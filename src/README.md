@@ -4,7 +4,6 @@ displays. It includes a library of interactive graphical display elements (widge
 for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.
 
 ## Installation instructions
-## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
 2. Download and install NodeJS from https://nodejs.org/en/download
 3. Open a terminal window and change directory to the daadisplays folder.
