@@ -8,7 +8,7 @@ for cockpit systems, and simulations tools supporting comparative analysis of co
    This command will install the dependecies (including the WellClear library from github)
 2. Run the bash script ./danti
    The script will launch the server side of the main application on port 8082
-3. Open the web browser at http://localhost:8082
+3. Open Google Chrome at http://localhost:8082
 
 ## Notices
 Copyright 2019 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved.
