@@ -3,6 +3,8 @@ DAA-Displays is a toolkit for model-based design and analysis of cockpit
 displays. It includes a library of interactive graphical display elements (widgets)
 for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.
 
+![](screenshots/danti.png "")
+
 ## Installation instructions
 1. Run `make`
    This command will create a folder dist/ with the JavaScript distribution.
