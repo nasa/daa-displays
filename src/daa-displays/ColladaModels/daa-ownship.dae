@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <authoring_tool>Converted by the PolyTrans Collada exporter</authoring_tool>
+    </contributor>
+    <created>20XX-04-09T14:24:50Z</created>
+    <modified>20XX-04-09T14:24:50Z</modified>
+    <unit meter="0.010000" name="centimeters"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_images>
+    <image id="ceramic_tif" name="ceramic_tif">
+      <init_from>daa-ownship.png</init_from>
+    </image>
+  </library_images>
+  <library_materials>
+    <material id="default" name="default_1">
+      <instance_effect url="#default-fx"/>
+    </material>
+    <material id="floor__ceramic__tiled__redish_with_white_grout"
+ 	name="floor__ceramic__tiled__redish_with_white_grout_1">
+      <instance_effect url="#floor__ceramic__tiled__redish_with_white_grout-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="default-fx" name="default_2">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0.000000 0.000000 0.000000 1</color>
+            </emission>
+            <ambient>
+              <color>0.300000 0.300000 0.300000 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.400000 0.400000 0.400000 1</color>
+            </diffuse>
+            <specular>
+              <color>0.700000 0.700000 0.700000 1</color>
+            </specular>
+            <shininess>
+              <float>16.000000</float>
+            </shininess>
+            <reflective>
+              <color>0.000000 0.000000 0.000000 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.000000</float>
+            </reflectivity>
+            <transparent opaque="A_ONE">
+              <color>1.000000 1.000000 1.000000 1</color>
+            </transparent>
+            <transparency>
+              <float>1.000000</float>
+            </transparency>
+            <index_of_refraction>
+              <float>1.000000</float>
+            </index_of_refraction>
+          </phong>
+          <extra>
+            <technique profile="OKINO">
+              <filter_color>
+                <color>1.000000 1.000000 1.000000 1</color>
+              </filter_color>
+              <phong>
+                <shininess>32</shininess>
+                <metal>0.000000</metal>
+              </phong>
+              <shading_coefficients>
+                <ambient>0.300000</ambient>
+                <diffuse>0.400000</diffuse>
+                <specular>0.700000</specular>
+                <luminous>0.000000</luminous>
+                <reflect>0.000000</reflect>
+                <filter>1.000000</filter>
+              </shading_coefficients>
+              <opacity>
+                <face>1.000000</face>
+                <reflect>1.000000</reflect>
+                <edge>1.000000</edge>
+                <edge_exponent>1.000000</edge_exponent>
+                <edge_enable>0</edge_enable>
+              </opacity>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="floor__ceramic__tiled__redish_with_white_grout-fx" 
+	name="floor__ceramic__tiled__redish_with_white_grout_2">
+      <profile_COMMON>
+        <newparam sid="ceramic_tif-surface">
+          <surface type="2D">
+            <init_from>ceramic_tif</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="ceramic_tif-sampler">
+          <sampler2D>
+            <source>ceramic_tif-surface</source>
+            <wrap_s>WRAP</wrap_s>
+            <wrap_t>WRAP</wrap_t>
+            <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+            <magfilter>LINEAR</magfilter>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0.000000 0.000000 0.000000 1</color>
+            </emission>
+            <ambient>
+              <color>0.300000 0.300000 0.300000 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="ceramic_tif-sampler" texcoord="uv0">
+              <extra>
+                <technique profile="OKINO">
+                  <weighting>1.000000</weighting>
+                  <modulation_source>rgb</modulation_source>
+                  <color_blending_mask>off</color_blending_mask>
+                  <mix_with_previous_layer>1.000000</mix_with_previous_layer>
+                </technique>
+                <technique profile="MAX3D">
+                  <amount>1.000000</amount>
+                </technique>
+                <technique profile="MAYA">
+                  <wrapU>1</wrapU>
+                  <wrapV>1</wrapV>
+                  <repeatU>1.000000</repeatU>
+                  <repeatV>1.000000</repeatV>
+                  <offsetU>0.000000</offsetU>
+                  <offsetV>0.000000</offsetV>
+                  <rotateUV>0.000000</rotateUV>
+                </technique>
+              </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.250000 0.250000 0.250000 1</color>
+            </specular>
+            <shininess>
+              <float>16.000000</float>
+            </shininess>
+            <reflective>
+              <color>0.000000 0.000000 0.000000 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.000000</float>
+            </reflectivity>
+            <transparent opaque="A_ONE">
+              <color>1.000000 1.000000 1.000000 1</color>
+            </transparent>
+            <transparency>
+              <float>1.000000</float>
+            </transparency>
+            <index_of_refraction>
+              <float>1.000000</float>
+            </index_of_refraction>
+          </phong>
+          <extra>
+            <technique profile="OKINO">
+              <filter_color>
+                <color>1.000000 1.000000 1.000000 1</color>
+              </filter_color>
+              <phong>
+                <shininess>32</shininess>
+                <metal>0.000000</metal>
+              </phong>
+              <shading_coefficients>
+                <ambient>0.300000</ambient>
+                <diffuse>0.568627</diffuse>
+                <specular>0.250000</specular>
+                <luminous>0.000000</luminous>
+                <reflect>0.000000</reflect>
+                <filter>1.000000</filter>
+              </shading_coefficients>
+              <opacity>
+                <face>1.000000</face>
+                <reflect>1.000000</reflect>
+                <edge>1.000000</edge>
+                <edge_exponent>1.000000</edge_exponent>
+                <edge_enable>0</edge_enable>
+              </opacity>
+            </technique>
+            <technique profile="FCOLLADA">
+              <bump>
+                <texture texture="ceramic_tif-sampler" texcoord="uv0">
+                <extra>
+                  <technique profile="OKINO">
+                    <weighting>0.050000</weighting>
+                    <modulation_source>rgb</modulation_source>
+                  </technique>
+                  <technique profile="MAX3D">
+                    <amount>0.050000</amount>
+                  </technique>
+                  <technique profile="MAYA">
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                    <repeatU>1.000000</repeatU>
+                    <repeatV>1.000000</repeatV>
+                    <offsetU>0.000000</offsetU>
+                    <offsetV>0.000000</offsetV>
+                    <rotateUV>0.000000</rotateUV>
+                  </technique>
+                </extra>
+                </texture>
+              </bump>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_cameras>
+    <camera id="default-camera" name="default_3">
+      <optics>
+        <technique_common>
+          <perspective>
+            <xfov>28.072487</xfov>
+            <yfov>28.072487</yfov>
+            <znear>0.010000</znear>
+            <zfar>1000000.000000</zfar>
+          </perspective>
+        </technique_common>
+      </optics>
+      <extra>
+        <technique profile="OKINO">
+          <interestdist>32.015621</interestdist>
+        </technique>
+        <technique profile="XSI">
+          <XSI_Camera>
+            <xsi_param sid="interestdist">32.015621</xsi_param>
+          </XSI_Camera>
+        </technique>
+      </extra>
+    </camera>
+  </library_cameras>
+  <library_lights>
+    <light id="defaultambient-light" name="defaultambient">
+      <technique_common>
+        <ambient>
+          <color>1.000000 1.000000 1.000000</color>
+        </ambient>
+      </technique_common>
+    </light>
+    <light id="light-light" name="light">
+      <technique_common>
+        <directional>
+          <color>1.000000 1.000000 1.000000</color>
+        </directional>
+      </technique_common>
+    </light>
+    <light id="light-light_1" name="light_1">
+      <technique_common>
+        <directional>
+          <color>1.000000 1.000000 1.000000</color>
+        </directional>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_geometries>
+    <geometry id="rectangle_object-mesh" name="rectangle_object">
+      <mesh>
+        <source id="rectangle_object-mesh-positions">
+          <float_array id="rectangle_object-mesh-positions-array" count="12">
+		-1.500000 -2.500000 0.000000
+		 0.000000  0.000000 0.000000
+		 0.500000 -2.500000 0.000000
+		 0.500000 -0.500000 0.000000</float_array>
+          <technique_common>
+            <accessor source="#rectangle_object-mesh-positions-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="rectangle_object-mesh-normals">
+          <float_array id="rectangle_object-mesh-normals-array" count="3">
+		0.000000 0.000000 1.000000</float_array>
+          <technique_common>
+            <accessor source="#rectangle_object-mesh-normals-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="rectangle_object-mesh-map-channel1">
+          <float_array id="rectangle_object-mesh-map-channel1-array" count="8">
+		0.000000 0.000000 0.000000 1.000000 1.000000 0.000000 1.000000 1.000000</float_array>
+          <technique_common>
+            <accessor source="#rectangle_object-mesh-map-channel1-array" count="4" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="rectangle_object-mesh-tangent1">
+          <float_array id="rectangle_object-mesh-tangent1-array" count="3">
+		1.000000 0.000000 0.000000</float_array>
+          <technique_common>
+            <accessor source="#rectangle_object-mesh-tangent1-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="rectangle_object-mesh-binormal1">
+          <float_array id="rectangle_object-mesh-binormal1-array" count="3">
+		0.000000 1.000000 0.000000</float_array>
+          <technique_common>
+            <accessor source="#rectangle_object-mesh-binormal1-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="rectangle_object-mesh-vertices">
+          <input semantic="POSITION" source="#rectangle_object-mesh-positions"/>
+        </vertices>
+        <polylist material="NUGRAF___SPECIAL_INHERITED_SURFACE_MARKER" count="1">
+          <input semantic="VERTEX" source="#rectangle_object-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#rectangle_object-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#rectangle_object-mesh-map-channel1" offset="2" set="1"/>
+          <input semantic="TANGENT" source="#rectangle_object-mesh-tangent1" offset="3" set="1"/>
+          <input semantic="BINORMAL" source="#rectangle_object-mesh-binormal1" offset="4" set="1"/>
+          <vcount>4 </vcount>
+          <p>0 0 0 0 0 2 0 2 0 0 3 0 3 0 0 1 0 1 0 0 </p>
+        </polylist>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="RootNode" name="RootNode">
+      <node id="default-node" name="default_3" type="NODE">
+        <translate>20.000000 15.000000 20.000000</translate>
+        <rotate>-0.503521 0.838431 0.208565 52.581881</rotate>
+        <scale>1.000000 1.000000 1.000000</scale>
+        <instance_camera url="#default-camera"/>
+      </node>
+      <node id="defaultambient-node" name="defaultambient" type="NODE">
+        <instance_light url="#defaultambient-light"/>
+      </node>
+      <node id="light-node" name="light" type="NODE">
+        <translate>-99.999992 99.999992 49.999996</translate>
+        <rotate>-0.809017 -0.500000 0.309017 74.754734</rotate>
+        <scale>1.000000 1.000000 1.000000</scale>
+        <instance_light url="#light-light"/>
+      </node>
+      <node id="light-node_1" name="light_1" type="NODE">
+        <translate>99.999992 99.999992 49.999996</translate>
+        <rotate>-0.809017 0.500000 -0.309017 74.754734</rotate>
+        <scale>1.000000 1.000000 1.000000</scale>
+        <instance_light url="#light-light_1"/>
+      </node>
+      <node id="rectangle-node" name="rectangle" type="NODE">
+        <translate>0.000000 2.000000 0.000000</translate>
+        <instance_geometry url="#rectangle_object-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="NUGRAF___SPECIAL_INHERITED_SURFACE_MARKER" 
+		target="#floor__ceramic__tiled__redish_with_white_grout">
+                <bind_vertex_input semantic="uv0" input_semantic="TEXCOORD" 
+			input_set="1"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <extra>
+        <technique profile="OKINO">
+          <scene_bounding_min>-2.000000 0.000000 0.000000</scene_bounding_min>
+          <scene_bounding_max>2.000000 4.000000 0.000000</scene_bounding_max>
+        </technique>
+        <technique profile="MAX3D">
+          <frame_rate>30</frame_rate>
+        </technique>
+        <technique profile="XSI">
+          <SI_Scene>
+            <xsi_param sid="frameRate">30</xsi_param>
+            <xsi_param sid="start">0.000000</xsi_param>
+            <xsi_param sid="end">3.333333</xsi_param>
+            <xsi_param sid="timing">"SECONDS"</xsi_param>
+          </SI_Scene>
+          <SI_Ambience>
+            <xsi_param sid="red">1.000000</xsi_param>
+            <xsi_param sid="green">1.000000</xsi_param>
+            <xsi_param sid="blue">1.000000</xsi_param>
+          </SI_Ambience>
+        </technique>
+        <technique profile="FCOLLADA">
+          <start_time>0.000000</start_time>
+          <end_time>3.333333</end_time>
+        </technique>
+      </extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#RootNode"/>
+  </scene>
+</COLLADA>

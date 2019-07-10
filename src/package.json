@@ -1,0 +1,26 @@
+{
+	"name": "daa-displays",
+	"description": "",
+	"author": "Paolo Masci",
+	"license": "NASA OPEN SOURCE AGREEMENT",
+	"version": "1.0.0",
+	"repository": {
+		"type": "git",
+		"url": "xxx"
+	},
+	"publisher": "paolomasci",
+	"categories": [],
+	"dependencies": {
+		"bootstrap": "^4.3.1",
+		"font-awesome": "^4.7.0",
+		"handlebars": "^4.1.2",
+		"jquery": "^3.3.29",
+		"underscore": "^1.8.14",
+		"requirejs": "^2.3.6",
+		"node": "^8.9.1",
+		"animate.css": "^3.7.0"
+	},
+	"devDependencies": {
+		"jasmine": "^3.4.0"
+	}
+}

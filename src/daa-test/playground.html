@@ -1,0 +1,127 @@
+<!--
+ * ## Notices
+ * Copyright 2019 United States Government as represented by the Administrator 
+ * of the National Aeronautics and Space Administration. All Rights Reserved.
+ * 
+ * ## Disclaimers
+ * No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, 
+ * EITHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY 
+ * THAT THE SUBJECT SOFTWARE WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF 
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM INFRINGEMENT, 
+ * ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT 
+ * DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, 
+ * IN ANY MANNER, CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT 
+ * OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY OTHER APPLICATIONS 
+ * RESULTING FROM USE OF THE SUBJECT SOFTWARE.  FURTHER, GOVERNMENT AGENCY DISCLAIMS 
+ * ALL WARRANTIES AND LIABILITIES REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE 
+ * ORIGINAL SOFTWARE, AND DISTRIBUTES IT "AS IS."
+ * 
+ * Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE 
+ * UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR 
+ * RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, 
+ * DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES 
+ * FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, 
+ * RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, 
+ * ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT 
+ * PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, 
+ * UNILATERAL TERMINATION OF THIS AGREEMENT.
+-->
+<!DOCTYPE HTML>
+<html style="background-color:white; transform-origin:left top;">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible">
+        <title></title>
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="../node_modules/animate.css/animate.min.css">
+        <link rel="stylesheet" href="../daa-displays/css/daa-displays.css">
+
+
+        <script src="../node_modules/jquery/dist/jquery.slim.min.js"></script>
+        <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="../node_modules/handlebars/dist/handlebars.min.js"></script>
+        <script src="../node_modules/requirejs/require.js" data-main="playground.js"></script>
+    </head>
+    <body>
+        <div id="daa-cockpit" style="position:absolute; left:0;">
+            <div id="daa-disp" style="margin-top:64px;"></div>
+            <div id="daa-disp-left" style="margin-left:50px;"></div>
+            <div id="daa-disp-right" style="margin-left:1200px;"></div>
+        </div>
+        <div id="simulation-controls" style="position:absolute; top:940px; left:0; width:80%;">
+        </div>
+        <div id="simulation-plot" style="position:absolute; top:1100px; left:0; height:200px; width:1020px;">
+        </div>
+
+        <div class="control-right" style="width:1000px; position:absolute; left:1230px; top:64px;">
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Air Speed (knots) [ 0, 300 ]</span>
+                </div>
+                <input type="number" class="form-control" id="test-airspeed-input" value="100" aria-label="Airspeed">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-airspeed">Submit</button>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Air Speed Step (knots)</span>
+                </div>
+                <input type="number" class="form-control" id="test-airspeed-step-input" value="20" aria-label="Airspeed Step">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-airspeed-step">Submit</button>
+            </div>
+    
+            <br>
+    
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Altitude (feet) [ -200, 60000 ]</span>
+                </div>
+                <input type="number" class="form-control" id="test-altitude-input" value="4000" aria-label="Altitude">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-altitude">Submit</button>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Altitude Step (feet)</span>
+                </div>
+                <input type="number" class="form-control" id="test-altitude-step-input" value="100" aria-label="Altitude Step">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-altitude-step">Submit</button>
+            </div>
+    
+            <br>
+    
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vertical Speed (100 feet per minute)</span>
+                </div>
+                <input type="number" class="form-control" id="test-vspeed-input" value="1" aria-label="Vertical Speed">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-vspeed">Submit</button>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Vertical Speed Step (100 feet per minute)</span>
+                </div>
+                <input type="number" class="form-control" id="test-vspeed-step-input" value="0.5" aria-label="Vertical Speed Step">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-vspeed-step">Submit</button>
+            </div>
+    
+            <br>
+
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Roll (degs)</span>
+                </div>
+                <input type="number" class="form-control" id="test-roll-input" value="10" aria-label="Roll">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-roll">Submit</button>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Pitch (degs)</span>
+                </div>
+                <input type="number" class="form-control" id="test-pitch-input" value="2" aria-label="Pitch">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-pitch">Submit</button>
+            </div>
+        </div>
+
+    </body>
+</html>

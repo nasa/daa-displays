@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"module": "UMD",
+		"target": "es6",
+		"outDir": "dist",
+		"rootDir": "src",
+		"lib": [ "es6", "dom" ],
+		"sourceMap": false,
+		"baseUrl": ".",
+		"paths": {
+			"*": [ "node_modules/*", "node_modules/@types/*" ] // This mapping is relative to "baseUrl"
+		},
+		"types": [
+			"handlebars", "jquery", "node", "express", "ws", "connect", "events", "body-parser", "jasmine"
+		]
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
