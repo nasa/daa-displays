@@ -6,11 +6,14 @@ for cockpit systems, and simulations tools supporting comparative analysis of co
 ![](screenshots/danti.png "")
 
 ## Installation instructions
-1. Run `make`
+1. Download the latest release of DAA-Displays from the github repository.
+2. Download and install NodeJS from https://nodejs.org/en/download
+3. Open a terminal window and change directory to the daadisplays folder.
+3. Run `make`.
    This command will create a folder dist/ with the JavaScript distribution.
-2. Run the bash script `./restart.sh`
+4. Run the bash script `./restart.sh`.
    The script will install the dependencies and launch the daa-server on port 8082.
-3. Open Google Chrome at http://localhost:8082
+5. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
 
 ## Notices
 Copyright 2019 United States Government as represented by the Administrator of the National Aeronautics and Space Administration. All Rights Reserved.
