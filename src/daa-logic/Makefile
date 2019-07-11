@@ -1,5 +1,5 @@
 # WellClear versions to be compiled
-VERSIONS = 1.0.1 1.0.2
+VERSIONS = 1.0.1 1.0.2 2.0.e
 
 # definitions necessary for javac
 SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java src/gov/nasa/larcfm/ACCoRD/*.java)
@@ -10,6 +10,7 @@ JAR   = jar
 # $(call file-exists, file-name)
 #   Return non-null if a file exists.
 file-exists = $(wildcard $(1))
+version1 = $(shell echo $(1) | grep "WellClear-1.")
 
 # url of the github repositories
 github = curl --output /dev/null --silent --head --fail "https://codeload.github.com/nasa/WellClear/zip/v$(1)"
@@ -30,10 +31,10 @@ COMPILE_TARGETS = $(foreach ver,$(VERSIONS), compile-$(ver))
 define compile-template
 compile-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src DAABands.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	-@cd utils && $(JAR) cfe ../WellClear-$(1).jar DAABands *.class
+	@echo Compiling for WellClear version $(1)
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	-@cd utils && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class
 	-@cd WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	@echo WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/GreatCircle.java
 	$(if $(call file-exists, WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/GreatCircle.java) \
 		 , @unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF \
 		 , rm -f WellClear-$(1).jar)

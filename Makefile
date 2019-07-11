@@ -1,5 +1,5 @@
 all: compile install-dependencies
-	@echo "\033[0;32m ** To start DaNTi, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
+	@echo "\033[0;32m ** To start the DaNTi app, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
 
 compile:
 	@npm install
@@ -8,7 +8,7 @@ compile:
 	npm run build
 	# copy remaining files
 	cp src/daa-test/*.html dist/daa-test/
-	cp src/danti dist/
+	cp src/restart.sh dist/
 	cp src/README.md dist/
 	cp -R src/LICENSES dist/
 	cp src/Makefile dist/
@@ -34,8 +34,7 @@ compile:
 
 install-dependencies:
 	@echo "\033[0;32m ** Installing dependencies **\033[0m"
-	@cd dist && npm install
-	@cd dist/daa-server && npm install
+	@cd dist && make install-dependencies
 	@echo "\033[0;32m Done! \033[0m"
 
 clean:
