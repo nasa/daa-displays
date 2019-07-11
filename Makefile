@@ -1,10 +1,12 @@
-all: install build
-	cd dist && make wellclear-1.x
+all: compile install-dependencies
 	@echo "\033[0;32m ** To start DaNTi, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
 
-build:
-	@echo "\033[0;32m ** Building daa-displays **\033[0m"
+compile:
+	@npm install
+	@echo "\033[0;32m ** Building dist folder for daa-displays **\033[0m"
+	# generate javascript files
 	npm run build
+	# copy remaining files
 	cp src/daa-test/*.html dist/daa-test/
 	cp src/danti dist/
 	cp src/README.md dist/
@@ -22,18 +24,25 @@ build:
 	cp -R src/daa-displays/css dist/daa-displays/
 	cp -R src/daa-displays/images dist/daa-displays
 	cp -R src/daa-displays/wwd dist/daa-displays/
+	cp src/daa-displays/daa-interactive-map.js dist/daa-displays/
 	cp src/index.html dist/
 	cp src/split.html dist/
-	cp src/daa-displays/daa-interactive-map.js dist/daa-displays/
 	cp src/package.json dist/
+	# compile java files
+	cd dist && make compile
+	@echo "\033[0;32m Done! \033[0m"
 
-install:
+install-dependencies:
 	@echo "\033[0;32m ** Installing dependencies **\033[0m"
-	npm install
+	@cd dist && npm install
+	@cd dist/daa-server && npm install
+	@echo "\033[0;32m Done! \033[0m"
 
 clean:
-	rm -rf dist
-	rm -rf node_modules
-	cd src && rm -rf node_modules
-	cd src/daa-server && rm -rf node_modules
-	cd src/daa-logic && make cleandaa2pvs
+	@echo "\033[0;33m ** Removing dist folder, .class files, .jar files, and node_modules **\033[0m"
+	-@rm -r dist
+	-@rm -r node_modules
+	-@cd src && rm -r node_modules
+	-@cd src/daa-server && rm -r node_modules
+	-@cd src/daa-logic && make clean
+	@echo "\033[0;33m Done! \033[0m"

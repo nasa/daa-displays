@@ -1,66 +1,80 @@
-# Simple Makefile to build DAIDALUS library and example applications
+# WellClear versions to be compiled
+VERSIONS = 1.0.1 1.0.2
 
+# definitions necessary for javac
 SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java src/gov/nasa/larcfm/ACCoRD/*.java)
 OBJS  = $(SRCS:.java=.class)
 JAVAC = javac
 JAR   = jar
 
-all: WellClear-1.0.1 WellClear-1.0.2 #WellClear-2.0.e
+# $(call file-exists, file-name)
+#   Return non-null if a file exists.
+file-exists = $(wildcard $(1))
 
-WellClear-1.0.1: download-wellclear-1.0.1 compile-wellclear-1.0.1
+# url of the github repositories
+github = curl --output /dev/null --silent --head --fail "https://codeload.github.com/nasa/WellClear/zip/v$(1)"
 
-compile-wellclear-1.0.1:
-	@echo "\033[0;32m ** Building WellClear-1.0.1.jar **\033[0m"
-	@cd utils && $(JAVAC) -cp ../WellClear-1.0.1/DAIDALUS/Java/src DAABands.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	@cd utils && $(JAR) cfe ../WellClear-1.0.1.jar DAABands *.class
-	@cd WellClear-1.0.1/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-1.0.1.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	@unzip -vl WellClear-1.0.1.jar
-	@unzip -c WellClear-1.0.1.jar META-INF/MANIFEST.MF
+# download templates
+DOWNLOAD_TARGETS = $(foreach ver,$(VERSIONS), download-$(ver))
+define download-template
+download-$(1):
+	@echo "\n\033[0;32m ** Downloading WellClear $(1) from GitHub **\033[0m" 
+	-@curl https://codeload.github.com/nasa/WellClear/zip/v$(1) > WellClear-$(1).zip 
+	-@unzip -qn WellClear-$(1).zip
+	-@rm WellClear-$(1).zip
+endef
+download-all = $(foreach ver,$(VERSIONS),$(eval $(call download-template,$(ver))))
 
-download-wellclear-1.0.1:
-	@echo "\033[0;32m ** Downloading WellClear 1.0.1 from GitHub **\033[0m"
-	@curl https://codeload.github.com/nasa/WellClear/zip/v1.0.1 > WellClear-1.0.1.zip
-	@unzip -qn WellClear-1.0.1.zip && rm -f WellClear-1.0.1.zip
+# compilation templates
+COMPILE_TARGETS = $(foreach ver,$(VERSIONS), compile-$(ver))
+define compile-template
+compile-$(1):
+	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src DAABands.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	-@cd utils && $(JAR) cfe ../WellClear-$(1).jar DAABands *.class
+	-@cd WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
+	@echo WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/GreatCircle.java
+	$(if $(call file-exists, WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/GreatCircle.java) \
+		 , @unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF \
+		 , rm -f WellClear-$(1).jar)
+endef
+compile-all = $(foreach ver,$(VERSIONS),$(eval $(call compile-template,$(ver))))
 
-WellClear-1.0.2: download-wellclear-1.0.2 compile-wellclear-1.0.2
+# clean templates
+CLEAN_TARGETS = $(foreach ver,$(VERSIONS), clean-$(ver))
+define clean-template
+clean-$(1):
+	@echo "\n\033[0;33m ** Removing .class files in WellClear-$(1) **\033[0m"
+	-cd WellClear-$(1)/DAIDALUS/Java/src && rm *.class
+	-cd WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD && rm *.class
+	-cd WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO && rm *.class
+	-cd WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util && rm *.class
+endef
+clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 
-compile-wellclear-1.0.2:
-	@echo "\033[0;32m ** Building WellClear-1.0.2.jar **\033[0m"
-	@cd utils && $(JAVAC) -cp ../WellClear-1.0.2/DAIDALUS/Java/src DAABands.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	@cd utils && $(JAR) cfe ../WellClear-1.0.2.jar DAABands *.class
-	@cd WellClear-1.0.2/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-1.0.2.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	@unzip -vl WellClear-1.0.2.jar
-	@unzip -c WellClear-1.0.2.jar META-INF/MANIFEST.MF
+# makefile targets
+all: download compile
 
-download-wellclear-1.0.2:
-	@echo "\033[0;32m ** Downloading WellClear 1.0.2 from GitHub **\033[0m"
-	@curl https://codeload.github.com/nasa/WellClear/zip/v1.0.2 > WellClear-1.0.2.zip
-	@unzip -qn WellClear-1.0.2.zip && rm -f WellClear-1.0.2.zip
+download: $(DOWNLOAD_TARGETS)
 
-WellClear-2.0.e: compile-wellclear-2.0.e
+compile: $(COMPILE_TARGETS)
 
-compile-wellclear-2.0.e:
-	@echo "\033[0;32m ** Building WellClear-2.0.e.jar **\033[0m"
-	@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAABandsV2.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	@cd utils && $(JAR) cfe ../WellClear-2.0.e.jar DAABandsV2 *.class
-	@cd WellClear-2.0.e/DAIDALUS/Java/src/ && $(JAR) uf ../../../../WellClear-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	@unzip -vl WellClear-2.0.e.jar
-	@unzip -c WellClear-2.0.e.jar META-INF/MANIFEST.MF
+clean: clean-utils clean-jar $(CLEAN_TARGETS)
 
-clean: cleandaa2pvs cleanwellclear
+clean-utils:
+	@echo "\n\033[0;33m ** Removing .class files in utils **\033[0m"
+	@-cd utils && rm *.class
 
-cleandaa2pvs:
-	cd utils && rm -f *.class
-	rm -f *.jar
+clean-jar:
+	@echo "\n\033[0;33m ** Removing .jar files **\033[0m"
+	@-rm *.jar
 
-cleanwellclear:
-	cd WellClear-2.0.e/DAIDALUS/Java/src && rm -f *.class
-	cd WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD && rm -f *.class
-	cd WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO && rm -f *.class
-	cd WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util && rm -f *.class
+remove-downloads:
+	@echo "\n\033[0;33m ** Removing downloaded versions of WellClear **\033[0m"
+	@-rm -r WellClear-*
+	@-rm WellClear-*.zip
 
-removewellclear:
-	rm -rf WellClear-1.0.1
-	rm -rf WellClear-1.0.2
-	rm -f WellClear-1.0.1.zip
-	rm -f WellClear-1.0.2.zip
+# these final commands expand the templates
+$(call download-all)
+$(call compile-all)
+$(call clean-all)
