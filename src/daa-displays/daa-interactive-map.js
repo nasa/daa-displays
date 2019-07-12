@@ -681,12 +681,10 @@ define(function (require, exports, module) {
          * @inner
          */
         setHeading(deg) {
-            if (deg) {
-                let val = parseFloat(deg);
-                if (!isNaN(val) && this.flight) {
-                    this.flight.zRotation = this.rotationOffset.zRotation + val;
-                    this.wwd.redraw();
-                }
+            const val = parseFloat(deg);
+            if (!isNaN(val) && this.flight) {
+                this.flight.zRotation = this.rotationOffset.zRotation + val;
+                this.wwd.redraw();
             }
             return this;
         }
@@ -902,21 +900,6 @@ define(function (require, exports, module) {
             }
             return "daa-target";
         }
-        // selectSymbolByName(daaSymbol = "daa-target") {
-        //     if (!this.aircraft) {
-        //         console.log("Warning: still loading DAA_Aircraft symbols... :/");
-        //         this.symbol = daaSymbol; // the symbol will be selected when the loading process completes
-        //     } else {
-        //         if (daaSymbol !== this.symbol) {
-        //             this.aircraft.hide(); // hide old symbol
-        //             this.aircraft = this.aircraftSymbols[daaSymbol];
-        //             this.aircraft.reveal(); // reveal new symbol
-        //             this.symbol = daaSymbol;
-        //             this.refreshLabel();
-        //         } // else do nothing, the symbol is the same
-        //     }
-        //     return this;
-        // }
         /**
          * @function <a name="DAA_Aircraft_selectSymbolByAlert">selectSymbolByAlert</a>
          * @description Sets the daa symbol of the aircraft based on the alert level.
@@ -1099,6 +1082,7 @@ define(function (require, exports, module) {
             opt.traffic = opt.traffic || [];
             opt.canvas = opt.canvas || "canvasOne";
             opt.shader = (isNaN(+opt.shader)) ? 0.4 : +opt.shader;
+            this.godsView = !!opt.godsView;
             this.offlineMap = opt.offlineMap;
     
             // create worldwind view in the canvas
@@ -1132,8 +1116,8 @@ define(function (require, exports, module) {
                 alt: opt.ownship.alt,
                 symbol: "daa-ownship",
                 name: "ownship"
-            }, function (ownship) {
-                if (config.hideOwnshipSymbol) {
+            }, (ownship) => {
+                if (!this.godsView) {
                     ownship.hide();
                 }
             });
@@ -1168,6 +1152,12 @@ define(function (require, exports, module) {
             
             // set 2D view
             this.view2D();
+        }
+        godsViewOn() {
+            this.godsView = true;
+        }
+        godsViewOff() {
+            this.godsView = false;
         }
         /**
          * Utility function, adds event listener for mouse wheel events -- necessary for resizing traffic symbols when zooming the map
@@ -1236,15 +1226,19 @@ define(function (require, exports, module) {
         /**
          * @function <a name="DAA_Airspace_recenter">recenter</a>
          * @description Centers the map on the ownship position.
+         * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
          * @memberof module:InteractiveMap
          * @instance
          * @inner
          */
-        recenter() {
-            let pos = this._ownship.getPosition();
-            this.wwd.navigator.lookAtLocation.latitude = pos.lat;
-            this.wwd.navigator.lookAtLocation.longitude = pos.lon;
-            this.wwd.redraw();
+        recenter(pos) {
+            if (pos) {
+                this.wwd.navigator.lookAtLocation.latitude = pos.lat;
+                this.wwd.navigator.lookAtLocation.longitude = pos.lon;
+                this.wwd.redraw();
+            } else {
+                console.error("Unable to recenter map -- position is null :/");
+            }
             return this;
         }
         /**
@@ -1261,13 +1255,29 @@ define(function (require, exports, module) {
         }
         /**
          * @function <a name="DAA_Airspace_goTo">goTo</a>
-         * @description Moves the ownship to a given location and re-centers the map to that location.
-         * @param pos {Object({ lat: real, lon: real })} New position of the ownship.
+         * @description Centers the map to a given location. The ownship position is kept unchanged.
+         * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
          * @memberof module:InteractiveMap
          * @instance
          * @inner
          */
         goTo(pos) {
+            if (pos) {
+                this.recenter(pos);
+            } else {
+                console.error("Incorrect position :/ ", pos);
+            }
+            return this;
+        }
+        /**
+         * @function <a name="DAA_Airspace_setOwnshipPosition">setOwnshipPosition</a>
+         * @description Sets the ownship position to a given location.
+         * @param pos {Object({ lat: real, lon: real, alt: real })} New position of the ownship.
+         * @memberof module:InteractiveMap
+         * @instance
+         * @inner
+         */
+        setOwnshipPosition(pos) {
             if (pos) {
                 if (typeof pos === "string") {
                     // remove white spaces in the name and make all small letters
@@ -1282,9 +1292,16 @@ define(function (require, exports, module) {
                 } else {
                     this._ownship.setPosition(pos);
                 }
-                return this.recenter();
+                this._ownship.refreshLabel();
             } else {
                 console.error("Incorrect aircraft position :/ ", pos);
+            }
+            return this;
+        }
+        setOwnshipVelocity(v) {
+            if (v) {
+                this._ownship.setVelocity(v);
+                this._ownship.refreshLabel();
             }
             return this;
         }
@@ -1503,11 +1520,11 @@ define(function (require, exports, module) {
             this.heading = 0; // default heading is 0 deg (i.e., pointing north)
             this.pos = opt.pos || cities.hampton;
             this.trafficPosition = [];
-    
+            
             coords = coords || {};
             coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
             coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
-    
+
             // create the DOM element
             this.div = utils.createDiv(id, {
                 parent: opt.parent
@@ -1522,7 +1539,8 @@ define(function (require, exports, module) {
                 canvas: this.id + "-canvas",
                 offlineMap: opt.offlineMap,
                 terrain: opt.terrain,
-                atmosphere: opt.atmosphere
+                atmosphere: opt.atmosphere,
+                godsView: opt.godsView
             });
             this.wwd.setHeading(this.heading);
             this.wwd.setZoomLevel(5); // NMI
@@ -1587,7 +1605,7 @@ define(function (require, exports, module) {
         /**
          * @function <a name="goTo">goTo</a>
          * @description Sets the current position of the map.
-         * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real) }
+         * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real), alt: (real) }
          * @memberof module:InteractiveMap
          * @instance
          */
@@ -1599,11 +1617,56 @@ define(function (require, exports, module) {
                 pos = cities[pos];
             }
             if (pos && pos.lat && pos.lon) {
-                this.pos = pos;
+                this.pos = {
+                    lat: +pos.lat,
+                    lon: +pos.lon,
+                    alt: +pos.alt
+                };
                 this.wwd.goTo(pos);
             } else {
                 console.error("Incorrect aircraft position :/ ", pos);
             }
+            return this;
+        }
+        /**
+         * @function <a name="setOwnshipPosition">setOwnshipPosition</a>
+         * @description Sets the ownship positions on the map.
+         * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real), alt: (real) }
+         * @memberof module:InteractiveMap
+         * @instance
+         */
+        setOwnshipPosition(pos) {
+            if (typeof pos === "string") {
+                // remove white spaces in the name and make all small letters
+                pos = pos.replace(/\s/g, "").toLowerCase();
+                // look for the name of the city in the list of known destinations (array cities)
+                pos = cities[pos];
+            }
+            if (pos && pos.lat && pos.lon) {
+                this.pos = {
+                    lat: +pos.lat,
+                    lon: +pos.lon,
+                    alt: +pos.alt
+                };
+                this.wwd.setOwnshipPosition(pos);
+            } else {
+                console.error("Incorrect aircraft position :/ ", pos);
+            }
+            return this;
+        }
+        setOwnshipVelocity(v) {
+            this.wwd.setOwnshipVelocity(v);
+            return this;
+        }
+        /**
+         * @function <a name="recenter">recenter</a>
+         * @description Recenters the map at the ownship location.
+         * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
+         * @memberof module:InteractiveMap
+         * @instance
+         */
+        recenter(pos) {
+            this.wwd.recenter(pos);
             return this;
         }
         /**

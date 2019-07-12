@@ -556,6 +556,7 @@ export class DAAPlayer {
                     // console.log(`Loading complete!`);
                 }
                 this._selectedScenario = scenario;
+                this.simulationStep = 0;
                 this._simulationLength = this._scenarios[this._selectedScenario].length;
                 $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
                 this._log = [];
@@ -837,8 +838,12 @@ export class DAAPlayer {
      */
     getCurrentFlightData (enc?: string): LLAData {
         if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
-            const time: string = this._scenarios[this._selectedScenario].steps[this.simulationStep];
-            return this._scenarios[this._selectedScenario].lla[time];
+            if (this.simulationStep < this._scenarios[this._selectedScenario].length) {
+                const time: string = this._scenarios[this._selectedScenario].steps[this.simulationStep];
+                return this._scenarios[this._selectedScenario].lla[time];
+            } else {
+                console.error("Incorrect simulation step (array index out of range for flight data)");
+            }
         }
         return null;
     }
