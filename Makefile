@@ -27,6 +27,7 @@ compile:
 	cp src/daa-displays/daa-interactive-map.js dist/daa-displays/
 	cp src/index.html dist/
 	cp src/split.html dist/
+	cp src/gods.html dist/
 	cp src/package.json dist/
 	# compile java files
 	cd dist && make compile

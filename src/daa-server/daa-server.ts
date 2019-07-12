@@ -260,6 +260,9 @@ class DAAServer {
         app.get('/split', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
         });
+        app.get('/gods', (req, res) => {
+            res.sendFile(path.join(daaDisplaysRoot, 'gods.html'));
+        });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');
         app.use(express.static(daaTestFolder));
         app.get('/test', (req, res) => {
