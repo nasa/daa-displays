@@ -6,7 +6,7 @@ import { Compass } from '../daa-displays/daa-compass';
 import { HScale } from '../daa-displays/daa-hscale';
 import { VirtualHorizon } from '../daa-displays/daa-virtual-horizon';
 
-import * as InteractiveMap from '../daa-displays/daa-interactive-map';
+import { InteractiveMap } from '../daa-displays/daa-interactive-map';
 import { DAAPlayer } from '../daa-displays/daa-player';
 import { DAASplitView } from '../daa-displays/daa-split-view';
 import { DAAScenario, LLAData } from '../daa-displays/utils/daa-server';
@@ -167,9 +167,9 @@ class Playground {
         // });
 
         $("#test-location").on("click", () => {
-            const val: number = +$("#test-location-input").val();
-            console.log("Setting location to " + val);
-            this.daaWidgets.map.goTo(val);
+            const loc: string = <string>$("#test-location-input").val();
+            console.log("Setting location to " + loc);
+            this.daaWidgets.map.goTo(loc);
         });
     }
 }

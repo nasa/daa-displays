@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
-import * as InteractiveMap from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
 import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
 

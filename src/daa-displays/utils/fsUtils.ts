@@ -8,6 +8,13 @@ export function getBandsFileName (desc: { daaConfig: string, scenarioName: strin
     return null;
 }
 
+export function getLoSFileName (desc: { daaConfig: string, scenarioName: string }) {
+    if (desc) {
+        return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.LoS.json`;
+    }
+    return null;
+}
+
 export async function stat(file: string): Promise<fs.Stats> {
 	return new Promise<fs.Stats>((resolve, reject) => {
 		fs.stat(file, (error, stat) => {

@@ -90,16 +90,10 @@ require(["widgets/daa-displays/daa-interactive-map"], function (InteractiveMap) 
  * REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
  * TERMINATION OF THIS AGREEMENT.
  **/
-
-// @ts-nocheck
-// import { WorldWind } from './daa-worldwind'
-import * as utils from './daa-utils';
+import * as utils from 'daa-displays/daa-utils';
 import * as templates from './templates/daa-map-templates';
-import * as Handlebars from 'node_modules/handlebars/dist/handlebars';
-
-import * as WorldWind from 'daa-displays/wwd/worldwind.min';
-// require("daa-displays/wwd/worldwind.min");
-
+import * as WorldWind from './wwd/worldwind.min';
+import * as serverInterface from './utils/daa-server'
 
 // https://tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/11/699/1129.jpg
 // class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
@@ -315,104 +309,261 @@ const default_aircraft_altitude = 1000; // 1Km
 // const m2latlon = Math.sqrt((cities.newportnews.lat - cities.hampton.lat) * (cities.newportnews.lat - cities.hampton.lat)
 //     + (cities.newportnews.lon - cities.hampton.lon) * (cities.newportnews.lon - cities.hampton.lon)) / 12.81;
 
-class WellClearVolume {
-    well_clear_volume;
-    /**
-     * @function <a name="WellClearVolume">WellClearVolume</a>
-     * @description Constructor. Renders a well-clear volume in 3D.
-     * @param layer {Object} wwd layer to be used for rendering the well-clear volume.
-     * @param lat {real} Latitude of the aircraft (degrees)
-     * @param lon {real} Longitude of the aircraft (degrees)
-     * @param alt {real} Altitude of the aircraft (meters)
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
-     */
-    constructor(layer = null, lat = cities.hampton.lat, lon = cities.hampton.lon, alt = default_aircraft_altitude) {
-        const ZTHR = 4000;
-        // Create the mesh's positions.
-        let meshPositions = []; // Use a new positions array.
-        meshPositions.push(new WorldWind.Position(lat, lon, alt)); // the mesh center
+// class WellClearVolume {
+//     private well_clear_volume: WorldWind.TriangleMesh;
+//     /**
+//      * @function <a name="WellClearVolume">WellClearVolume</a>
+//      * @description Constructor. Renders a well-clear volume in 3D.
+//      * @param layer {Object} wwd layer to be used for rendering the well-clear volume.
+//      * @param lat {real} Latitude of the aircraft (degrees)
+//      * @param lon {real} Longitude of the aircraft (degrees)
+//      * @param alt {real} Altitude of the aircraft (meters)
+//      * @memberof module:InteractiveMap
+//      * @instance
+//      * @inner
+//      */
+//     constructor(layer: WorldWind.RenderableLayer = null, lat: number = cities.hampton.lat, lon: number = cities.hampton.lon, alt: number = default_aircraft_altitude) {
+//         const ZTHR: number = 4000;
+//         // Create the mesh's positions.
+//         let meshPositions = []; // Use a new positions array.
+//         meshPositions.push(new WorldWind.Position(lat, lon, alt)); // the mesh center
 
-        const meshRadius = 0.1;
-        const numRadialPositions = 16;
-        const step = 360 / numRadialPositions;
-        for (let angle = 0; angle < 360; angle += step) {
-            // this code draws rectangles necessary for rendering the side of the cylinder
-            let angleRadians = angle * WorldWind.Angle.DEGREES_TO_RADIANS;
-            let latitude = meshPositions[0].latitude + Math.sin(angleRadians) * meshRadius;
-            let longitude = meshPositions[0].longitude + Math.cos(angleRadians) * meshRadius;
-            meshPositions.push(new WorldWind.Position(latitude, longitude, alt + ZTHR / 2));
-            meshPositions.push(new WorldWind.Position(latitude, longitude, alt - ZTHR / 2));
-            let next_angle = angle + step;
-            let next_angleRadians = next_angle * WorldWind.Angle.DEGREES_TO_RADIANS;
-            let next_latitude = meshPositions[0].latitude + Math.sin(next_angleRadians) * meshRadius;
-            let next_longitude = meshPositions[0].longitude + Math.cos(next_angleRadians) * meshRadius;
-            meshPositions.push(new WorldWind.Position(next_latitude, next_longitude, alt - ZTHR / 2));
-            meshPositions.push(new WorldWind.Position(next_latitude, next_longitude, alt + ZTHR / 2));
-            meshPositions.push(new WorldWind.Position(latitude, longitude, alt + ZTHR / 2));
-        }
+//         const meshRadius: number = 0.1;
+//         const numRadialPositions: number = 16;
+//         const step: number = 360 / numRadialPositions;
+//         for (let angle = 0; angle < 360; angle += step) {
+//             // this code draws rectangles necessary for rendering the side of the cylinder
+//             const angleRadians: number = angle * WorldWind.Angle.DEGREES_TO_RADIANS;
+//             const latitude: number = meshPositions[0].latitude + Math.sin(angleRadians) * meshRadius;
+//             const longitude: number = meshPositions[0].longitude + Math.cos(angleRadians) * meshRadius;
+//             meshPositions.push(new WorldWind.Position(latitude, longitude, alt + ZTHR / 2));
+//             meshPositions.push(new WorldWind.Position(latitude, longitude, alt - ZTHR / 2));
+//             const next_angle: number = angle + step;
+//             const next_angleRadians: number = next_angle * WorldWind.Angle.DEGREES_TO_RADIANS;
+//             const next_latitude: number = meshPositions[0].latitude + Math.sin(next_angleRadians) * meshRadius;
+//             const next_longitude: number = meshPositions[0].longitude + Math.cos(next_angleRadians) * meshRadius;
+//             meshPositions.push(new WorldWind.Position(next_latitude, next_longitude, alt - ZTHR / 2));
+//             meshPositions.push(new WorldWind.Position(next_latitude, next_longitude, alt + ZTHR / 2));
+//             meshPositions.push(new WorldWind.Position(latitude, longitude, alt + ZTHR / 2));
+//         }
 
-        // Use the same attributes as before, except for the image source, which is now the custom image.
-        const meshAttributes = new WorldWind.ShapeAttributes(null);
-        meshAttributes.outlineColor = new WorldWind.Color(0, 0, 1, 0.6); // transparent blue
-        meshAttributes.interiorColor = new WorldWind.Color(0, 0, 1, 0.4); // transparent blue
-        meshAttributes.applyLighting = true;
-        // meshAttributes.imageSource = new WorldWind.ImageSource(canvas);
+//         // Use the same attributes as before, except for the image source, which is now the custom image.
+//         const meshAttributes = new WorldWind.ShapeAttributes(null);
+//         meshAttributes.outlineColor = new WorldWind.Color(0, 0, 1, 0.6); // transparent blue
+//         meshAttributes.interiorColor = new WorldWind.Color(0, 0, 1, 0.4); // transparent blue
+//         meshAttributes.applyLighting = true;
+//         // meshAttributes.imageSource = new WorldWind.ImageSource(canvas);
 
-        // Create the mesh indices.
-        let numIndices = meshPositions.length - 1;
-        let meshIndices = [];
-        for (let i = 1; i < numIndices; i++) {
-            meshIndices.push(0);
-            meshIndices.push(i);
-            meshIndices.push(i + 1);
-        }
-        // Close the circle.
-        meshIndices.push(0);
-        meshIndices.push(numIndices);
-        meshIndices.push(1);
+//         // Create the mesh indices.
+//         const numIndices: number = meshPositions.length - 1;
+//         const meshIndices: number[] = [];
+//         for (let i = 1; i < numIndices; i++) {
+//             meshIndices.push(0);
+//             meshIndices.push(i);
+//             meshIndices.push(i + 1);
+//         }
+//         // Close the circle.
+//         meshIndices.push(0);
+//         meshIndices.push(numIndices);
+//         meshIndices.push(1);
 
-        // Create the outline indices.
-        let outlineIndices = [];
-        for (let j = 1; j <= numIndices; j++) {
-            outlineIndices.push(j);
-        }
-        // Close the outline.
-        outlineIndices.push(1);
+//         // Create the outline indices.
+//         const outlineIndices: number[] = [];
+//         for (let j = 1; j <= numIndices; j++) {
+//             outlineIndices.push(j);
+//         }
+//         // Close the outline.
+//         outlineIndices.push(1);
 
-        // Create the mesh.
-        let mesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
-        mesh.outlineIndices = outlineIndices;
+//         // Create the mesh.
+//         const mesh: WorldWind.TriangleMesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
+//         mesh.outlineIndices = outlineIndices;
 
-        this.well_clear_volume = mesh;
-        // layer.addRenderable(this.well_clear_volume);
+//         this.well_clear_volume = mesh;
+//         // layer.addRenderable(this.well_clear_volume);
+//     }
+//     /**
+//      * @function <a name="WellClearVolume_hide">hide</a>
+//      * @description Hides the well clear volume.
+//      * @memberof module:InteractiveMap
+//      * @instance
+//      * @inner
+//      */
+//     hide(): void {
+//         this.well_clear_volume.enabled = false;
+//     }
+//     /**
+//      * @function <a name="WellClearVolume_reveal">hide</a>
+//      * @description Makes the well clear volume visible.
+//      * @memberof module:InteractiveMap
+//      * @instance
+//      * @inner
+//      */
+//     reveal(): void {
+//         this.well_clear_volume.enabled = true;
+//     }
+// }
+
+class LosSector {
+    protected sector: WorldWind.AbstractMesh;
+    protected layer: WorldWind.RenderableLayer;
+    protected getLosAltitude(altitude: number): number {
+        return colladaAltitude(altitude) - 100; // this is done to render los below the aircraft symbol
     }
     /**
-     * @function <a name="WellClearVolume_hide">hide</a>
-     * @description Hides the well clear volume.
+     * @function <a name="LosSector">LosSector</a>
+     * @description Constructor. Renders LoS regions.
+     * @param layer { WorldWind.RenderableLayer } wwd layer to be used for rendering the LoS region.
+     * @param pos { Position } Center of the conflict region
+     * @param opt Optional attributes: nmi (size of the region), opacity (opacity of the region), color (region color)
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    hide() {
-        this.well_clear_volume.enabled = false;
+    constructor(layer: WorldWind.RenderableLayer, pos: utils.LatLonAlt | serverInterface.LatLonAlt, opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
+        if (layer) {
+            this.layer = layer;
+            if (pos) {
+                opt = opt || {};
+                const nmi: number = (isNaN(opt.nmi)) ? 5 : opt.nmi;
+                const opacity: number = (isNaN(opt.nmi)) ? 0.2 : opt.opacity;
+                const color: { r: number, g: number, b: number } = opt.color || { r: 1, g: 0, b: 0 };
+
+                // const size: number = nmi / 60;
+                // const boundaries: WorldWind.Location[] = [
+                //     new WorldWind.Location(pos.lat + size, pos.lon + size),
+                //     new WorldWind.Location(pos.lat + size, pos.lon - size),
+                //     new WorldWind.Location(pos.lat - size, pos.lon - size),
+                //     new WorldWind.Location(pos.lat - size, pos.lon + size)
+                // ];
+
+                // const attributes = new WorldWind.ShapeAttributes(null);
+                // attributes.interiorColor = new WorldWind.Color(color.r, color.g, color.b, opacity);
+                // attributes.applyLighting = false;
+
+                // const conflictRegion: WorldWind.SurfacePolygon = new WorldWind.SurfacePolygon(boundaries, attributes);
+                // this.layer.addRenderable(conflictRegion);
+
+                const meshPositions = [];
+                const meshIndices = [];
+                const outlineIndices = [];
+                const meshRadius = nmi / 2 / 60; // nmi
+
+                const alt: number = (typeof pos.alt === "string")? +pos.alt : pos.alt;
+                const altitude: number = this.getLosAltitude(alt);
+
+                // flat piramid centered at the given position.
+                const latitude: number = (typeof pos.lat === "string")? +pos.lat : pos.lat;
+                const longitude: number = (typeof pos.lon === "string")? +pos.lon : pos.lon;
+                const center: WorldWind.Position = new WorldWind.Position(latitude, longitude, altitude);
+                meshPositions.push(center);
+                const nodes: WorldWind.Position[] = [
+                    new WorldWind.Position(meshPositions[0].latitude + meshRadius, meshPositions[0].longitude + meshRadius, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude + meshRadius, meshPositions[0].longitude - meshRadius, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude - meshRadius, meshPositions[0].longitude - meshRadius, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude - meshRadius, meshPositions[0].longitude + meshRadius, altitude)
+                ];
+                for (let i = 0; i < 4; i++) {
+                    meshPositions.push(nodes[i]);
+                    meshPositions.push(nodes[(i + 1) % 4]);
+                    meshPositions.push(center);
+                }
+
+                const numRadialPositions: number = meshPositions.length - 1;
+                // Create the mesh indices.
+                for (var i = 1; i < numRadialPositions; i++) {
+                    meshIndices.push(0);
+                    meshIndices.push(i);
+                    meshIndices.push(i + 1);
+                }
+                // Close the circle.
+                meshIndices.push(0);
+                meshIndices.push(numRadialPositions);
+                meshIndices.push(1);
+
+                // Create the outline indices.
+                for (var j = 1; j <= numRadialPositions; j++) {
+                    outlineIndices.push(j);
+                }
+                // Close the outline.
+                outlineIndices.push(1);
+
+                // Create the mesh's attributes. Light this mesh.
+                var meshAttributes = new WorldWind.ShapeAttributes(null);
+                // meshAttributes.outlineColor = WorldWind.Color.RED;
+                meshAttributes.interiorColor = new WorldWind.Color(color.r, color.g, color.b, opacity);
+                meshAttributes.applyLighting = false;
+
+                // Create the mesh.
+                var mesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
+                // mesh.outlineIndices = outlineIndices;
+                mesh.enabled = true;
+
+                // Add the mesh to a layer and the layer to the WorldWindow's layer list.    
+                this.sector = mesh;
+                layer.addRenderable(this.sector);
+            }
+        }
     }
     /**
-     * @function <a name="WellClearVolume_reveal">hide</a>
-     * @description Makes the well clear volume visible.
+     * @function <a name="LosSector_hide">hide</a>
+     * @description Hides the conflict region.
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    reveal() {
-        this.well_clear_volume.enabled = true;
+    hide(): void {
+        if (this.sector) {
+            this.sector.enabled = false;
+        }
+    }
+    /**
+     * @function <a name="LosSector_reveal">hide</a>
+     * @description Makes the conflict region visible.
+     * @memberof module:InteractiveMap
+     * @instance
+     * @inner
+     */
+    reveal(): void {
+        if (this.sector) {
+            this.sector.enabled = true;
+        }
+    }
+}
+
+class LosRegion {
+    protected region: LosSector[];
+    protected layer: WorldWind.RenderableLayer;
+    constructor (layer: WorldWind.RenderableLayer, region: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
+        if (layer) {
+            this.layer = layer;
+            if (region && region.length > 0) {
+                this.region = [];
+                for (let i = 0; i < region.length; i++) {
+                    this.region.push(new LosSector(this.layer, region[i], opt));
+                }
+            }
+        }
+    }
+    reveal () {
+        if (this.region) {
+            for (let i = 0; i < this.region.length; i++) {
+                this.region[i].reveal();
+            }
+        }
+    }
+    hide () {
+        if (this.region) {
+            for (let i = 0; i < this.region.length; i++) {
+                this.region[i].hide();
+            }
+        }
     }
 }
 
 class Aircraft {
-    position;//: utils.LatLonAlt;
-    velocity;//: utils.Vector3D;
+    protected position: utils.LatLonAlt;
+    protected velocity: utils.Vector3D;
     /**
      * @function <a name="Aircraft">Aircraft</a>
      * @description Constructor. Aircraft descriptor.
@@ -424,16 +575,13 @@ class Aircraft {
      * @instance
      * @inner
      */
-    constructor(lat = cities.hampton.lat, lon = cities.hampton.lon, alt = default_aircraft_altitude, vel = {
-        x: 0,
-        y: 0,
-        z: 0
-    }) {
+    constructor(lat: number, lon: number, alt: number, vel?: utils.Vector3D) {
         this.position = {
             lat: lat,
             lon: lon,
             alt: alt
         };
+        vel = vel || { x: 0, y: 0, z: 0 };
         this.velocity = vel;
     }
     /**
@@ -444,11 +592,11 @@ class Aircraft {
      * @instance
      * @inner
      */
-    setPosition(pos) {
+    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): Aircraft {
         if (pos) {
-            this.position.lat = (isNaN(parseFloat(pos.lat))) ? this.position.lat : parseFloat(pos.lat);
-            this.position.lon = (isNaN(parseFloat(pos.lon))) ? this.position.lon : parseFloat(pos.lon);
-            this.position.alt = (isNaN(parseFloat(pos.alt))) ? this.position.alt : parseFloat(pos.alt);
+            this.position.lat = (typeof pos.lat === "string") ? +pos.lat : pos.lat;
+            this.position.lon = (typeof pos.lon === "string") ? +pos.lon : pos.lon;
+            this.position.alt = (typeof pos.alt === "string") ? +pos.alt : pos.alt;
         }
         return this;
     }
@@ -460,11 +608,11 @@ class Aircraft {
      * @instance
      * @inner
      */
-    setVelocity(vel) {
+    setVelocity(vel: utils.Vector3D): Aircraft {
         if (vel) {
-            this.velocity.x = (isNaN(parseFloat(vel.x))) ? this.velocity.x : parseFloat(vel.x);
-            this.velocity.y = (isNaN(parseFloat(vel.y))) ? this.velocity.y : parseFloat(vel.y);
-            this.velocity.z = (isNaN(parseFloat(vel.z))) ? this.velocity.z : parseFloat(vel.z);
+            this.velocity.x = (isNaN(vel.x)) ? this.velocity.x : vel.x;
+            this.velocity.y = (isNaN(vel.y)) ? this.velocity.y : vel.y;
+            this.velocity.z = (isNaN(vel.z)) ? this.velocity.z : vel.z;
         }
         return this;
     }
@@ -477,7 +625,7 @@ class Aircraft {
      * @instance
      * @inner
      */
-    setPositionAndVelocity(pos, vel) {
+    setPositionAndVelocity(pos: utils.LatLonAlt, vel: utils.Vector3D): Aircraft {
         this.setPosition(pos);
         this.setVelocity(vel);
         return this;
@@ -490,9 +638,9 @@ class Aircraft {
      * @instance
      * @inner
      */
-    setAltitude(alt) {
-        if (alt && !isNaN(parseFloat(alt))) {
-            this.position.alt = parseFloat(alt);
+    setAltitude(alt: number): Aircraft {
+        if (alt && !isNaN(alt)) {
+            this.position.alt = alt;
         }
         return this;
     }
@@ -504,7 +652,7 @@ class Aircraft {
      * @instance
      * @inner
      */
-    getPosition() {
+    getPosition(): utils.LatLonAlt {
         return {
             lat: this.position.lat,
             lon: this.position.lon,
@@ -519,7 +667,7 @@ class Aircraft {
      * @instance
      * @inner
      */
-    getVelocity() {
+    getVelocity(): utils.Vector3D {
         return {
             x: this.velocity.x,
             y: this.velocity.y,
@@ -531,17 +679,20 @@ class Aircraft {
 // utility function, used to offset the label for collada aircraft
 // in 2D view, collada objects are artificially rendered closer to the ground otherwise they would not be rendered correctly in some scenarios,
 // as they tend to fall outside the fov of the navigator
-function colladaAltitude(alt) {
-    return alt / 10;
+function colladaAltitude(alt: number) {
+    return alt / 4;
 }
 class ColladaAircraft extends Aircraft {
-    wwd;
-    path;
-    layers;
-    colladaLoader;
-    rotationOffset; //: { xRotation: number, yRotation: number, zRotation: number };
-    flight;
-    well_clear_volume;
+    protected wwd: WorldWind.WorldWindow;
+    protected colladaLoader: WorldWind.ColladaLoader;
+    protected rotationOffset: { xRotation: number, yRotation: number, zRotation: number };
+    protected flight: WorldWind.ColladaScene;
+    protected layers: {
+        flight: WorldWind.RenderableLayer//
+        // well_clear_volume: WorldWind.RenderableLayer
+    };
+    protected well_clear_volume; // TODO: remove the attribute from this class?
+    protected nmiScale: number;
     /**
      * @function <a name="ColladaAircraft">ColladaAircraft</a>
      * @description Constructor. Uses a Collada model to creates an aircraft on the wwd map.
@@ -556,18 +707,17 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    constructor(wwd, lat, lon, alt, daaSymbol, cb) {
+    constructor(wwd: WorldWind.WorldWindow, lat: number, lon: number, alt: number, daaSymbol: string, cb: (aircraft: ColladaAircraft) => void) {
         super(lat, lon, alt);
         daaSymbol = daaSymbol || "daa-ownship";
 
         this.wwd = wwd;
-        this.path = [];
         this.layers = {
-            flight: new WorldWind.RenderableLayer("Ownship"), // Will render a cylinder representing the ownship well clear volume
-            well_clear_volume: new WorldWind.RenderableLayer("Ownship WCV") // Will render a cylinder representing the ownship well clear volume
+            flight: new WorldWind.RenderableLayer("Aircraft"), // This layers is used to render the aircraft
+            // well_clear_volume: new WorldWind.RenderableLayer("Well-Clear Volume") // This layer is used to render the well-clear volume TODO: move this visual element to DAA_Aircraft
         };
         wwd.addLayer(this.layers.flight);
-        wwd.addLayer(this.layers.well_clear_volume);
+        // wwd.addLayer(this.layers.well_clear_volume);
 
         this.colladaLoader = new WorldWind.ColladaLoader(new WorldWind.Position(lat, lon, alt));
         this.colladaLoader.init({
@@ -580,30 +730,42 @@ class ColladaAircraft extends Aircraft {
             yRotation: 0,
             zRotation: 0
         };
-        let _this = this;
+
+        this.nmiScale = 5; // default scale is 5NMI
+
         let colladaObj = colladaObjects[daaSymbol]; //colladaObjects.privateJet;
-        this.colladaLoader.load(colladaObj.fileName, function (colladaScene) {
+        this.colladaLoader.load(colladaObj.fileName, (colladaScene: WorldWind.ColladaScene) => {
             if (colladaScene) {
-                _this.flight = colladaScene;
-                _this.flight.scale = colladaObj.scale || 1;
-                _this.flight.displayName = "Aircraft";
-                // _this.flight.useTexturePaths = false; // use this option to force loading textures from the same directory of the collada file
-                _this.flight.altitudeMode = WorldWind.ABSOLUTE; // the alternative is RELATIVE_TO_GROUND;
-                _this.flight.xRotation = colladaObj.xRotation || 0;
-                _this.rotationOffset.xRotation = _this.flight.xRotation;
-                _this.flight.yRotation = colladaObj.yRotation || 0;
-                _this.rotationOffset.yRotation = _this.flight.yRotation;
-                _this.flight.zRotation = colladaObj.zRotation || 0;
-                _this.rotationOffset.zRotation = _this.flight.zRotation;
-                _this.flight.position = new WorldWind.Position(lat, lon, colladaAltitude(alt));
-                _this.layers.flight.addRenderable(_this.flight); // Add the Collada model to the renderable layer within a callback.
+                this.flight = colladaScene;
+                this.flight.scale = colladaObj.scale || 1;
+                this.flight.displayName = "Aircraft";
+                // this.flight.useTexturePaths = false; // use this option to force loading textures from the same directory of the collada file
+                this.flight.altitudeMode = WorldWind.ABSOLUTE; // the alternative is RELATIVE_TO_GROUND;
+                this.flight.xRotation = colladaObj.xRotation || 0;
+                this.rotationOffset.xRotation = this.flight.xRotation;
+                this.flight.yRotation = colladaObj.yRotation || 0;
+                this.rotationOffset.yRotation = this.flight.yRotation;
+                this.flight.zRotation = colladaObj.zRotation || 0;
+                this.rotationOffset.zRotation = this.flight.zRotation;
+                this.flight.position = new WorldWind.Position(lat, lon, colladaAltitude(alt));
+                this.layers.flight.addRenderable(this.flight); // Add the Collada model to the renderable layer within a callback.
+                // set scale
+                this.setScale(this.nmiScale);
+                // execute callback function, if any was provided to the constructor
                 if (cb && typeof cb === "function") {
-                    cb(_this);
+                    cb(this);
                 }
             } else {
                 console.error("Could not load collada object :/");
             }
         });
+    }
+    setVelocity(vel: utils.Vector3D): ColladaAircraft {
+        super.setVelocity(vel);
+        // rotate the aircraft accordingly
+        const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+        this.setHeading(deg);
+        return this;
     }
     /**
      * @function <a name="ColladaAircraft_setPosition">setPosition</a>
@@ -613,21 +775,25 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setPosition(pos) {
+    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): ColladaAircraft {
         if (this.flight) {
-            pos.lat = (isNaN(parseFloat(pos.lat))) ? this.flight.position.lat : parseFloat(pos.lat);
-            pos.lon = (isNaN(parseFloat(pos.lon))) ? this.flight.position.lon : parseFloat(pos.lon);
-            pos.alt = (isNaN(parseFloat(pos.alt))) ? this.flight.position.alt : parseFloat(pos.alt);
-            this.flight.position = new WorldWind.Position(pos.lat, pos.lon, colladaAltitude(pos.alt));
-            if (isNaN(parseFloat(pos.lat)) || isNaN(parseFloat(pos.lon))) {
-                console.error("lat/lon is NaN");
+            if (pos) {
+                pos.lat = (pos.lat !== undefined) ? 
+                    (typeof pos.lat === "string")? +pos.lat : pos.lat
+                    : this.flight.position.latitude; 
+                pos.lon = (pos.lon !== undefined) ? 
+                    (typeof pos.lon === "string")? +pos.lon : pos.lon
+                    : this.flight.position.longitude; 
+                pos.alt = (pos.alt !== undefined) ? 
+                    (typeof pos.alt === "string")? +pos.alt : pos.alt
+                    : this.flight.position.altitude; 
+                this.flight.position = new WorldWind.Position(pos.lat, pos.lon, colladaAltitude(pos.alt));
             }
-
-            if (this.well_clear_volume) {
-                this.well_clear_volume.hide();
-                this.path.push(this.well_clear_volume);
-            }
-            this.well_clear_volume = new WellClearVolume(this.layers.well_clear_volume, this.position.lat, this.position.lon, this.position.alt);
+            // if (this.well_clear_volume) {
+            //     this.well_clear_volume.hide();
+            //     this.path.push(this.well_clear_volume);
+            // }
+            // this.well_clear_volume = new WellClearVolume(this.layers.well_clear_volume, this.position.lat, this.position.lon, this.position.alt);
         }
         return this;
     }
@@ -638,7 +804,7 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    hide() {
+    hide(): ColladaAircraft {
         if (this.flight) {
             this.flight.enabled = false;
         }
@@ -651,7 +817,7 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    reveal() {
+    reveal(): ColladaAircraft {
         if (this.flight) {
             this.flight.enabled = true;
         }
@@ -665,13 +831,11 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setHeading(deg) {
-        if (deg) {
-            let val = parseFloat(deg);
-            if (!isNaN(val) && this.flight) {
-                this.flight.zRotation = this.rotationOffset.zRotation + val;
-                this.wwd.redraw();
-            }
+    setHeading(deg: number) {
+        const val = deg;
+        if (!isNaN(val) && this.flight) {
+            this.flight.zRotation = this.rotationOffset.zRotation + val;
+            this.wwd.redraw();
         }
         return this;
     }
@@ -685,7 +849,8 @@ class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setScale(NMI) {
+    setScale(NMI: number): ColladaAircraft {
+        this.nmiScale = NMI;
         if (this.flight) {
             this.flight.scale = colladaScale / 5 * NMI;
         }
@@ -699,21 +864,24 @@ class ColladaAircraft extends Aircraft {
 //  - velocity vector: represented using an arrow (arrow-up if aircraft is climbing, arrow-down if aircraft is descending, no arrow is shown if the aircraft is levelled)
 // The label color matches that of the daa symbol of the aircraft
 // The label is shown above the daa symbol if the altitude of the aircraft is greater than or equal the ownship's altitude, below otherwise.
-function createLabel(aircraft, ownship) {
-    function fixed2(val) {
+function createLabel(aircraft: Aircraft, ownship: Aircraft, opt?: { units?: string }): { text: string, position: WorldWind.Position, offsetX: number, offsetY: number } {
+    function fixed2(val: number): string {
         if (val > 0) {
-            return (val < 10) ? "0" + val : val;
+            return (val < 10) ? "0" + val : val.toString();
         }
-        return (val > -10) ? "-0" + (-val) : val;
+        return (val > -10) ? "-0" + (-val) : val.toString();
     }
-    let label = {
+    opt = opt || {};
+    const label = {
         text: "",
-        position: new WorldWind.Position(aircraft.position.lat, aircraft.position.lon, aircraft.position.alt),
+        position: new WorldWind.Position(aircraft.getPosition().lat, aircraft.getPosition().lon, colladaAltitude(aircraft.getPosition().alt)),
         offsetX: 18,
         offsetY: 0
     };
     // indicate altitude, in feet
-    let val = Math.trunc(utils.meters2feet(ownship.position.alt - aircraft.position.alt) / 1000);
+    let val = (opt.units === "meters") ?
+                    Math.trunc(utils.meters2feet(aircraft.getPosition().alt - ownship.getPosition().alt) / 100)
+                    : Math.trunc((aircraft.getPosition().alt - ownship.getPosition().alt) / 100);
     if (val === 0) {
         label.text = " 00";
         label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
@@ -725,31 +893,38 @@ function createLabel(aircraft, ownship) {
         label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
     }
     // indicate whether the aircraft is climbing or descending, based on the velocity vector
-    if (aircraft.velocity.z > 0) {
-        // add arrow up before label
-        label.text += arrows["white-up"];
-    } else if (aircraft.velocity.z < 0) {
-        // add arrow down before label
-        label.text += arrows["white-down"];
+    const THRESHOLD: number = 50; // Any climb or descent smaller than this threshold show as level flight (no arrow)
+    if (Math.abs(aircraft.getVelocity().z) >= THRESHOLD) {
+        if (aircraft.getVelocity().z > 0) {
+            // add arrow up before label
+            label.text += arrows["white-up"];
+        } else if (aircraft.getVelocity().z < 0) {
+            // add arrow down before label
+            label.text += arrows["white-down"];
+        }
     }
-    console.log(label);
+    // console.log(label);
     return label;
 }
 
 class DAA_Aircraft extends Aircraft {
-    symbol;//: string;
-    name;//: string;
-    reference;
-    _loaded;//: number;
-    aircraft;
-    aircraftSymbols;
-    symbolColor;
-    text;//: {
-    //     text: string,
-    //     position;
-    //     attributes;
-    //     enabled;
-    // };
+    protected symbol: string;
+    protected name: string;
+    protected reference: Aircraft;
+    protected _loaded: number;
+    protected aircraft: ColladaAircraft;
+    protected aircraftSymbols: { "daa-ownship": ColladaAircraft, "daa-alert": ColladaAircraft, "daa-target": ColladaAircraft, "daa-traffic-avoid": ColladaAircraft, "daa-traffic-monitor": ColladaAircraft };
+    protected readonly symbolColor = {
+        "daa-ownship": WorldWind.Color.CYAN,
+        "daa-alert": WorldWind.Color.RED, // this is also called "warning"
+        "daa-target": WorldWind.Color.WHITE,
+        "daa-traffic-avoid": WorldWind.Color.YELLOW, // this is also called "corrective"
+        "daa-traffic-monitor": WorldWind.Color.YELLOW // this is also called "preventive"
+    };
+    protected text: WorldWind.GeographicText;
+    protected textLayer: WorldWind.RenderableLayer;
+    protected los: LosRegion;
+    protected losLayer: WorldWind.RenderableLayer;
     /**
      * @function <a name="DAA_Aircraft">DAA_Aircraft</a>
      * @description Constructor. Creates an aircraft rendered using the standard daa symbols ("daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship").
@@ -772,83 +947,107 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    constructor(wwd, desc, cb) {
+    constructor(wwd: WorldWind.WorldWindow, desc: { symbol?: string, name?: string, lat?: number, lon?: number, alt?: number, reference?: Aircraft }, cb?: (ownship: Aircraft) => void) {
+        super((desc) ? desc.lat :  null, (desc) ? desc.lon : null, (desc) ? desc.alt : null);
         desc = desc || {};
         desc.symbol = desc.symbol || "daa-ownship";
         desc.name = desc.name || "";
-        super(desc.lat, desc.lon, desc.alt);
         this.symbol = desc.symbol;
         this.name = desc.name;
         this.reference = desc.reference;
         this._loaded = 0;
-        let _this = this;
+        this.losLayer = new WorldWind.RenderableLayer(`LoS Layer`) // This layer is used to render the conflict regions between this aircraft and the ownship
+        wwd.addLayer(this.losLayer);
 
-        function addLabel(_this) {
-            if (_this.symbol && !(config.hideOwnshipLabel && _this.symbol === "daa-ownship")) {
-                _this.textLayer = new WorldWind.RenderableLayer("Aircraft data");
-                let aircraftLabel = createLabel(_this, _this.reference);
-                _this.text = new WorldWind.GeographicText(aircraftLabel.position, aircraftLabel.text);
-                _this.text.attributes = new WorldWind.TextAttributes(null);
-                _this.text.attributes.color = _this.symbolColor[_this.symbol];
-                _this.text.attributes.font.weight = "bold";
-                _this.text.attributes.font.size = 18;
-                _this.text.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
-                _this.text.attributes.depthTest = true;
-                _this.text.declutterGroup = 0;
-                _this.textLayer.addRenderable(_this.text);
-                wwd.addLayer(_this.textLayer);
-            }
-        }
-
-        function collada_cb(aircraft) {
-            aircraft.hide();
-            _this._loaded++;
-            if (_this._loaded === 5) {
-                _this.aircraft = _this.aircraftSymbols[_this.symbol];
-                _this.aircraft.reveal();
-                addLabel(_this);
-                if (cb && typeof cb === "function") {
-                    cb(_this);
-                }
-            }
-        }
         this.aircraftSymbols = {
-            "daa-ownship": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-ownship", collada_cb),
-            "daa-alert": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-alert", collada_cb),
-            "daa-target": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-target", collada_cb),
-            "daa-traffic-avoid": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-avoid", collada_cb),
-            "daa-traffic-monitor": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-monitor", collada_cb)
-        };
-        this.symbolColor = {
-            "daa-ownship": WorldWind.Color.CYAN,
-            "daa-alert": WorldWind.Color.RED, // this is also called "warning"
-            "daa-target": WorldWind.Color.WHITE,
-            "daa-traffic-avoid": WorldWind.Color.YELLOW, // this is also called "corrective"
-            "daa-traffic-monitor": WorldWind.Color.YELLOW // this is also called "preventive"
+            "daa-ownship": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-ownship", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-alert": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-alert", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-target": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-target", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-traffic-avoid": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-avoid", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-traffic-monitor": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-monitor", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
         };
     }
+    private addLabel(wwd: WorldWind.WorldWindow) {
+        if (this.symbol && !(config.hideOwnshipLabel && this.symbol === "daa-ownship")) {
+            this.textLayer = new WorldWind.RenderableLayer("Aircraft data");
+            let aircraftLabel = createLabel(this, this.reference);
+            this.text = new WorldWind.GeographicText(aircraftLabel.position, aircraftLabel.text);
+            this.text.attributes = new WorldWind.TextAttributes(null);
+            this.text.attributes.color = this.symbolColor[this.symbol];
+            this.text.attributes.font.weight = "bold";
+            this.text.attributes.font.size = 18;
+            this.text.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
+            this.text.attributes.depthTest = true;
+            this.text.declutterGroup = 0;
+            this.textLayer.addRenderable(this.text);
+            wwd.addLayer(this.textLayer);
+        }
+    }
+    private collada_cb(aircraft: ColladaAircraft, wwd: WorldWind.WorldWindow, cb: (aircraf: DAA_Aircraft) => void) {
+        aircraft.hide();
+        this._loaded++;
+        if (this._loaded === 5) {
+            this.aircraft = this.aircraftSymbols[this.symbol];
+            this.aircraft.reveal();
+            this.addLabel(wwd);
+            const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            this.setHeading(deg);
+            if (cb && typeof cb === "function") {
+                cb(this);
+            }
+        }
+    }
     /**
-     * @function <a name="DAA_Aircraft_selectSymbolByName">selectSymbolByName</a>
+     * @function <a name="DAA_Aircraft_setSymbol">setSymbol</a>
      * @description Sets the daa symbol to be used for the aircraft.
-     * @param daaSymbol {String} daa symbol, one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship)</li>
+     * @param daaSymbol {String|number} string is for daa symbols, one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship), number is for alert (0 = target, 1 = monitor, 2 = avoid, 3 = alert)</li>
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    selectSymbolByName(daaSymbol = "daa-target") {
-        if (!this.aircraft) {
-            console.log("Warning: still loading DAA_Aircraft symbols... :/");
-            this.symbol = daaSymbol; // the symbol will be selected when the loading process completes
-        } else {
-            if (daaSymbol !== this.symbol) {
-                this.aircraft.hide(); // hide old symbol
-                this.aircraft = this.aircraftSymbols[daaSymbol];
-                this.aircraft.reveal(); // reveal new symbol
-                this.symbol = daaSymbol;
-                this.refreshLabel();
-            } // else do nothing, the symbol is the same
+    setSymbol(daaSymbol: string | number) {
+        if (daaSymbol) {
+            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : this._alert2symbol(+daaSymbol);
+            if (symbol) {
+                if (!this.aircraft) {
+                    // console.log("Warning: still loading DAA_Aircraft symbols... :/");
+                    this.symbol = symbol; // the symbol will be selected when the loading process completes
+                } else {
+                    if (daaSymbol !== this.symbol) {
+                        this.aircraft.hide(); // hide old symbol
+                        this.aircraft = this.aircraftSymbols[daaSymbol];
+                        this.aircraft.reveal(); // reveal new symbol
+                        this.symbol = symbol;
+                        this.refreshLabel();
+                    } // else do nothing, the symbol is the same
+                }
+            } else {
+                console.error("Error: unrecognised symbol name ", daaSymbol);
+            }
         }
         return this;
+    }
+    setLabel(name: string, reference?: Aircraft) {
+        if (name) {
+            this.name = name;
+        }
+        if (reference) {
+            this.reference = reference;
+        }
+        this.refreshLabel();
+        return this;
+    }
+    _alert2symbol(daaAlert: number) {
+        switch (daaAlert) {
+            case 1:
+                return "daa-traffic-avoid";
+            case 2:
+                return "daa-traffic-monitor";
+            case 3:
+                return "daa-alert";
+            default: // return "daa-target"
+        }
+        return "daa-target";
     }
     /**
      * @function <a name="DAA_Aircraft_selectSymbolByAlert">selectSymbolByAlert</a>
@@ -862,19 +1061,18 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    selectSymbolByAlert(daaAlert) {
-        let id = parseInt(daaAlert);
-        switch (id) {
+    selectSymbolByAlert(daaAlert: number) {
+        switch (daaAlert) {
             case 1:
-                return this.selectSymbolByName("daa-traffic-avoid");
+                return this.setSymbol("daa-traffic-avoid");
             case 2:
-                return this.selectSymbolByName("daa-traffic-monitor");
+                return this.setSymbol("daa-traffic-monitor");
             case 3:
-                return this.selectSymbolByName("daa-alert");
+                return this.setSymbol("daa-alert");
             default:
-                return this.selectSymbolByName("daa-target");
+                //return this.setSymbol("daa-target");
         }
-        return this;
+        return this.setSymbol("daa-target");
     }
     /**
      * @function <a name="DAA_Aircraft_refreshLabel">refreshLabel</a>
@@ -891,6 +1089,10 @@ class DAA_Aircraft extends Aircraft {
             this.text.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
             this.text.text = aircraftLabel.text;
         }
+        if (this.velocity) {
+            const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            this.setHeading(deg);
+        }
         return this;
     }
     /**
@@ -901,13 +1103,13 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setPosition(pos) {
+    setPosition(pos: utils.LatLonAlt, reference?: Aircraft): DAA_Aircraft {
         super.setPosition(pos);
         Object.keys(this.aircraftSymbols).forEach(symbol => {
-            this.aircraftSymbols[symbol].setPosition(pos);
+            this.aircraftSymbols[symbol].setPosition(pos, reference);
         });
         this.refreshLabel();
-        console.log(this.name, this.position);
+        // console.log(this.name, this.position);
         return this;
     }
     /**
@@ -917,7 +1119,7 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    hide() {
+    hide(): DAA_Aircraft {
         if (this.aircraft) {
             this.aircraft.hide();
             if (this.text) {
@@ -933,11 +1135,15 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    reveal() {
+    reveal(): DAA_Aircraft {
         if (this.aircraft) {
             this.aircraft.reveal();
             if (this.text) {
                 this.text.enabled = true;
+            }
+            if (this.velocity) {
+                const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+                this.setHeading(deg);
             }
         }
         return this;
@@ -950,7 +1156,7 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setHeading(deg) {
+    setHeading(deg: number): DAA_Aircraft {
         Object.keys(this.aircraftSymbols).forEach(symbol => {
             this.aircraftSymbols[symbol].setHeading(-deg); // changing sign to the value because rotation of the aircraft is clockwise
         });
@@ -964,16 +1170,43 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setScale(NMI) {
+    setScale(NMI: number): DAA_Aircraft {
         Object.keys(this.aircraftSymbols).forEach(symbol => {
             this.aircraftSymbols[symbol].setScale(NMI);
         });
         return this;
     }
+    /**
+     * @function <a name="ColladaAircraft_setLoS">setLoS</a>
+     * @description Renders conflict regions betweeen the current aircraft and the ownship. This function should be used only when the current aircraft is an intruder.
+     * @memberof module:InteractiveMap
+     * @instance
+     * @inner
+     */
+    setLoS(region: utils.LatLonAlt[] | serverInterface.LatLonAlt[]): DAA_Aircraft {
+        region = region || [];
+        if (this.losLayer && region) {
+            if (this.los) {
+                this.los.hide();
+                delete this.los;
+            }
+            this.los = new LosRegion(this.losLayer, region);
+            this.los.reveal();
+        }
+        return this;
+    }
+    revealLoS(): DAA_Aircraft {
+        this.los.reveal();
+        return this;
+    }
+    hideLoS(): DAA_Aircraft {
+        this.los.reveal();
+        return this;
+    }
 }
 
 // utility function, creates a wwd terrain layer
-function _get_terrain(t) {
+function _get_terrain(t: string): WorldWind.RenderableLayer {
     if (t === "BMNG") {
         return new WorldWind.BMNGLayer(); // terrain, low res
     } else if (t === "BMNGOne") {
@@ -985,24 +1218,27 @@ function _get_terrain(t) {
     } else if (t === "BingAerialWithLabels") {
         return new WorldWind.BingAerialWithLabelsLayer(null); // terrain, high res with labels
     } else if (t === "OpenStreetMap") {
-        // return new WorldWind.OpenStreetMapImageLayer();
+        return new WorldWind.OpenStreetMapImageLayer();
+    } else if (t === "OpenStreetMap-Hampton") {
         return new OpenStreetMapRestLayer();
     }
     return new WorldWind.BingRoadsLayer(); // plain map with labels
 }
 
 class DAA_Airspace {
-    offlineMap;
-    wwd;
-    nmi;//: number;
-    _ownship;
-    _traffic;//: any[];
-    atmosphereLayer;
+    protected offlineMap: string;
+    protected wwd: WorldWind.WorldWindow;
+    protected nmi: number;
+    protected _ownship: DAA_Aircraft;
+    protected _traffic: DAA_Aircraft[];
+    protected atmosphereLayer: WorldWind.RenderableLayer;
+    protected losLayer: WorldWind.RenderableLayer;
+    protected godsView: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
      * @description Constructor. Creates a virtual airspace, including a map and traffic information.
      * @param opt {Object} Configuration options for the airspace.
-     *          <li>ownship (Object({ lat: real, lon: real, alt: real})): ownship position, given in the form { lat: real, lon: real, alt: real } (default lat/lon: Hampton, VA, USA; default altitude 1000 meters) </li>
+     *          <li>ownship (Object({ lat: real, lon: real, alt: real})): ownship position, given in the form { lat: real, lon: real, alt: real } (default lat/lon: Hampton, VA, USA; default altitude 0 meters) </li>
      *          <li>traffic (Array of Object({ lat: real, lon: real, alt: real})): position of other aircraft (default is null)</li>
      *          <li>offlineMap (String): folder storing BMNG offline maps, downloaded from the <a href="http://worldwindserver.net/webworldwind/WebWorldWindStandaloneData.zip" target=_blank>http://worldwindserver.net</a></li>
      *          <li>terrain (String): terrain type, one of "BMNG" (terrain, low res), "BMNGOne" (terrain, low res), "BMNGLandsat" (terrain, low res), "BingAerial" (terrain, high res), "BingAerialWithLabels" (terrain, high res), "BingRoads" (map, high res)</li>
@@ -1014,22 +1250,25 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    constructor(opt) {
+    constructor(opt?: { ownship?: utils.LatLonAlt, traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[], 
+                        canvas?: string, shader?: number, godsView?: boolean, offlineMap?: string, terrain?: string, atmosphere?: boolean, los?: boolean }) {
         opt = opt || {};
-        opt.ownship = opt.ownship || {};
-        opt.ownship.lat = opt.ownship.lat || cities.hampton.lat;
-        opt.ownship.lon = opt.ownship.lon || cities.hampton.lon;
-        opt.ownship.alt = opt.ownship.alt || 1000;
+        opt.ownship = opt.ownship || {
+            lat: cities.hampton.lat,
+            lon: cities.hampton.lon,
+            alt: 0
+        };
         opt.traffic = opt.traffic || [];
         opt.canvas = opt.canvas || "canvasOne";
         opt.shader = (isNaN(+opt.shader)) ? 0.4 : +opt.shader;
+        this.godsView = !!opt.godsView;
         this.offlineMap = opt.offlineMap;
 
         // create worldwind view in the canvas
         this.wwd = new WorldWind.WorldWindow(opt.canvas);
 
         this.wwd.surfaceOpacity = 0.999; // this should reduce flickering when loading tiles, see https://github.com/NASAWorldWind/WebWorldWind/issues/353
-        this.wwd.verticalExaggeration = 0; // 0 is flat world. A value of 1 will make it 3D
+        this.wwd.verticalExaggeration = (this.godsView) ? 1 : 0; // 0 is flat world. A value of 1 will make it 3D
         this.nmi = 5; // default eye view
 
         // Add map layers to worldwind.
@@ -1056,8 +1295,8 @@ class DAA_Airspace {
             alt: opt.ownship.alt,
             symbol: "daa-ownship",
             name: "ownship"
-        }, function (ownship) {
-            if (config.hideOwnshipSymbol) {
+        }, (ownship: DAA_Aircraft) => {
+            if (!this.godsView) {
                 ownship.hide();
             }
         });
@@ -1071,7 +1310,7 @@ class DAA_Airspace {
         // Create atmosphere layer
         if (opt.atmosphere) {
             this.atmosphereLayer = new WorldWind.AtmosphereLayer();
-            let timestamp = Date.now(); // The current date will be given to initialize the simulation of the sun postion.
+            const timestamp = Date.now(); // The current date will be given to initialize the simulation of the sun postion.
             this.atmosphereLayer.time = new Date(timestamp); // Atmosphere layer requires a date to simulate the Sun position at that time.
             this.wwd.addLayer(this.atmosphereLayer);
         }
@@ -1085,31 +1324,46 @@ class DAA_Airspace {
         this.wwd.navigator.lookAtLocation.latitude = opt.ownship.lat;
         this.wwd.navigator.lookAtLocation.longitude = opt.ownship.lon;
 
-        // add event listener for mouse wheel events -- necessary for resizing traffic symbols when zooming the map
+        // attach autoscale
         this.wwd.addEventListener("wheel", () => {
-            const NMI = this.wwd.navigator.range / scaleFactor;
-            console.log("updating scale factor to " + NMI + "NMI");
-            if (this._traffic) {
-                this._traffic.forEach(aircraft => {
-                    aircraft.setScale(NMI);
-                });
-            }
-            if (this._ownship) {
-                this._ownship.setScale(NMI);
-            }
+            this.autoScale();
         });
         
+        // set 2D view
         this.view2D();
     }
+    godsViewOn() {
+        this.godsView = true;
+    }
+    godsViewOff() {
+        this.godsView = false;
+    }
     /**
-     * @function <a name="DAA_Airspace_setZoomLevel">setZoomLevel</a>
-     * @description Sets the zoom level of the airspace.
+     * Utility function, adds event listener for mouse wheel events -- necessary for resizing traffic symbols when zooming the map
+     * @memberof module:InteractiveMap
+     * @instance
+     * @inner
+     */
+    autoScale() {
+        const NMI = this.wwd.navigator.range / scaleFactor;
+        // console.log("updating scale factor to " + NMI + "NMI");
+        if (this._traffic) {
+            this._traffic.forEach(aircraft => {
+                aircraft.setScale(NMI);
+            });
+        }
+        if (this._ownship) {
+            this._ownship.setScale(NMI);
+        }
+    }
+    /**
+     * Sets the zoom level of the airspace.
      * @param NMI {real} Zoom level, given in nautical miles. The map is resized so that the diagonal size of the map corresponds to the provided NMI value.
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    setZoomLevel(NMI) {
+    setZoomLevel(NMI: number) {
         this.nmi = NMI || this.nmi;
         // wwd.navigator.range is the diagonal size of the wwd map displayed in the canvas.
         this.wwd.navigator.range = NMI * scaleFactor;
@@ -1131,7 +1385,7 @@ class DAA_Airspace {
         this.wwd.navigator.range = this.nmi; //64e4;//16e4;
         this.wwd.navigator.tilt = 0; // 0 degrees tilt
         // this.wwd.navigator.fieldOfView = 180;
-        console.log(this.wwd.navigator);
+        // console.log(this.wwd.navigator);
         // this.wwd.redraw();
         return this;
     }
@@ -1151,15 +1405,19 @@ class DAA_Airspace {
     /**
      * @function <a name="DAA_Airspace_recenter">recenter</a>
      * @description Centers the map on the ownship position.
+     * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    recenter() {
-        let pos = this._ownship.getPosition();
-        this.wwd.navigator.lookAtLocation.latitude = pos.lat;
-        this.wwd.navigator.lookAtLocation.longitude = pos.lon;
-        this.wwd.redraw();
+    recenter(pos: { lat: number, lon: number }) {
+        if (pos) {
+            if (pos.lat !== undefined) { this.wwd.navigator.lookAtLocation.latitude = pos.lat; }
+            if (pos.lon !== undefined) { this.wwd.navigator.lookAtLocation.longitude = pos.lon; }
+            this.wwd.redraw();
+        } else {
+            console.error("Unable to recenter map -- position is null :/");
+        }
         return this;
     }
     /**
@@ -1169,19 +1427,36 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    render() {
+    render(): DAA_Airspace {
+        // redraw airspace
         this.wwd.redraw();
         return this;
     }
     /**
      * @function <a name="DAA_Airspace_goTo">goTo</a>
-     * @description Moves the ownship to a given location and re-centers the map to that location.
-     * @param pos {Object({ lat: real, lon: real })} New position of the ownship.
+     * @description Centers the map to a given location. The ownship position is kept unchanged.
+     * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    goTo(pos) {
+    goTo(pos: { lat: number, lon: number }): DAA_Airspace {
+        if (pos) {
+            this.recenter(pos);
+        } else {
+            console.error("Incorrect position :/ ", pos);
+        }
+        return this;
+    }
+    /**
+     * @function <a name="DAA_Airspace_setOwnshipPosition">setOwnshipPosition</a>
+     * @description Sets the ownship position to a given location.
+     * @param pos {Object({ lat: real, lon: real, alt: real })} New position of the ownship.
+     * @memberof module:InteractiveMap
+     * @instance
+     * @inner
+     */
+    setOwnshipPosition(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): DAA_Airspace {
         if (pos) {
             if (typeof pos === "string") {
                 // remove white spaces in the name and make all small letters
@@ -1194,11 +1469,23 @@ class DAA_Airspace {
                     console.error("Could not find location " + location + " :((");
                 }
             } else {
-                this._ownship.setPosition(pos);
+                const position: utils.LatLonAlt = {
+                    alt: (typeof pos.alt === "string") ? +pos.alt : pos.alt,
+                    lat: (typeof pos.lat === "string") ? +pos.lat : pos.lat,
+                    lon: (typeof pos.lon === "string") ? +pos.lon : pos.lon,
+                }
+                this._ownship.setPosition(position);
             }
-            return this.recenter();
+            this._ownship.refreshLabel();
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
+        }
+        return this;
+    }
+    setOwnshipVelocity(v: utils.Vector3D): DAA_Airspace {
+        if (v) {
+            this._ownship.setVelocity(v);
+            this._ownship.refreshLabel();
         }
         return this;
     }
@@ -1212,7 +1499,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setHeading(deg, opt) {
+    setHeading(deg: number, opt?: { nrthup?: boolean}): DAA_Airspace {
         opt = opt || {};
         this.wwd.navigator.heading = deg;
         if (!opt.nrthup) {
@@ -1229,7 +1516,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    getHeading() {
+    getHeading(): number {
         return this.wwd.navigator.heading;
     }
     /**
@@ -1246,7 +1533,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    getTraffic() {
+    getTraffic(): DAA_Aircraft[] {
         return this._traffic;
     }
     /**
@@ -1254,44 +1541,45 @@ class DAA_Airspace {
      * @desc Updates traffic information.
      * @param traffic {Array(TrafficDescriptors)} Traffic information, as an array of traffic descriptors.
      *              Each traffic descriptor is an object with the following attributes:
-     *              <li>lat (real): latitudes</li>
-     *              <li>lon (real): longitude</li>
-     *              <li>alt (real): altitude</li>
+     *              <li>s: {lat: real, lon: real, alt: real} position of the aircraft</li>
+     *              <li>v: {x: real, y: real, z: real} velocity vector</li>
      *              <li>symbol (String): one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship"</li>
      *              <li>name (String): unique traffic identifier</li>
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    setTraffic(traffic) {
+    setTraffic(traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
+        if (traffic.length !== this._traffic.length) {
+            this._traffic.forEach((aircraft) => {
+                // TODO: is there a way to remove collada objects from the scene?
+                aircraft.hide();
+            });
+            this._traffic = [];
+        }
         if (traffic && traffic.length > 0) {
             for (let i = 0; i < traffic.length; i++) {
                 if (i < this._traffic.length) {
-                    this._traffic[i].setPosition({
+                    this._traffic[i].setPositionAndVelocity(traffic[i].s, traffic[i].v);
+                    this._traffic[i].setLabel(traffic[i].name);
+                    this._traffic[i].setSymbol(traffic[i].symbol);
+                } else {
+                    const aircraft = new DAA_Aircraft(this.wwd, {
                         lat: traffic[i].s.lat,
                         lon: traffic[i].s.lon,
                         alt: traffic[i].s.alt,
-                        symbol: (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ?
-                            traffic[i].symbol : this._traffic[i].symbol,
+                        symbol: (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? 
+                            traffic[i].symbol : "daa-target",
                         name: (traffic[i].name !== null || traffic[i].name !== undefined) ?
-                            traffic[i].name : this._traffic[i].name
-                    }, {
-                        ownship: this._ownship
+                            traffic[i].name : "traffic-" + i,
+                        reference: this._ownship
                     });
-                } else {
-                    this._traffic.push(
-                        new DAA_Aircraft(this.wwd, {
-                            lat: traffic[i].s.lat,
-                            lon: traffic[i].s.lon,
-                            alt: traffic[i].s.alt,
-                            symbol: traffic[i].symbol || "daa-target",
-                            name: "target" + i,
-                            reference: this._ownship
-                        })
-                    );
+                    aircraft.setVelocity(traffic[i].v)
+                    this._traffic.push(aircraft);
                 }
             }
         }
+        this.autoScale();
         return this;
     }
     /**
@@ -1302,38 +1590,35 @@ class DAA_Airspace {
      *       If a different symbol needs to be rendered, use <a href="DAA_Airspace_setTraffic">setTraffic</a>.
      * @param traffic {Array(TrafficDescriptors)} Traffic information, as an array of traffic descriptors.
      *              Each traffic descriptor is an object with the following attributes:
-     *              <li>lat (real): latitudes</li>
-     *              <li>lon (real): longitude</li>
-     *              <li>alt (real): altitude</li>
+     *              <li>s (LatLonAlt): lat lon alt</li>
+     *              <li>v (Vector3D): x y z</li>
      *              <li>symbol (String): one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship"</li>
      *              <li>name (String): unique traffic identifier</li>
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    setTrafficPosition(traffic) {
+    setTrafficPosition(traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
         if (traffic && traffic.length > 0) {
             for (let i = 0; i < traffic.length; i++) {
                 if (i < this._traffic.length) {
                     if (typeof traffic[i].s === "object") {
-                        this._traffic[i].setPosition(traffic[i].s, {
-                            ownship: this._ownship
-                        });
+                        this._traffic[i].setPosition(traffic[i].s, this._ownship);
                     }
                     if (typeof traffic[i].v === "object") {
                         this._traffic[i].setVelocity(traffic[i].v);
                     }
                 } else {
-                    this._traffic.push(
-                        new DAA_Aircraft(this.wwd, {
-                            lat: traffic[i].s.lat,
-                            lon: traffic[i].s.lon,
-                            alt: traffic[i].s.alt,
-                            symbol: "daa-target",
-                            name: "target" + i,
-                            reference: this._ownship
-                        })
-                    );
+                    const aircraft = new DAA_Aircraft(this.wwd, {
+                        lat: traffic[i].s.lat,
+                        lon: traffic[i].s.lon,
+                        alt: traffic[i].s.alt,
+                        symbol: "daa-target",
+                        name: `target${i}`,
+                        reference: this._ownship
+                    });
+                    aircraft.setVelocity(traffic[i].v);
+                    this._traffic.push(aircraft);
                 }
             }
         }
@@ -1348,7 +1633,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setTrafficSymbolsByAlert(alerts) {
+    setTrafficSymbolsByAlert(alerts: number[]): DAA_Airspace {
         if (alerts && alerts.length > 0) {
             for (let i = 0; i < alerts.length && i < this._traffic.length; i++) {
                 this._traffic[i].selectSymbolByAlert(alerts[i]);
@@ -1364,7 +1649,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    hideTraffic() {
+    hideTraffic(): DAA_Airspace {
         this._traffic.forEach(function (traffic) {
             traffic.hide();
         });
@@ -1377,24 +1662,44 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    revealTraffic() {
-        this._traffic.forEach(function (traffic) {
+    revealTraffic(): DAA_Airspace {
+        this._traffic.forEach((traffic) => {
             traffic.reveal();
         });
         return this.render();
     }
+    setLoS (regions: serverInterface.DAALosRegion[]): DAA_Airspace {
+        this._traffic.forEach((traffic, index) => {
+            // FIXME: use aircraft ID to get the regions
+            if (index < regions.length) {
+                const region: serverInterface.DAALosRegion = regions[index];
+                if (region && region.sectors) {
+                    const reg: utils.LatLonAlt[] = region.sectors.filter(reg => {
+                        return !!reg.los;
+                    }).map(reg => {
+                        return { lat: +reg.lat, lon: +reg.lon, alt: +reg.alt };
+                    });
+                    console.log(traffic.getPosition());
+                    console.log(regions);
+                    console.log(reg);
+                    traffic.setLoS(reg);
+                }
+            }
+        });
+        return this;
+    }
 }
 
-require("daa-displays/templates/daa-map-templates.js");
+// require("daa-displays/templates/daa-map-templates.js");
 // const mapTemplate = require("text!widgets/daa-displays/templates/daa-map.handlebars");
 
 export class InteractiveMap {
-    id;//: string;
-    heading;//: number;
-    pos;//: { lat: number, lon: number };
-    trafficPosition;//: any[];
-    wwd;
-    div;//: HTMLDivElement;
+    id: string;
+    heading: number;
+    pos: utils.LatLonAlt;
+    trafficPosition: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[];
+    wwd: DAA_Airspace;
+    div: HTMLElement;
     /**
      * @function <a name="InteractiveMap">InteractiveMap</a>
      * @description Constructor.
@@ -1410,13 +1715,13 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    constructor(id, coords, opt) {
+    constructor(id: string, coords: { top?: number, left?: number, width?: number, height?: number}, opt?) {
         opt = opt || {};
         this.id = id;
         this.heading = 0; // default heading is 0 deg (i.e., pointing north)
         this.pos = opt.pos || cities.hampton;
         this.trafficPosition = [];
-
+        
         coords = coords || {};
         coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
         coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
@@ -1435,7 +1740,9 @@ export class InteractiveMap {
             canvas: this.id + "-canvas",
             offlineMap: opt.offlineMap,
             terrain: opt.terrain,
-            atmosphere: opt.atmosphere
+            atmosphere: opt.atmosphere,
+            godsView: opt.godsView,
+            los: opt.los
         });
         this.wwd.setHeading(this.heading);
         this.wwd.setZoomLevel(5); // NMI
@@ -1448,7 +1755,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setHeading(deg) {
+    setHeading(deg: number) {
         this.heading = deg;
         this.wwd.setHeading(deg);
         return this;
@@ -1460,8 +1767,11 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    showTraffic(flag) {
-        return (flag) ? this.wwd.revealTraffic() : this.wwd.hideTraffic();
+    showTraffic(flag: boolean): InteractiveMap {
+        if (flag) {
+            this.wwd.revealTraffic();
+         } else { this.wwd.hideTraffic(); }
+         return this;
     }
     // getMap () {
     //     return this.wwd;
@@ -1472,7 +1782,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    revealTraffic() {
+    revealTraffic(): InteractiveMap {
         this.wwd.revealTraffic();
         return this;
     }
@@ -1482,7 +1792,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    hideTraffic() {
+    hideTraffic(): InteractiveMap {
         this.wwd.hideTraffic();
         return this;
     }
@@ -1493,30 +1803,84 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setZoomLevel(NMI) {
+    setZoomLevel(NMI: number): InteractiveMap {
         this.wwd.setZoomLevel(NMI);
         return this;
     }
     /**
      * @function <a name="goTo">goTo</a>
      * @description Sets the current position of the map.
-     * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real) }
+     * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real), alt: (real) }
      * @memberof module:InteractiveMap
      * @instance
      */
-    goTo(pos) {
+    goTo(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): InteractiveMap {
         if (typeof pos === "string") {
             // remove white spaces in the name and make all small letters
             pos = pos.replace(/\s/g, "").toLowerCase();
             // look for the name of the city in the list of known destinations (array cities)
             pos = cities[pos];
         }
-        if (pos && pos.lat && pos.lon) {
-            this.pos = pos;
-            this.wwd.goTo(pos);
+        if (typeof pos === "object" && pos && pos.lat && pos.lon) {
+            this.pos = {
+                lat: (typeof pos.lat === "string")? +pos.lat : pos.lat, 
+                lon: (typeof pos.lon === "string")? +pos.lon : pos.lon, 
+                alt: (typeof pos.alt === "string")? +pos.alt : pos.alt 
+            };
+            this.wwd.goTo({ lat: this.pos.lat, lon: this.pos.lon });
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
         }
+        return this;
+    }
+    /**
+     * @function <a name="setOwnshipPosition">setOwnshipPosition</a>
+     * @description Sets the ownship positions on the map.
+     * @param pos {Object} Earth location shown at the center of the map, given as { lat: (real), lon: (real), alt: (real) }
+     * @memberof module:InteractiveMap
+     * @instance
+     */
+    setOwnshipPosition(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): InteractiveMap {
+        if (typeof pos === "string") {
+            // remove white spaces in the name and make all small letters
+            pos = pos.replace(/\s/g, "").toLowerCase();
+            // look for the name of the city in the list of known destinations (array cities)
+            pos = cities[pos];
+        }
+        if (typeof pos === "object" && pos && pos.lat && pos.lon) {
+            this.pos = {
+                lat: (typeof pos.lat === "string") ? +pos.lat : pos.lat,
+                lon: (typeof pos.lon === "string") ? +pos.lon : pos.lon,
+                alt: (typeof pos.alt === "string") ? +pos.alt : pos.alt
+            };
+            this.wwd.setOwnshipPosition(this.pos);
+        } else {
+            console.error("Incorrect aircraft position :/ ", pos);
+        }
+        return this;
+    }
+    setOwnshipVelocity(v: utils.Vector3D | serverInterface.Vector3D): InteractiveMap {
+        if (v) {
+            const vel: utils.Vector3D = {
+                x: (typeof v.x === "string") ? +v.x : v.x,
+                y: (typeof v.y === "string") ? +v.y : v.y,
+                z: (typeof v.z === "string") ? +v.z : v.z
+            }
+            this.wwd.setOwnshipVelocity(vel);
+        } else {
+            console.error("Incorrect aircraft velocity :/ ", v);
+        }
+        return this;
+    }
+    /**
+     * @function <a name="recenter">recenter</a>
+     * @description Recenters the map at the ownship location.
+     * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
+     * @memberof module:InteractiveMap
+     * @instance
+     */
+    recenter(pos: { lat: number, lon: number }): InteractiveMap {
+        this.wwd.recenter(pos);
         return this;
     }
     /**
@@ -1526,7 +1890,8 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setPosition(pos) {
+    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt) {
+        this.setOwnshipPosition(pos);
         return this.goTo(pos);
     }
     /**
@@ -1570,8 +1935,13 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setTrafficSymbolsByAlert(alertType) {
-        this.wwd.setTrafficSymbolsByAlert(alertType);
-        return this;
+    // setTrafficSymbolsByAlert(alertType: string) {
+    //     this.wwd.setTrafficSymbolsByAlert(alertType);
+    //     return this;
+    // }
+
+
+    setLoS(regions: serverInterface.DAALosRegion[]) {
+        this.wwd.setLoS(regions);
     }
 }

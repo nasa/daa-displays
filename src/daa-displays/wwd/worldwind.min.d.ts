@@ -1,0 +1,200 @@
+// stub declarations for WorldWind
+export declare class OpenStreetMapImageLayer extends RenderableLayer {
+    xhr: XMLHttpRequest;
+    layer;
+    displayName;
+}
+export declare class WmtsCapabilities {
+    constructor (xmlDom: XMLDocument);
+    serviceProvider;
+    contents;
+    getLayer(identifier: string);
+}
+export declare class WmtsLayer {
+    static formLayerConfiguration(wmtsLayerCapabilities);
+    constructor (config, timeString?: string);
+}
+export declare class Position {
+    latitude: number;
+    longitude: number;
+    altitude: number;
+    static readonly ZERO: Position;
+    constructor (latitude: number, longitude: number, altitude: number)
+}
+export declare class Angle {
+    static readonly DEGREES_TO_RADIANS: number;
+}
+export declare class ShapeAttributes {
+    outlineColor: Color;
+    interiorColor: Color;
+    applyLighting: boolean;
+    constructor  (attributes)
+}
+export declare class Color {
+    constructor (red: number, green: number, blue: number, alpha: number)
+    static readonly CYAN: number;
+    static readonly RED: number;
+    static readonly WHITE: number;
+    static readonly YELLOW: number;
+    static readonly BLUE: number;
+}
+export declare class DrawContext {
+    canvas2D: HTMLElement;
+    clearColor: Color;
+    constructor(gl: WebGLRenderingContext);
+}
+export declare class Renderable {
+    displayName: string;
+    enabled: boolean;
+    pickDelegate: Object;
+    userProperties: Object;
+    constructor();
+    render(dc: DrawContext): void;
+}
+export declare class AbstractShape extends Renderable {
+    constructor(attributes: ShapeAttributes);
+}
+export declare class AbstractMesh extends AbstractShape {
+    constructor(attributes: ShapeAttributes);
+}
+export declare class TriangleMesh extends AbstractMesh {
+    outlineIndices: number[];
+    highlighted: boolean;
+    highlightAttributes: ShapeAttributes;
+    attributes: ShapeAttributes;
+    displayName: string;
+    altitudeScale: number;
+    altitudeMode: string;
+    expirationInterval: number;
+    enabled: boolean;
+    constructor (positions: Position[], indices: number[], attributes: ShapeAttributes);
+}
+export declare class Navigator {
+    constructor();
+    heading: number;
+    roll: number;
+    tilt: number;
+}
+export declare class RenderableLayer {
+    constructor (displayName?: string)
+    time: Date;
+    readonly renderables: any[];
+    addRenderable (renderable: Renderable): void;
+}
+export declare class ColladaLoader {
+    init(config?: { dirPath?: string }): void;
+    constructor (position: Position, config?: { dirPath?: string });
+    load(url: string, cb: (scene: ColladaScene) => void);
+}
+export declare class ColladaScene extends Renderable {
+    constructor(position: Position, sceneData: { root: { children: any }, meshes: any, materials: any, images: any, upAxis: any, dirPath: string });
+    scale: number;
+    altitudeMode: string;
+    xRotation: number;
+    yRotation: number;
+    zRotation: number;
+    position: Position;
+}
+export declare class GeographicText extends Renderable {
+    attributes?: TextAttributes;
+    declutterGroup?: number;
+    position: Position;
+    text: string;
+    constructor (position: Position, text: string);
+}
+export declare class TextAttributes {
+    color: Color;
+    depthTest: boolean;
+    enableOutline: boolean;
+    font: Font;
+    offset: Offset;
+    outlineColor: Color;
+    outlineWidth: number;
+    scale: number;
+    readonly stateKey: string;
+    protected stateKeyInvalid: boolean;
+    constructor (attributes: TextAttributes);
+    protected computeStateKey (): string;
+}
+export declare class Font {
+    size: number;
+    style: string;
+    variant: string;
+    weight: string;
+    family: string;
+    horizontalAlignment: string;
+    constructor (size: number, style: string, variant: string, weight: string, family: string, horizontalAlignment: string);
+}
+export declare class Offset {
+    constructor (xUnits: number, x: number, yUnits: number, y: number);
+}
+export declare class BMNGLayer extends RenderableLayer {
+
+}
+export declare class BMNGOneImageLayer extends RenderableLayer {
+
+}
+export declare class BMNGLandsatLayer extends RenderableLayer {
+
+}
+export declare class BingAerialLayer extends RenderableLayer {
+    constructor (bingMapsKey: string);
+}
+export declare class BingAerialWithLabelsLayer extends RenderableLayer {
+    constructor (bingMapsKey: string);
+}
+export declare class BingRoadsLayer extends RenderableLayer {
+
+}
+export declare class LookAtNavigator extends Navigator {
+    constructor();
+    lookAtLocation: Location;
+    range: number;
+}
+export declare class SurfaceShape extends Renderable {
+    constructor(attributes: ShapeAttributes);
+}
+export declare class SurfacePolygon extends SurfaceShape {
+    constructor(boundaries: Location[], attributes: ShapeAttributes);
+}
+export declare class Location {
+    latitude: number;
+    longitude: number;
+    constructor(latitude: number, longitude: number);
+}
+export declare class WorldWindow {
+    constructor (canvasElem: string | HTMLCanvasElement, elevationModel?);
+    addLayer(layer: RenderableLayer): void;
+    redraw(): void;
+    surfaceOpacity: number;
+    verticalExaggeration: number;
+    navigator: LookAtNavigator;
+    addEventListener(type: string, listener);
+}
+export declare class BMNGRestLayer extends RenderableLayer {
+    constructor (serverAddress: string, pathToData: string, displayName?: string, initialTime?: Date)
+}
+export declare class SurfaceImage extends Renderable {
+    opacity: number;
+    constructor (sector, imageSource)
+}
+export declare class Sector {
+    static readonly FULL_SPHERE: number;
+}
+export declare class AtmosphereLayer extends RenderableLayer {
+}
+export declare class CoordinatesDisplayLayer extends RenderableLayer {
+    constructor (worldWindow: WorldWindow);
+}
+export declare class GeographicMesh extends AbstractMesh {
+    constructor(positions: Position[], attributes: ShapeAttributes);
+    altitudeMode: string;
+    attributes: ShapeAttributes;
+}
+export const REDRAW_EVENT_TYPE: string;
+export const ABSOLUTE: string;
+export const OFFSET_PIXELS: number;
+
+export declare const CLAMP_TO_GROUND: string;
+export declare const RELATIVE_TO_GLOBE: string;
+export declare const RELATIVE_TO_GROUND: string;

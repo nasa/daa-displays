@@ -79,6 +79,39 @@ export class JavaProcess {
 			});
 		});
 	}
+	async execLoS (losLogic: string, daaConfig: string, scenarioName: string): Promise<string> {
+		losLogic = losLogic || "DAALoS-1.0.1";
+		daaConfig = daaConfig || "WC_SC_228_nom_b.txt";
+		scenarioName = scenarioName || "H1.daa";
+		const subFolder: string = await this.getVersion(losLogic);
+		const outputPath: string = path.join("../daa-output/", subFolder);
+		// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
+		if (!fs.existsSync(outputPath)) {
+			fs.mkdirSync(outputPath);
+		}
+		const outputFileName: string = path.join(outputPath, fsUtils.getLoSFileName({ daaConfig, scenarioName }));
+		return new Promise((resolve, reject) => {
+			const wellClearFolder: string = path.join(__dirname, "../daa-logic");
+			const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", scenarioName);
+			const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
+			const cmds: string[] = [
+				`cd ${wellClearFolder}`,
+				`java -jar ${losLogic} --conf ${wellClearConfig} --output ${outputFileName} ${wellClearScenario}`
+			];
+			const cmd = cmds.join(" && ");
+			console.info(`Executing ${cmd}`);
+			exec(cmd, (error, stdout, stderr) => {
+				if (error) {
+				  console.error(`exec error: ${error}`);
+				  return;
+				} else if (stderr) {
+					console.error(`stderr: ${stderr}`);  
+				}
+				console.info(`stdout: ${stdout}`);
+				resolve(stdout);
+			});
+		});
+	}
 	async getVersion (daaLogic: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const wellClearFolder: string = path.join(__dirname, "../daa-logic");

@@ -123,6 +123,32 @@ export declare interface DaidalusBandsDescriptor {
     "Altitude Bands": BandElement[];
 }
 
+export declare interface DAALosSector {
+    los: boolean;
+    level: number;
+    lat: string;
+    lon: string;
+    alt: string;
+}
+export declare interface DAALosRegion {
+    ac: string;
+    sectors: DAALosSector[];
+}
+export declare interface DAALosDescriptor {
+    WellClear: {
+        version: string,
+        configuration: string
+    },
+    Scenario: string,
+    Detector: string,
+    AlertLevel: number,
+    Grid: { sectorSize: number, sectorUnits: string, xmax: number, ymax: number },
+    LoS: {
+        time: number,
+        conflicts: DAALosRegion[]
+    }[]
+}
+
 export declare interface DAAScenario {
     scenarioName: string;
     length: number;

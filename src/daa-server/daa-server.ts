@@ -10,6 +10,7 @@ import * as utils from '../daa-displays/daa-utils';
 import * as fsUtils from './utils/fsUtils';
 
 class DAAServer {
+    useCache: boolean = true;
     httpServer: http.Server;
     wsServer: ws.Server;
     pvsioProcess: PVSioProcess; // TODO: create an array of processes for parallel execution of multiple pvs files
@@ -299,10 +300,10 @@ class DAAServer {
                                 await this.activateJavaProcess();
                                 const wellClearVersion: string = await this.javaProcess.getVersion(data.daaLogic);
                                 const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
-                                if (!fs.existsSync(path.join(javaOutputPath, bandsFile))) {
-                                    await this.javaProcess.execWellClear(data.daaLogic, data.daaConfig, data.scenarioName);                                    
-                                } else {
+                                if (this.useCache && fs.existsSync(path.join(javaOutputPath, bandsFile))) {
                                     console.log(`Reading bands file ${bandsFile} from cache`);
+                                } else {
+                                    await this.javaProcess.execWellClear(data.daaLogic, data.daaConfig, data.scenarioName);                                    
                                 }
                                 try {
                                     // WellClear-1.0.1/DAIDALUS/Scenarios/H1.daa
@@ -311,6 +312,32 @@ class DAAServer {
                                     this.trySend(wsocket, content, "daa bands");
                                 } catch (readError) {
                                     console.error(`Error while reading daa bands file ${path.join(javaOutputPath, bandsFile)}`);
+                                }
+                            } else {
+                                console.error(`Error while generating bands file name (name is null) :/`);
+                            }
+                            break;
+                        }
+                        case 'java-los': {
+                            // console.log(`WellClear arguments: ${JSON.stringify(data)}`);
+                            const data: JavaMsg = <JavaMsg> content.data;
+                            const losFile: string = fsUtils.getLoSFileName(data);
+                            if (losFile) {
+                                await this.activateJavaProcess();
+                                const wellClearVersion: string = await this.javaProcess.getVersion(data.daaLogic);
+                                const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
+                                if (this.useCache && fs.existsSync(path.join(javaOutputPath, losFile))) {
+                                    console.log(`Reading bands file ${losFile} from cache`);
+                                } else {
+                                    await this.javaProcess.execLoS(data.daaLogic, data.daaConfig, data.scenarioName);
+                                }
+                                try {
+                                    // WellClear-1.0.1/DAIDALUS/Scenarios/H1.daa
+                                    const buf: Buffer = fs.readFileSync(path.join(javaOutputPath, losFile));
+                                    content.data = buf.toLocaleString();
+                                    this.trySend(wsocket, content, "daa bands");
+                                } catch (readError) {
+                                    console.error(`Error while reading daa bands file ${path.join(javaOutputPath, losFile)}`);
                                 }
                             } else {
                                 console.error(`Error while generating bands file name (name is null) :/`);

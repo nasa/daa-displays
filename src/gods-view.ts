@@ -33,11 +33,13 @@ import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
-import * as InteractiveMap from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { LLAData } from './daa-displays/utils/daa-server';
+import { LLAData, DAALosRegion } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+
+const playback: DAAPlayer = new DAAPlayer();
 
 function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -102,12 +104,16 @@ function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: Air
         units: "fpm",
         step: playback.getCurrentSimulationStep()
     });
+    const los: DAALosRegion[] = playback.getCurrentLoS();
+    if (los) {
+        data.map.setLoS(los);
+    }
     // console.log(`Bands`, bands);
 }
 
 // single player, god's view
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true });
-const playback: DAAPlayer = new DAAPlayer();
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true, los: true });
+
 playback.define("step", async () => {
     render({
         map: map, compass: null, airspeedTape: null, 
@@ -118,6 +124,11 @@ playback.define("init", async () => {
     // compute java output
     await playback.java({
         alertingLogic: `${playback.getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+        alertingConfig: playback.getSelectedConfiguration(),
+        scenario: playback.getSelectedScenario()
+    });
+    await playback.javaLoS({
+        losLogic: null, //`${playback.getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });

@@ -54,7 +54,7 @@ endef
 clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download compile
+all: download compile los1.x
 
 download: $(DOWNLOAD_TARGETS)
 
@@ -74,6 +74,13 @@ remove-downloads:
 	@echo "\n\033[0;33m ** Removing downloaded versions of WellClear **\033[0m"
 	@-rm -r WellClear-*
 	@-rm WellClear-*.zip
+
+los1.x:
+	@echo "\n\033[0;32m ** Building DAALoSRegion **\033[0m"
+	-@cd utils && $(JAVAC) -cp ../WellClear-1.0.1/DAIDALUS/Java/src DAALoSRegion.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	-@cd utils && $(JAR) cfe ../LoSRegion-1.0.1.jar DAALoSRegion *.class
+	-@cd WellClear-1.0.1/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-1.0.1.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
+	unzip -vl LoSRegion-1.0.1.jar 
 
 # these final commands expand the templates
 $(call download-all)

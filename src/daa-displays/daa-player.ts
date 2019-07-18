@@ -89,11 +89,12 @@ require(["widgets/daa-displays/daa-playback"], function (PlaybackPlayer) {
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-playback-templates';
+import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
-import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from 'src/daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand } from './utils/daa-server';
+import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
+import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor } from './utils/daa-server';
 
 // utility function, for writing log files to disk. Log files can be strings or JSON objects
 function writeFile (fileWriter, filename, content) {
@@ -156,6 +157,7 @@ export class DAAPlayer {
     _displays: string[];
     _scenarios: { [ daaFileName: string ]: DAAScenario } = {};
     _bands: DaidalusBandsDescriptor; // bands for the selected scenario
+    _los: DAALosDescriptor;
     _selectedScenario: string;
     _selectedWellClear: string;
     _simulationLength: number;
@@ -724,7 +726,7 @@ export class DAAPlayer {
         scenario: string
     }): Promise<{
         err: string,
-        bands: string
+        bands: DaidalusBandsDescriptor
     }> {
         const msg: JavaMsg = {
             daaLogic: data.alertingLogic ||  "DAAtoPVS-1.0.1.jar",
@@ -741,15 +743,85 @@ export class DAAPlayer {
             type: "java",
             data: msg
         });
-        if (res && res.data) {
-            const data = JSON.parse(res.data);
-            this._bands = data;
+        try {
+            if (res && res.data) {
+                const data = JSON.parse(res.data);
+                this._bands = data;
+            }
+            console.log("WellClear data ready!", this._bands);
+            return {
+                err: res.err,
+                bands: (this._bands) ? this._bands : null
+            };
+        } catch (parseError) {
+            console.error("Error while parsing JSON bands: ", parseError);
+            return {
+                err: parseError,
+                bands: null
+            };
         }
-        console.log("WellClear data ready!", this._bands);
-        return {
-            err: res.err,
-            bands: (this._bands) ? JSON.stringify(this._bands) : null
-        };
+        
+    }
+
+    /**
+     * @function <a name="javaLoS">javaLoS</a>
+     * @description Computes conflict regions using the java implementation of well-clear
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., DAAtoPVS-1.0.1.jar (Base path is daa-logic/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
+     * @memberof module:DAAPlaybackPlayer
+     * @instance
+     */
+    async javaLoS (data: {
+        losLogic: string,
+        alertingConfig: string,
+        scenario: string
+    }): Promise<{
+        err: string,
+        los: DAALosDescriptor
+    }> {
+        const msg: JavaMsg = {
+            daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
+            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
+            scenarioName: data.scenario || "H1.daa"
+        }
+        console.log(`Computing conflict regions using java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
+        if (!this._repl[msg.daaLogic]) {
+            const ws: DAAClient = new DAAClient();
+            await ws.connectToServer();
+            this._repl[msg.daaLogic] = ws;
+        }
+        const res = await this._repl[msg.daaLogic].send({
+            type: "java-los",
+            data: msg
+        });
+        try {
+            if (res && res.data) {
+                const data = JSON.parse(res.data);
+                this._los = data;
+            }
+            console.log("Conflict regions ready!", this._los);
+            return {
+                err: res.err,
+                los: (this._los) ? this._los : null
+            };
+        } catch (parseError) {
+            console.error("Error while parsing JSON LoS: ", parseError);
+            return {
+                err: parseError,
+                los: null
+            };
+        }
+    }
+
+    getCurrentLoS (): DAALosRegion[] {
+        if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._los) {
+            if (this._los.LoS && this.simulationStep < this._los.LoS.length) {
+                return this._los.LoS[this.simulationStep].conflicts;
+            } else {
+                console.error(`LoS region could not be read for step ${this.simulationStep} (index out of bounds)`);
+            }
+        }
+        return null;
     }
 
     async listVersions(): Promise<string[]> {
@@ -759,7 +831,11 @@ export class DAAPlayer {
         });
         if (res && res.data) {
             console.log(res);
-            this._wellClearVersions = JSON.parse(res.data);            
+            const versions: string [] = JSON.parse(res.data);
+            if (versions) {
+                // sort in descending order, so that newest version comes first
+                this._wellClearVersions = versions.sort((a: string, b: string) => { return (a < b) ? 1 : -1; });
+            }
         }
         return this._wellClearVersions;
     }
