@@ -10,7 +10,7 @@ import * as utils from '../daa-displays/daa-utils';
 import * as fsUtils from './utils/fsUtils';
 
 class DAAServer {
-    useCache: boolean = true;
+    useCache: boolean = false;
     httpServer: http.Server;
     wsServer: ws.Server;
     pvsioProcess: PVSioProcess; // TODO: create an array of processes for parallel execution of multiple pvs files

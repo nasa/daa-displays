@@ -75,11 +75,13 @@ export declare class Navigator {
     roll: number;
     tilt: number;
 }
-export declare class RenderableLayer {
+export declare class RenderableLayer extends Layer {
     constructor (displayName?: string)
     time: Date;
     readonly renderables: any[];
     addRenderable (renderable: Renderable): void;
+    removeRenderable(renderable: Renderable): void;
+    removeAllRenderables(): void;
 }
 export declare class ColladaLoader {
     init(config?: { dirPath?: string }): void;
@@ -162,14 +164,28 @@ export declare class Location {
     longitude: number;
     constructor(latitude: number, longitude: number);
 }
+export declare class Layer {
+    displayName: string;
+    enabled: boolean;
+    readonly isCurrentFrame: boolean;
+    maxActiveAltitude: number;
+    minActiveAltitude: number;
+    opacity: number;
+    pickEnabled: boolean;
+    time: Date;
+    render(dc: DrawContext): void;
+    refresh(): void;
+}
 export declare class WorldWindow {
     constructor (canvasElem: string | HTMLCanvasElement, elevationModel?);
     addLayer(layer: RenderableLayer): void;
+    removeLayer(layer: RenderableLayer): void;
     redraw(): void;
     surfaceOpacity: number;
     verticalExaggeration: number;
     navigator: LookAtNavigator;
     addEventListener(type: string, listener);
+    layers: RenderableLayer[];
 }
 export declare class BMNGRestLayer extends RenderableLayer {
     constructor (serverAddress: string, pathToData: string, displayName?: string, initialTime?: Date)

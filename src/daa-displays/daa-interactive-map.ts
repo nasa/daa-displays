@@ -415,7 +415,7 @@ class LosSector {
      * @description Constructor. Renders LoS regions.
      * @param layer { WorldWind.RenderableLayer } wwd layer to be used for rendering the LoS region.
      * @param pos { Position } Center of the conflict region
-     * @param opt Optional attributes: nmi (size of the region), opacity (opacity of the region), color (region color)
+     * @param opt Optional attributes: nmi (size of the region, default is 1nmi), opacity (opacity of the region), color (region color)
      * @memberof module:InteractiveMap
      * @instance
      * @inner
@@ -425,9 +425,9 @@ class LosSector {
             this.layer = layer;
             if (pos) {
                 opt = opt || {};
-                const nmi: number = (isNaN(opt.nmi)) ? 5 : opt.nmi;
-                const opacity: number = (isNaN(opt.nmi)) ? 0.2 : opt.opacity;
-                const color: { r: number, g: number, b: number } = opt.color || { r: 1, g: 0, b: 0 };
+                const nmi: number = (isNaN(opt.nmi)) ? 1 : opt.nmi;
+                const opacity: number = (isNaN(opt.opacity)) ? 0.4 : opt.opacity;
+                const color: { r: number, g: number, b: number } = opt.color || { r: 1, g: 0.54, b: 0 }; // default color is dark orange
 
                 // const size: number = nmi / 60;
                 // const boundaries: WorldWind.Location[] = [
@@ -498,6 +498,7 @@ class LosSector {
                 var mesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
                 // mesh.outlineIndices = outlineIndices;
                 mesh.enabled = true;
+                mesh.displayName = `LoS Sector`;
 
                 // Add the mesh to a layer and the layer to the WorldWindow's layer list.    
                 this.sector = mesh;
@@ -536,6 +537,7 @@ class LosRegion {
     protected layer: WorldWind.RenderableLayer;
     constructor (layer: WorldWind.RenderableLayer, region: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
         if (layer) {
+            opt = opt || {};
             this.layer = layer;
             if (region && region.length > 0) {
                 this.region = [];
@@ -687,10 +689,7 @@ class ColladaAircraft extends Aircraft {
     protected colladaLoader: WorldWind.ColladaLoader;
     protected rotationOffset: { xRotation: number, yRotation: number, zRotation: number };
     protected flight: WorldWind.ColladaScene;
-    protected layers: {
-        flight: WorldWind.RenderableLayer//
-        // well_clear_volume: WorldWind.RenderableLayer
-    };
+    protected wwdLayer: WorldWind.RenderableLayer;
     protected well_clear_volume; // TODO: remove the attribute from this class?
     protected nmiScale: number;
     /**
@@ -700,26 +699,25 @@ class ColladaAircraft extends Aircraft {
      * @param lat {real} Latitude of the aircraft (degrees)
      * @param lon {real} Longitude of the aircraft (degrees)
      * @param alt {real} Altitude of the aircraft (meters)
-     * @param daaSymbol {String} DAA symbol to be used for the aircraft, one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship).
+     * @param symbol {String} DAA symbol to be used for the aircraft, one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship).
      * @param cb {Function} callback function to be invoked when the constructor has completed loading the aircraft symbols
      * @memberof module:InteractiveMap
      * @augments Aircraft
      * @instance
      * @inner
      */
-    constructor(wwd: WorldWind.WorldWindow, lat: number, lon: number, alt: number, daaSymbol: string, cb: (aircraft: ColladaAircraft) => void) {
-        super(lat, lon, alt);
-        daaSymbol = daaSymbol || "daa-ownship";
+    constructor(wwd: WorldWind.WorldWindow, desc: { lat: number, lon: number, alt: number, id: string, symbol?: string }, layers: { wwdLayer: WorldWind.RenderableLayer }, cb: (aircraft: ColladaAircraft) => void) {
+        super(desc.lat, desc.lon, desc.alt);
+        desc.symbol = desc.symbol || "daa-ownship";
 
         this.wwd = wwd;
-        this.layers = {
-            flight: new WorldWind.RenderableLayer("Aircraft"), // This layers is used to render the aircraft
-            // well_clear_volume: new WorldWind.RenderableLayer("Well-Clear Volume") // This layer is used to render the well-clear volume TODO: move this visual element to DAA_Aircraft
-        };
-        wwd.addLayer(this.layers.flight);
+        this.wwdLayer = layers.wwdLayer //new WorldWind.RenderableLayer("Aircraft"), // This layers is used to render the aircraft
+        // well_clear_volume: new WorldWind.RenderableLayer("Well-Clear Volume") // This layer is used to render the well-clear volume TODO: move this visual element to DAA_Aircraft
+
+        // wwd.addLayer(this.layers.flight);
         // wwd.addLayer(this.layers.well_clear_volume);
 
-        this.colladaLoader = new WorldWind.ColladaLoader(new WorldWind.Position(lat, lon, alt));
+        this.colladaLoader = new WorldWind.ColladaLoader(new WorldWind.Position(desc.lat, desc.lon, desc.alt));
         this.colladaLoader.init({
             dirPath: utils.baseUrl + 'ColladaModels/'
         });
@@ -733,12 +731,12 @@ class ColladaAircraft extends Aircraft {
 
         this.nmiScale = 5; // default scale is 5NMI
 
-        let colladaObj = colladaObjects[daaSymbol]; //colladaObjects.privateJet;
+        let colladaObj = colladaObjects[desc.symbol]; //colladaObjects.privateJet;
         this.colladaLoader.load(colladaObj.fileName, (colladaScene: WorldWind.ColladaScene) => {
             if (colladaScene) {
                 this.flight = colladaScene;
                 this.flight.scale = colladaObj.scale || 1;
-                this.flight.displayName = "Aircraft";
+                this.flight.displayName = `${desc.id}-${desc.symbol}`;
                 // this.flight.useTexturePaths = false; // use this option to force loading textures from the same directory of the collada file
                 this.flight.altitudeMode = WorldWind.ABSOLUTE; // the alternative is RELATIVE_TO_GROUND;
                 this.flight.xRotation = colladaObj.xRotation || 0;
@@ -747,8 +745,8 @@ class ColladaAircraft extends Aircraft {
                 this.rotationOffset.yRotation = this.flight.yRotation;
                 this.flight.zRotation = colladaObj.zRotation || 0;
                 this.rotationOffset.zRotation = this.flight.zRotation;
-                this.flight.position = new WorldWind.Position(lat, lon, colladaAltitude(alt));
-                this.layers.flight.addRenderable(this.flight); // Add the Collada model to the renderable layer within a callback.
+                this.flight.position = new WorldWind.Position(desc.lat, desc.lon, colladaAltitude(desc.alt));
+                this.wwdLayer.addRenderable(this.flight); // Add the Collada model to the renderable layer within a callback.
                 // set scale
                 this.setScale(this.nmiScale);
                 // execute callback function, if any was provided to the constructor
@@ -925,6 +923,8 @@ class DAA_Aircraft extends Aircraft {
     protected textLayer: WorldWind.RenderableLayer;
     protected los: LosRegion;
     protected losLayer: WorldWind.RenderableLayer;
+    protected aircraftLayer: WorldWind.RenderableLayer;
+    protected wwd: WorldWind.WorldWindow;
     /**
      * @function <a name="DAA_Aircraft">DAA_Aircraft</a>
      * @description Constructor. Creates an aircraft rendered using the standard daa symbols ("daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship").
@@ -947,7 +947,10 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    constructor(wwd: WorldWind.WorldWindow, desc: { symbol?: string, name?: string, lat?: number, lon?: number, alt?: number, reference?: Aircraft }, cb?: (ownship: Aircraft) => void) {
+    constructor(wwd: WorldWind.WorldWindow, 
+                desc: { symbol?: string, name?: string, lat?: number, lon?: number, alt?: number, reference?: Aircraft }, 
+                layers: { losLayer: WorldWind.RenderableLayer, aircraftLayer: WorldWind.RenderableLayer, textLayer: WorldWind.RenderableLayer, }, 
+                cb?: (ownship: Aircraft) => void) {
         super((desc) ? desc.lat :  null, (desc) ? desc.lon : null, (desc) ? desc.alt : null);
         desc = desc || {};
         desc.symbol = desc.symbol || "daa-ownship";
@@ -956,20 +959,24 @@ class DAA_Aircraft extends Aircraft {
         this.name = desc.name;
         this.reference = desc.reference;
         this._loaded = 0;
-        this.losLayer = new WorldWind.RenderableLayer(`LoS Layer`) // This layer is used to render the conflict regions between this aircraft and the ownship
-        wwd.addLayer(this.losLayer);
+        this.losLayer = layers.losLayer; //new WorldWind.RenderableLayer(`LoS Layer ${this.name}`); // This layer is used to render the conflict regions between this aircraft and the ownship
+        this.aircraftLayer = layers.aircraftLayer; //new WorldWind.RenderableLayer(`Aicraft Layer ${this.name}`);
+        this.textLayer = layers.textLayer;
+        this.wwd = wwd;
+        // wwd.addLayer(this.losLayer);
+        // wwd.addLayer(this.aircraftLayer);
 
         this.aircraftSymbols = {
-            "daa-ownship": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-ownship", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
-            "daa-alert": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-alert", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
-            "daa-target": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-target", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
-            "daa-traffic-avoid": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-avoid", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
-            "daa-traffic-monitor": new ColladaAircraft(wwd, desc.lat, desc.lon, desc.alt, "daa-traffic-monitor", (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-ownship": new ColladaAircraft(wwd, { lat: desc.lat, lon: desc.lon, alt: desc.alt, id: this.name, symbol: "daa-ownship" }, { wwdLayer: this.aircraftLayer }, (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-alert": new ColladaAircraft(wwd, { lat: desc.lat, lon: desc.lon, alt: desc.alt, id: this.name, symbol: "daa-alert" }, { wwdLayer: this.aircraftLayer }, (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-target": new ColladaAircraft(wwd, { lat: desc.lat, lon: desc.lon, alt: desc.alt, id: this.name, symbol: "daa-target" }, { wwdLayer: this.aircraftLayer }, (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-traffic-avoid": new ColladaAircraft(wwd, { lat: desc.lat, lon: desc.lon, alt: desc.alt, id: this.name, symbol: "daa-traffic-avoid" }, { wwdLayer: this.aircraftLayer }, (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
+            "daa-traffic-monitor": new ColladaAircraft(wwd, { lat: desc.lat, lon: desc.lon, alt: desc.alt, id: this.name, symbol: "daa-traffic-monitor" }, { wwdLayer: this.aircraftLayer }, (aircraft: ColladaAircraft) => { this.collada_cb(aircraft, wwd, cb) }),
         };
     }
     private addLabel(wwd: WorldWind.WorldWindow) {
         if (this.symbol && !(config.hideOwnshipLabel && this.symbol === "daa-ownship")) {
-            this.textLayer = new WorldWind.RenderableLayer("Aircraft data");
+            // this.textLayer = new WorldWind.RenderableLayer(`Aircraft Text Layer ${this.name}`);
             let aircraftLabel = createLabel(this, this.reference);
             this.text = new WorldWind.GeographicText(aircraftLabel.position, aircraftLabel.text);
             this.text.attributes = new WorldWind.TextAttributes(null);
@@ -980,7 +987,7 @@ class DAA_Aircraft extends Aircraft {
             this.text.attributes.depthTest = true;
             this.text.declutterGroup = 0;
             this.textLayer.addRenderable(this.text);
-            wwd.addLayer(this.textLayer);
+            // wwd.addLayer(this.textLayer);
         }
     }
     private collada_cb(aircraft: ColladaAircraft, wwd: WorldWind.WorldWindow, cb: (aircraf: DAA_Aircraft) => void) {
@@ -1183,14 +1190,16 @@ class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setLoS(region: utils.LatLonAlt[] | serverInterface.LatLonAlt[]): DAA_Aircraft {
+    setLoS(region: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { nmi?: number }): DAA_Aircraft {
         region = region || [];
-        if (this.losLayer && region) {
+        if (this.losLayer) {
+            opt = opt || {};
             if (this.los) {
+                // delete the old region, if any was rendered in the airspace
                 this.los.hide();
-                delete this.los;
+                // delete this.los;
             }
-            this.los = new LosRegion(this.losLayer, region);
+            this.los = new LosRegion(this.losLayer, region, opt);
             this.los.reveal();
         }
         return this;
@@ -1200,7 +1209,7 @@ class DAA_Aircraft extends Aircraft {
         return this;
     }
     hideLoS(): DAA_Aircraft {
-        this.los.reveal();
+        this.los.hide();
         return this;
     }
 }
@@ -1233,6 +1242,9 @@ class DAA_Airspace {
     protected _traffic: DAA_Aircraft[];
     protected atmosphereLayer: WorldWind.RenderableLayer;
     protected losLayer: WorldWind.RenderableLayer;
+    protected trafficLayer: WorldWind.RenderableLayer;
+    protected ownshipLayer: WorldWind.RenderableLayer;
+    protected textLayer: WorldWind.RenderableLayer;
     protected godsView: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
@@ -1281,11 +1293,27 @@ class DAA_Airspace {
                 // Add shader, to enhance visibility of DAA symbols over Bing map
                 let surfaceImage2 = new WorldWind.SurfaceImage(WorldWind.Sector.FULL_SPHERE, utils.baseUrl + "images/black.png");
                 surfaceImage2.opacity = opt.shader;
-                let surfaceImageLayer = new WorldWind.RenderableLayer();
+                let surfaceImageLayer = new WorldWind.RenderableLayer("Map Shader Layer");
                 surfaceImageLayer.addRenderable(surfaceImage2);
                 this.wwd.addLayer(surfaceImageLayer);
             }
         }
+
+        // create LoS layer
+        this.losLayer = new WorldWind.RenderableLayer(`LoS Layer`); // This layer is used to render the conflict regions between this aircraft and the ownship
+        this.wwd.addLayer(this.losLayer);
+
+        // create layer for rendering traffic aircraft symbol
+        this.trafficLayer = new WorldWind.RenderableLayer(`Aicraft Layer`);
+        this.wwd.addLayer(this.trafficLayer);
+
+        // create lauer for rendering ownship
+        this.ownshipLayer = new WorldWind.RenderableLayer(`Aicraft Layer`);
+        this.wwd.addLayer(this.ownshipLayer);
+
+        // create layer for rendering aircraft label
+        this.textLayer = new WorldWind.RenderableLayer(`Aircraft Text Layer`);
+        this.wwd.addLayer(this.textLayer);
 
         // Create ownship, and make it invisible because danti renders the ownship in overlay
         // Having the ownship in WWD is useful for adjusting the map location
@@ -1295,6 +1323,10 @@ class DAA_Airspace {
             alt: opt.ownship.alt,
             symbol: "daa-ownship",
             name: "ownship"
+        }, {
+            losLayer: this.losLayer,
+            aircraftLayer: this.ownshipLayer,
+            textLayer: this.textLayer
         }, (ownship: DAA_Aircraft) => {
             if (!this.godsView) {
                 ownship.hide();
@@ -1316,7 +1348,8 @@ class DAA_Airspace {
         }
 
         // show coordinates
-        this.wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(this.wwd));
+        // this.wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(this.wwd));
+
         // this.wwd.addLayer(new WorldWind.CompassLayer());
         // this.wwd.addLayer(new WorldWind.ViewControlsLayer(this.wwd));
 
@@ -1332,11 +1365,19 @@ class DAA_Airspace {
         // set 2D view
         this.view2D();
     }
-    godsViewOn() {
-        this.godsView = true;
+    resetView (): DAA_Airspace {
+        if (this.losLayer) { this.losLayer.removeAllRenderables(); }
+        if (this.trafficLayer) { this.trafficLayer.removeAllRenderables(); }
+        if (this.textLayer) { this.textLayer.removeAllRenderables(); }
+        return this;
     }
-    godsViewOff() {
+    godsViewOn (): DAA_Airspace {
+        this.godsView = true;
+        return this;
+    }
+    godsViewOff (): DAA_Airspace {
         this.godsView = false;
+        return this;
     }
     /**
      * Utility function, adds event listener for mouse wheel events -- necessary for resizing traffic symbols when zooming the map
@@ -1344,7 +1385,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    autoScale() {
+    autoScale (): DAA_Airspace {
         const NMI = this.wwd.navigator.range / scaleFactor;
         // console.log("updating scale factor to " + NMI + "NMI");
         if (this._traffic) {
@@ -1355,6 +1396,7 @@ class DAA_Airspace {
         if (this._ownship) {
             this._ownship.setScale(NMI);
         }
+        return this;
     }
     /**
      * Sets the zoom level of the airspace.
@@ -1363,7 +1405,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setZoomLevel(NMI: number) {
+    setZoomLevel (NMI: number): DAA_Airspace {
         this.nmi = NMI || this.nmi;
         // wwd.navigator.range is the diagonal size of the wwd map displayed in the canvas.
         this.wwd.navigator.range = NMI * scaleFactor;
@@ -1381,7 +1423,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    view2D() {
+    view2D (): DAA_Airspace {
         this.wwd.navigator.range = this.nmi; //64e4;//16e4;
         this.wwd.navigator.tilt = 0; // 0 degrees tilt
         // this.wwd.navigator.fieldOfView = 180;
@@ -1396,7 +1438,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    view3D() {
+    view3D (): DAA_Airspace {
         this.wwd.navigator.tilt = 55; // 55 degrees tilt
         this.wwd.navigator.range = this.nmi; // 6e4;
         this.wwd.redraw();
@@ -1410,7 +1452,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    recenter(pos: { lat: number, lon: number }) {
+    recenter (pos: { lat: number, lon: number }): DAA_Airspace {
         if (pos) {
             if (pos.lat !== undefined) { this.wwd.navigator.lookAtLocation.latitude = pos.lat; }
             if (pos.lon !== undefined) { this.wwd.navigator.lookAtLocation.longitude = pos.lon; }
@@ -1427,7 +1469,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    render(): DAA_Airspace {
+    render (): DAA_Airspace {
         // redraw airspace
         this.wwd.redraw();
         return this;
@@ -1440,7 +1482,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    goTo(pos: { lat: number, lon: number }): DAA_Airspace {
+    goTo (pos: { lat: number, lon: number }): DAA_Airspace {
         if (pos) {
             this.recenter(pos);
         } else {
@@ -1456,7 +1498,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setOwnshipPosition(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): DAA_Airspace {
+    setOwnshipPosition (pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): DAA_Airspace {
         if (pos) {
             if (typeof pos === "string") {
                 // remove white spaces in the name and make all small letters
@@ -1482,7 +1524,7 @@ class DAA_Airspace {
         }
         return this;
     }
-    setOwnshipVelocity(v: utils.Vector3D): DAA_Airspace {
+    setOwnshipVelocity (v: utils.Vector3D): DAA_Airspace {
         if (v) {
             this._ownship.setVelocity(v);
             this._ownship.refreshLabel();
@@ -1499,7 +1541,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setHeading(deg: number, opt?: { nrthup?: boolean}): DAA_Airspace {
+    setHeading (deg: number, opt?: { nrthup?: boolean}): DAA_Airspace {
         opt = opt || {};
         this.wwd.navigator.heading = deg;
         if (!opt.nrthup) {
@@ -1516,7 +1558,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    getHeading(): number {
+    getHeading (): number {
         return this.wwd.navigator.heading;
     }
     /**
@@ -1533,7 +1575,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    getTraffic(): DAA_Aircraft[] {
+    getTraffic (): DAA_Aircraft[] {
         return this._traffic;
     }
     /**
@@ -1549,7 +1591,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setTraffic(traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
+    setTraffic (traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
         if (traffic.length !== this._traffic.length) {
             this._traffic.forEach((aircraft) => {
                 // TODO: is there a way to remove collada objects from the scene?
@@ -1573,6 +1615,10 @@ class DAA_Airspace {
                         name: (traffic[i].name !== null || traffic[i].name !== undefined) ?
                             traffic[i].name : "traffic-" + i,
                         reference: this._ownship
+                    }, {
+                        losLayer: this.losLayer,
+                        aircraftLayer: this.trafficLayer,
+                        textLayer: this.textLayer
                     });
                     aircraft.setVelocity(traffic[i].v)
                     this._traffic.push(aircraft);
@@ -1598,7 +1644,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setTrafficPosition(traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
+    setTrafficPosition (traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
         if (traffic && traffic.length > 0) {
             for (let i = 0; i < traffic.length; i++) {
                 if (i < this._traffic.length) {
@@ -1616,6 +1662,10 @@ class DAA_Airspace {
                         symbol: "daa-target",
                         name: `target${i}`,
                         reference: this._ownship
+                    }, { 
+                        losLayer: this.losLayer, 
+                        aircraftLayer: this.trafficLayer,
+                        textLayer: this.textLayer
                     });
                     aircraft.setVelocity(traffic[i].v);
                     this._traffic.push(aircraft);
@@ -1633,7 +1683,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setTrafficSymbolsByAlert(alerts: number[]): DAA_Airspace {
+    setTrafficSymbolsByAlert (alerts: number[]): DAA_Airspace {
         if (alerts && alerts.length > 0) {
             for (let i = 0; i < alerts.length && i < this._traffic.length; i++) {
                 this._traffic[i].selectSymbolByAlert(alerts[i]);
@@ -1649,7 +1699,7 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    hideTraffic(): DAA_Airspace {
+    hideTraffic (): DAA_Airspace {
         this._traffic.forEach(function (traffic) {
             traffic.hide();
         });
@@ -1662,13 +1712,14 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    revealTraffic(): DAA_Airspace {
+    revealTraffic (): DAA_Airspace {
         this._traffic.forEach((traffic) => {
             traffic.reveal();
         });
         return this.render();
     }
-    setLoS (regions: serverInterface.DAALosRegion[]): DAA_Airspace {
+    setLoS (regions: serverInterface.DAALosRegion[], opt?: { nmi?: number }): DAA_Airspace {
+        opt = opt || {};
         this._traffic.forEach((traffic, index) => {
             // FIXME: use aircraft ID to get the regions
             if (index < regions.length) {
@@ -1682,7 +1733,9 @@ class DAA_Airspace {
                     console.log(traffic.getPosition());
                     console.log(regions);
                     console.log(reg);
-                    traffic.setLoS(reg);
+                    traffic.setLoS(reg, opt);
+                } else {
+                    traffic.setLoS(null, opt);
                 }
             }
         });
@@ -1715,11 +1768,12 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    constructor(id: string, coords: { top?: number, left?: number, width?: number, height?: number}, opt?) {
+    constructor(id: string, coords: { top?: number, left?: number, width?: number, height?: number},
+                opt?: { parent?: string, pos?: utils.LatLonAlt, offlineMap?: string, terrain?: string, atmosphere?: boolean, godsView?: boolean, los?: boolean }) {
         opt = opt || {};
         this.id = id;
         this.heading = 0; // default heading is 0 deg (i.e., pointing north)
-        this.pos = opt.pos || cities.hampton;
+        this.pos = opt.pos || { lat: cities.hampton.lat, lon: cities.hampton.lon, alt: 0 };
         this.trafficPosition = [];
         
         coords = coords || {};
@@ -1748,6 +1802,10 @@ export class InteractiveMap {
         this.wwd.setZoomLevel(5); // NMI
         this.wwd.setTrafficPosition(this.trafficPosition);
     }
+    resetView (): InteractiveMap {
+        this.wwd.resetView();
+        return this;
+    }
     /**
      * @function <a name="setHeading">setHeading</a>
      * @description Rotates the map.
@@ -1755,7 +1813,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setHeading(deg: number) {
+    setHeading(deg: number): InteractiveMap {
         this.heading = deg;
         this.wwd.setHeading(deg);
         return this;
@@ -1941,7 +1999,7 @@ export class InteractiveMap {
     // }
 
 
-    setLoS(regions: serverInterface.DAALosRegion[]) {
-        this.wwd.setLoS(regions);
+    setLoS(regions: serverInterface.DAALosRegion[], opt?: { nmi?: number }) {
+        this.wwd.setLoS(regions, opt);
     }
 }

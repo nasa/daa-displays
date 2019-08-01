@@ -54,7 +54,7 @@ endef
 clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download compile los1.x
+all: download compile los1.x daa2xyz
 
 download: $(DOWNLOAD_TARGETS)
 
@@ -80,7 +80,15 @@ los1.x:
 	-@cd utils && $(JAVAC) -cp ../WellClear-1.0.1/DAIDALUS/Java/src DAALoSRegion.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-1.0.1/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
 	-@cd utils && $(JAR) cfe ../LoSRegion-1.0.1.jar DAALoSRegion *.class
 	-@cd WellClear-1.0.1/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-1.0.1.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	unzip -vl LoSRegion-1.0.1.jar 
+	unzip -vl LoSRegion-1.0.1.jar
+
+daa2xyz:
+	@echo "\n\033[0;32m ** Building DAA2XYZ for Daidalus 2.x **\033[0m"
+	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAA2XYZ.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	-@cd utils && $(JAR) cfe ../DAA2XYZ-2.0.e.jar DAA2XYZ *.class
+	-@cd WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../DAA2XYZ-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
+	unzip -vl DAA2XYZ-2.0.e.jar
+
 
 # these final commands expand the templates
 $(call download-all)

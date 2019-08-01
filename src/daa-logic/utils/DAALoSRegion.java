@@ -65,7 +65,6 @@ public class DAALoSRegion {
 
 	protected Boolean VERBOSE = true;
 
-	protected static final EuclideanProjection eprj = Projection.createProjection(Position.ZERO_LL);
 	protected Daidalus daa = null;
 	protected Detection3D detector = null;
 	protected int alertLevel = 2;
@@ -73,11 +72,11 @@ public class DAALoSRegion {
 
 	// 1 degree latitude is 69 miles and 60nmi
 	// 1 degree longitude is ~69 miles and ~60nmi
-	// 1 nautical mile is 1.15078 miles
-	protected int sectorNMI = 5; // each sector is 5nmi x 5nmi
+	// 1 nautical mile is 1.15078 miles or 1.852km
+	protected int sectorNMI = 1; // each sector is 1nmi x 1nmi
 	protected final String sectorUnits = "nmi";
-	protected int xmax = 4;
-	protected int ymax = 4;
+	protected int xmax = 8;
+	protected int ymax = 8;
 
 	public Boolean setAlertLevel (int alertLevel) {
 		if (this.daa != null) {
@@ -126,7 +125,7 @@ public class DAALoSRegion {
 		return null;
 	}
 
-	public String printLosSettings (String scenario) {
+	public String jsonHeader (String scenario) {
 		return "\"WellClear\": { \"version\": \"" + KinematicBandsParameters.VERSION + "\", \"configuration\": \"" + this.getDaaConfigFileName() + "\" },\n"
 			+ "\"Scenario\": \"" + scenario + "\",\n"
 			+ "\"Detector\": \"" + this.detector + "\",\n"
@@ -134,13 +133,13 @@ public class DAALoSRegion {
 			+ "\"Grid\": { \"sectorSize\": " + this.sectorNMI + ", \"sectorUnits\": \"" + this.sectorUnits + "\", \"xmax\": " + this.xmax + ", \"ymax\": "+ this.ymax + " }";
 	}
 
-	public String printHorizontalLoSRegions () {
+	public String jsonHLoSRegions () {
 		TrafficState ownship = daa.getOwnshipState();
 		String time = f.Fm8(ownship.getTime());
 		String ans = "\"time\": " + time + ", \"conflicts\": [";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			TrafficState intruder = daa.getAircraftState(ac);
-			String res = printHorizontalLosRegions(detector, ownship, intruder);
+			String res = jsonHLoSRegions(detector, ownship, intruder);
 			ans += res;
 			if (ac < daa.lastTrafficIndex()) {
 				ans += ",\n";
@@ -150,82 +149,48 @@ public class DAALoSRegion {
 		return "{ " + ans + " }";
 	}
 
+
 	// horizontal conflict regions, returns a String representation of a JSON object
-    public String printHorizontalLosRegions(Detection3D detector, TrafficState ownship, TrafficState intruder) {
+    public String jsonHLoSRegions(Detection3D detector, TrafficState ownship, TrafficState intruder) {
 		if (detector != null && ownship != null && intruder != null) {
 			if (ownship.getTime() == intruder.getTime()) {
 				
-				double delta = this.sectorNMI / 60.0; // sector size, in deg
+				double delta = Units.from("nmi", this.sectorNMI); // sector size, in meters
+
+				Position po = ownship.getPosition(); // current ownship position in lat lon
+				EuclideanProjection eprj = Projection.createProjection(po); // reference point for projections is always the ownship
+				Vect3 si = intruder.get_s(); // projected intruder position
+				Velocity vi = intruder.get_v(); // projected intruder velocity
 
 				String tmp = ""; 
 				// set ownship position
 				// x and y are used to move the intruder's position over the horizontal plane
+				// FIXME: the exploration of future positions should take into account current speed and velocity of the intruder
 				int totConflictPoints = 0;
-				for (int x = -xmax; x < xmax; x++) {
-					for (int y = -ymax; y < ymax; y++) {
-						//----------
-						double deltaLat = delta * x; // deg
-						double deltaLon = delta * y; // deg
-						double deltaX = Units.to("rad", deltaLat);
-						double deltaY = Units.to("rad", deltaLon);
-						
-						// Velocity vo = ownship.get_v();
-			
-						// Position px = Position.makeLatLonAlt(
-						// 	deltaX + pi.latitude(),
-						// 	deltaY + pi.longitude(),
-						// 	pi.altitude()
-						// );
-						// // System.out.println("pi: " + pi);
-						// // System.out.println("px: " + px);
-						
-						// Vect3 so = ownship.get_s();
-						// Velocity vo = ownship.get_v();
+				for (int x = 0; x < xmax; x++) {
+					for (int y = 0; y < ymax; y++) {
+						double deltaX = Math.signum(vi.x) * delta * x; // meters, the sign of vi.x is used to place the region in the airspace before the intruder aircraft
+						double deltaY = Math.signum(vi.y) * delta * y; // meters, the sign of vi.y is used to place the region in the airspace before the intruder aircraft
 
-						// Vect3 sx = eprj.project(px);
-						// Velocity vi = intruder.get_v();
-
-						// boolean conflict = detector.violation(so, vo, sx, vi);
-						//-----------
-
-						// current ownship position
-						Position po = ownship.getPosition(); // actual position
-						Vect3 so = ownship.get_s(); // projected position
-						Velocity vo = ownship.get_v(); // velocity
-
-						// current intruder position
-						Position pi = intruder.getPosition();
-						Vect3 si = intruder.get_s(); // projected position
-						LatLonAlt lla = eprj.inverse(si);
-						Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
-
-
-						Velocity vi = intruder.get_v(); // velocity
-						
 						// future intruder position
-						// FIXME: the exploration of future positions should take into account current speed and velocity of the intruder
-						// Vect3 sx = new Vect3(si.x + deltaX, si.y + deltaY, si.z);
-						// how do I convert sx to latlonalt??
-						// project velocity of the intruder wrt the position of the ownship
-						Velocity vx = intruder.vel_to_v(po, vi);
-						boolean los = false;//detector.violation(so, vo, sx, vx);
+						Vect3 sx = si.Add(new Vect3(deltaX, deltaY, 0)); // projected intruder position + delta
+						Velocity vx = intruder.vel_to_v(po, vi); // projected velocity, wrt the ownship
+						boolean los = detector.violation(ownship.get_s(), ownship.get_v(), sx, vx);
+
+						// transforming sx back to latlon, this is necessary for rendering purposes
+						LatLonAlt lla = eprj.inverse(sx); // intruder position in latlon
+						Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt()); // px is all in internal units, i.e., lat lon alt are in meters at this point
 
 						if (this.VERBOSE || los) {
 							totConflictPoints++;
 							tmp += (tmp.equals("")) ? "\n" : ",\n";
 							tmp += "{" 
-										+ "\"lla.lat\": \"" + lla.lat() + "\", " 
-										+ "\"lla.lon\": \"" + lla.lon() + "\", " 
-										+ "\"si.x\": \"" + si.x + "\", "
-										+ "\"si.y\": \"" + si.y + "\", " 
-										// + "\"deltaX\": \"" + deltaX + "\", " 
-										+ "\"px\": \"" + px + "\", " 
-
-										+ "\"los\": " + los + ", " 
-										+ "\"level\": " + this.alertLevel + ", " 
-										+ "\"lat\": \"" + Units.convert("rad", "deg", pi.lat()) 
-										+ "\", \"lon\": \"" + Units.convert("rad", "deg", pi.lon()) 
-										+ "\", \"alt\": \"" + Units.convert("m", "ft", pi.alt()) + "\" }";
+								+ "\"los\": " + los + ", " 
+								+ "\"level\": " + this.alertLevel + ", " 
+								+ "\"lat\": \"" + Units.to("deg", px.lat()) 
+								+ "\", \"lon\": \"" + Units.to("deg", px.lon()) 
+								+ "\", \"alt\": \"" + Units.to("ft", px.alt()) 
+								+ "\" }";
 						}
 					}
 					tmp += "\n";
@@ -293,7 +258,7 @@ public class DAALoSRegion {
 		DAALoSRegion los = new DAALoSRegion(daa, alertLevel, config);
 
 		out.println("{");
-		out.print(los.printLosSettings(scenario));
+		out.print(los.jsonHeader(scenario));
 		out.println(",");
 		out.println("\"LoS\": [");
 
@@ -301,7 +266,7 @@ public class DAALoSRegion {
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
 		while (!walker.atEnd()) {
 			walker.readState(daa);
-			out.println(los.printHorizontalLoSRegions());
+			out.println(los.jsonHLoSRegions());
 			if (!walker.atEnd()) {
 				out.println(",");
 			};

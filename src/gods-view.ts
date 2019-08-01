@@ -106,7 +106,7 @@ function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: Air
     });
     const los: DAALosRegion[] = playback.getCurrentLoS();
     if (los) {
-        data.map.setLoS(los);
+        data.map.setLoS(los, { nmi: 1 });
     }
     // console.log(`Bands`, bands);
 }
@@ -134,6 +134,7 @@ playback.define("init", async () => {
     });
     // center the map at the ownship location
     const flightData: LLAData = <LLAData> playback.getCurrentFlightData();
+    map.resetView();
     map.goTo(flightData.ownship.s);
     map.setOwnshipPosition(flightData.ownship.s);
     map.setOwnshipVelocity(flightData.ownship.v);
