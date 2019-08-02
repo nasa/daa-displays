@@ -1185,6 +1185,7 @@ class DAA_Aircraft extends Aircraft {
      */
     hide(): DAA_Aircraft {
         if (this.aircraft) {
+            this.aircraftVisible = false;
             this.aircraft.hide();
             if (this.text) {
                 this.text.enabled = false;
@@ -1204,6 +1205,7 @@ class DAA_Aircraft extends Aircraft {
      */
     reveal(): DAA_Aircraft {
         if (this.aircraft) {
+            this.aircraftVisible = true;
             this.aircraft.reveal();
             if (this.text) {
                 this.text.enabled = true;
@@ -1341,7 +1343,7 @@ class DAA_Airspace {
         opt.shader = (isNaN(+opt.shader)) ? 0.4 : +opt.shader;
         this.godsView = !!opt.godsView;
         this.callSignVisible = !!opt.callSignVisible;
-        this.trafficVisible = !!opt.trafficVisible;
+        this.trafficVisible = (this.godsView) ? true : !!opt.trafficVisible;
         this.offlineMap = opt.offlineMap;
 
         // create worldwind view in the canvas
@@ -1391,7 +1393,8 @@ class DAA_Airspace {
             alt: opt.ownship.alt,
             symbol: "daa-ownship",
             callSign: "ownship",
-            callSignVisible: this.callSignVisible
+            callSignVisible: this.callSignVisible,
+            aircraftVisible: this.godsView
         }, {
             losLayer: this.losLayer,
             aircraftLayer: this.ownshipLayer,
@@ -1416,13 +1419,15 @@ class DAA_Airspace {
         // Create atmosphere layer
         if (opt.atmosphere) {
             this.atmosphereLayer = new WorldWind.AtmosphereLayer();
-            const timestamp = Date.now(); // The current date will be given to initialize the simulation of the sun postion.
-            this.atmosphereLayer.time = new Date(timestamp); // Atmosphere layer requires a date to simulate the Sun position at that time.
+            const timestamp = Date.now(); // The current date will be given to initialize the position of the sun.
+            this.atmosphereLayer.time = new Date(timestamp); // Atmosphere layer requires a date to simulate the position of the Sun.
             this.wwd.addLayer(this.atmosphereLayer);
         }
 
         // show coordinates
-        // this.wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(this.wwd));
+        if (this.godsView) {
+            this.wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(this.wwd));
+        }
 
         // this.wwd.addLayer(new WorldWind.CompassLayer());
         // this.wwd.addLayer(new WorldWind.ViewControlsLayer(this.wwd));

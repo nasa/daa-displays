@@ -41,6 +41,9 @@ export declare class Color {
 export declare class DrawContext {
     canvas2D: HTMLElement;
     clearColor: Color;
+    eyePosition: Position;
+    currentGlContext: WebGLRenderingContext;
+    globe: Globe;
     constructor(gl: WebGLRenderingContext);
 }
 export declare class Renderable {
@@ -201,15 +204,29 @@ export declare class AtmosphereLayer extends RenderableLayer {
 }
 export declare class CoordinatesDisplayLayer extends RenderableLayer {
     constructor (worldWindow: WorldWindow);
+    doRender (dc: DrawContext): void;
+    eyeText: GeographicText;
 }
 export declare class GeographicMesh extends AbstractMesh {
     constructor(positions: Position[], attributes: ShapeAttributes);
     altitudeMode: string;
     attributes: ShapeAttributes;
 }
+export declare class ElevationModel {
+    coverages: any[];
+}
+export declare class GeographicProjection {
+    constructor (displayName: string, continuous: boolean, projectionLimits: Sector);
+}
+export declare class Globe {
+    constructor (elevationModel: ElevationModel, projecttion: GeographicProjection);
+    is2D (): boolean;
+}
 export const REDRAW_EVENT_TYPE: string;
 export const ABSOLUTE: string;
 export const OFFSET_PIXELS: number;
+export const OFFSET_INSET_PIXELS: number;
+export const OFFSET_FRACTION: number;
 
 export declare const CLAMP_TO_GROUND: string;
 export declare const RELATIVE_TO_GLOBE: string;
