@@ -44,7 +44,7 @@ daa-displays-1.0.0
 │   ├── daa-server                       // Server-side component of DAA-Displays
 │   │
 │   ├── LICENSES                         // NASA Open Source License Agreement
-│   ├── index.html                       // Single-view demo app (DAnTI)
+│   ├── index.html                       // Single-view demo app (DaNTi)
 │   ├── split.html                       // Split-view demo app
 │   └── gods.html                        // Gods-view demo app
 │
