@@ -93,6 +93,7 @@ require(["widgets/daa-displays/daa-compass"], function (Compass) {
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-compass-templates';
 import * as server from '../daa-server/utils/daa-server';
+import { InteractiveMap } from './daa-interactive-map';
 
 const strokeWidth = 8;
 // const compassTemplate = require("text!widgets/daa-displays/templates/daa-compass.handlebars");
@@ -112,7 +113,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    constructor (id, daaCompass) {
+    constructor (id: string, daaCompass: Compass) {
         this.id = id;
         this.compass = daaCompass;
         this.deg = 0;
@@ -125,7 +126,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setAngle(deg) {
+    setAngle(deg: number): ResolutionBug {
         this.deg = deg;
         this.refresh();
         return this;
@@ -138,7 +139,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    getAngle() {
+    getAngle(): number {
         return this.deg;
     }
     /**
@@ -148,11 +149,11 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    refresh() {
-        $("#" + this.id).css({ "transition-duration": "500ms", "transform": "rotate(" + this.deg + "deg)" });
+    refresh(): ResolutionBug {
+        $(`#${this.id}`).css({ "transition-duration": "500ms", "transform": `rotate(${this.deg}deg)` });
         let alert = (this.compass) ? this.compass.getAlert(this.deg) : "NONE";
-        $("." + this.id + "-bg").css({ "background-color": utils.bugColors[alert] });
-        $("." + this.id + "-bl").css({ "border-left": "2px dashed " + utils.bugColors[alert] });
+        $(`.${this.id}-bg`).css({ "background-color": utils.bugColors[alert] });
+        $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${utils.bugColors[alert]}` });
         return this;
     }
 }
@@ -194,7 +195,7 @@ function _draw_bands (_this) {
             color: utils.bandColors[alert].color
         });                        
     });
-    $("#" + _this.id + "-bands").html(theHTML);
+    $(`#${_this.id}-bands`).html(theHTML);
 }
 
 // utility function, updates the compass angle
@@ -232,7 +233,7 @@ export class Compass {
     left: number;
     currentCompassAngle: number;
     nrthup: boolean;
-    map: any;
+    map: InteractiveMap;
     bands: utils.Bands;
     canvas: HTMLCanvasElement;
     radius: number;
@@ -255,7 +256,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    constructor(id: string, coords: utils.Coords, opt?) {
+    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, parent?: string}) {
         opt = opt || {};
         this.id = id || "daa-compass";
 
@@ -301,7 +302,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setCompass(data: number | utils.Vector3D | server.Vector3D, opt?: { units?: string }) {
+    setCompass(data: number | utils.Vector3D | server.Vector3D, opt?: { units?: string }): Compass {
         opt = opt || {};
         // x and y are swapped in atan2 because axes are inverted in the map view (x is the aircraft direction, and it's facing up)
         const deg = (typeof data === "number")? data : 
@@ -321,7 +322,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBug(deg: number) {
+    setBug(deg: number): Compass {
         this.resolutionBug.setAngle(deg);
         return this;
     }
@@ -347,7 +348,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBands(bands, opt?) {
+    setBands(bands, opt?: { units?: string }): Compass {
         opt = opt || {};
         function normaliseCompassBand(b) {
             // normaliseRange converts range in bands to positive degrees (e.g., -10..0 becomes 350..360), and range.from is always < range.to 
@@ -400,8 +401,8 @@ export class Compass {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    getAlert(deg) {
-        function normalise(deg) {
+    getAlert(deg: number): string {
+        function normalise(deg: number) {
             return (deg % 360 + 360) % 360;
         }
         function isWithinBand(b) {
@@ -432,28 +433,17 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    resetCompass() {
+    resetCompass(): Compass {
         return this.setCompass(0);
     }
     /**
-     * @function <a name="setNRTHUP">setNRTHUP</a>
+     * @function <a name="nrthupViewOn">nrthupViewOn</a>
      * @description Sets the mode of operation to north up.
      * @memberof module:Compass
      * @instance
      */
-    setNRTHUP() {
-        this.nrthup = true;
-        _update_compass(this, { transitionDuration: "0ms" });
-        return this;
-    }
-    /**
-     * @function <a name="resetNRTHUP">setNRTHUP</a>
-     * @description Sets the mode of operation to standard.
-     * @memberof module:Compass
-     * @instance
-     */
-    resetNRTHUP() {
-        this.nrthup = false;
+    nrthupView(on: boolean): Compass {
+        this.nrthup = on;
         _update_compass(this, { transitionDuration: "0ms" });
         return this;
     }
@@ -464,7 +454,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    getHeading() {
+    getHeading(): number {
         return this.currentCompassAngle;
     }
 }

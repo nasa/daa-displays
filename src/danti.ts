@@ -38,6 +38,7 @@ import { DAAPlayer } from './daa-displays/daa-player';
 import { LLAData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -102,6 +103,9 @@ const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { pare
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
+// map view options
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
+// create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { parent: "daa-disp" });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
@@ -119,6 +123,7 @@ playback.define("init", async () => {
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
+    viewOptions.applyCurrentViewOptions();
 });
 async function createPlayer() {
     playback.appendSimulationPlot({
@@ -171,55 +176,3 @@ async function createPlayer() {
     await playback.activate();
 }
 createPlayer();
-
-// split view
-// $('#daa-disp').css("display", "none");
-// const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 6 }, { parent: "daa-disp-left" ,terrain: "OpenStreetMap" });
-// const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left });
-// const airspeedTape_left = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
-// const altitudeTape_left = new AltitudeTape("altitude-left", { top: 100, left: 600 }, { parent: "daa-disp-left" });
-// const verticalSpeedTape_left = new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-left" });
-
-// const map_right: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 6 }, { parent: "daa-disp-right" ,terrain: "OpenStreetMap" });
-// const compass_right: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_left });
-// const airspeedTape_right = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-right" });
-// const altitudeTape_right = new AltitudeTape("altitude-left", { top: 100, left: 600 }, { parent: "daa-disp-right" });
-// const verticalSpeedTape_right = new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-right" });
-
-// const playback: DAASplitView = new DAASplitView();
-// playback.define("step", async () => {
-//     console.log('rendering left display');
-//     render({
-//         map: map_left, compass: compass_left, airspeedTape: airspeedTape_left, 
-//         altitudeTape: altitudeTape_left, verticalSpeedTape: verticalSpeedTape_left
-//     });
-//     console.log('rendering right display')
-//     render({
-//         map: map_right, compass: compass_right, airspeedTape: airspeedTape_right, 
-//         altitudeTape: altitudeTape_right, verticalSpeedTape: verticalSpeedTape_right
-//     });
-// });
-// playback.define("init", async () => {
-//     // compute java output
-//     await playback.getPlayer("left").java({
-//         alertingLogic: "DAAtoPVS-1.0.1.jar",
-//         alertingConfig: "WC_SC_228_nom_a.txt"
-//     });
-//     await playback.getPlayer("right").java({
-//         alertingLogic: "DAAtoPVS-1.0.1.jar",
-//         alertingConfig: "WC_SC_228_nom_b.txt"
-//     });
-// });
-// playback.listDaaFiles().then(async (daaFiles: string[]) => {
-//     console.log(`daa files`, daaFiles);
-//     if (daaFiles) {
-//         playback.appendSimulationControls({
-//             parent: "simulation-controls",
-//             scenarios: daaFiles
-//         });
-//         // // load files
-//         // await playback.loadDaaFiles();
-//         // // do one step
-//         // playback.step();
-//     }
-// });

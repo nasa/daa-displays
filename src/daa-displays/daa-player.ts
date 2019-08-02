@@ -406,8 +406,25 @@ export class DAAPlayer {
         const theHTML = Handlebars.compile(templates.sidePanelTemplate)({
             id: this.id
         });
-        utils.createDiv(`${this.id}-scenario-selector`, { xIndex: 10 });
+        utils.createDiv(`${this.id}-scenario-selector`, { zIndex: 99 });
         $(`#${this.id}-scenario-selector`).html(theHTML);
+
+        // make side panel resizeable
+        const min: number = 20;
+        $("#sidebar-resize").mousedown((e) => {
+            e.preventDefault();
+            $(document).on("mousemove", (e: JQuery.MouseMoveEvent) => {
+                e.preventDefault();
+                $("#sidebar-panel").removeClass("col-md-2");
+                const x: number = e.pageX - $("#sidebar-panel").offset().left;
+                if (x > min && e.pageX < $(window).width()) {
+                    $("#sidebar-panel").css("width", x);
+                }
+            });
+        });
+        $(document).on("mouseup", (e: JQuery.MouseUpEvent) => {
+            $(document).unbind("mousemove");
+        });
     }
 
     disableSelection() {

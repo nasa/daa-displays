@@ -980,14 +980,14 @@
      d="null"
      points="null"
      id="line7995"
-     style="stroke:#008000" />
+     style="stroke:#00bf00; stroke-width:2;" />
   <line
      x1="252.23997"
      x2="252.23997"
      y1="464.20001"
      y2="501.88995"
      id="line7997"
-     style="stroke:#008000" />
+     style="stroke:#00bf00; stroke-width:2;" />
   <text
      style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text7999"
@@ -1288,14 +1288,14 @@
      d="null"
      points="null"
      id="line8065"
-     style="stroke:#008000;stroke-width:0.99092454" />
+     style="stroke:#00bf00;stroke-width:2;" />
   <line
      x1="252.23997"
      x2="252.23997"
      y1="1.2879858"
      y2="38.463985"
      id="line8067"
-     style="stroke:#008000" />
+     style="stroke:#00bf00;stroke-width:2;" />
   <text
      x="240.18593"
      y="58.756996"

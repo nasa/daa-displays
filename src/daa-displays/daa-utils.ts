@@ -134,7 +134,7 @@ export function limit(min: number, max: number, name?: string): (val: number) =>
     };
 }
 
-export function createDiv(id: string, opt?: any): HTMLElement {
+export function createDiv(id: string, opt?: { zIndex?: number, top?: number, left?: number, parent?: string }): HTMLElement {
     opt = opt || {};
     opt.zIndex = opt.zIndex || 0;
     const div: JQuery<HTMLElement> = $('<div></div>');//document.createElement("div");

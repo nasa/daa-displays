@@ -69,9 +69,9 @@ export const daidalusAttributesTemplate: string = `
 export const sidePanelTemplate: string = `
 <div class="container-fluid">
 <div class="row">
-    <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+    <nav id="sidebar-panel" class="col-md-2 d-none d-md-block bg-light sidebar">
+        <div id="sidebar-resize" style="float:right; width: 6px; cursor: col-resize; height: 100%; background-color: #272b2f;"></div>
         <div class="sidebar-sticky">
-
             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                 <span><b>Scenarios</b></span> 
                 <button id="{{id}}-refresh-scenarios" class="btn btn-secondary btn-sm" type="button">

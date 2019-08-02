@@ -1,19 +1,21 @@
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-hscale-templates';
+import { InteractiveMap } from './daa-interactive-map';
 
 export class HScale {
-    private id: string;
-    private top: number;
-    private left: number;
-    private zoomLevel: number;
-    private map: any; // TODO: create a declaration file for daa-interactive-map.js
-    private div: HTMLElement;
+    protected id: string;
+    protected top: number;
+    protected left: number;
+    protected zoomLevel: number;
+    protected map: InteractiveMap;
+    protected div: HTMLElement;
     readonly nRadios: number = 16;
-    private readonly nmiRadios = [ 0, // valid radio IDs start from 1
+    protected readonly nmiRadios: number[] = [ 0, // valid radio IDs start from 1
         0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.5, 2, 
-        2.5, 5, 10, 20, 40, 80, 160, 320 ];
+        2.5, 5, 10, 20, 40, 80, 160, 320
+    ];
 
-    constructor(id: string, coords: utils.Coords, opt?) {
+    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, parent?: string }) {
         opt = opt || {};
         this.id = id || "daa-hscale";
 
@@ -45,19 +47,19 @@ export class HScale {
         // install handlers
         for (let i = 0; i < this.nRadios; i++) {
             let radioID = i + 1;
-            $("#" + this.id + "-radio" + radioID + "-overlay").on("click", () => {
+            $(`#${this.id}-radio${radioID}-overlay`).on("click", () => {
                 this.checkRadio(radioID);
             });
         }
     }
-    private checkInput(inputID: number) {
+    protected checkInput(inputID: number): HScale {
         $(`#${this.id}-radio-${inputID}`).prop("checked", true);
-        this.updateBackground(inputID);
+        this.updateBackground();
         return this;
     }
-    private updateBackground(inputID: number) {
+    protected updateBackground(): HScale {
         const updateColor = (id: string, inputID: number) => {
-            let isChecked = $(`#${id}-radio-${inputID}`).prop("checked");
+            const isChecked = $(`#${id}-radio-${inputID}`).prop("checked");
             if (isChecked) {
                 $(`#${id}-radio${inputID}`).css("background-color", "green");
             } else {
@@ -69,11 +71,15 @@ export class HScale {
         }    
         return this;
     }
-    checkRadio(radioID: number) {
+    checkRadio(radioID: number): HScale {
         this.checkInput(radioID);
         this.zoomLevel = radioID;
         const NMI = this.nmiRadios[this.zoomLevel];
-        this.map.setZoomLevel(NMI);
+        if (this.map) {
+            this.map.setZoomLevel(NMI);
+        } else {
+            console.warn("Warning: HScale is not linked to an interactive map object");
+        }
         return this;
     }
 }
