@@ -43,20 +43,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Hashtable;
-import java.util.ArrayList;
 
-import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
-import gov.nasa.larcfm.ACCoRD.DaidalusParameters;
 import gov.nasa.larcfm.ACCoRD.SUMData;
 import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.EuclideanProjection;
 import gov.nasa.larcfm.Util.LatLonAlt;
 import gov.nasa.larcfm.Util.Position;
 import gov.nasa.larcfm.Util.Units;
-import gov.nasa.larcfm.Util.Util;
 import gov.nasa.larcfm.Util.Vect3;
 import gov.nasa.larcfm.Util.Velocity;
 import gov.nasa.larcfm.Util.f;
@@ -119,7 +114,7 @@ public class DAA2XYZ {
 		return str + " ".repeat(padding);
 	}
 
-    public String printXYZ(TrafficState ownship, TrafficState intruder, double time) {
+	public String printXYZ(TrafficState ownship, TrafficState intruder, double time) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
 		Velocity vi = intruder.get_v(); // projected velocity of the intruder
@@ -197,7 +192,6 @@ public class DAA2XYZ {
 		PrintWriter out = new PrintWriter(System.out);
 		PrintWriter out2 = new PrintWriter(System.out);
 		
-		String daaConfig = null;
 		String scenario = null;
 		String output = null;
 

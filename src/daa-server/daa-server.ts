@@ -314,7 +314,7 @@ class DAAServer {
                                     console.error(`Error while reading daa bands file ${path.join(javaOutputPath, bandsFile)}`);
                                 }
                             } else {
-                                console.error(`Error while generating bands file name (name is null) :/`);
+                                console.error(`Error while generating daa bands file name (name is null) :/`);
                             }
                             break;
                         }
@@ -327,20 +327,21 @@ class DAAServer {
                                 const wellClearVersion: string = await this.javaProcess.getVersion(data.daaLogic);
                                 const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
                                 if (this.useCache && fs.existsSync(path.join(javaOutputPath, losFile))) {
-                                    console.log(`Reading bands file ${losFile} from cache`);
+                                    console.log(`Reading daa los regions file ${losFile} from cache`);
                                 } else {
-                                    await this.javaProcess.execLoS(data.daaLogic, data.daaConfig, data.scenarioName);
+                                    const losLogic: string = data.daaLogic.replace("WellClear-", "LoSRegion-");
+                                    await this.javaProcess.execLoS(losLogic, data.daaConfig, data.scenarioName);
                                 }
                                 try {
                                     // WellClear-1.0.1/DAIDALUS/Scenarios/H1.daa
                                     const buf: Buffer = fs.readFileSync(path.join(javaOutputPath, losFile));
                                     content.data = buf.toLocaleString();
-                                    this.trySend(wsocket, content, "daa bands");
+                                    this.trySend(wsocket, content, "daa los regions");
                                 } catch (readError) {
-                                    console.error(`Error while reading daa bands file ${path.join(javaOutputPath, losFile)}`);
+                                    console.error(`Error while reading daa los regions file ${path.join(javaOutputPath, losFile)}`);
                                 }
                             } else {
-                                console.error(`Error while generating bands file name (name is null) :/`);
+                                console.error(`Error while generating daa los regions file name (name is null) :/`);
                             }
                             break;
                         }

@@ -43,15 +43,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Hashtable;
 import java.util.ArrayList;
 
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
 import gov.nasa.larcfm.ACCoRD.DaidalusParameters;
-import gov.nasa.larcfm.Util.Units;
-import gov.nasa.larcfm.Util.Util;
 import gov.nasa.larcfm.Util.f;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
@@ -82,7 +79,7 @@ public class DAABandsV2 {
 		}
 	}
 
-	private static void printBands(PrintWriter out, ArrayList bands, String label) {
+	protected static void printBands(PrintWriter out, ArrayList<String> bands, String label) {
 		out.println("\"" + label + "\": [");
 		for (int i = 0; i < bands.size(); i++) {
 			out.print(bands.get(i));
@@ -162,40 +159,40 @@ public class DAABandsV2 {
 		
         out.println("\"Scenario\": \"" + scenario + "\",");  
 
-		String str_to = "";
-		String str_trko = "";
-		String str_gso = "";
-		String str_vso = "";
-		String str_alto = "";
-		ArrayList trkArray = new ArrayList();
-		ArrayList gsArray = new ArrayList();
-		ArrayList vsArray = new ArrayList();
-		ArrayList altArray = new ArrayList();
-		ArrayList alertsArray = new ArrayList();
+		// String str_to = "";
+		// String str_trko = "";
+		// String str_gso = "";
+		// String str_vso = "";
+		// String str_alto = "";
+		ArrayList<String> trkArray = new ArrayList<String>();
+		ArrayList<String> gsArray = new ArrayList<String>();
+		ArrayList<String> vsArray = new ArrayList<String>();
+		ArrayList<String> altArray = new ArrayList<String>();
+		ArrayList<String> alertsArray = new ArrayList<String>();
 
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
 			
-			str_to += f.FmPrecision(daa.getCurrentTime())+" ";
+			// str_to += f.FmPrecision(daa.getCurrentTime())+" ";
 
-			double trko = Util.to_pi(daa.getOwnshipState().horizontalDirection());
-			str_trko += f.FmPrecision(Units.to("deg",trko))+" ";
+			// double trko = Util.to_pi(daa.getOwnshipState().horizontalDirection());
+			// str_trko += f.FmPrecision(Units.to("deg",trko))+" ";
 
-			double gso = daa.getOwnshipState().horizontalSpeed();
-			str_gso += f.FmPrecision(Units.to(hs_units,gso))+" ";
+			// double gso = daa.getOwnshipState().horizontalSpeed();
+			// str_gso += f.FmPrecision(Units.to(hs_units,gso))+" ";
 
-			double vso = daa.getOwnshipState().verticalSpeed();
-			str_vso += f.FmPrecision(Units.to(vs_units,vso))+" ";
+			// double vso = daa.getOwnshipState().verticalSpeed();
+			// str_vso += f.FmPrecision(Units.to(vs_units,vso))+" ";
 
-			double alto = daa.getOwnshipState().altitude();
-			str_alto += f.FmPrecision(Units.to(alt_units,alto))+" ";
+			// double alto = daa.getOwnshipState().altitude();
+			// str_alto += f.FmPrecision(Units.to(alt_units,alto))+" ";
 
 			String time = f.FmPrecision(daa.getCurrentTime());
 			String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 			String tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-				int alert = daa.alerting(ac);
+				int alert = daa.alertLevel(ac);
 				String ac_name = daa.getAircraftStateAt(ac).getId();
 				if (tmp != "") { tmp += ", "; }
 				tmp += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + alert + "\" }";

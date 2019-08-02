@@ -123,12 +123,12 @@ playback.define("step", async () => {
 playback.define("init", async () => {
     // compute java output
     await playback.java({
-        alertingLogic: `${playback.getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+        alertingLogic: `${playback.getSelectedWellClearVersion()}.jar`,
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
     await playback.javaLoS({
-        losLogic: null, //`${playback.getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+        losLogic: `${playback.getSelectedWellClearVersion()}.jar`,
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
