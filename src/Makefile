@@ -8,7 +8,7 @@ install-dependencies:
 	@cd daa-server && npm install
 
 compile:
-	cd daa-logic && make all && make compile
+	cd daa-logic && make all
 
 clean:
 	cd daa-logic && make clean

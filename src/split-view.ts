@@ -39,8 +39,7 @@ import { DAASplitView } from './daa-displays/daa-split-view';
 import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
-import { playbackTemplate } from './daa-displays/templates/daa-playback-templates';
-
+// import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -55,10 +54,12 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     data.altitudeTape.setAltitude(alt);
     // console.log(`Flight data`, flightData);
     const bands: utils.DAABandsData = playback.getPlayer(playerID).getCurrentBands();
-    data.compass.setBands(bands["Heading Bands"]);
-    data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
-    data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-    data.altitudeTape.setBands(bands["Altitude Bands"]);
+    if (bands) {
+        data.compass.setBands(bands["Heading Bands"]);
+        data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
+        data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
+        data.altitudeTape.setBands(bands["Altitude Bands"]);
+    }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
@@ -102,6 +103,8 @@ const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 
 const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left });
 // map zoom is controlled by nmiSelector
 const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left });
+// map view options
+// const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { parent: "daa-disp-left", compass: compass_left, map: map_left });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
 const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 600 }, { parent: "daa-disp-left" });
 const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
@@ -111,6 +114,8 @@ const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left
 const compass_right: Compass = new Compass("compass-right", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_right });
 // map zoom is controlled by nmiSelector
 const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right });
+// map view options
+// const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { parent: "daa-disp-right", compass: compass_right, map: map_right });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
 const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 600 }, { parent: "daa-disp-right" });
 const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", {top: 210, left: 600 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
@@ -141,6 +146,7 @@ playback.getPlayer("left").define("init", async () => {
         alertingConfig: playback.getPlayer("left").getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
+    // viewOptions_left.applyCurrentViewOptions();
 });
 playback.getPlayer("right").define("init", async () => {
     // init right
@@ -149,6 +155,7 @@ playback.getPlayer("right").define("init", async () => {
         alertingConfig: playback.getPlayer("right").getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
+    // viewOptions_right.applyCurrentViewOptions();
 });
 async function createPlayer() {
     playback.appendNavbar();

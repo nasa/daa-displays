@@ -48,18 +48,41 @@ import java.util.ArrayList;
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
-import gov.nasa.larcfm.ACCoRD.DaidalusParameters;
 import gov.nasa.larcfm.Util.f;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class DAABandsV2 {
 
-	static void printHelpMsg() {
-		System.out.println("Version: DAIDALUS V-" + DaidalusParameters.VERSION);
+	protected String tool_name = "DAABandsV2";
+
+	Daidalus daa = null;
+
+	protected String daaConfig = null;
+	protected String scenario = null;
+	protected String ofname = null; // output file name
+	protected String ifname = null; // input file name
+
+	PrintWriter out = null;
+
+	public String getConfigFileName() {
+		return this.daaConfig;
+	}
+	public String getScenarioFileName() {
+		return this.scenario;
+	}
+	public String getOutputFileName() {
+		return this.ofname;
+	}
+	public String getInputFileName() {
+		return this.ifname;
+	}
+
+	void printHelpMsg() {
+		System.out.println("Version: DAIDALUS " + getVersion());
 		System.out.println("Generates a file that can be rendered in daa-displays");
 		System.out.println("Usage:");
-		System.out.println("  DAABandsV2 [options] file");
+		System.out.println("  " + tool_name + " [options] file");
 		System.out.println("Options:");
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint WellClear version");
@@ -70,12 +93,12 @@ public class DAABandsV2 {
 
 	static String region2str(BandsRegion r) {
 		switch (r) {
-		case NONE: return "0";
-		case FAR: return "1";
-		case MID: return "2";
-		case NEAR: return "3";
-		case RECOVERY: return "4";
-		default: return "-1";
+			case NONE: return "0";
+			case FAR: return "1";
+			case MID: return "2";
+			case NEAR: return "3";
+			case RECOVERY: return "4";
+			default: return "-1";
 		}
 	}
 
@@ -92,171 +115,143 @@ public class DAABandsV2 {
 		out.println("]");
 	}
 
-	public static void main(String[] args) {
-		PrintWriter out = new PrintWriter(System.out);
-		String config = null;
-		String scenario = null;
-		String output = null;
 
-		/* Reading and processing options */
-		int a=0;
-		for (;a < args.length && args[a].startsWith("-"); ++a) {
-			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-				printHelpMsg();
-			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
-				config = args[++a];
-			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
-				output = args[++a];
-			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
-				System.out.println(VERSION);
-				System.exit(0);
-			} else if (args[a].startsWith("-")) {
-				System.err.println("** Error: Invalid option ("+args[a]+")");
-				System.exit(1);
-			}
-		}
-		if (a+1 != args.length) {
-			System.err.println("** Error: Expecting exactly one input file. Try --help for usage.");
-			System.exit(1);
-		} 
-		String input = args[a];
-		File file = new File(input);
-		if (!file.exists() || !file.canRead()) {
-			System.err.println("** Error: File "+input+" cannot be read");
-			System.exit(1);
-		}
-		try {
-			String name = file.getName();
-			scenario = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
-			if (output == null) {
-				output = scenario + ".json";
-			} 
-			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
-			System.out.println("Writing file " + output);
-		} catch (Exception e) {
-			System.err.println("** Error: "+e);
-			System.exit(1);
-		}
-
+	DAABandsV2 () {
 		/* Create Daidalus object and setting the configuration parameters */
-		Daidalus daa  = new Daidalus();
+		this.daa = new Daidalus();
+	}
 
-		if (config != null && !daa.loadFromFile(config)) {
-		    System.err.println("** Error: Configuration file " + config + " not found");
-		    System.exit(1);
+	public Boolean loadDaaConfig () {
+		if (daa != null) {
+			if (daaConfig != null) {
+				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
+				if (paramLoaded) {
+					return true;
+				} else {
+					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default WellClear configuration.");
+				}
+			} else {
+				System.err.println("** Warning: Configuration file not specified. Using default WellClear configuration.");
+			}
+		} else {
+			System.err.println("** Error: Daidalus is not initialized.");
 		}
+		return false;
+	}
 
-		/* Creating a DaidalusFileWalker */
-		DaidalusFileWalker walker = new DaidalusFileWalker(input);
+	public String getDaaConfigFileName () {
+		if (daaConfig != null) {
+			return daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
+		}
+		return null;
+	}
+	
+	public String jsonHeader (String scenario) {
+		return "\"WellClear\":\n"
+				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfigFileName() + "\" },"
+				+   "\"Scenario\": \"" + scenario + "\",";  
+	}
+
+	protected String jsonBands (Daidalus daa, ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray) {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
 
-		String conf = (config != null) ? config.split("/")[config.split("/").length - 1] : "";
+		String time = f.FmPrecision(daa.getCurrentTime());
+		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
+		String tmp = "";
+		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
+			int alert = daa.alertLevel(ac);
+			String ac_name = daa.getAircraftStateAt(ac).getId();
+			if (tmp != "") { tmp += ", "; }
+			tmp += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + alert + "\" }";
+		}
+		alerts += tmp;
+		alerts += " ]}";
+		alertsArray.add(alerts);
 
-		out.print("{\n\"WellClear\": ");
-		out.println("{ \"version\": " + "\"" + VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");
+		String trk = "{ \"time\": " + time;
+		trk += ", \"bands\": [ ";
+		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
+			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, "deg");
+			trk += ", \"units\": \"deg\"";
+			trk += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
+			if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
+		}
+		trk += " ]}";
+		trkArray.add(trk);
+
+		String gs = "{ \"time\": " + time;
+		gs += ", \"bands\": [ ";
+		for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
+			gs += "{ \"range\": " + daa.horizontalSpeedIntervalAt(i, hs_units);
+			gs += ", \"units\": \"" + hs_units + "\"";
+			gs += ", \"alert\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
+			if (i < daa.horizontalSpeedBandsLength() - 1) { gs += ", "; }
+		}
+		gs += " ]}";
+		gsArray.add(gs);
+
+		String vs = "{ \"time\": " + time;
+		vs += ", \"bands\": [ ";
+		for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
+			vs += "{ \"range\": " + daa.verticalSpeedIntervalAt(i, vs_units);
+			vs += ", \"units\": \"" + vs_units + "\"";
+			vs += ", \"alert\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
+			if (i < daa.verticalSpeedBandsLength() - 1) { vs += ", "; }
+		}
+		vs += " ]}";
+		vsArray.add(vs);
 		
-        out.println("\"Scenario\": \"" + scenario + "\",");  
+		String alt = "{ \"time\": " + time;
+		alt += ", \"bands\": [ ";
+		for (int i = 0; i < daa.altitudeBandsLength(); i++) {
+			alt += "{ \"range\": " + daa.altitudeIntervalAt(i, alt_units);
+			alt += ", \"units\": \"" + alt_units + "\"";
+			alt += ", \"alert\": \"" + daa.altitudeRegionAt(i) + "\" }";
+			if (i < daa.altitudeBandsLength() - 1) { alt += ", "; }
+		}
+		alt += " ]}";
+		altArray.add(alt);
 
-		// String str_to = "";
-		// String str_trko = "";
-		// String str_gso = "";
-		// String str_vso = "";
-		// String str_alto = "";
+		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
+					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
+					+ ", \"units\": \"" + hs_units + "\" },\n"
+					+ "\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
+					+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
+					+ ", \"units\": \"" + vs_units + "\" },\n"
+					+ "\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
+					+ ", \"max\": " + daa.getMaxAltitude(alt_units)
+					+ ", \"units\": \"" + alt_units + "\" },\n"
+					+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";
+		return stats;
+	}
+	public void walkFile (DaidalusWrapperInterface wrapper) {
+		this.createPrintWriter();
+
+		/* Create DaidalusFileWalker */
+		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
+
+		out.println("{" + this.jsonHeader(scenario));
+
 		ArrayList<String> trkArray = new ArrayList<String>();
 		ArrayList<String> gsArray = new ArrayList<String>();
 		ArrayList<String> vsArray = new ArrayList<String>();
 		ArrayList<String> altArray = new ArrayList<String>();
 		ArrayList<String> alertsArray = new ArrayList<String>();
 
+		String jsonStats = null;
+
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
-			
-			// str_to += f.FmPrecision(daa.getCurrentTime())+" ";
-
-			// double trko = Util.to_pi(daa.getOwnshipState().horizontalDirection());
-			// str_trko += f.FmPrecision(Units.to("deg",trko))+" ";
-
-			// double gso = daa.getOwnshipState().horizontalSpeed();
-			// str_gso += f.FmPrecision(Units.to(hs_units,gso))+" ";
-
-			// double vso = daa.getOwnshipState().verticalSpeed();
-			// str_vso += f.FmPrecision(Units.to(vs_units,vso))+" ";
-
-			// double alto = daa.getOwnshipState().altitude();
-			// str_alto += f.FmPrecision(Units.to(alt_units,alto))+" ";
-
-			String time = f.FmPrecision(daa.getCurrentTime());
-			String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
-			String tmp = "";
-			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-				int alert = daa.alertLevel(ac);
-				String ac_name = daa.getAircraftStateAt(ac).getId();
-				if (tmp != "") { tmp += ", "; }
-				tmp += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + alert + "\" }";
+			if (wrapper != null) {
+				wrapper.adjustAlertingTime();
 			}
-			alerts += tmp;
-			alerts += " ]}";
-			alertsArray.add(alerts);
-
-			String trk = "{ \"time\": " + time;
-			trk += ", \"bands\": [ ";
-			for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-				trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, "deg");
-				trk += ", \"units\": \"deg\"";
-				trk += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
-				if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
-			}
-			trk += " ]}";
-			trkArray.add(trk);
-
-			String gs = "{ \"time\": " + time;
-			gs += ", \"bands\": [ ";
-			for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
-				gs += "{ \"range\": " + daa.horizontalSpeedIntervalAt(i, hs_units);
-				gs += ", \"units\": \"" + hs_units + "\"";
-				gs += ", \"alert\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
-				if (i < daa.horizontalSpeedBandsLength() - 1) { gs += ", "; }
-			}
-			gs += " ]}";
-			gsArray.add(gs);
-
-			String vs = "{ \"time\": " + time;
-			vs += ", \"bands\": [ ";
-			for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
-				vs += "{ \"range\": " + daa.verticalSpeedIntervalAt(i, vs_units);
-				vs += ", \"units\": \"" + vs_units + "\"";
-				vs += ", \"alert\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
-				if (i < daa.verticalSpeedBandsLength() - 1) { vs += ", "; }
-			}
-			vs += " ]}";
-			vsArray.add(vs);
-			
-			String alt = "{ \"time\": " + time;
-			alt += ", \"bands\": [ ";
-			for (int i = 0; i < daa.altitudeBandsLength(); i++) {
-				alt += "{ \"range\": " + daa.altitudeIntervalAt(i, alt_units);
-				alt += ", \"units\": \"" + alt_units + "\"";
-				alt += ", \"alert\": \"" + daa.altitudeRegionAt(i) + "\" }";
-				if (i < daa.altitudeBandsLength() - 1) { alt += ", "; }
-			}
-			alt += " ]}";
-			altArray.add(alt);
+			jsonStats = this.jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray);
 		}
 
-		out.println("\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
-							+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
-							+ ", \"units\": \"" + hs_units + "\" },");
-		out.println("\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
-							+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
-							+ ", \"units\": \"" + vs_units + "\" },");
-		out.println("\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
-							+ ", \"max\": " + daa.getMaxAltitude(alt_units)
-							+ ", \"units\": \"" + alt_units + "\" },");
-
-		out.println("\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\",");
+		out.println(jsonStats + ",");
 
 		DAABandsV2.printBands(out, alertsArray, "Alerts");
 		out.println(",");
@@ -271,4 +266,84 @@ public class DAABandsV2 {
 
 		out.close();
 	}
+
+	public static String getFileName (String fname) {
+		if (fname != null && fname.contains("/")) {
+			String[] comp = fname.split("/");
+			return comp[comp.length - 1];
+		}
+		return fname;
+	}
+
+	public static String removeExtension (String fname) {
+		return fname != null && fname.contains(".") ? 
+					fname.substring(0, fname.lastIndexOf('.')) 
+					: fname;
+	}
+
+	public String getVersion () {
+		return VERSION;
+	}
+
+	protected void parseCliArgs (String[] args) {
+		// System.out.println(args.toString());
+		if (args != null && args.length == 0) {
+			printHelpMsg();
+			System.exit(0);
+		}
+		int a = 0;
+		for (; a < args.length && args[a].startsWith("-"); a++) {
+			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
+				printHelpMsg();
+			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
+				daaConfig = args[++a];
+			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
+				ofname = args[++a];
+			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
+				System.out.println(getVersion());
+				System.exit(0);
+			} else if (args[a].startsWith("-")) {
+				System.err.println("** Error: Invalid option ("+args[a]+")");
+				System.exit(1);
+			}
+		}
+		ifname = args[a];
+		if (ofname == null) {
+			ofname = removeExtension(getFileName(scenario)) + ".json";
+		}
+	}
+
+	public Boolean inputFileReadable () {
+		String inputFile = getInputFileName();
+		File file = new File(inputFile);
+		if (!file.exists() || !file.canRead()) {
+			return false;
+		}
+		return true;
+	}
+
+	protected void createPrintWriter () {
+		try {
+			System.out.println("Writing file " + ofname);
+			out = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
+			System.out.println("Done!");
+		} catch (Exception e) {
+			System.err.println("** Error: " + e);
+			System.exit(1);
+		}
+	}
+
+
+
+	public static void main(String[] args) {
+		DAABandsV2 daaBands = new DAABandsV2();
+		daaBands.parseCliArgs(args);
+		if (!daaBands.inputFileReadable()) {
+			System.err.println("** Error: File " + daaBands.getInputFileName() + " cannot be read");
+			System.exit(1);
+		}
+		daaBands.loadDaaConfig();
+		daaBands.walkFile(null);
+	}
+
 }

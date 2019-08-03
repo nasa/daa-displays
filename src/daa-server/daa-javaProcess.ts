@@ -102,8 +102,8 @@ export class JavaProcess {
 			console.info(`Executing ${cmd}`);
 			exec(cmd, (error, stdout, stderr) => {
 				if (error) {
-				  console.error(`exec error: ${error}`);
-				  return;
+					console.error(`exec error: ${error}`);
+					return;
 				} else if (stderr) {
 					console.error(`stderr: ${stderr}`);  
 				}
@@ -123,8 +123,8 @@ export class JavaProcess {
 			console.info("Executing " + cmd);
 			exec(cmd, (error, stdout, stderr) => {
 				if (error) {
-				  console.error(`exec error: ${error}`);
-				  return;
+					console.error(`exec error: ${error}`);
+					return;
 				} else if (stderr) {
 					console.error(`stderr: ${stderr}`);  
 				}

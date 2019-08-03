@@ -1408,12 +1408,13 @@ class DAA_Airspace {
         // Render traffic information
         this._traffic = [];
         if (opt.traffic) {
-            this.setTraffic(opt.traffic);
-            if (this.trafficVisible) {
-                this.revealTraffic();
-            } else {
-                this.hideTraffic();
-            }
+            this.setTraffic(opt.traffic, () => {
+                if (this.trafficVisible) {
+                    this.revealTraffic();
+                } else {
+                    this.hideTraffic();
+                }
+            });
         }
 
         // Create atmosphere layer
@@ -1670,7 +1671,8 @@ class DAA_Airspace {
      * @instance
      * @inner
      */
-    setTraffic (traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[]): DAA_Airspace {
+    setTraffic (traffic: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, name: string }[], cb?: () => void): DAA_Airspace {
+        let nLoaded: number = 0;
         if (traffic.length !== this._traffic.length) {
             this._traffic.forEach((aircraft) => {
                 // TODO: is there a way to remove collada objects from the scene?
@@ -1700,13 +1702,21 @@ class DAA_Airspace {
                         losLayer: this.losLayer,
                         aircraftLayer: this.trafficLayer,
                         textLayer: this.textLayer
+                    }, () => {
+                        this._traffic[i].reveal();
+                        nLoaded++;
+                        if (nLoaded === traffic.length) {
+                            this.autoScale();
+                            if (cb && typeof cb === "function") {
+                                cb();
+                            }
+                        }
                     });
                     aircraft.setVelocity(traffic[i].v);
                     this._traffic.push(aircraft);
                 }
             }
         }
-        this.autoScale();
         return this;
     }
     /**
