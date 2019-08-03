@@ -16,12 +16,13 @@ export const playbackTemplate: string = `
             </div>
             <div class="input-group mb-3" style="width: 240px; margin-left:20px; margin-right:30px;">
                 <div class="btn-group btn-group-toggle" role="group" aria-label="View">
+                    <button type="button" class="btn btn-sm btn-warning" id="{{id}}-back" style="width:84px;" alt="Step backward"><i class="fa fa-step-backward"></i></button>
                     <button type="button" class="btn btn-sm btn-danger" id="{{id}}-pause" style="width:84px;">Stop</button>
                     <button type="button" class="btn btn-sm btn-primary" id="{{id}}-play" style="width:84px;">Play</button>
-                    <button type="button" class="btn btn-sm btn-warning" id="{{id}}-step" style="width:84px;">Step</button>
+                    <button type="button" class="btn btn-sm btn-warning" id="{{id}}-step" style="width:84px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
                 </div>
             </div>
-            <div class="input-group input-group-sm mb-3" style="margin-left:20px; margin-right:30px;">
+            <div class="input-group input-group-sm mb-3" style="margin-left:106px; margin-right:30px;">
                 <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary" style="width:84px;">GoTo</button>
                 <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
             </div>

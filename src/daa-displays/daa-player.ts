@@ -109,6 +109,8 @@ function writeFile (fileWriter, filename, content) {
 export declare interface DAAPlaybackHandlers {
     init: () => void;
     step: () => void;
+    pause: () => void;
+    back: () => void;
     goto: () => void;
     speed: () => void;
     identify: () => void;
@@ -262,6 +264,14 @@ export class DAAPlayer {
             },
             step: () => {
                 this.stepControl();
+            },
+            pause: () => {
+                this.clearInterval();
+            },
+            back: () => {
+                this._handlers.pause();
+                const current_step: number = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
+                this._gotoControl(current_step - 1);
             },
             goto: () => {
                 this.gotoControl();    
@@ -1147,8 +1157,9 @@ export class DAAPlayer {
 
         // install handlers for simulation controls play/pause/restart/goto/...
         $(`#${this.id}-play`).on("click", () => { this.playControl(); });
-        $(`#${this.id}-pause`).on("click", () => { this.clearInterval(); });
+        $(`#${this.id}-pause`).on("click", () => { this._handlers.pause(); });
         $(`#${this.id}-step`).on("click", () => { this._handlers.step(); });
+        $(`#${this.id}-back`).on("click", () => { this._handlers.back(); });
         $(`#${this.id}-goto`).on("click", () => { this._handlers.goto(); });
         $(`#${this.id}-goto-input`).on("change", () => { this._handlers.goto(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
