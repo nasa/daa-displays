@@ -96,15 +96,6 @@ import { DAAClient } from './utils/daa-client';
 import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
 import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor } from './utils/daa-server';
 
-// utility function, for writing log files to disk. Log files can be strings or JSON objects
-function writeFile (fileWriter, filename, content) {
-    if (typeof content === "string") {
-        return fileWriter.writeFile(filename, content, { overWrite: true });
-    }
-    // else it's an array of JSON strings
-    return fileWriter.writeFile(filename, content.join("\n"), { overWrite: true });
-}
-
 
 export declare interface DAAPlaybackHandlers {
     init: () => void;
@@ -149,48 +140,48 @@ export function safeSelector(str: string): string {
 
 export class DAAPlayer {
     readonly VERSION: string = "2.0.0";
-    id: string;
-    simulationStep: number;
+    protected id: string;
+    protected simulationStep: number;
     init: (args?: any) => Promise<void> = async function () { console.warn("Warning, init function has not been defined :/"); };
     step: (args?: any) => Promise<void> = async function () { console.warn("Warning, step function has not been defined :/"); };
     render: (args?: any) => Promise<void> = async function () { console.warn("Warning, rendering function has not been defined :/"); };
-    ms: number;
-    precision: number;
-    _displays: string[];
-    _scenarios: { [ daaFileName: string ]: DAAScenario } = {};
-    _bands: DaidalusBandsDescriptor; // bands for the selected scenario
-    _los: DAALosDescriptor;
-    _selectedScenario: string;
-    _selectedWellClear: string;
-    _simulationLength: number;
-    _repl: { [key: string]: DAAClient };
-    _log;
-    _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
-    url: string;
-    port: number;
+    protected ms: number;
+    protected precision: number;
+    protected _displays: string[];
+    protected _scenarios: { [ daaFileName: string ]: DAAScenario } = {};
+    protected _bands: DaidalusBandsDescriptor; // bands for the selected scenario
+    protected _los: DAALosDescriptor;
+    protected _selectedScenario: string;
+    protected _selectedWellClear: string;
+    protected _simulationLength: number;
+    protected _repl: { [key: string]: DAAClient };
+    protected _log;
+    protected _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
+    protected url: string;
+    protected port: number;
 
-    _handlers: Handlers;
-    _defines;
-    _timer_active: boolean;
-    _simulationControls: {
+    protected _handlers: Handlers;
+    protected _defines;
+    protected _timer_active: boolean;
+    protected _simulationControls: {
         htmlTemplate: string,
         parent: string,
         width?: number,
         top?: number,
         left?: number
     };
-    _loadingScenario: boolean;
+    protected _loadingScenario: boolean;
 
     // _versionCallback: () => void;
     // _configurationCallback: () => void;
-    private bridgedPlayer: DAAPlayer;
+    protected bridgedPlayer: DAAPlayer;
 
-    _wellClearVersions: string[];
-    _wellClearConfigurations: string[];
-    ws: DAAClient;
+    protected _wellClearVersions: string[];
+    protected _wellClearConfigurations: string[];
+    protected ws: DAAClient;
 
-    private wellClearVersionSelector: string;
-    private wellClearConfigurationSelector: string;
+    protected wellClearVersionSelector: string;
+    protected wellClearConfigurationSelector: string;
 
     getWellClearVersionSelector(): string {
         return this.wellClearVersionSelector;

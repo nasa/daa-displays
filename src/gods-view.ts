@@ -127,6 +127,7 @@ playback.define("init", async () => {
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
+    const losFile: string = playback.getSelectedWellClearVersion().replace("-WR-", "-"); // wrappers are not supported for now
     await playback.javaLoS({
         losLogic: `${playback.getSelectedWellClearVersion()}.jar`,
         alertingConfig: playback.getSelectedConfiguration(),

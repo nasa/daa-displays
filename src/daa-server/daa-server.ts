@@ -419,14 +419,14 @@ class DAAServer {
                                 const allFiles: string[] = await fs.readdirSync(wellclearLogicFolder);
                                 if (allFiles) {
                                     let wellclearVersions: string[] = [];
-                                    try{ 
-                                        let wellclearFiles = allFiles.filter(async (name: string) => {
+                                    try { 
+                                        let jarFiles = allFiles.filter(async (name: string) => {
                                             return await fs.lstatSync(path.join(__dirname, "../daa-logic", name)).isDirectory();
                                         });
-                                        wellclearFiles = wellclearFiles.filter((name: string) => {
+                                        jarFiles = jarFiles.filter((name: string) => {
                                             return name.startsWith("WellClear-") && name.endsWith(".jar");
                                         });
-                                        wellclearVersions = wellclearFiles.map((name: string) => {
+                                        wellclearVersions = jarFiles.map((name: string) => {
                                             return name.slice(0, name.length - 4);
                                         });
                                     } catch (statError) {

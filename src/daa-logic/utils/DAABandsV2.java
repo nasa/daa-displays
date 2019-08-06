@@ -126,6 +126,7 @@ public class DAABandsV2 {
 			if (daaConfig != null) {
 				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
 				if (paramLoaded) {
+					System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
 					return true;
 				} else {
 					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default WellClear configuration.");
@@ -146,10 +147,10 @@ public class DAABandsV2 {
 		return null;
 	}
 	
-	public String jsonHeader (String scenario) {
+	public String jsonHeader () {
 		return "\"WellClear\":\n"
 				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfigFileName() + "\" },"
-				+   "\"Scenario\": \"" + scenario + "\",";  
+				+   "\"Scenario\": \"" + this.scenario + "\",";  
 	}
 
 	protected String jsonBands (Daidalus daa, ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray) {
@@ -232,7 +233,7 @@ public class DAABandsV2 {
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 
-		out.println("{" + this.jsonHeader(scenario));
+		out.println("{" + this.jsonHeader());
 
 		ArrayList<String> trkArray = new ArrayList<String>();
 		ArrayList<String> gsArray = new ArrayList<String>();
@@ -308,8 +309,9 @@ public class DAABandsV2 {
 			}
 		}
 		ifname = args[a];
+		scenario = removeExtension(getFileName(scenario));
 		if (ofname == null) {
-			ofname = removeExtension(getFileName(scenario)) + ".json";
+			ofname = scenario + ".json";
 		}
 	}
 
