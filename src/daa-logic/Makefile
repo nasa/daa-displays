@@ -36,7 +36,8 @@ compile-$(1):
 	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
 	
 	@echo "\n\033[0;32m ** Building DAALoSRegion-${1} **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAALoSRegion.java, DAALoSRegionV2.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../LoSRegion-${1}.jar $(if $(call version1, WellClear-$(1)) , DAALoSRegion, DAALoSRegionV2 ) *.class && cd ../WellClear-${1}/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl LoSRegion-$(1).jar && unzip -c LoSRegion-$(1).jar META-INF/MANIFEST.MF
+	cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAALoSRegion.java, DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	cd utils && $(JAR) cfe ../LoSRegion-${1}.jar $(if $(call version1, WellClear-$(1)) , DAALoSRegion, DAALoSRegionV2 ) *.class && cd ../WellClear-${1}/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl LoSRegion-$(1).jar && unzip -c LoSRegion-$(1).jar META-INF/MANIFEST.MF
 endef
 compile-all = $(foreach ver,$(VERSIONS),$(eval $(call compile-template,$(ver))))
 
@@ -100,7 +101,7 @@ los1.0.2:
 
 los2.0.e:
 	@echo "\n\033[0;32m ** Building DAALoSRegionV2 **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAALoSRegionV2.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
+	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
 	-@cd utils && $(JAR) cfe ../LoSRegion-2.0.e.jar DAALoSRegionV2 *.class
 	-@cd WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
 	unzip -vl LoSRegion-2.0.e.jar
