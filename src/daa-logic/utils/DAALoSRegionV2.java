@@ -43,7 +43,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Optional;
 
+import gov.nasa.larcfm.ACCoRD.ConflictData;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
 
@@ -62,14 +64,11 @@ import gov.nasa.larcfm.Util.f;
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 
-public class DAALoSRegionV2 {
+public class DAALoSRegionV2 extends DAABandsV2 {
 
-	protected Boolean VERBOSE = true;
+	protected String tool_name = "DAALoSRegionV2";
 
-	protected Daidalus daa = null;
-	protected Detection3D detector = null;
 	protected int alertLevel = 2;
-	protected String daaConfig = null;
 
 	// 1 degree latitude is 69 miles and 60nmi
 	// 1 degree longitude is ~69 miles and ~60nmi
@@ -79,68 +78,36 @@ public class DAALoSRegionV2 {
 	protected int xmax = 8;
 	protected int ymax = 8;
 
-	public Boolean setAlertLevel (int alertLevel) {
-		if (this.daa != null) {
-			this.alertLevel = alertLevel;
-			this.detector = daa.getAlerterAt(1).getDetector(this.alertLevel).get();
-			return true;
-		}
-		return false;
-	}
-	public DAALoSRegionV2 (Daidalus daa) {
-		this.daa = daa;
-		this.setAlertLevel(2);
-	}
-	public DAALoSRegionV2 (Daidalus daa, int alertLevel) {
-		this.daa = daa;
-		this.setAlertLevel(alertLevel);
-	}
-	public DAALoSRegionV2 (Daidalus daa, int alertLevel, String daaConfig) {
-		this.daa  = daa;
-		// always load config before setting alert level
-		this.loadDaaConfig(daaConfig);
-		this.setAlertLevel(alertLevel);
-	}
-	public Boolean loadDaaConfig (String daaConfig) {
-		if (this.daa != null) {
-			if (daaConfig != null) {
-				this.daaConfig = daaConfig;
-				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
-				if (paramLoaded) {
-					return true;
-				} else {
-					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default WellClear configuration.");
-				}
-			} else {
-				System.err.println("** Warning: Configuration file not specified. Using default WellClear configuration.");
-			}
-		} else {
-			System.err.println("** Error: Daidalus is not initialized.");
-		}
-		return false;
-	}
-	public String getDaaConfigFileName () {
-		if (this.daaConfig != null) {
-			return this.daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
-		}
-		return null;
+	protected Boolean VERBOSE = false;
+
+	@Override
+	public String getVersion () {
+		return "LoS-" + VERSION;
 	}
 
-	public String jsonHeader (String scenario) {
-		return "\"WellClear\": { \"version\": \"" + VERSION + "\", \"configuration\": \"" + this.getDaaConfigFileName() + "\" },\n"
+	@Override
+	protected String jsonHeader () {
+		return "\"Info\": { \"version\": \"" + VERSION + "\", \"configuration\": \"" + this.getDaaConfig() + "\" },\n"
 			+ "\"Scenario\": \"" + scenario + "\",\n"
-			+ "\"Detector\": \"" + this.detector + "\",\n"
 			+ "\"AlertLevel\": " + this.alertLevel + ",\n"
 			+ "\"Grid\": { \"sectorSize\": " + this.sectorNMI + ", \"sectorUnits\": \"" + this.sectorUnits + "\", \"xmax\": " + this.xmax + ", \"ymax\": "+ this.ymax + " }";
 	}
 
-	public String jsonHLoSRegions (double dtime) {
+	public Boolean setAlertLevel (int alertLevel) {
+		if (this.daa != null) {
+			this.alertLevel = alertLevel;
+			return true;
+		}
+		return false;
+	}
+
+	public String jsonLosRegionsH (double dtime) {
 		TrafficState ownship = daa.getOwnshipState();
 		String time = f.Fm8(dtime);
 		String ans = "\"time\": " + time + ", \"conflicts\": [";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			TrafficState intruder = daa.getAircraftStateAt(ac);
-			String res = jsonHLoSRegions(detector, ownship, intruder);
+			String res = _jsonLosRegionsH(ownship, intruder);
 			ans += res;
 			if (ac < daa.lastTrafficIndex()) {
 				ans += ",\n";
@@ -152,27 +119,39 @@ public class DAALoSRegionV2 {
 
 
 	// horizontal conflict regions, returns a String representation of a JSON object
-    public String jsonHLoSRegions(Detection3D detector, TrafficState ownship, TrafficState intruder) {
-		if (detector != null && ownship != null && intruder != null) {				
-			double delta = Units.from("nmi", this.sectorNMI); // sector size, in meters
+    protected String _jsonLosRegionsH(TrafficState ownship, TrafficState intruder) {
+		if (ownship != null && intruder != null) {
+			int idx = intruder.getAlerterIndex();
+			Optional<Detection3D> dd = daa.getAlerterAt(idx).getDetector(this.alertLevel);
+			if (!dd.isPresent()) {
+				System.err.println("[DAALoSRegionV2] Warning: Detection3D is null");
+				return null;
+			}
+			Detection3D detector = dd.get();
+			ConflictData det = this.daa.violationOfAlertThresholds(idx, this.alertLevel);
 
+			// estimate position of the intruder at time_in
 			Position po = ownship.getPosition(); // current ownship position in lat lon
 			EuclideanProjection eprj = Projection.createProjection(po); // reference point for projections is always the ownship
 			Vect3 si = intruder.get_s(); // projected intruder position
 			Velocity vi = intruder.get_v(); // projected intruder velocity
 
-			String tmp = ""; 
-			// set ownship position
+			// Vect3 cpa = si.Add(vi.Scal(time2CPA));
+			Vect3 pos_at_time_in = new Vect3(si.x + vi.x * det.time_in, si.y + vi.y * det.time_in, si.z + vi.z * det.time_in);
+
+			String ans = "";
 			// x and y are used to move the intruder's position over the horizontal plane
-			// FIXME: the exploration of future positions should take into account current speed and velocity of the intruder
+			double delta = Units.from("nmi", this.sectorNMI); // sector size, in meters
 			int totConflictPoints = 0;
+			Boolean first = true;
 			for (int x = 0; x < xmax; x++) {
+				Boolean losDetected = false;
 				for (int y = 0; y < ymax; y++) {
-					double deltaX = Math.signum(vi.x) * delta * x; // meters, the sign of vi.x is used to place the region in the airspace before the intruder aircraft
-					double deltaY = Math.signum(vi.y) * delta * y; // meters, the sign of vi.y is used to place the region in the airspace before the intruder aircraft
+					double deltaX = Math.signum(vi.x) * delta * x; // meters, the sign of vi.x is used to scan the region in the airspace in front of the intruder aircraft -- the aircraft does not fly backwards
+					double deltaY = Math.signum(vi.y) * delta * y; // meters, the sign of vi.y is used to scan the region in the airspace in front of the intruder aircraft
 
 					// future intruder position
-					Vect3 sx = si.Add(new Vect3(deltaX, deltaY, 0)); // projected intruder position + delta
+					Vect3 sx = pos_at_time_in.Add(new Vect3(deltaX, deltaY, 0)); // projected intruder position + delta
 					Velocity vx = intruder.vel_to_v(po, vi); // projected velocity, wrt the ownship
 					boolean los = detector.violation(ownship.get_s(), ownship.get_v(), sx, vx);
 
@@ -182,94 +161,62 @@ public class DAALoSRegionV2 {
 
 					if (this.VERBOSE || los) {
 						totConflictPoints++;
-						tmp += (tmp.equals("")) ? "\n" : ",\n";
-						tmp += "{" 
+						ans += (first) ? "\n" : ",\n";
+						ans += "{ " 
 							+ "\"los\": " + los + ", " 
+							+ "\"time_in\": \"" + det.time_in + "\", " // using strings because time_in can be Infinity
 							+ "\"level\": " + this.alertLevel + ", " 
 							+ "\"lat\": \"" + Units.to("deg", px.lat()) 
 							+ "\", \"lon\": \"" + Units.to("deg", px.lon()) 
-							+ "\", \"alt\": \"" + Units.to("ft", px.alt()) 
+							+ "\", \"alt\": \"" + Units.to("ft", px.alt())
 							+ "\" }";
+						first = false;
+						losDetected = true;
 					}
 				}
-				tmp += "\n";
+				if (losDetected) {
+					ans += "\n";
+				}
 			}
-			tmp = "{ \"ac\": \"" + intruder.getId() + "\", \"sectors\": [ " + tmp + "], \"length\": " + totConflictPoints + " }";
-			return tmp;
+			ans = "{ \"ac\": \"" + intruder.getId() + "\", \"detector\": \"" + det.toString() + "\", \"sectors\": [ " + ans + " ], \"length\": " + totConflictPoints + " }";
+			return ans;
 		}
 		return null;
 	}
 
-    public static void main(String[] args) {
+	public void walkFile (DaidalusWrapperInterface wrapper) {
+		/* Create DaidalusFileWalker */
+		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 
-		PrintWriter out = new PrintWriter(System.out);
-		String config = null;
-		String scenario = null;
-		String output = null;
-		int alertLevel = 2;
-
-		// Process args
-		int a = 0;
-		while (a < args.length && args[a].startsWith("-")) {
-			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-				// printHelpMsg();
-			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
-				config = args[++a];
-			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
-				output = args[++a];
-			} else if (args[a].startsWith("--level") || args[a].startsWith("-level") || args[a].equals("-l")) {
-				alertLevel = Integer.parseInt(args[++a]);
-            } else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
-				System.out.println(VERSION);
-                System.exit(0);
-            } else if (args[a].startsWith("-")) {
-				System.err.println("** Error: Invalid option (" + args[a] + ")");
-				System.exit(1);
+		if (walker != null) {	
+			this.createPrintWriter();
+			printWriter.println("{" + this.jsonHeader() + ",");
+			printWriter.println("\"LoS\": [\n");
+			/* Process input file */
+			while (!walker.atEnd()) {
+				walker.readState(daa);
+				double time = daa.getCurrentTime();
+				// write output
+				printWriter.println(this.jsonLosRegionsH(time));
+				if (!walker.atEnd()) {
+					printWriter.println(",");
+				}
 			}
-			a++;
+			printWriter.println("\n]}");
+			this.closePrintWriter();
 		}
+	}
 
-		String input = args[a];
 
-		File file = new File(input);
-		if (!file.exists() || !file.canRead()) {
-			System.err.println("** Error: File " + input + " cannot be read");
+	public static void main(String[] args) {
+		DAALoSRegionV2 los = new DAALoSRegionV2();
+		los.parseCliArgs(args);
+		if (!los.inputFileReadable()) {
+			System.err.println("** Error: File " + los.getInputFileName() + " cannot be read");
 			System.exit(1);
 		}
-		try {
-			String name = file.getName();
-			scenario = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
-			if (output == null) {
-				output = scenario + ".LoS.json";
-			}
-			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
-			System.out.println("Writing output into file " + output);
-		} catch (Exception e) {
-			System.err.println("** Error: " + e);
-			System.exit(1);
-		}
+		los.loadDaaConfig();
 
-		// create daidalus and los
-		Daidalus daa = new Daidalus();
-		DAALoSRegionV2 los = new DAALoSRegionV2(daa, alertLevel, config);
-
-		out.println("{");
-		out.print(los.jsonHeader(scenario));
-		out.println(",");
-		out.println("\"LoS\": [");
-
-		// Process input file using DaidalusFileWalker
-		DaidalusFileWalker walker = new DaidalusFileWalker(input);
-		while (!walker.atEnd()) {
-			double time = walker.getTime();
-			walker.readState(daa);
-			out.println(los.jsonHLoSRegions(time));
-			if (!walker.atEnd()) {
-				out.println(",");
-			};
-		}
-
-		out.println("]}");        
-		out.close();
+		los.walkFile(null);
 	}
 }

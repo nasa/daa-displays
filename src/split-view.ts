@@ -63,7 +63,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
-            name: data.id,
+            callSign: data.id,
             s: data.s,
             v: data.v,
             symbol: daaSymbols[alert]

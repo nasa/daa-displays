@@ -55,6 +55,9 @@ export function deg2rad(deg: number): number {
 export function meters2feet(m: number): number {
     return m * 3.28084;
 }
+export function feet2meters(ft: number): number {
+    return ft / 3.28084;
+}
 
 // interface definitions
 export interface Vector3D { x: number, y: number, z: number }

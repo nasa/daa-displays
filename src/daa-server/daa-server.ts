@@ -324,12 +324,12 @@ class DAAServer {
                             const losFile: string = fsUtils.getLoSFileName(data);
                             if (losFile) {
                                 await this.activateJavaProcess();
-                                const wellClearVersion: string = await this.javaProcess.getVersion(data.daaLogic);
+                                const losLogic: string = data.daaLogic.replace("WellClear-", "LoSRegion-");
+                                const wellClearVersion: string = await this.javaProcess.getVersion(losLogic);
                                 const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
                                 if (this.useCache && fs.existsSync(path.join(javaOutputPath, losFile))) {
                                     console.log(`Reading daa los regions file ${losFile} from cache`);
                                 } else {
-                                    const losLogic: string = data.daaLogic.replace("WellClear-", "LoSRegion-");
                                     await this.javaProcess.execLoS(losLogic, data.daaConfig, data.scenarioName);
                                 }
                                 try {
@@ -339,6 +339,7 @@ class DAAServer {
                                     this.trySend(wsocket, content, "daa los regions");
                                 } catch (readError) {
                                     console.error(`Error while reading daa los regions file ${path.join(javaOutputPath, losFile)}`);
+                                    this.trySend(wsocket, null, "daa los regions");
                                 }
                             } else {
                                 console.error(`Error while generating daa los regions file name (name is null) :/`);
@@ -434,6 +435,34 @@ class DAAServer {
                                     } finally {
                                         content.data = JSON.stringify(wellclearVersions);
                                         this.trySend(wsocket, content, "wellclear versions");
+                                    }
+                                }
+                            } catch (listError) {
+                                console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
+                            }
+                            break;
+                        }
+                        case 'list-los-versions': {
+                            const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
+                            try {
+                                const allFiles: string[] = await fs.readdirSync(wellclearLogicFolder);
+                                if (allFiles) {
+                                    let wellclearVersions: string[] = [];
+                                    try { 
+                                        let jarFiles = allFiles.filter(async (name: string) => {
+                                            return await fs.lstatSync(path.join(__dirname, "../daa-logic", name)).isDirectory();
+                                        });
+                                        jarFiles = jarFiles.filter((name: string) => {
+                                            return name.startsWith("LoSRegion-") && name.endsWith(".jar");
+                                        });
+                                        wellclearVersions = jarFiles.map((name: string) => {
+                                            return name.slice(0, name.length - 4);
+                                        });
+                                    } catch (statError) {
+                                        console.error(`Error while reading los folder ${wellclearLogicFolder} :/`);
+                                    } finally {
+                                        content.data = JSON.stringify(wellclearVersions);
+                                        this.trySend(wsocket, content, "los versions");
                                     }
                                 }
                             } catch (listError) {

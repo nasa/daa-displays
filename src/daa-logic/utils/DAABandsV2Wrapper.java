@@ -44,6 +44,7 @@ public class DAABandsV2Wrapper extends DAABandsV2 {
 
 	protected String tool_name = "DAABandsV2Wrapper";
 
+	@Override
 	public String getVersion () {
 		return "WR-" + VERSION;
 	}

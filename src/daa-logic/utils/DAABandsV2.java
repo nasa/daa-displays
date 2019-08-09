@@ -63,22 +63,33 @@ public class DAABandsV2 {
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
 
-	PrintWriter out = null;
+	PrintWriter printWriter = null;
 
-	public String getConfigFileName() {
-		return this.daaConfig;
+	DAABandsV2 () {
+		/* Create Daidalus object and setting the configuration parameters */
+		this.daa = new Daidalus();
 	}
-	public String getScenarioFileName() {
+
+	String getScenario() {
 		return this.scenario;
 	}
-	public String getOutputFileName() {
+	String getConfigFileName() {
+		return this.daaConfig;
+	}
+	String getDaaConfig () {
+		if (daaConfig != null) {
+			return daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
+		}
+		return null;
+	}
+	String getOutputFileName() {
 		return this.ofname;
 	}
-	public String getInputFileName() {
+	String getInputFileName() {
 		return this.ifname;
 	}
 
-	void printHelpMsg() {
+	protected void printHelpMsg() {
 		System.out.println("Version: DAIDALUS " + getVersion());
 		System.out.println("Generates a file that can be rendered in daa-displays");
 		System.out.println("Usage:");
@@ -91,7 +102,7 @@ public class DAABandsV2 {
 		System.exit(0);
 	}
 
-	static String region2str(BandsRegion r) {
+	protected static String region2str(BandsRegion r) {
 		switch (r) {
 			case NONE: return "0";
 			case FAR: return "1";
@@ -115,13 +126,7 @@ public class DAABandsV2 {
 		out.println("]");
 	}
 
-
-	DAABandsV2 () {
-		/* Create Daidalus object and setting the configuration parameters */
-		this.daa = new Daidalus();
-	}
-
-	public Boolean loadDaaConfig () {
+	Boolean loadDaaConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
 				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
@@ -139,17 +144,10 @@ public class DAABandsV2 {
 		}
 		return false;
 	}
-
-	public String getDaaConfigFileName () {
-		if (daaConfig != null) {
-			return daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
-		}
-		return null;
-	}
 	
-	public String jsonHeader () {
-		return "\"WellClear\":\n"
-				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfigFileName() + "\" },"
+	protected String jsonHeader () {
+		return "\"Info\":\n"
+				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfig() + "\" },"
 				+   "\"Scenario\": \"" + this.scenario + "\",";  
 	}
 
@@ -233,7 +231,7 @@ public class DAABandsV2 {
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 
-		out.println("{" + this.jsonHeader());
+		printWriter.println("{" + this.jsonHeader());
 
 		ArrayList<String> trkArray = new ArrayList<String>();
 		ArrayList<String> gsArray = new ArrayList<String>();
@@ -252,23 +250,23 @@ public class DAABandsV2 {
 			jsonStats = this.jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray);
 		}
 
-		out.println(jsonStats + ",");
+		printWriter.println(jsonStats + ",");
 
-		DAABandsV2.printBands(out, alertsArray, "Alerts");
-		out.println(",");
-		DAABandsV2.printBands(out, trkArray, "Heading Bands");
-		out.println(",");
-		DAABandsV2.printBands(out, gsArray, "Horizontal Speed Bands");
-		out.println(",");
-		DAABandsV2.printBands(out, vsArray, "Vertical Speed Bands");
-		out.println(",");
-		DAABandsV2.printBands(out, altArray, "Altitude Bands");
-		out.println("}");
+		DAABandsV2.printBands(printWriter, alertsArray, "Alerts");
+		printWriter.println(",");
+		DAABandsV2.printBands(printWriter, trkArray, "Heading Bands");
+		printWriter.println(",");
+		DAABandsV2.printBands(printWriter, gsArray, "Horizontal Speed Bands");
+		printWriter.println(",");
+		DAABandsV2.printBands(printWriter, vsArray, "Vertical Speed Bands");
+		printWriter.println(",");
+		DAABandsV2.printBands(printWriter, altArray, "Altitude Bands");
+		printWriter.println("}");
 
-		out.close();
+		this.closePrintWriter();
 	}
 
-	public static String getFileName (String fname) {
+	static String getFileName (String fname) {
 		if (fname != null && fname.contains("/")) {
 			String[] comp = fname.split("/");
 			return comp[comp.length - 1];
@@ -276,17 +274,17 @@ public class DAABandsV2 {
 		return fname;
 	}
 
-	public static String removeExtension (String fname) {
+	static String removeExtension (String fname) {
 		return fname != null && fname.contains(".") ? 
 					fname.substring(0, fname.lastIndexOf('.')) 
 					: fname;
 	}
 
-	public String getVersion () {
+	String getVersion () {
 		return VERSION;
 	}
 
-	protected void parseCliArgs (String[] args) {
+	protected DAABandsV2 parseCliArgs (String[] args) {
 		// System.out.println(args.toString());
 		if (args != null && args.length == 0) {
 			printHelpMsg();
@@ -308,11 +306,12 @@ public class DAABandsV2 {
 				System.exit(1);
 			}
 		}
-		ifname = args[a];
-		scenario = removeExtension(getFileName(scenario));
+		this.ifname = args[a];
+		this.scenario = removeExtension(getFileName(this.ifname));
 		if (ofname == null) {
 			ofname = scenario + ".json";
 		}
+		return this;
 	}
 
 	public Boolean inputFileReadable () {
@@ -324,18 +323,23 @@ public class DAABandsV2 {
 		return true;
 	}
 
-	protected void createPrintWriter () {
+	protected Boolean createPrintWriter () {
 		try {
-			System.out.println("Writing file " + ofname);
-			out = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
-			System.out.println("Done!");
+			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
+			System.out.println("Creating output file " + ofname);
 		} catch (Exception e) {
 			System.err.println("** Error: " + e);
-			System.exit(1);
+			return false;
 		}
+		return true;
 	}
-
-
+	protected Boolean closePrintWriter () {
+		if (printWriter != null) {
+			printWriter.close();
+			return true;
+		}
+		return false;
+	}
 
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();

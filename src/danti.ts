@@ -63,7 +63,7 @@ function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: Air
         const alert: number = (bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         if (isNaN(alert)) { console.error("Something's wrong with alert bands :/"); }
         return {
-            name: data.id,
+            callSign: data.id,
             s: data.s,
             v: data.v,
             symbol: daaSymbols[alert]

@@ -98,13 +98,13 @@ import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigReq
 
 
 export declare interface DAAPlaybackHandlers {
-    init: () => void;
-    step: () => void;
-    pause: () => void;
-    back: () => void;
-    goto: () => void;
-    speed: () => void;
-    identify: () => void;
+    init: () => Promise<void>;
+    step: () => Promise<void>;
+    pause: () => Promise<void>;
+    back: () => Promise<void>;
+    goto: () => Promise<void>;
+    speed: () => Promise<void>;
+    identify: () => Promise<void>;
 }
 
 export declare interface Handlers extends DAAPlaybackHandlers {
@@ -160,6 +160,9 @@ export class DAAPlayer {
     protected url: string;
     protected port: number;
 
+    readonly appTypes: string[] = [ "wellclear", "los" ];
+    protected selectedAppType: string = this.appTypes[0]; 
+
     protected _handlers: Handlers;
     protected _defines;
     protected _timer_active: boolean;
@@ -201,7 +204,7 @@ export class DAAPlayer {
     }
 
     private async _stepControl(currentStep: number): Promise<DAAPlayer> {
-        this._gotoControl(currentStep);
+        await this._gotoControl(currentStep);
         if (this.simulationStep < this._simulationLength - 1) {
             this.simulationStep++;
             await this._gotoControl(this.simulationStep);
@@ -250,32 +253,53 @@ export class DAAPlayer {
  
         this._handlers = {
             init: () => {
-                this.clearInterval();
-                this.render();
+                return new Promise(async (resolve, reject) => {
+                    this.clearInterval();
+                    await this.render();
+                    resolve();
+                })
             },
             step: () => {
-                this.stepControl();
+                return new Promise(async (resolve, reject) => {
+                    await this.stepControl();
+                    resolve();
+                });
             },
             pause: () => {
-                this.clearInterval();
+                return new Promise(async (resolve, reject) => {
+                    this.clearInterval();
+                    resolve();
+                });
             },
             back: () => {
-                this._handlers.pause();
-                const current_step: number = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
-                this._gotoControl(current_step - 1);
+                return new Promise(async (resolve, reject) => {
+                    const current_step: number = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
+                    await this._handlers.pause();
+                    await this._gotoControl(current_step - 1); // note: this call is async
+                    resolve();
+                });
             },
             goto: () => {
-                this.gotoControl();    
+                return new Promise(async (resolve, reject) => {
+                    await this.gotoControl();
+                    resolve();
+                });
             },
             speed: () => {
-                const speed: number = parseFloat(<string> $(`#${this.id}-speed-input`).val());
-                this.setSpeed(speed);
+                return new Promise(async (resolve, reject) => {
+                    const speed: number = parseFloat(<string> $(`#${this.id}-speed-input`).val());
+                    this.setSpeed(speed);
+                    resolve();
+                });
             },
             identify: () => {
-                $(".daa-view-splash").css("display", "block").css("opacity", 0.5);
-                setTimeout(() => {
-                    $(".daa-view-splash").css("display", "none");
-                }, 1600);
+                return new Promise(async (resolve, reject) => {
+                    $(".daa-view-splash").css("display", "block").css("opacity", 0.5);
+                    setTimeout(() => {
+                        $(".daa-view-splash").css("display", "none");
+                        resolve();
+                    }, 1600);
+                });
             },
             installScenarioSelectors: (scenarios: string[]) => {
                 // define handler for the refresh button
@@ -374,6 +398,7 @@ export class DAAPlayer {
     setSpeed(speed: number) {
         if (!isNaN(speed) && speed > 0) {
             this.ms = 1000 * (100 / speed);
+            $(`#${this.id}-speed-input`).val(speed);
         }
         return this;
     }
@@ -842,10 +867,22 @@ export class DAAPlayer {
         return null;
     }
 
+    losMode (): DAAPlayer {
+        this.selectedAppType = this.appTypes[1];
+        return this;
+    }
+    wellclearMode (): DAAPlayer {
+        this.selectedAppType = this.appTypes[0];
+        return this;
+    }
+    getSelectedAppType (): string {
+        return this.selectedAppType;
+    }
+
     async listVersions(): Promise<string[]> {
         await this.connectToServer();
         const res = await this.ws.send({
-            type: "list-wellclear-versions",
+            type: `list-${this.selectedAppType}-versions`,
         });
         if (res && res.data) {
             console.log(res);
@@ -887,10 +924,21 @@ export class DAAPlayer {
         return $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list option:selected`).text();
     }
 
+    // TODO: generalise this function
     getSelectedWellClearVersion(): string {
-        return $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+        if (sel) {
+            return sel.replace("LoSRegion-", "WellClear-");
+        }
+        return sel;
     }
-
+    getSelectedLoSVersion(): string {
+        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+        if (sel) {
+            return sel.replace("WellClear-", "LoSRegion-");
+        }
+        return sel;
+    }
     /**
      * @function <a name="play">play</a>
      * @description Starts the simulation run
@@ -974,8 +1022,10 @@ export class DAAPlayer {
                             }
                         }
                     }
-                    // copy alerting info
-                    res.Alerts = this._bands.Alerts[this.simulationStep];
+                    if (this._bands && this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
+                        // copy alerting info
+                        res.Alerts = this._bands.Alerts[this.simulationStep];
+                    }
                 }
             }
         }
@@ -1261,7 +1311,7 @@ export class DAAPlayer {
                 this._plot[plotID].setLength(this._simulationLength);
             });
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
-            this._gotoControl(0);
+            this._gotoControl(0); // note: this call is async
         }
         return this;
     }

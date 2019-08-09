@@ -40,8 +40,9 @@ import { LLAData, DAALosRegion } from './daa-displays/utils/daa-server';
 import * as utils from './daa-displays/daa-utils';
 
 const playback: DAAPlayer = new DAAPlayer();
+playback.losMode();
 
-function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
+async function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> playback.getCurrentFlightData();
     data.map.setOwnshipPosition(flightData.ownship.s);
@@ -73,11 +74,11 @@ function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: Air
         const alert: number = +bands.Alerts.alerts[index].alert;
         if (isNaN(alert)) { console.error("Something's wrong with alert bands :/"); }
         return {
-            name: data.id,
+            callSign: data.id,
             s: data.s,
             v: data.v,
             symbol: daaSymbols[alert]
-        }
+        };
     });
     data.map.setTraffic(traffic);
     playback.getPlot("alerts").plotAlerts({
@@ -112,7 +113,7 @@ function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: Air
 }
 
 // single player, god's view
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true, los: true });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true, los: true, callSignVisible: true });
 
 playback.define("step", async () => {
     render({
@@ -121,21 +122,21 @@ playback.define("step", async () => {
     });
 });
 playback.define("init", async () => {
-    // compute java output
+    // compute los regions
+    await playback.javaLoS({
+        losLogic: `${playback.getSelectedLoSVersion()}.jar`,
+        alertingConfig: playback.getSelectedConfiguration(),
+        scenario: playback.getSelectedScenario()
+    });
+    // compute bands
     await playback.java({
         alertingLogic: `${playback.getSelectedWellClearVersion()}.jar`,
         alertingConfig: playback.getSelectedConfiguration(),
         scenario: playback.getSelectedScenario()
     });
-    const losFile: string = playback.getSelectedWellClearVersion().replace("-WR-", "-"); // wrappers are not supported for now
-    await playback.javaLoS({
-        losLogic: `${playback.getSelectedWellClearVersion()}.jar`,
-        alertingConfig: playback.getSelectedConfiguration(),
-        scenario: playback.getSelectedScenario()
-    });
     // center the map at the ownship location
     const flightData: LLAData = <LLAData> playback.getCurrentFlightData();
-    map.resetView();
+    map.resetLoS();
     map.goTo(flightData.ownship.s);
     map.setOwnshipPosition(flightData.ownship.s);
     map.setOwnshipVelocity(flightData.ownship.v);
@@ -188,6 +189,7 @@ async function createPlayer() {
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
     });
+    playback.setSpeed(1000);
     await playback.activate();
 }
 createPlayer();

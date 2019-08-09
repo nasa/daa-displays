@@ -111,9 +111,9 @@ export declare interface AlertElement {
 }
 
 export declare interface DaidalusBandsDescriptor {
-    WellClear: {
-        version: string,
-        configuration: string
+    Info: {
+        version: string, // well clear version
+        configuration: string // daidalus configuration file used to produce bands data
     },
     Scenario: string,
     Alerts: AlertElement[]; // alerts over time

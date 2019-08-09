@@ -103,7 +103,7 @@ export class JavaProcess {
 			exec(cmd, (error, stdout, stderr) => {
 				if (error) {
 					console.error(`exec error: ${error}`);
-					return;
+					resolve(null);
 				} else if (stderr) {
 					console.error(`stderr: ${stderr}`);  
 				}
