@@ -439,7 +439,7 @@ class LosSector {
                 // 1 degree longitude is ~69 miles and ~60nmi
                 // 1 nautical mile is 1.15078 miles or 1.852km
                 const nmi: number = (isNaN(opt.nmi)) ? 1 : opt.nmi;
-                
+
                 const opacity: number = (isNaN(opt.opacity)) ? 0.4 : opt.opacity;
                 const color: { r: number, g: number, b: number } = opt.color || { r: 1, g: 0.54, b: 0 }; // default color is dark orange
 
@@ -461,7 +461,10 @@ class LosSector {
                 const meshPositions = [];
                 const meshIndices = [];
                 const outlineIndices = [];
-                const meshRadius = nmi / 2 / 60; // nmi
+                const meshSegment = {
+                    x: nmi / 2 / 60, // nmi
+                    y: nmi / 2 / 60
+                };
 
                 const alt: number = (typeof pos.alt === "string")? +pos.alt : pos.alt;
                 const altitude: number = this.getLosAltitude(alt);
@@ -472,10 +475,10 @@ class LosSector {
                 const center: WorldWind.Position = new WorldWind.Position(latitude, longitude, altitude);
                 meshPositions.push(center);
                 const nodes: WorldWind.Position[] = [
-                    new WorldWind.Position(meshPositions[0].latitude + meshRadius, meshPositions[0].longitude + meshRadius, altitude),
-                    new WorldWind.Position(meshPositions[0].latitude + meshRadius, meshPositions[0].longitude - meshRadius, altitude),
-                    new WorldWind.Position(meshPositions[0].latitude - meshRadius, meshPositions[0].longitude - meshRadius, altitude),
-                    new WorldWind.Position(meshPositions[0].latitude - meshRadius, meshPositions[0].longitude + meshRadius, altitude)
+                    new WorldWind.Position(meshPositions[0].latitude + meshSegment.y, meshPositions[0].longitude + meshSegment.x, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude + meshSegment.y, meshPositions[0].longitude - meshSegment.x, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude - meshSegment.y, meshPositions[0].longitude - meshSegment.x, altitude),
+                    new WorldWind.Position(meshPositions[0].latitude - meshSegment.y, meshPositions[0].longitude + meshSegment.x, altitude)
                 ];
                 for (let i = 0; i < 4; i++) {
                     meshPositions.push(nodes[i]);
