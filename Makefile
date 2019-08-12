@@ -19,6 +19,7 @@ compile:
 	cp src/daa-server/daa-server.json dist/daa-server/
 	cp src/daa-server/package.json dist/daa-server
 	cp src/daa-server/start-server.sh dist/daa-server
+	cp -R src/daa-server/tileServer dist/daa-server
 	cp -R src/daa-displays/svgs dist/daa-displays/
 	cp -R src/daa-displays/ColladaModels dist/daa-displays/
 	cp -R src/daa-displays/css dist/daa-displays/

@@ -151,50 +151,59 @@ import * as serverInterface from './utils/daa-server'
 // require("daa-displays/openMap/wmts-config");
 
 class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
-    configureLayer(dc) {
+    useTileCache: boolean = false;
+    constructor(opt?: { useTileCache?: boolean }) {
+        super();
+        opt = opt || {};
+        if (opt.useTileCache) {
+            this.useTileCache = true;
+        }
+    }
+    configureLayer(dc: WorldWind.DrawContext) {
         // this.layer = new WorldWind.WmtsLayer(wmtsConfig);
         // // Send an event to request a redraw.
         // var e = document.createEvent('Event');
         // e.initEvent(WorldWind.REDRAW_EVENT_TYPE, true, true);
         // dc.currentGlContext.canvas.dispatchEvent(e);
         if (!this.xhr) {
-            var self = this;
-            var canvas = dc.currentGlContext.canvas;
+            const canvas = dc.currentGlContext.canvas;
             this.xhr = new XMLHttpRequest();
             // change the GET so that tiles are requested to the local server
             // this.xhr.open("GET", "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml", true);
             // this.xhr.open("GET", "http://localhost:10000/WMTSCapabilities.xml", true);
-            const url = "http://localhost:8082/osm/WMTSCapabilities.xml";
+            const url = "http://localhost:8082/WMTSCapabilities.xml";
             this.xhr.open("GET", url, true);
             this.xhr.onreadystatechange = () => {
-                if (self.xhr.readyState === 4) {
-                    if (self.xhr.status === 200) {
+                if (this.xhr.readyState === 4) {
+                    if (this.xhr.status === 200) {
                         // Create a layer from the WMTS capabilities.
-                        var wmtsCapabilities = new WorldWind.WmtsCapabilities(self.xhr.responseXML);
+                        const wmtsCapabilities = new WorldWind.WmtsCapabilities(this.xhr.responseXML);
 
-                        wmtsCapabilities.serviceProvider.providerSiteUrl = "http://localhost:8082/daadisplays";
-                        wmtsCapabilities.contents.layer[0].resourceUrl[0].template =
-                            "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
+                        if (this.useTileCache) {
+                            wmtsCapabilities.serviceProvider.providerSiteUrl = "http://localhost:8082/daadisplays";
+                            wmtsCapabilities.contents.layer[0].resourceUrl[0].template =
+                                "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
+                        }
 
-                        var wmtsLayerCapabilities = wmtsCapabilities.getLayer("osm");
-                        var wmtsConfig = WorldWind.WmtsLayer.formLayerConfiguration(wmtsLayerCapabilities);
-                        wmtsConfig.title = self.displayName;
-                        self.layer = new WorldWind.WmtsLayer(wmtsConfig);
+                        const wmtsLayerCapabilities = wmtsCapabilities.getLayer("osm");
+                        const wmtsConfig = WorldWind.WmtsLayer.formLayerConfiguration(wmtsLayerCapabilities);
+                        wmtsConfig.title = this.displayName;
+                        this.layer = new WorldWind.WmtsLayer(wmtsConfig);
 
                         // Send an event to request a redraw.
-                        var e = document.createEvent('Event');
+                        const e: Event = document.createEvent('Event');
                         e.initEvent(WorldWind.REDRAW_EVENT_TYPE, true, true);
                         canvas.dispatchEvent(e);
                     } else {
-                        console.warn("OSM retrieval failed (" + this.xhr.statusText + "): " + url);
+                        console.warn(`OSM retrieval failed (${this.xhr.statusText}): ${url}`);
                     }
                 }
             };
             this.xhr.onerror = function () {
-                console.warn("OSM retrieval failed: " + url);
+                console.warn(`OSM retrieval failed: ${url}`);
             };
             this.xhr.ontimeout = function () {
-                console.warn("OSM retrieval timed out: " + url);
+                console.warn(`OSM retrieval timed out: ${url}`);
             };
             this.xhr.send(null);
         }
@@ -425,7 +434,12 @@ class LosSector {
             this.layer = layer;
             if (pos) {
                 opt = opt || {};
+
+                // 1 degree latitude is 69 miles and 60nmi
+                // 1 degree longitude is ~69 miles and ~60nmi
+                // 1 nautical mile is 1.15078 miles or 1.852km
                 const nmi: number = (isNaN(opt.nmi)) ? 1 : opt.nmi;
+                
                 const opacity: number = (isNaN(opt.opacity)) ? 0.4 : opt.opacity;
                 const color: { r: number, g: number, b: number } = opt.color || { r: 1, g: 0.54, b: 0 }; // default color is dark orange
 
@@ -1407,9 +1421,9 @@ function _get_terrain(t: string): WorldWind.RenderableLayer {
     } else if (t === "BingAerialWithLabels") {
         return new WorldWind.BingAerialWithLabelsLayer(null); // terrain, high res with labels
     } else if (t === "OpenStreetMap") {
-        return new WorldWind.OpenStreetMapImageLayer();
-    } else if (t === "OpenStreetMap-Hampton") {
         return new OpenStreetMapRestLayer();
+    } else if (t === "OpenStreetMap-Hampton") {
+        return new OpenStreetMapRestLayer({ useTileCache: true });
     }
     return new WorldWind.BingRoadsLayer(); // plain map with labels
 }
@@ -1465,7 +1479,7 @@ class DAA_Airspace {
         this.wwd = new WorldWind.WorldWindow(opt.canvas);
 
         this.wwd.surfaceOpacity = 0.999; // this should reduce flickering when loading tiles, see https://github.com/NASAWorldWind/WebWorldWind/issues/353
-        this.wwd.verticalExaggeration = (this.godsView) ? 1 : 0; // 0 is flat world. A value of 1 will make it 3D
+        this.wwd.verticalExaggeration = (this.godsView) ? 1 : 0; // 0 is flat world. A value > 0 will make it 3D. Default in WorldWind is 1.
         this.nmi = 5; // default eye view
 
         // Add map layers to worldwind.

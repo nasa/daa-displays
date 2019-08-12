@@ -272,6 +272,13 @@ class DAAServer {
         app.get('/playground', (req, res) => {
             res.sendFile(path.join(daaTestFolder, 'playground.html'));
         });
+        const tileServerFolder: string = path.join(__dirname, 'tileServer');
+        console.log(`### serving ${tileServerFolder}`);
+        app.use(express.static(tileServerFolder));
+        app.get('/WMTSCapabilities.xml', (req, res) => {
+            console.log("received request for WMTSCapabilities.xml");
+            res.sendFile(path.join(tileServerFolder, 'osm', 'WMTSCapabilities.xml'));
+        });
         // create http server
         this.httpServer = http.createServer(app);
         this.httpServer.listen(this.config.port, "localhost", async () => {
