@@ -171,7 +171,9 @@ export class AirspeedTape {
     // utility function for drawing resolution bands
     private _draw_bands(): void {
         let theHTML = "";
-        Object.keys(this.bands).forEach(alert => {
+        const keys: string[] = Object.keys(this.bands);
+        for (let i = 0; i < keys.length; i++) {
+            const alert: string = keys[i];
             const segments: utils.FromTo[] = this.bands[alert];
             // console.log(segments);
             let segs = [];
@@ -197,7 +199,7 @@ export class AirspeedTape {
                 dash: utils.bandColors[alert].style === "dash"
             });
             // console.log(theHTML);
-        });
+        }
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for updating ground speed display (if any is rendered)

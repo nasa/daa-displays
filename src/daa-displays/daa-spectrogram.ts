@@ -99,21 +99,22 @@ function createGrid (data) {
 }
 
 // utility function for converting values between units
-function convert (val: number, unitsFrom: string, unitsTo: string) {
+function convert (val: number, unitsFrom: string, unitsTo: string): number {
     if (unitsFrom !== unitsTo) {
         if (unitsFrom === "rad" && unitsTo === "deg") { return parseFloat(utils.rad2deg(val).toFixed(2)); }
         if (unitsFrom === "msec" && unitsTo === "knots") { return parseFloat(utils.msec2knots(val).toFixed(2)); }
         if (unitsFrom === "meters" && unitsTo === "feet") { return parseFloat(utils.meters2feet(val).toFixed(2)); }
         if (unitsFrom === "mpm" && unitsTo === "fpm 100x") { return parseFloat(utils.meters2feet(val).toFixed(2)) / 100; }
     }
-    return parseFloat(val.toFixed(2));
+    // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
+    return Math.floor(val * 100) / 100; // [profiler] 0.1ms
 }
 
 
 
 export class DAASpectrogram {
     id: string;
-    _timeseries: any[];
+    // _timeseries: any[];
     top: number;
     left: number;
     width: number;
@@ -146,7 +147,7 @@ export class DAASpectrogram {
     }) {
         opt = opt || {};
         this.id = id || "plot";
-        this._timeseries = []; // used for storing historical plot data
+        // this._timeseries = []; // used for storing historical plot data
         coords = coords || {};
         this.top = coords.top || 0;
         this.left = coords.left || 0;
@@ -219,7 +220,7 @@ export class DAASpectrogram {
             };
             const range: { from: number, to: number } = { from: 0, to: 3 };
             const height: number = 3;
-            this._timeseries.push(JSON.stringify(data.alerts, null, " "));
+            // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms
             const band_plot_data = {};
             const yScaleFactor = this.height / 3;
             data.alerts.alerts.forEach((elem: { ac: string, alert: string }) => {
@@ -234,7 +235,7 @@ export class DAASpectrogram {
                 });
             });
 
-            const stepID = this.id + "-step-" + data.step;
+            const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
             const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
@@ -251,11 +252,12 @@ export class DAASpectrogram {
                 width: barWidth,
                 height: this.height
             });
-            $("#" + stepID).remove();
-            $("#" + this.id + "-spectrogram-data").append(theHTML);
-            $("#" + this.id + "-cursor").css("left", leftMargin );
+            $(`#${stepID}`).remove();
+            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            $(`#${this.id}-cursor`).css("left", leftMargin );
             // @ts-ignore -- method tooltip is added by bootstrap
-            $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+            // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
+            $(`#${stepID}`).tooltip();
         }
         return this;
     }
@@ -270,12 +272,16 @@ export class DAASpectrogram {
      */
     plot (data: { bands: utils.Bands, step: number, units?: string }): DAASpectrogram {
         if (data && data.bands) {
-            this._timeseries.push(data.bands);
+            // this._timeseries.push(data.bands);
             const band_plot_data = {};
             const yScaleFactor = this.height / (this.range.to - this.range.from);
-            Object.keys(data.bands).forEach((alert) => {
+            const keys: string[] = Object.keys(data.bands);
+            for (let k = 0; k < keys.length; k++) {
+                const alert: string = keys[k];
                 band_plot_data[alert] = [];
-                data.bands[alert].forEach((range: { from: number, to: number }) => {
+                const info: { from: number, to: number }[] = data.bands[alert];
+                for (let i = 0; i < info.length; i++) {
+                    const range: { from: number, to: number } = info[i];
                     const from = convert(range.from, this.units.from, this.units.to);
                     const to = convert(range.to, this.units.from, this.units.to);
                     const height = to - from;
@@ -288,13 +294,13 @@ export class DAASpectrogram {
                         height: height * yScaleFactor,
                         units: this.units.to
                     });
-                });
-            });
+                }
+            }
             
-            const stepID = this.id + "-step-" + data.step;
+            const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
-            const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({
+            const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
                 id: this.id,
                 stepID: stepID,
                 zIndex: 2,
@@ -305,11 +311,12 @@ export class DAASpectrogram {
                 width: barWidth,
                 height: this.height
             });
-            $("#" + stepID).remove();
-            $("#" + this.id + "-spectrogram-data").append(theHTML);
-            $("#" + this.id + "-cursor").css("left", leftMargin );
+            $(`#${stepID}`).remove(); 
+            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            $(`#${this.id}-cursor`).css("left", leftMargin );
             // @ts-ignore -- method tooltip is added by bootstrap
-            $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+            //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+            $(`#${stepID}`).tooltip();
         }
         return this;
     }

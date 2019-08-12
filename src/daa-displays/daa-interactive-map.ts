@@ -630,9 +630,9 @@ class Aircraft {
      */
     setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): Aircraft {
         if (pos) {
-            this.position.lat = (isNaN(+pos.lat)) ? this.position.lat: +pos.lat;
-            this.position.lon = (isNaN(+pos.lon)) ? this.position.lon: +pos.lon;
-            this.position.alt = (isNaN(+pos.alt)) ? this.position.alt: +pos.alt;
+            this.position.lat = +pos.lat; //(isNaN(+pos.lat)) ? this.position.lat: +pos.lat;
+            this.position.lon = +pos.lon; //(isNaN(+pos.lon)) ? this.position.lon: +pos.lon;
+            this.position.alt = +pos.alt; //(isNaN(+pos.alt)) ? this.position.alt: +pos.alt;
         }
         return this;
     }
@@ -647,9 +647,9 @@ class Aircraft {
     setVelocity(vel: utils.Vector3D | serverInterface.Vector3D): Aircraft {
         if (vel) {
             this.velocity = this.velocity || { x: 0, y: 0, z: 0 };
-            this.velocity.x = (isNaN(+vel.x)) ? this.velocity.x : +vel.x;
-            this.velocity.y = (isNaN(+vel.y)) ? this.velocity.y : +vel.y;
-            this.velocity.z = (isNaN(+vel.z)) ? this.velocity.z : +vel.z;
+            this.velocity.x = +vel.x; //(isNaN(+vel.x)) ? this.velocity.x : +vel.x;
+            this.velocity.y = +vel.y; //(isNaN(+vel.y)) ? this.velocity.y : +vel.y;
+            this.velocity.z = +vel.z; //(isNaN(+vel.z)) ? this.velocity.z : +vel.z;
             this.heading = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
         }
         return this;
@@ -1927,8 +1927,8 @@ class DAA_Airspace {
                         }).map(reg => {
                             return { lat: +reg.lat, lon: +reg.lon, alt: +reg.alt };
                         });
-                        console.log(traffic.getPosition());
-                        console.log(regions);
+                        // console.log(traffic.getPosition());
+                        // console.log(regions);
                         // console.log(reg);
                         traffic.setLoS(reg, opt);
                     } else {
