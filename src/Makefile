@@ -9,6 +9,7 @@ install-dependencies:
 
 compile:
 	cd daa-logic && make all
+	cd contrib/virtual-pilot && make
 
 clean:
 	cd daa-logic && make clean

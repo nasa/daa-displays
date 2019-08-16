@@ -15,6 +15,13 @@ export function getLoSFileName (desc: { daaConfig: string, scenarioName: string 
     return null;
 }
 
+export function getVirtualPilotFileName (desc: { daaConfig: string, scenarioName: string }) {
+    if (desc) {
+        return `${getFilename(desc.scenarioName, { removeFileExtension: true })}.ViP.daa`;
+    }
+    return null;
+}
+
 export async function stat(file: string): Promise<fs.Stats> {
 	return new Promise<fs.Stats>((resolve, reject) => {
 		fs.stat(file, (error, stat) => {

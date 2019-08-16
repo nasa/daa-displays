@@ -160,8 +160,10 @@ export class DAAPlayer {
     protected url: string;
     protected port: number;
 
-    readonly appTypes: string[] = [ "wellclear", "los" ];
+    readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
+
+    protected scenarioType: string = "daa"; // "daa" or "ic"
 
     protected _handlers: Handlers;
     protected _defines;
@@ -306,14 +308,14 @@ export class DAAPlayer {
                 $(`#${this.id}-refresh-scenarios`).on("click", async () => {
                     console.log(`Refreshing scenario list...`);
                     this.setStatus('Refreshing scenario list...');
-                    const scenarios: string[] = await this.listDaaFiles();
+                    const scenarios: string[] = await this.listScenarioFiles();
                     if (scenarios) {
                         // if the selected scenario has been removed from the new list, select the first scenario in the list. Otherwise, keep the current selection.
                         const scenarioStillExists: boolean = scenarios.some((name) => {
                             return name === this._selectedScenario;
                         });
                         if (!scenarioStillExists) {
-                            this.selectDaaFile(scenarios[0]);
+                            this.selectScenarioFile(scenarios[0]);
                         }
                     }
                     this.refreshScenariosView();
@@ -508,26 +510,26 @@ export class DAAPlayer {
      * Loads all daa files contained in folder daa-scenarios
      * @returns Array of filenames
      */
-    async loadDaaFiles (): Promise<string[]> {
-        const daaFiles: string[] = await this.listDaaFiles();
-        if (daaFiles && daaFiles.length > 0) {
-            for (let i = 0; i < daaFiles.length; i++) {
-                await this.loadDaaFile(daaFiles[i]);
+    async loadScenarioFiles (): Promise<string[]> {
+        const scenarioFiles: string[] = await this.listScenarioFiles();
+        if (scenarioFiles && scenarioFiles.length > 0) {
+            for (let i = 0; i < scenarioFiles.length; i++) {
+                await this.loadDaaFile(scenarioFiles[i]);
             }
-            this.selectDaaFile(daaFiles[0]);
+            this.selectScenarioFile(scenarioFiles[0]);
         } else {
             console.warn(`Folder daa-scenarios is empty :/`);
         }
-        return daaFiles;
+        return scenarioFiles;
     }
 
     /**
      * Returns the list of daa files available in folder daa-scenarios
      */
-    async listDaaFiles (): Promise<string[]> {
+    async listScenarioFiles (): Promise<string[]> {
         await this.connectToServer();
         const res: WebSocketMessage<string> = await this.ws.send({
-            type: "list-daa-files"
+            type: `list-${this.scenarioType}-files`
         });
         let daaFiles = null;
         if (res && res.data) {
@@ -573,9 +575,9 @@ export class DAAPlayer {
     getCurrentSimulationStep (): number {
         return this.simulationStep;
     }
-    async reloadDaaFile () {
+    async reloadScenarioFile () {
         const selectedScenario: string = this.getSelectedScenario();
-        await this.selectDaaFile(selectedScenario, { forceReload: true });
+        await this.selectScenarioFile(selectedScenario, { forceReload: true });
         return this;
     }
     /**
@@ -584,7 +586,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async selectDaaFile (scenario: string, opt?: {
+    async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean
     }) {
         if (this._scenarios && !this._loadingScenario) {
@@ -709,9 +711,9 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async connectToServer (opt?) {
+    async connectToServer (opt?: { url?: string, port?: number }) {
         opt = opt || {};
-        this.url = opt.url || "localhost";
+        this.url = opt.url || `${document.location.hostname}`; //"localhost";
         this.port = opt.port || 8082;
         await this.ws.connectToServer(this.url, this.port);
         // enable file system
@@ -855,6 +857,58 @@ export class DAAPlayer {
             };
         }
     }
+    
+    /**
+     * @function <a name="javaVirtualPilot">javaVirtualPilot</a>
+     * @description Sends a java evaluation request to the server
+     * @param virtualPilot Executable for virtual pilot, e.g., SimDaidalus_2.3_1-wind.jar (Base path is contrib/virtual-pilot/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
+     * @memberof module:DAAPlaybackPlayer
+     * @instance
+     */
+    async javaVirtualPilot (data: {
+        virtualPilot: string,
+        alertingConfig: string,
+        scenario: string
+    }): Promise<{
+        err: string,
+        //scenario: .... 
+        bands: DaidalusBandsDescriptor
+    }> {
+        const msg: JavaMsg = {
+            daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
+            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
+            scenarioName: data.scenario || "H1.ic"
+        }
+        console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
+        if (!this._repl[msg.daaLogic]) {
+            const ws: DAAClient = new DAAClient();
+            await ws.connectToServer();
+            this._repl[msg.daaLogic] = ws;
+        }
+        const res = await this._repl[msg.daaLogic].send({
+            type: "java-virtual-pilot",
+            data: msg
+        });
+        try {
+            if (res && res.data) {
+                const data = JSON.parse(res.data);
+                this._bands = data;
+            }
+            console.log("Flight data ready!", this._bands);
+            return {
+                err: res.err,
+                bands: (this._bands) ? this._bands : null
+            };
+        } catch (parseError) {
+            console.error("Error while parsing JSON bands: ", parseError);
+            return {
+                err: parseError,
+                bands: null
+            };
+        }
+        
+    }
 
     getCurrentLoS (): DAALosRegion[] {
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._los) {
@@ -867,12 +921,19 @@ export class DAAPlayer {
         return null;
     }
 
-    losMode (): DAAPlayer {
-        this.selectedAppType = this.appTypes[1];
-        return this;
-    }
     wellclearMode (): DAAPlayer {
         this.selectedAppType = this.appTypes[0];
+        this.scenarioType = "daa";
+        return this;
+    }
+    losMode (): DAAPlayer {
+        this.selectedAppType = this.appTypes[1];
+        this.scenarioType = "daa";
+        return this;
+    }
+    virtualPilotMode (): DAAPlayer {
+        this.selectedAppType = this.appTypes[2];
+        this.scenarioType = "ic";
         return this;
     }
     getSelectedAppType (): string {
@@ -924,19 +985,29 @@ export class DAAPlayer {
         return $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list option:selected`).text();
     }
 
-    // TODO: generalise this function
     getSelectedWellClearVersion(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
         if (sel) {
-            return sel.replace("LoSRegion-", "WellClear-");
+            return `WellClear-${sel.split("-").slice(-1)}`;
         }
-        return sel;
+        return null;
     }
     getSelectedLoSVersion(): string {
-        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
-        if (sel) {
-            return sel.replace("WellClear-", "LoSRegion-");
+        if (this.selectedAppType === this.appTypes[1]) {
+            const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+            return sel;
         }
+        return null;
+    }
+    getSelectedVirtualPilotVersion(): string {
+        if (this.selectedAppType === this.appTypes[2]) {
+            const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+            return sel;
+        }
+        return null;
+    }
+    getSelectedLogic(): string {
+        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
         return sel;
     }
     /**
@@ -1167,7 +1238,7 @@ export class DAAPlayer {
         top?: number,
         left?: number,
         width?: number,
-        htmlTemplate?: string
+        htmlTemplate?: string,
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
     }): Promise<DAAPlayer> {
         opt = opt || {};
@@ -1181,7 +1252,7 @@ export class DAAPlayer {
         if (document.getElementById(opt.parent) === null) {
             utils.createDiv(opt.parent, opt);
         }
-        const scenarios = await this.listDaaFiles();
+        const scenarios = await this.listScenarioFiles();
 
         this._simulationControls = {
             htmlTemplate: opt.htmlTemplate || templates.playbackTemplate,
@@ -1216,8 +1287,8 @@ export class DAAPlayer {
     }
 
     async activate() {
-        const scenarios = await this.listDaaFiles();
-        await this.selectDaaFile(scenarios[0]);
+        const scenarios = await this.listScenarioFiles();
+        await this.selectScenarioFile(scenarios[0]);
     }
 
     /**
@@ -1342,7 +1413,7 @@ export class DAAPlayer {
             const selectedConfig: string = this.getSelectedConfiguration();
             console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
             await refreshConfigurationAttributesView(selectedConfig);
-            await this.reloadDaaFile();
+            await this.reloadScenarioFile();
             this.refreshSimulationPlots();
         });
         return this;
@@ -1363,7 +1434,7 @@ export class DAAPlayer {
             // debug lines
             console.log(`new daidalus version selected: ${this.getSelectedWellClearVersion()}`);
             // this will trigger the init function of the simulation. The wellclear version is specified in the java command defined by the caller
-            await this.reloadDaaFile();
+            await this.reloadScenarioFile();
             this.refreshSimulationPlots();
             this.loadingComplete();
         });
@@ -1394,7 +1465,7 @@ export class DAAPlayer {
             scenarios.forEach(scenario => {
                 // event handler
                 $(`#${this.id}-scenario-${safeSelector(scenario)}`).on("click", async () => {
-                    this.selectDaaFile(scenario);
+                    this.selectScenarioFile(scenario);
                 });
             });
         }

@@ -171,7 +171,7 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
             // change the GET so that tiles are requested to the local server
             // this.xhr.open("GET", "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml", true);
             // this.xhr.open("GET", "http://localhost:10000/WMTSCapabilities.xml", true);
-            const url = "http://localhost:8082/WMTSCapabilities.xml";
+            const url = `http://${document.location.hostname}:${document.location.port}/WMTSCapabilities.xml`;//"http://localhost:8082/WMTSCapabilities.xml";
             this.xhr.open("GET", url, true);
             this.xhr.onreadystatechange = () => {
                 if (this.xhr.readyState === 4) {
@@ -180,9 +180,10 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
                         const wmtsCapabilities = new WorldWind.WmtsCapabilities(this.xhr.responseXML);
 
                         if (this.useTileCache) {
-                            wmtsCapabilities.serviceProvider.providerSiteUrl = "http://localhost:8082/daadisplays";
+                            wmtsCapabilities.serviceProvider.providerSiteUrl = `${document.location.href}/daadisplays`; //"http://localhost:8082/daadisplays";
                             wmtsCapabilities.contents.layer[0].resourceUrl[0].template =
-                                "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
+                                `${document.location.href}tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg`;
+                                // "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
                         }
 
                         const wmtsLayerCapabilities = wmtsCapabilities.getLayer("osm");

@@ -173,6 +173,30 @@ export class DAASplitView extends DAAPlayer {
             if (this.players.right) { await this.players.right.activate(); }
         }
     }
+    wellclearMode (): DAAPlayer {
+        super.wellclearMode();
+        if (this.players) {
+            if (this.players.left) { this.players.left.wellclearMode(); }
+            if (this.players.right) { this.players.right.wellclearMode(); }
+        }
+        return this;
+    }
+    losMode (): DAAPlayer {
+        super.losMode();
+        if (this.players) {
+            if (this.players.left) { this.players.left.losMode(); }
+            if (this.players.right) { this.players.right.losMode(); }
+        }
+        return this;
+    }
+    virtualPilotMode (): DAAPlayer {
+        super.virtualPilotMode();
+        if (this.players) {
+            if (this.players.left) { this.players.left.virtualPilotMode(); }
+            if (this.players.right) { this.players.right.virtualPilotMode(); }
+        }
+        return this;
+    }
 
     
     /**
@@ -216,8 +240,8 @@ export class DAASplitView extends DAAPlayer {
                 // event handler
                 $(`#${this.id}-scenario-${safeSelector(scenario)}`).on("click", async () => {
                     this._selectedScenario = scenario;
-                    this.players.left.selectDaaFile(scenario);
-                    this.players.right.selectDaaFile(scenario);
+                    this.players.left.selectScenarioFile(scenario);
+                    this.players.right.selectScenarioFile(scenario);
                 });
             });
         }
@@ -261,7 +285,7 @@ export class DAASplitView extends DAAPlayer {
         top?: number,
         left?: number,
         width?: number,
-        htmlTemplate?: string
+        htmlTemplate?: string,
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
     }): Promise<DAAPlayer> 
     {

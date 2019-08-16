@@ -25,9 +25,11 @@ compile:
 	cp -R src/daa-displays/css dist/daa-displays/
 	cp -R src/daa-displays/images dist/daa-displays
 	cp -R src/daa-displays/wwd dist/daa-displays/
+	cp -R src/contrib dist/contrib
 	# cp src/daa-displays/daa-interactive-map.js dist/daa-displays/
 	cp src/index.html dist/
 	cp src/split.html dist/
+	cp src/virtual-pilot.html dist/
 	cp src/gods.html dist/
 	cp src/package.json dist/
 	# compile java files

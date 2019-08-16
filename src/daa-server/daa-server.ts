@@ -281,7 +281,7 @@ class DAAServer {
         });
         // create http server
         this.httpServer = http.createServer(app);
-        this.httpServer.listen(this.config.port, "localhost", async () => {
+        this.httpServer.listen(this.config.port, "0.0.0.0", async () => {
             const url: string = "http://" + this.httpServer.address().address + ":" + this.httpServer.address().port;
             // console.info(`Server folder ${daaDisplaysRoot}`);
             console.info(`DAAServer ready at ${url}`);
@@ -300,56 +300,99 @@ class DAAServer {
                     // console.info("Message parsed successfully!")
                     switch (content['type']) {
                         case 'java': {
-                            // console.log(`WellClear arguments: ${JSON.stringify(data)}`);
                             const data: JavaMsg = <JavaMsg> content.data;
                             const bandsFile: string = fsUtils.getBandsFileName(data);
                             if (bandsFile) {
                                 await this.activateJavaProcess();
-                                const wellClearVersion: string = await this.javaProcess.getVersion(data.daaLogic);
-                                const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
-                                if (this.useCache && fs.existsSync(path.join(javaOutputPath, bandsFile))) {
-                                    console.log(`Reading bands file ${bandsFile} from cache`);
-                                } else {
-                                    await this.javaProcess.execWellClear(data.daaLogic, data.daaConfig, data.scenarioName);                                    
-                                }
+                                const wellClearFolder: string = path.join(__dirname, "../daa-logic");
+                                const wellClearVersion: string = await this.javaProcess.getVersion(wellClearFolder, data.daaLogic);
+                                const outputFileName: string = fsUtils.getBandsFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                                const outputFolder: string = path.join(__dirname, "../daa-output", wellClearVersion);
                                 try {
-                                    // WellClear-1.0.1/DAIDALUS/Scenarios/H1.daa
-                                    const buf: Buffer = fs.readFileSync(path.join(javaOutputPath, bandsFile));
-                                    content.data = buf.toLocaleString();
-                                    this.trySend(wsocket, content, "daa bands");
-                                } catch (readError) {
-                                    console.error(`Error while reading daa bands file ${path.join(javaOutputPath, bandsFile)}`);
+                                    if (this.useCache && fs.existsSync(path.join(outputFolder, bandsFile))) {
+                                        console.log(`Reading bands file ${bandsFile} from cache`);
+                                    } else {
+                                        await this.javaProcess.exec(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, outputFileName);                                    
+                                    }
+                                    try {
+                                        const buf: Buffer = fs.readFileSync(path.join(outputFolder, bandsFile));
+                                        content.data = buf.toLocaleString();
+                                        this.trySend(wsocket, content, "daa bands");
+                                    } catch (readError) {
+                                        console.error(`Error while reading daa bands file ${path.join(outputFolder, bandsFile)}`);
+                                        this.trySend(wsocket, null, "daa bands");
+                                    }
+                                } catch (execError) {
+                                    console.error(`Error while executing java process`, execError);
+                                    this.trySend(wsocket, null, "daa bands");
                                 }
                             } else {
-                                console.error(`Error while generating daa bands file name (name is null) :/`);
+                                console.error(`Error while generating daa bands file (filename is null) :/`);
                             }
                             break;
                         }
                         case 'java-los': {
-                            // console.log(`WellClear arguments: ${JSON.stringify(data)}`);
                             const data: JavaMsg = <JavaMsg> content.data;
                             const losFile: string = fsUtils.getLoSFileName(data);
                             if (losFile) {
                                 await this.activateJavaProcess();
-                                const losLogic: string = data.daaLogic.replace("WellClear-", "LoSRegion-");
-                                const wellClearVersion: string = await this.javaProcess.getVersion(losLogic);
-                                const javaOutputPath: string = path.join(__dirname, "../daa-output", wellClearVersion);
-                                if (this.useCache && fs.existsSync(path.join(javaOutputPath, losFile))) {
-                                    console.log(`Reading daa los regions file ${losFile} from cache`);
-                                } else {
-                                    await this.javaProcess.execLoS(losLogic, data.daaConfig, data.scenarioName);
-                                }
+                                const losLogic: string = data.daaLogic;
+                                const losFolder: string = path.join(__dirname, "../daa-logic");
+                                const losVersion: string = await this.javaProcess.getVersion(losFolder, losLogic);
+                                const outputFileName: string = fsUtils.getLoSFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                                const outputFolder: string = path.join(__dirname, "../daa-output", losVersion);
                                 try {
-                                    // WellClear-1.0.1/DAIDALUS/Scenarios/H1.daa
-                                    const buf: Buffer = fs.readFileSync(path.join(javaOutputPath, losFile));
-                                    content.data = buf.toLocaleString();
-                                    this.trySend(wsocket, content, "daa los regions");
-                                } catch (readError) {
-                                    console.error(`Error while reading daa los regions file ${path.join(javaOutputPath, losFile)}`);
+                                    if (this.useCache && fs.existsSync(path.join(outputFolder, losFile))) {
+                                        console.log(`Reading daa los regions file ${losFile} from cache`);
+                                    } else {
+                                        await this.javaProcess.exec(losFolder, losLogic, data.daaConfig, data.scenarioName, outputFileName);
+                                    }
+                                    try {
+                                        const buf: Buffer = fs.readFileSync(path.join(outputFolder, losFile));
+                                        content.data = buf.toLocaleString();
+                                        this.trySend(wsocket, content, "daa los regions");
+                                    } catch (readError) {
+                                        console.error(`Error while reading daa los regions file ${path.join(outputFolder, losFile)}`);
+                                        this.trySend(wsocket, null, "daa los regions");
+                                    }
+                                } catch (execError) {
+                                    console.error(`Error while executing java process`, execError);
                                     this.trySend(wsocket, null, "daa los regions");
                                 }
                             } else {
-                                console.error(`Error while generating daa los regions file name (name is null) :/`);
+                                console.error(`Error while generating daa los regions file (filename is null) :/`);
+                            }
+                            break;
+                        }
+                        case 'java-virtual-pilot': { // generate-daa-file-from-ic
+                            const data: JavaMsg = <JavaMsg> content.data;
+                            const outputFile: string = data.scenarioName.replace(".ic", ".daa");
+                            if (outputFile) {
+                                await this.activateJavaProcess();
+                                const virtualPilot: string = data.daaLogic;
+                                const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
+                                console.log("folder:" + virtualPilotFolder);
+                                const outputFileName: string = fsUtils.getVirtualPilotFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                                console.log("fileName:" + outputFileName);
+                                const outputFolder: string = path.join(__dirname, "../../daa-output/virtual_pilot");
+                                // use the .ic file to generate the .daa file
+                                try {
+                                    await this.javaProcess.exec(virtualPilotFolder, virtualPilot, data.daaConfig, data.scenarioName, outputFileName, { contrib: true });
+                                    console.log("executed");
+                                    try {
+                                        const buf: Buffer = fs.readFileSync(path.join(outputFolder, outputFile));
+                                        content.data = buf.toLocaleString();
+                                        this.trySend(wsocket, content, "daa virtual pilot");
+                                    } catch (readError) {
+                                        console.error(`Error while reading daa virtual pilot file ${path.join(outputFolder, outputFile)}`);
+                                        this.trySend(wsocket, null, "daa virtual pilot");
+                                    }
+                                } catch (execError) {
+                                    console.error(`Error while executing java process`, execError);
+                                    this.trySend(wsocket, null, "daa virtual pilot");
+                                }
+                            } else {
+                                console.error(`Error while generating daa virtual pilot file (filename is null) :/`);
                             }
                             break;
                         }
@@ -385,6 +428,20 @@ class DAAServer {
                             }
                             break;
                         }
+                        case 'list-ic-files': {
+                            const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
+                            let icFiles: string[] = null;
+                            try {
+                                icFiles = await this.listFilesRecursive(scenarioFolder, '.ic');
+                            } catch (listError) {
+                                console.error(`Error while reading scenario folder`, listError);
+                            } finally {
+                                content.data = JSON.stringify(icFiles);
+                                console.log(content.data);
+                                this.trySend(wsocket, content, "ic file list");
+                            }
+                            break;
+                        }
                         case 'list-conf-files':
                         case 'list-config-files': {
                             const configurationsFolder: string = path.join(__dirname, "../daa-config");
@@ -400,7 +457,7 @@ class DAAServer {
                             }
                             break;
                         }
-                        case 'load-cong-file':
+                        case 'load-conf-file':
                         case 'load-config-file': {
                             const data: LoadConfigRequest = <LoadConfigRequest> content.data;
                             const configurationsFolder: string = path.join(__dirname, "../daa-config");
@@ -429,7 +486,7 @@ class DAAServer {
                                     let wellclearVersions: string[] = [];
                                     try { 
                                         let jarFiles = allFiles.filter(async (name: string) => {
-                                            return await fs.lstatSync(path.join(__dirname, "../daa-logic", name)).isDirectory();
+                                            return await fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory();
                                         });
                                         jarFiles = jarFiles.filter((name: string) => {
                                             return name.startsWith("WellClear-") && name.endsWith(".jar");
@@ -457,7 +514,7 @@ class DAAServer {
                                     let wellclearVersions: string[] = [];
                                     try { 
                                         let jarFiles = allFiles.filter(async (name: string) => {
-                                            return await fs.lstatSync(path.join(__dirname, "../daa-logic", name)).isDirectory();
+                                            return await fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory();
                                         });
                                         jarFiles = jarFiles.filter((name: string) => {
                                             return name.startsWith("LoSRegion-") && name.endsWith(".jar");
@@ -474,6 +531,34 @@ class DAAServer {
                                 }
                             } catch (listError) {
                                 console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
+                            }
+                            break;
+                        }
+                        case 'list-virtual-pilot-versions': {
+                            const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
+                            try {
+                                const allFiles: string[] = await fs.readdirSync(virtualPilotFolder);
+                                if (allFiles) {
+                                    let virtualPilotVersions: string[] = [];
+                                    try { 
+                                        let jarFiles = allFiles.filter(async (name: string) => {
+                                            return await fs.lstatSync(path.join(virtualPilotFolder, name)).isDirectory();
+                                        });
+                                        jarFiles = jarFiles.filter((name: string) => {
+                                            return name.startsWith("SimDaidalus_") && name.endsWith(".jar");
+                                        });
+                                        virtualPilotVersions = jarFiles.map((name: string) => {
+                                            return name.slice(0, name.length - 4);
+                                        });
+                                    } catch (statError) {
+                                        console.error(`Error while reading virtual pilot folder ${virtualPilotFolder} :/`);
+                                    } finally {
+                                        content.data = JSON.stringify(virtualPilotVersions);
+                                        this.trySend(wsocket, content, "virtual pilot versions");
+                                    }
+                                }
+                            } catch (listError) {
+                                console.error(`Error while reading wellclear folder ${virtualPilotFolder} :/`);
                             }
                             break;
                         }

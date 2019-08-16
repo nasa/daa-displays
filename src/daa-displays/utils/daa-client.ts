@@ -6,13 +6,13 @@
 export class DAAClient {
     ws: WebSocket;
     url: string;
-    port: number;
+    port: string;
     constructor () {
         this.ws = null;
     }
     async connectToServer (url?: string, port?: number): Promise<WebSocket> {
-        this.url = url || "localhost";
-        this.port = port || 8082;
+        this.url = url || document.location.hostname;//"localhost";
+        this.port = (port) ? port.toString() : document.location.port || "8082";
         if (this.ws) { 
             if (this.ws.readyState === this.ws.CONNECTING) {
                 return new Promise((resolve, reject) => {
@@ -25,7 +25,8 @@ export class DAAClient {
             }
         }
         return new Promise((resolve, reject) => {
-            let wsUrl = "ws://" + this.url + ":" + this.port;
+            const wsUrl = "ws://" + this.url + ":" + this.port;
+            console.log(`wsUrl: ${wsUrl}`);
             this.ws = new WebSocket(wsUrl);
             this.ws.onopen = (evt) => {
                 resolve(this.ws);
