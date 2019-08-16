@@ -65,7 +65,15 @@ clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 # makefile targets
 all: download clean-jar compile daa2xyz #wrapper #los1.0.1 los1.0.2 los2.0.e 
 
-download: $(DOWNLOAD_TARGETS)
+download-wellclear-2.0.e:
+	@echo "\n\033[0;32m ** Downloading WellClear 2.0.e from LaRC **\033[0m" 
+	-@mkdir WellClear-2.0.e
+	-@curl https://shemesh.larc.nasa.gov/fm/DAIDALUS/RELEASE2e-May-19-19.tgz > WellClear-2.0.e.tgz
+	-@tar xvzf WellClear-2.0.e.tgz
+	-@mv RELEASE2e WellClear-2.0.e/DAIDALUS
+	-@rm WellClear-2.0.e.tgz
+
+download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e
 
 compile: $(COMPILE_TARGETS) $(COMPILE_WRAPPERS)
 
