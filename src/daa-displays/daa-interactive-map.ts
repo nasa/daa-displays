@@ -171,7 +171,7 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
             // change the GET so that tiles are requested to the local server
             // this.xhr.open("GET", "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml", true);
             // this.xhr.open("GET", "http://localhost:10000/WMTSCapabilities.xml", true);
-            const url = `http://${document.location.hostname}:${document.location.port}/WMTSCapabilities.xml`;//"http://localhost:8082/WMTSCapabilities.xml";
+            const url: string = `${document.location.href}WMTSCapabilities.xml`;//"http://localhost:8082/WMTSCapabilities.xml";
             this.xhr.open("GET", url, true);
             this.xhr.onreadystatechange = () => {
                 if (this.xhr.readyState === 4) {

@@ -157,8 +157,7 @@ export class DAAPlayer {
     protected _repl: { [key: string]: DAAClient };
     protected _log;
     protected _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
-    protected url: string;
-    protected port: number;
+    protected href: string;
 
     readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
@@ -706,16 +705,14 @@ export class DAAPlayer {
      * @function <a name="connectToServer">connectToServer</a>
      * @description Connects to a WebSocket server compatible with the PVSio-web APIs.
      * @param opt {Object} Connection options
-     *          <li>url (String): server URL (default: localhost)</li>
-     *          <li>port (String): server port (default: 8082)</li>
+     *          <li>href (String): server URL (default: http://localhost)</li>
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async connectToServer (opt?: { url?: string, port?: number }) {
+    async connectToServer (opt?: { href?: string }) {
         opt = opt || {};
-        this.url = opt.url || `${document.location.hostname}`; //"localhost";
-        this.port = opt.port || 8082;
-        await this.ws.connectToServer(this.url, this.port);
+        this.href = opt.href || document.location.href; //"localhost";
+        await this.ws.connectToServer(this.href);
         // enable file system
         // if (opt.fs) {
         //     await this.enableFileSystem();    
