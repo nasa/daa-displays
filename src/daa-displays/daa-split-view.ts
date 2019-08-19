@@ -166,6 +166,9 @@ export class DAASplitView extends DAAPlayer {
     getCurrentSimulationStep (): number {
         return this.players.right.getCurrentSimulationStep();
     }
+    getCurrentSimulationTime (): string {
+        return this.players.right.getCurrentSimulationTime();
+    }
     async activate () {
         await super.activate();
         if (this.players) {

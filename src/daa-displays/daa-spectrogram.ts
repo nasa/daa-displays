@@ -210,7 +210,7 @@ export class DAASpectrogram {
         }
         return this;
     }
-    plotAlerts(data: { alerts: AlertElement, step: number }): DAASpectrogram {
+    plotAlerts(data: { alerts: AlertElement, step: number, time: string }): DAASpectrogram {
         if (data && data.alerts) {
             const alertTypes: { [level: string]: string } = {
                 "0": "NONE",
@@ -243,6 +243,7 @@ export class DAASpectrogram {
                 stepID: stepID,
                 zIndex: 2,
                 step: data.step,
+                time: data.time,
                 bands: band_plot_data,
                 alerts: (data && data.alerts && data.alerts.alerts) ? data.alerts.alerts.map((elem: { ac: string; alert: string }) => {
                     return `${elem.ac} (${alertTypes[elem.alert]})`;
@@ -270,7 +271,7 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plot (data: { bands: utils.Bands, step: number, units?: string }): DAASpectrogram {
+    plot (data: { bands: utils.Bands, step: number, time: string, units?: string }): DAASpectrogram {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
             const band_plot_data = {};
@@ -305,6 +306,7 @@ export class DAASpectrogram {
                 stepID: stepID,
                 zIndex: 2,
                 step: data.step,
+                time: data.time,
                 bands: band_plot_data,
                 top: this.top,
                 left: leftMargin,

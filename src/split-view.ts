@@ -72,27 +72,32 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     data.map.setTraffic(traffic);
     playback.getPlayer(playerID).getPlot("alerts").plotAlerts({
         alerts: bands["Alerts"],
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlayer(playerID).getPlot("heading-bands").plot({
         bands: bands["Heading Bands"],
         units: "deg",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlayer(playerID).getPlot("altitude-bands").plot({
         bands: bands["Altitude Bands"],
         units: "ft",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlayer(playerID).getPlot("airspeed-bands").plot({
         bands: bands["Horizontal Speed Bands"],
         units: "knots",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlayer(playerID).getPlot("vs-bands").plot({
         bands: bands["Vertical Speed Bands"],
         units: "fpm",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     // console.log(`Bands`, bands);
 }

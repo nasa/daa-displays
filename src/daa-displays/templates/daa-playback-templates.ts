@@ -1,10 +1,10 @@
 export const playbackTemplate: string = `
 <div id="{{id}}" style="position:absolute;width:100%;">
-    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="input-group-prepend">
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
-                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed (%)</span>
-                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="100" min="10" max="100000" step="10" aria-label="simulation speed" class="form-control">
+                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
+                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="1" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
             </div>
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:400px;">
@@ -13,6 +13,11 @@ export const playbackTemplate: string = `
                     of
                     <span id="{{id}}-tot-sim-steps" style="margin-left:4px; margin-right:4px;">0</span>
                 </span>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:200px;">
+                    Virtual time: 
+                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>
             </div>
             <div class="input-group mb-3" style="width: 240px; margin-left:20px; margin-right:30px;">
                 <div class="btn-group btn-group-toggle" role="group" aria-label="View">

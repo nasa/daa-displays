@@ -83,27 +83,32 @@ async function render(data: { map: InteractiveMap, compass: Compass, airspeedTap
     data.map.setTraffic(traffic);
     playback.getPlot("alerts").plotAlerts({
         alerts: bands["Alerts"],
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlot("heading-bands").plot({
         bands: bands["Heading Bands"],
         units: "deg",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlot("altitude-bands").plot({
         bands: bands["Altitude Bands"],
         units: "ft",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlot("airspeed-bands").plot({
         bands: bands["Horizontal Speed Bands"],
         units: "knots",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     playback.getPlot("vs-bands").plot({
         bands: bands["Vertical Speed Bands"],
         units: "fpm",
-        step: playback.getCurrentSimulationStep()
+        step: playback.getCurrentSimulationStep(),
+        time: playback.getCurrentSimulationTime()
     });
     const los: DAALosRegion[] = playback.getCurrentLoS();
     if (los) {
