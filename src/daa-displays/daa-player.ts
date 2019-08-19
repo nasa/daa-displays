@@ -125,7 +125,8 @@ export declare interface PlotDescriptor {
     left?: number,
     width?: number,
     height?: number,
-    parent?: string
+    parent?: string,
+    player?: DAAPlayer
 }
 
 export function safeSelector(str: string): string {
@@ -1337,18 +1338,18 @@ export class DAAPlayer {
      * @instance
      */
     appendSimulationPlot(desc: PlotDescriptor) {
-        const plotDescriptor: PlotDescriptor = JSON.parse(JSON.stringify(desc));
-        plotDescriptor.id = plotDescriptor.id;
-        plotDescriptor.type = plotDescriptor.type || "spectrogram";
-        if (plotDescriptor.type === "spectrogram") {
-            this._plot[plotDescriptor.id] = new DAASpectrogram(`${this.id}-${plotDescriptor.id.replace(/\s/g, "")}`, {
-                top: plotDescriptor.top, left: plotDescriptor.left, height: plotDescriptor.height, width: plotDescriptor.width
+        desc.id = desc.id;
+        desc.type = desc.type || "spectrogram";
+        if (desc.type === "spectrogram") {
+            this._plot[desc.id] = new DAASpectrogram(`${this.id}-${desc.id.replace(/\s/g, "")}`, {
+                top: desc.top, left: desc.left, height: desc.height, width: desc.width
             }, { 
-                units: plotDescriptor.units,
+                units: desc.units,
                 length: this._simulationLength,
-                label: plotDescriptor.label,
-                range: plotDescriptor.range,
-                parent: plotDescriptor.parent
+                label: desc.label,
+                range: desc.range,
+                player: desc.player || this,
+                parent: desc.parent
             });
         }
         return this;

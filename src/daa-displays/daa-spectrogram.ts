@@ -83,6 +83,7 @@ require(["widgets/daa-displays/daa-sspectrogram"], function (DAASpectrogram) {
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-spectrogram-templates';
 import { AlertElement } from '../daa-server/utils/daa-server';
+import { DAAPlayer } from './daa-player';
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data) {
@@ -124,6 +125,7 @@ export class DAASpectrogram {
     units: { from: string, to: string };
     label: { top: string, left: string };
     div: HTMLElement;
+    player: DAAPlayer;
     /**
      * @function <a name="DAASpectrogram">DAASpectrogram</a>
      * @description Constructor.
@@ -143,6 +145,7 @@ export class DAASpectrogram {
         range?: { from: number, to: number },
         length?: number,
         label?: string | { top?: string, left?: string },
+        player?: DAAPlayer,
         parent?: string
     }) {
         opt = opt || {};
@@ -157,7 +160,6 @@ export class DAASpectrogram {
             from: (opt.range && opt.range.from) ? opt.range.from : 0,
             to: (opt.range && opt.range.to) ? opt.range.to : 100
         };
-        opt = opt || {};
         this.length = opt.length || 10;
         this.units = (opt.units) ? 
                         (typeof opt.units === "string") ? { from: opt.units, to: opt.units } : opt.units
@@ -167,11 +169,23 @@ export class DAASpectrogram {
             left: (typeof opt.label === "object") ? opt.label.left : null,
         } : { top: null, left: null };
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2, top: this.top, left: this.left });
-        let theHTML = this.compileHTML();
+        const theHTML = this.compileHTML();
         $(this.div).html(theHTML);
+        this.player = opt.player;
+    }
+    protected installGotoHandler(step: number) {
+        if (this.player) {
+            const stepID = `${this.id}-step-${step}`;
+            $(`#${stepID}`).on("click", () => {
+                // @ts-ignore
+                $('[data-toggle="tooltip"]').tooltip('hide');
+                this.player.gotoControl(step);
+            });
+            $(`#${stepID}`).css("cursor", "pointer");
+        }
     }
     // utility function for compiling the HTML element of the spectrogram
-    private compileHTML () {
+    protected compileHTML () {
         const grid = createGrid({
             width: this.width, 
             height: this.height, 
@@ -259,6 +273,7 @@ export class DAASpectrogram {
             // @ts-ignore -- method tooltip is added by bootstrap
             // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
             $(`#${stepID}`).tooltip();
+            this.installGotoHandler(data.step);
         }
         return this;
     }
@@ -319,6 +334,7 @@ export class DAASpectrogram {
             // @ts-ignore -- method tooltip is added by bootstrap
             //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
             $(`#${stepID}`).tooltip();
+            this.installGotoHandler(data.step);
         }
         return this;
     }

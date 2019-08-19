@@ -176,7 +176,7 @@ export class DAASplitView extends DAAPlayer {
             if (this.players.right) { await this.players.right.activate(); }
         }
     }
-    wellclearMode (): DAAPlayer {
+    wellclearMode (): DAASplitView {
         super.wellclearMode();
         if (this.players) {
             if (this.players.left) { this.players.left.wellclearMode(); }
@@ -184,7 +184,7 @@ export class DAASplitView extends DAAPlayer {
         }
         return this;
     }
-    losMode (): DAAPlayer {
+    losMode (): DAASplitView {
         super.losMode();
         if (this.players) {
             if (this.players.left) { this.players.left.losMode(); }
@@ -192,7 +192,7 @@ export class DAASplitView extends DAAPlayer {
         }
         return this;
     }
-    virtualPilotMode (): DAAPlayer {
+    virtualPilotMode (): DAASplitView {
         super.virtualPilotMode();
         if (this.players) {
             if (this.players.left) { this.players.left.virtualPilotMode(); }
@@ -235,7 +235,7 @@ export class DAASplitView extends DAAPlayer {
     }
 
 
-    refreshScenariosView(): DAAPlayer {
+    refreshScenariosView(): DAASplitView {
         const scenarios: string[] = super.appendScenarioSelector();
         // install handlers for click events on scenarios
         if (scenarios) {
