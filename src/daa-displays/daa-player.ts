@@ -374,6 +374,7 @@ export class DAAPlayer {
                         console.error("Step function has thrown a runtime exception: ", stepError);
                     }
                     $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                    $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
                     if (!opt.preventIncrement) {
                         this.simulationStep++;
                     }
@@ -398,7 +399,7 @@ export class DAAPlayer {
      */
     setSpeed(speed: number) {
         if (!isNaN(speed) && speed > 0) {
-            this.ms = 1000 * (100 / speed);
+            this.ms = 1000 / speed;
             $(`#${this.id}-speed-input`).val(speed);
         }
         return this;
@@ -663,10 +664,11 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async gotoControl(step?: number): Promise<number> {
+    async gotoControl (step?: number): Promise<number> {
         this.clearInterval();
         this.simulationStep = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
         $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
         return await this._gotoControl(this.simulationStep);
     }
 
@@ -985,6 +987,10 @@ export class DAAPlayer {
     getSelectedWellClearVersion(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
         if (sel) {
+            const components: string[] = sel.split("-");
+            if (components && components.length > 2) {
+                return `WellClear-${components.slice(-2).join("-")}`;
+            }
             return `WellClear-${sel.split("-").slice(-1)}`;
         }
         return null;
@@ -1052,8 +1058,34 @@ export class DAAPlayer {
                 const time: string = this._scenarios[this._selectedScenario].steps[this.simulationStep];
                 return this._scenarios[this._selectedScenario].lla[time];
             } else {
-                console.error("Incorrect simulation step (array index out of range for flight data)");
+                console.error("[getCurrentFlightData] Error: Incorrect simulation step (array index out of range for flight data)");
             }
+        }
+        return null;
+    }
+
+    getCurrentSimulationTime (): string {
+        if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
+            if (this.simulationStep < this._scenarios[this._selectedScenario].length) {
+                const time: string = this._scenarios[this._selectedScenario].steps[this.simulationStep];
+                return time;
+            } else {
+                console.error("[getCurrentSimulationTime] Error: Incorrect simulation step (array index out of range for flight data)");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Utility function, finds the step corresponding to the given time
+     * @param time 
+     */
+    getStep (time: string): number {
+        if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
+            const step: number = this._scenarios[this._selectedScenario].steps.findIndex(tm => {
+                return +tm === +time;
+            });
+            return (step >= 0) ? step : null;
         }
         return null;
     }
@@ -1242,7 +1274,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || (`${this.id}-simulation-controls`);
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1900 : +opt.width;
+        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
 
         this._displays = opt.displays;
 
