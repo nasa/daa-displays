@@ -182,7 +182,7 @@ async function createPlayer() {
     });
     playback.getPlayer("right").appendSimulationPlot({
         id: "alerts",
-        left: 1120,
+        left: 1200,
         width: 1040,
         label: "Alerting",
         range: { from: 1, to: 3 },
@@ -196,16 +196,18 @@ async function createPlayer() {
         label: "Heading Bands",
         range: { from: 0, to: 360 },
         player: playback,
+        units: "[deg]",
         parent: "simulation-plot"
     });
     playback.getPlayer("right").appendSimulationPlot({
         id: "heading-bands",
         top: 150,
-        left: 1120,
+        left: 1200,
         width: 1040,
         label: "Heading Bands",
         range: { from: 0, to: 360 },
         player: playback,
+        units: "[deg]",
         parent: "simulation-plot"
     });
     playback.getPlayer("left").appendSimulationPlot({
@@ -215,16 +217,18 @@ async function createPlayer() {
         label: "Altitude Bands",
         range: { from: -200, to: 60000 },
         player: playback,
+        units: "[ft]",
         parent: "simulation-plot"
     });
     playback.getPlayer("right").appendSimulationPlot({
         id: "altitude-bands",
         top: 300,
-        left: 1120,
+        left: 1200,
         width: 1040,
         label: "Altitude Bands",
         range: { from: -200, to: 60000 },
         player: playback,
+        units: "[ft]",
         parent: "simulation-plot"
     });
     playback.getPlayer("left").appendSimulationPlot({
@@ -234,16 +238,18 @@ async function createPlayer() {
         label: "Horizontal Speed  Bands",
         range: { from: 0, to: 1000 },
         player: playback,
+        units: "[knot]",
         parent: "simulation-plot"
     });
     playback.getPlayer("right").appendSimulationPlot({
         id: "airspeed-bands",
         top: 450,
-        left: 1120,
+        left: 1200,
         width: 1040,
         label: "Horizontal Speed Bands",
         range: { from: 0, to: 1000 },
         player: playback,
+        units: "[knot]",
         parent: "simulation-plot"
     });
     playback.getPlayer("left").appendSimulationPlot({
@@ -253,16 +259,18 @@ async function createPlayer() {
         label: "Vertical Speed Bands",
         range: { from: -10000, to: 10000 },
         player: playback,
+        units: "[fpm]",
         parent: "simulation-plot"
     });
     playback.getPlayer("right").appendSimulationPlot({
         id: "vs-bands",
         top: 600,
-        left: 1120,
+        left: 1200,
         width: 1040,
         label: "Vertical Speed Bands",
         range: { from: -10000, to: 10000 },
         player: playback,
+        units: "[fpm]",
         parent: "simulation-plot"
     });
     await playback.activate();
