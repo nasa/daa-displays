@@ -165,6 +165,7 @@ playback.getPlayer("right").define("init", async () => {
 async function createPlayer() {
     playback.appendNavbar();
     playback.appendSidePanelView();
+    await playback.appendScenarioSelector();
     await playback.appendWellClearVersionSelector();
     await playback.appendWellClearConfigurationSelector();
     await playback.appendSimulationControls({

@@ -1,7 +1,7 @@
 export const spectrogramTemplate: string = `
 <div id="{{id}}" style="position:absolute;{{#if label.top}} margin-top:30px;{{/if}}">
     {{#if label.top}}
-    <div style="position:absolute; white-space:nowrap; height:30px; top:-30px;">{{label.top}}{{#if units}} ( <em>{{units}}</em> ){{/if}}</div>
+    <div style="position:absolute; white-space:nowrap; height:30px; top:-30px;">{{label.top}}</div>
     {{/if}}{{#if label.left}}
     <div style="position:absolute; transform:rotate(-90deg); height:{{height}}px;">{{label.left}}</div>{{/if}}
     <div style="position:absolute; width:{{width}}px; height:{{height}}px; background-color:#2c3541de;">
@@ -18,9 +18,9 @@ export const spectrogramTemplate: string = `
             </div>
             {{/each}}
         </div>
-        <div class="spectrogram-x-axis" style="position:absolute; left:{{width}}px; height:{{height}}px; margin-left:10px;">
-            <button id="{{id}}-max" data-toggle="modal-max" class="btn btn-sm" style="position:absolute; white-space:nowrap; margin-top:-12px;">{{to}}</button>
-            <button id="{{id}}-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-25px; white-space:nowrap;">{{from}}</button>
+        <div class="spectrogram-x-axis" style="position:absolute; left:{{width}}px; height:{{height}}px;">
+            <button id="{{id}}-max" data-toggle="modal-max" class="btn btn-sm" style="position:absolute; white-space:nowrap; margin-top:-12px;">{{to}} {{units}}</button>
+            <button id="{{id}}-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-25px; white-space:nowrap;">{{from}} {{units}}</button>
         </div>
         <div id="{{id}}-cursor" style="transform-origin:top; background-color:steelblue; opacity: 0.4; left:0px; top:0px; height:{{cursor.height}}px; width:{{cursor.width}}px; position:absolute;"></div>
     </div>
@@ -33,7 +33,7 @@ export const spectrogramBandTemplate: string = `
     title="<div>Step {{step}}</div><div>Time {{time}}</div>{{#each bands}}{{#each this}}<div style='white-space:nowrap;'>{{@../key}} [ {{from}}, {{to}} ]</div>{{/each}}{{/each}}">
     {{#each bands}}
         {{#each this}}
-        <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{../../width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
+        <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
         {{/each}}
     {{/each}}
 </div>`;
@@ -44,7 +44,7 @@ export const spectrogramAlertsTemplate: string = `
     title="<div>Step {{step}}</div><div>Time {{time}}</div><div style='white-space:nowrap;'>Alerts: [ {{alerts}} ]</div>">
     {{#each bands}}
         {{#each this}}
-        <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{../../width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
+        <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; border-radius:{{indicator.radius}}px; height:{{indicator.radius}}px; width:{{indicator.radius}}px; margin-top: {{indicator.marginTop}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
         {{/each}}
     {{/each}}
 </div>`;

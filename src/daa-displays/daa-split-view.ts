@@ -123,14 +123,16 @@ export class DAASplitView extends DAAPlayer {
         this.players[label.left] = this.players.left;
         this.players[label.right] = this.players.right;
 
-        this.step = async () => {
+        this.step = async (opt?: { preventIncrement?: boolean }) => {
+            opt = opt || {};
             let current_step = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
-            current_step += (current_step < this._simulationLength) ? 1 : 0;
+            current_step += (current_step < this._simulationLength && !opt.preventIncrement) ? 1 : 0;
             this.simulationStep = current_step;
             $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
             if (this.players) {
-                if (this.players.left) { this.players.left.step(); }
-                if (this.players.right) { this.players.right.step(); }
+                if (this.players.left) {
+                    this.players.left.gotoControl(this.simulationStep); // right player is bridged
+                }
             }
         };
         this.render = async () => {
@@ -154,6 +156,22 @@ export class DAASplitView extends DAAPlayer {
                 // }
             }
         };
+        this._handlers.step = () => {
+            return new Promise(async (resolve, reject) => {
+                await this.stepControl();
+                resolve();
+            });
+        };
+        // this._handlers.init = () => {
+        //     return new Promise(async (resolve, reject) => {
+        //         this.clearInterval();
+        //         if (this.players) {
+        //             if (this.players.left) { await this.players.left.render(); }
+        //             if (this.players.right) { await this.players.right.render(); }
+        //         }
+        //         resolve();
+        //     });
+        // };
     }
     getCurrentFlightData (enc?: string): LLAData {
         console.error(`splitView.getCurrentFlightData() should not be used. Please use splitView.getPlayers(..).getCurrentFlightData()`);
@@ -164,10 +182,10 @@ export class DAASplitView extends DAAPlayer {
         return null;
     }
     getCurrentSimulationStep (): number {
-        return this.players.right.getCurrentSimulationStep();
+        return this.simulationStep;
     }
     getCurrentSimulationTime (): string {
-        return this.players.right.getCurrentSimulationTime();
+        return this.players.left.getCurrentSimulationTime(); // left player is always the reference
     }
     async activate () {
         await super.activate();
@@ -201,30 +219,107 @@ export class DAASplitView extends DAAPlayer {
         return this;
     }
 
+    // @overrides
+    async selectScenarioFile (scenario: string, opt?: {
+        forceReload?: boolean
+    }): Promise<DAASplitView> {
+        if (this._scenarios && !this._loadingScenario) {
+            opt = opt || {};
+            this.clearInterval();
+            if (this._selectedScenario !== scenario || opt.forceReload) {
+                this._loadingScenario = true;
+                this.loadingAnimation();
+                this.setStatus(`Loading ${scenario}`);
+                this.disableSelection();
+                console.log(`Scenario ${scenario} selected`); 
+                if (!this._scenarios[scenario]) {
+                    console.log(`Loading scenario ${scenario}`); 
+                    await this.loadDaaFile(scenario);
+                    // console.log(`Loading complete!`);
+                }
+                this._selectedScenario = scenario;
+                this.simulationStep = 0;
+                this._simulationLength = this._scenarios[this._selectedScenario].length;
+                // update DOM
+                $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+                $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
+                $(`#${this.id}-selected-scenario`).html(scenario);
+                try {
+                    if (this.players) {
+                        if (this.players.left) {
+                            await this.players.left.loadDaaFile(scenario);
+                            await this.players.left.selectScenarioFile(scenario, opt);
+                        }
+                        if (this.players.right) {
+                            await this.players.right.loadDaaFile(scenario);
+                            await this.players.right.selectScenarioFile(scenario, opt);
+                        }
+                    }
+                } catch (loadError) {
+                    console.error(`[daa-split-view] Warning: unable to initialize scenario ${scenario}`);
+                } finally {
+                    this.refreshSimulationPlots();
+                    // this.refreshConfigView();
+                    // this.refreshVersionsView();
+                    // this.refreshScenariosView();
+                    this.enableSelection();
+                    this.loadingComplete();
+                    this.statusReady();
+                    this._loadingScenario = false;
+                    console.log(`Done!`);
+                    return this;
+                }
+            } else {
+                console.log(`Scenario ${scenario} already selected`);
+            }
+        } else {
+            console.error(`Unable to select scenario ${scenario} :X`);
+        }
+        return this;
+    }
     
     /**
      * @function <a name="goto">goto</a>
      * @description Goes to a given target simulation step
      * @param step {nat} Target simulation step.
      * @return {nat} The current simulation step, which corresponds to the target step (value clipped if target is outside the simulation range). 
-     * @memberof module:DAAPlaybackPlayer
+     * @memberof module:DAASplitView
      * @instance
      */
-    async gotoControl(step: number): Promise<number> {
+    async gotoControl(step: number): Promise<DAASplitView> {
         this.clearInterval();
-        step = (step > 0) ?
-                    (step < this._simulationLength) ? step : (this._simulationLength - 1)
-                    : 0;
-        this.simulationStep = step;
-        // if (step === 0) {
-        //     await this._handlers.init();
-        // }
+        this.simulationStep = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        // update DOM
+        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+        // send players the control command
         if (this.players) {
-            if (this.players.left) { await this.players.left.gotoControl(step); }
-            if (this.players.right) { await this.players.right.gotoControl(step); }
-            this.simulationStep = step;
+            if (this.players.left) {
+                // if (step === 0) {
+                //     await this._handlers.init();
+                // }
+                await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            }
         }
-        return step;
+        return this;
+    }
+
+    public async stepControl(currentStep?: number): Promise<DAASplitView> {
+        // get step number either from function argument or from DOM
+        currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
+        // sanity check
+        currentStep = (currentStep < this._simulationLength - 1) ? currentStep : this._simulationLength - 1;
+        // advance simulation step
+        this.simulationStep = (currentStep < this._simulationLength - 1) ? currentStep + 1 : currentStep;
+        // update DOM
+        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+        // send players the control command
+        if (this.players.left) { 
+            this.players.left.gotoControl(this.simulationStep); // right player is bridged
+        }
+        return this;
     }
 
     getPlayer(playerID: string): DAAPlayer {
@@ -232,23 +327,6 @@ export class DAASplitView extends DAAPlayer {
             return this.players[playerID];
         }
         return null;
-    }
-
-
-    refreshScenariosView(): DAASplitView {
-        const scenarios: string[] = super.appendScenarioSelector();
-        // install handlers for click events on scenarios
-        if (scenarios) {
-            scenarios.forEach(scenario => {
-                // event handler
-                $(`#${this.id}-scenario-${safeSelector(scenario)}`).on("click", async () => {
-                    this._selectedScenario = scenario;
-                    this.players.left.selectScenarioFile(scenario);
-                    this.players.right.selectScenarioFile(scenario);
-                });
-            });
-        }
-        return this; 
     }
 
     // @overrides
@@ -283,6 +361,13 @@ export class DAASplitView extends DAAPlayer {
         return this;
     }
 
+    // @overrides
+    async appendScenarioSelector(): Promise<DAAPlayer> {
+        await super.appendScenarioSelector();
+        return this;
+    }
+
+    // @overrides
     async appendSimulationControls(opt?: {
         parent?: string,
         top?: number,
@@ -292,9 +377,10 @@ export class DAASplitView extends DAAPlayer {
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
     }): Promise<DAAPlayer> 
     {
-        await this.players.left.appendSimulationControls(opt);
-        await this.players.right.appendSimulationControls(opt);
-        this.players.right.bridgePlayer(this.players.left);
+        // await this.players.left.appendSimulationControls(opt);
+        // await this.players.right.appendSimulationControls(opt);
+        super.appendSimulationControls(opt);
+        this.players.left.bridgePlayer(this.players.right);
         return this;
     }
 }

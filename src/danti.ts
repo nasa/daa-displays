@@ -144,6 +144,7 @@ async function createPlayer() {
         width: 1100,
         label: "Heading Bands",
         range: { from: 0, to: 360 },
+        units: "[deg]",
         parent: "simulation-plot"
     });
     playback.appendSimulationPlot({
@@ -152,6 +153,7 @@ async function createPlayer() {
         width: 1100,
         label: "Altitude Bands",
         range: { from: -200, to: 60000 },
+        units: "[ft]",
         parent: "simulation-plot"
     });
     playback.appendSimulationPlot({
@@ -160,6 +162,7 @@ async function createPlayer() {
         width: 1100,
         label: "Horizontal Speeds Bands",
         range: { from: 0, to: 1000 },
+        units: "[knot]",
         parent: "simulation-plot"
     });
     playback.appendSimulationPlot({
@@ -168,10 +171,12 @@ async function createPlayer() {
         width: 1100,
         label: "Vertical Speed Bands",
         range: { from: -10000, to: 10000 },
+        units: "[fpm]",
         parent: "simulation-plot"
     });
     playback.appendNavbar();
     playback.appendSidePanelView();
+    await playback.appendScenarioSelector();
     await playback.appendWellClearVersionSelector();
     await playback.appendWellClearConfigurationSelector();
     await playback.appendSimulationControls({

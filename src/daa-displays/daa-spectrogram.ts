@@ -227,16 +227,25 @@ export class DAASpectrogram {
     plotAlerts(data: { alerts: AlertElement, step: number, time: string }): DAASpectrogram {
         if (data && data.alerts) {
             const alertTypes: { [level: string]: string } = {
-                "0": "NONE",
-                "1": "MONITOR",
-                "2": "AVOID",
-                "3": "ALERT"
+                "0": "0", // NONE
+                "1": "1", // FAR
+                "2": "2", // MID
+                "3": "0" // NEAR
             };
             const range: { from: number, to: number } = { from: 0, to: 3 };
-            const height: number = 3;
             // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms
             const band_plot_data = {};
             const yScaleFactor = this.height / 3;
+            let radius: number = (this.width / this.length) - 1;
+            if (radius < 4) { radius = 4; } // 4px is the minimum radius
+            let marginTop: number = 0;
+            if (radius > yScaleFactor) {
+                // reduce radius size, otherwise it will not fit vertically
+                radius = yScaleFactor;
+            } else {
+                // offset the circle, to improve visibility of the alert in the spectrogram
+                marginTop = (yScaleFactor - radius) / 2;
+            }
             data.alerts.alerts.forEach((elem: { ac: string, alert: string }) => {
                 band_plot_data[elem.alert] = [];
                 band_plot_data[elem.alert].push({
@@ -245,7 +254,11 @@ export class DAASpectrogram {
                     color: utils.alertingColors[elem.alert].color,
                     top: (range.to - +elem.alert) * yScaleFactor,
                     height: yScaleFactor,
-                    units: this.units.to
+                    units: (typeof this.units === "string") ? this.units : this.units.to,
+                    indicator: {
+                        radius,
+                        marginTop
+                    }
                 });
             });
 
@@ -259,9 +272,12 @@ export class DAASpectrogram {
                 step: data.step,
                 time: data.time,
                 bands: band_plot_data,
-                alerts: (data && data.alerts && data.alerts.alerts) ? data.alerts.alerts.map((elem: { ac: string; alert: string }) => {
-                    return `${elem.ac} (${alertTypes[elem.alert]})`;
-                }).join("\n") : "",
+                alerts: (data && data.alerts && data.alerts.alerts) ? 
+                    data.alerts.alerts.filter((elem: { ac: string; alert: string }) => {
+                        return elem.alert !== "0";
+                    }).map((elem: { ac: string; alert: string }) => {
+                        return `${elem.ac} (${alertTypes[elem.alert]})`;
+                    }).join("\n") : "",
                 top: this.top,
                 left: leftMargin,
                 width: barWidth,
@@ -291,6 +307,8 @@ export class DAASpectrogram {
             // this._timeseries.push(data.bands);
             const band_plot_data = {};
             const yScaleFactor = this.height / (this.range.to - this.range.from);
+            const barWidth = this.width / this.length;
+            
             const keys: string[] = Object.keys(data.bands);
             for (let k = 0; k < keys.length; k++) {
                 const alert: string = keys[k];
@@ -308,13 +326,13 @@ export class DAASpectrogram {
                         dash: utils.bandColors[alert].style === "dash",
                         top: (this.range.to - to) * yScaleFactor,
                         height: height * yScaleFactor,
+                        width: barWidth,
                         units: this.units.to
                     });
                 }
             }
             
             const stepID = `${this.id}-step-${data.step}`;
-            const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
             const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
                 id: this.id,

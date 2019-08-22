@@ -36,7 +36,7 @@ export const compassTemplate = '<div id="{{id}}-inner" style="position:absolute;
 +                '0'
 +            '</div>'
 +        '</div>'
-+        '<div id="{{id}}-top-mag" style="color:#00f500; position:absolute;font-size:22px;margin-left:370px; top:64px;">MAG</div>'
++        '<div id="{{id}}-top-mag" style="display:none; color:#00f500; position:absolute;font-size:22px;margin-left:370px; top:64px;">MAG</div>'
 +    '</div>'
 +    '<!-- ownship -->'
 +    '<div id="{{id}}-ownship" style="z-index:1;">'

@@ -125,6 +125,16 @@ wrapper:
 	-@cd WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-DW-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
 	-@unzip -vl WellClear-DW-2.0.e.jar && unzip -c WellClear-DW-2.0.e.jar META-INF/MANIFEST.MF
 
+lib?=NONE
+ver?=2.0.x
+compile-jar:
+	@echo "\n\033[0;32m ** Building WellClear-$(ver).jar **\033[0m"
+	@echo Compiling with library $(lib).jar
+	cd utils && $(JAVAC) -cp ../$(lib).jar DAABandsV2.java DaidalusWrapperInterface.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class
+	cd utils && unzip -qn ../$(lib).jar -d temp
+	cd utils/temp && $(JAR) uf ../../WellClear-$(ver).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp && cd ../ 
+	unzip -vl WellClear-$(ver).jar
+	unzip -c WellClear-$(ver).jar META-INF/MANIFEST.MF	
 
 # these final commands expand the templates
 $(call download-all)

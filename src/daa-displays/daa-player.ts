@@ -156,7 +156,6 @@ export class DAAPlayer {
     protected _selectedWellClear: string;
     protected _simulationLength: number;
     protected _repl: { [key: string]: DAAClient };
-    protected _log;
     protected _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
     protected href: string;
 
@@ -200,21 +199,21 @@ export class DAAPlayer {
     }
 
     public async stepControl(currentStep?: number): Promise<DAAPlayer> {
-        this.clearInterval();
         currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
-        return this._stepControl(currentStep);
-    }
-
-    private async _stepControl(currentStep: number): Promise<DAAPlayer> {
-        await this._gotoControl(currentStep);
-        if (this.simulationStep < this._simulationLength - 1) {
-            this.simulationStep++;
-            await this._gotoControl(this.simulationStep);
-            if (this.bridgedPlayer) {
-                await this.bridgedPlayer.gotoControl(this.simulationStep);
-            }    
+        if (!isNaN(currentStep)) {
+            this.simulationStep = currentStep;
+            if (this.simulationStep < this._simulationLength - 1) {
+                this.simulationStep++;
+                await this.gotoControl(this.simulationStep);
+                if (this.bridgedPlayer) {
+                    await this.bridgedPlayer.gotoControl(this.simulationStep);
+                }    
+            } else {
+                await this.gotoControl(currentStep);
+                this.clearInterval();
+            }
         } else {
-            this.clearInterval();
+            console.error("[daa-player] Warning: currentStep is NaN");
         }
         return this;
     }
@@ -245,12 +244,10 @@ export class DAAPlayer {
         this._displays = [];
 
         this._scenarios = {};
-        const scenarioIDs = Object.keys(this._scenarios);
-        this._selectedScenario = (scenarioIDs.length > 0) ? scenarioIDs[0] : null;
-        this._simulationLength = (scenarioIDs.length > 0) ? this._scenarios[this._selectedScenario].length : 0;
+        this._selectedScenario = null;
+        this._simulationLength = 0;
 
         this._repl = {}; // this is a set of websockets for communication with pvsio instances, one instance for each file
-        this._log = [];
         this._plot = {};
  
         this._handlers = {
@@ -259,10 +256,11 @@ export class DAAPlayer {
                     this.clearInterval();
                     await this.render();
                     resolve();
-                })
+                });
             },
             step: () => {
                 return new Promise(async (resolve, reject) => {
+                    this.clearInterval();
                     await this.stepControl();
                     resolve();
                 });
@@ -277,7 +275,7 @@ export class DAAPlayer {
                 return new Promise(async (resolve, reject) => {
                     const current_step: number = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
                     await this._handlers.pause();
-                    await this._gotoControl(current_step - 1); // note: this call is async
+                    await this.gotoControl(current_step - 1); // note: this call is async
                     resolve();
                 });
             },
@@ -315,10 +313,9 @@ export class DAAPlayer {
                             return name === this._selectedScenario;
                         });
                         if (!scenarioStillExists) {
-                            this.selectScenarioFile(scenarios[0]);
+                            await this.selectScenarioFile(scenarios[0]);
                         }
                     }
-                    this.refreshScenariosView();
                     this.refreshSimulationControls();
                     this.listConfigurations();
                     setTimeout(() => {
@@ -355,7 +352,7 @@ export class DAAPlayer {
         };
         // these functions that can re-defined by the user using, e.g., define("step", function () {...})
         this._defines = {
-            init: async (f, opt?) => {
+            init: async (f: (p: DAAPlayer) => void, opt?) => {
                 opt = opt || {};
                 try {
                     await f(this);
@@ -366,7 +363,7 @@ export class DAAPlayer {
                 // this.simulationStep = 0;
                 // $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
             },
-            step: async (f, opt?) => {
+            step: async (f: (p: DAAPlayer) => void, opt?: { preventIncrement?: boolean }) => {
                 opt = opt || {};
                 if (this.simulationStep < this._simulationLength) {
                     try {
@@ -517,7 +514,7 @@ export class DAAPlayer {
             for (let i = 0; i < scenarioFiles.length; i++) {
                 await this.loadDaaFile(scenarioFiles[i]);
             }
-            this.selectScenarioFile(scenarioFiles[0]);
+            await this.selectScenarioFile(scenarioFiles[0]);
         } else {
             console.warn(`Folder daa-scenarios is empty :/`);
         }
@@ -542,8 +539,6 @@ export class DAAPlayer {
                     this._scenarios[scenario] = this._scenarios[scenario] || null;
                 });
             }
-            // refresh front-end
-            this.refreshScenariosView();
             console.log(`${daaFiles.length} daa files available`, daaFiles);
         } else {
             console.error(`Error while listing daa files ${res}`);
@@ -589,9 +584,10 @@ export class DAAPlayer {
      */
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean
-    }) {
+    }): Promise<DAAPlayer> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
+            this.clearInterval();
             if (this._selectedScenario !== scenario || opt.forceReload) {
                 this._loadingScenario = true;
                 this.loadingAnimation();
@@ -606,8 +602,10 @@ export class DAAPlayer {
                 this._selectedScenario = scenario;
                 this.simulationStep = 0;
                 this._simulationLength = this._scenarios[this._selectedScenario].length;
+                // update DOM
+                $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
                 $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
-                this._log = [];
                 $(`#${this.id}-selected-scenario`).html(scenario);
                 try {
                     await this.init();
@@ -622,7 +620,8 @@ export class DAAPlayer {
                     this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
-                    console.log(`Done!`);    
+                    console.log(`Done!`);
+                    return this;
                 }
             } else {
                 console.log(`Scenario ${scenario} already selected`);
@@ -630,6 +629,7 @@ export class DAAPlayer {
         } else {
             console.error(`Unable to select scenario ${scenario} :X`);
         }
+        return this;
     }
     /**
      * @function <a name="define">define</a>
@@ -643,7 +643,7 @@ export class DAAPlayer {
      */
     define (fname: string, fbody: () => void) {
         if (fname === "step") {
-            this.step = async (opt) => {
+            this.step = async (opt?: { preventIncrement: boolean }) => {
                 await this._defines.step(fbody, opt);
                 await this._defines.writeLog();
             };
@@ -665,45 +665,21 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async gotoControl (step?: number): Promise<number> {
-        this.clearInterval();
-        this.simulationStep = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
+    async gotoControl (step?: number): Promise<DAAPlayer> {
+        // get step from argument or from DOM
+        step = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
+        // sanity check
+        this.simulationStep = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        // update DOM
         $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
         $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
-        return await this._gotoControl(this.simulationStep);
-    }
-
-    async _gotoControl(step: number): Promise<number> {
-        step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
-        this.simulationStep = step;
         this.step({ preventIncrement: true });
         if (this.bridgedPlayer) {
             await this.bridgedPlayer.gotoControl(this.simulationStep);
         }
-        return step;
-    }
-    
-    /**
-     * @function <a name="log">log</a>
-     * @description Logs the provided state information.
-     * @param st {String} State information to be logged.
-     * @memberof module:DAAPlaybackPlayer
-     * @instance
-     */
-    log (st: string) {
-        this._log.push(st);
         return this;
     }
-    /**
-     * @function <a name="getLog">getLog</a>
-     * @description Returns the log data.
-     * @return {Array(String)} State information logged by the player.
-     * @memberof module:DAAPlaybackPlayer
-     * @instance
-     */
-    getLog () {
-        return this._log;
-    }
+    
     /**
      * @function <a name="connectToServer">connectToServer</a>
      * @description Connects to a WebSocket server compatible with the PVSio-web APIs.
@@ -715,7 +691,11 @@ export class DAAPlayer {
     async connectToServer (opt?: { href?: string }) {
         opt = opt || {};
         this.href = opt.href || document.location.href; //"localhost";
-        await this.ws.connectToServer(this.href);
+        if (this.ws) {
+            await this.ws.connectToServer(this.href);
+        } else {
+            console.error("[daa-player] Warning: cannot connect to server, WebSocket is null");
+        }
         // enable file system
         // if (opt.fs) {
         //     await this.enableFileSystem();    
@@ -1023,19 +1003,22 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    playControl (): void {
+    playControl (): DAAPlayer {
         // opt = opt || {};
         // this.ms = opt.ms || this.ms || 1000;
         // return (opt.paused) ? this.step({ preventIncrement: true }) // this step is done to initialise the simulation
         //             : this.setInterval(this.step, this.ms);
         // return this.setInterval(this.step, this.ms);
-        if (this.simulationStep < this._simulationLength) {
-            this.setInterval(() => {
-                this._stepControl(this.simulationStep);
-            }, this.ms);
-        } else {
-            this.clearInterval();
+        if (!this._timer_active) {
+            if (this.simulationStep < this._simulationLength) {
+                this.setInterval(() => {
+                    this.stepControl(this.simulationStep);
+                }, this.ms);
+            } else {
+                this.clearInterval();
+            }
         }
+        return this;
     }
 
     // /**
@@ -1188,7 +1171,7 @@ export class DAAPlayer {
             };
             this.ms = ms || this.ms || 1000;
             this._timer_active = true;
-            while(this._timer_active) {
+            while (this._timer_active) {
                 let promises = [
                     new Promise((resolve) => { setTimeout(resolve, this.ms); }),
                     new Promise((resolve) => {
@@ -1282,7 +1265,6 @@ export class DAAPlayer {
         if (document.getElementById(opt.parent) === null) {
             utils.createDiv(opt.parent, opt);
         }
-        const scenarios = await this.listScenarioFiles();
 
         this._simulationControls = {
             htmlTemplate: opt.htmlTemplate || templates.playbackTemplate,
@@ -1306,13 +1288,9 @@ export class DAAPlayer {
         $(`#${this.id}-goto-input`).on("change", () => { this._handlers.goto(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
-        this._handlers.installScenarioSelectors(scenarios);
         this._handlers.installConfigurationSelectors();
         this._handlers.installVersionSelectors();
 
-        this.refreshScenariosView();
-
-        // await this.selectDaaFile(scenarios[0]);
         return this;
     }
 
@@ -1397,7 +1375,6 @@ export class DAAPlayer {
         $(`#${this.id}-goto-input`).on("change", () => { this._handlers.goto(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
-        this._handlers.installScenarioSelectors(opt.scenarios);
         return this;
     }
     /**
@@ -1411,8 +1388,9 @@ export class DAAPlayer {
             Object.keys(this._plot).forEach((plotID: string) => {
                 this._plot[plotID].setLength(this._simulationLength);
             });
+            // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
-            this._gotoControl(0); // note: this call is async
+            this.gotoControl(0); // note: this call is async
         }
         return this;
     }
@@ -1449,7 +1427,7 @@ export class DAAPlayer {
         return this;
     }
 
-    private refreshVersionsView() {
+    private refreshVersionsView(): DAAPlayer {
         const theHTML: string = Handlebars.compile(templates.daidalusVersionsTemplate)({
             versions: this._wellClearVersions,
             id: this.wellClearVersionSelector
@@ -1471,35 +1449,37 @@ export class DAAPlayer {
         return this;
     }
 
-    appendScenarioSelector(): string[] {
-        const scenarios: string[] = Object.keys(this._scenarios);
-        const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
-            scenarios: scenarios.map((name: string, index: number) => {
-                return {
-                    id: safeSelector(name),
-                    name: name, 
-                    selected: (this._selectedScenario) ? this._selectedScenario === name : index === 0
-                };
-            }),
-            selectedScenario: safeSelector(this._selectedScenario),
-            id: this.id
-        });
-        $(`#${this.id}-scenarios-list`).remove();
-        $(`#${this.id}-scenarios`).append(theHTML);
-        return scenarios;
-    }
-    refreshScenariosView(): DAAPlayer {
-        const scenarios: string[] = this.appendScenarioSelector();
-        // install handlers for click events on scenarios
-        if (scenarios) {
-            scenarios.forEach(scenario => {
-                // event handler
-                $(`#${this.id}-scenario-${safeSelector(scenario)}`).on("click", async () => {
-                    this.selectScenarioFile(scenario);
-                });
+    async appendScenarioSelector(): Promise<DAAPlayer> {
+        try {
+            const scenarios: string[] = await this.listScenarioFiles();
+            this._handlers.installScenarioSelectors(scenarios);
+            const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
+                scenarios: scenarios.map((name: string, index: number) => {
+                    return {
+                        id: safeSelector(name),
+                        name: name, 
+                        selected: (this._selectedScenario) ? this._selectedScenario === name : index === 0
+                    };
+                }),
+                selectedScenario: safeSelector(this._selectedScenario),
+                id: this.id
             });
+            $(`#${this.id}-scenarios-list`).remove();
+            $(`#${this.id}-scenarios`).append(theHTML);
+            // install handlers for click events on scenarios
+            if (scenarios) {
+                for (let i = 0; i < scenarios.length; i++) {
+                    // event handler
+                    $(`#${this.id}-scenario-${safeSelector(scenarios[i])}`).on("click", async () => {
+                        await this.selectScenarioFile(scenarios[i]);
+                    });
+                }
+            }
+            return this;
+        } catch (error) {
+            console.error("[daa-player] Warning: could not append scenario selector", error);
+            return this;
         }
-        return this; 
     }
 
     /**
