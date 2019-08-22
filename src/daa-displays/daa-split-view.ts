@@ -228,7 +228,7 @@ export class DAASplitView extends DAAPlayer {
             this.clearInterval();
             if (this._selectedScenario !== scenario || opt.forceReload) {
                 this._loadingScenario = true;
-                this.loadingAnimation();
+                // this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
@@ -264,7 +264,7 @@ export class DAASplitView extends DAAPlayer {
                     // this.refreshVersionsView();
                     // this.refreshScenariosView();
                     this.enableSelection();
-                    this.loadingComplete();
+                    // this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
                     console.log(`Done!`);
@@ -380,7 +380,20 @@ export class DAASplitView extends DAAPlayer {
         // await this.players.left.appendSimulationControls(opt);
         // await this.players.right.appendSimulationControls(opt);
         super.appendSimulationControls(opt);
-        this.players.left.bridgePlayer(this.players.right);
+        if (this.players) {
+            opt = opt || {};
+            if (this.players.left && this.players.right) {
+                this.players.left.bridgePlayer(this.players.right);
+                if (opt.displays) {
+                    if (opt.displays.length > 0) {
+                        this.players.left.setDisplays([ opt.displays[0] ]);
+                    }
+                    if (opt.displays.length > 1) {
+                        this.players.right.setDisplays([ opt.displays[1] ]);
+                    }
+                }
+            }
+        }
         return this;
     }
 }

@@ -1235,6 +1235,11 @@ export class DAAPlayer {
         return this;
     }
 
+    setDisplays (displays: string[]): DAAPlayer {
+        this._displays = displays || [];
+        return this;
+    }
+
     /**
      * @function <a name="simulationControls">simulationControls</a>
      * @description Utility function for attaching simulation controls to the DOM.
@@ -1434,7 +1439,7 @@ export class DAAPlayer {
         });
         $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).remove();
         $(`#${this.wellClearVersionSelector}`).append(theHTML);
-        // update simulation when new version is selected
+        // append handlers for selection of well clear version
         $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).on("change", async () => {
             this.loadingAnimation();
             // this will update the list of configurations for the selected version
