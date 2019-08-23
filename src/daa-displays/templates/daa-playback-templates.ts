@@ -4,9 +4,9 @@ export const playbackTemplate: string = `
         <div class="input-group-prepend">
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
-                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="1" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
+                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="100000" step="1" aria-label="simulation speed" class="form-control">
             </div>
-            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
+            <div class="input-group input-group-sm mb-3" style="display:none; margin-right:30px;">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:400px;">
                     Simulation step: 
                     <span id="{{id}}-curr-sim-step" style="margin-left:4px; margin-right:4px;">0</span>
@@ -15,7 +15,7 @@ export const playbackTemplate: string = `
                 </span>
             </div>
             <div class="input-group input-group-sm mb-3">
-                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:200px;">
+                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; min-width:200px;">
                     Virtual time: 
                 <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>
             </div>
@@ -27,9 +27,13 @@ export const playbackTemplate: string = `
                     <button type="button" class="btn btn-sm btn-warning" id="{{id}}-step" style="width:84px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
                 </div>
             </div>
-            <div class="input-group input-group-sm mb-3" style="margin-left:106px; margin-right:30px;">
+            <div class="input-group input-group-sm mb-3" style="display:none; margin-left:106px; margin-right:30px;">
                 <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary" style="width:84px;">GoTo</button>
                 <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
+            </div>
+            <div class="input-group input-group-sm mb-3" style="margin-left:106px; margin-right:30px;">
+                <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary">Goto Time</button>
+                <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
             </div>
         </div>
     </div>

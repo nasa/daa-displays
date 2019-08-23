@@ -103,6 +103,7 @@ export declare interface DAAPlaybackHandlers {
     pause: () => Promise<void>;
     back: () => Promise<void>;
     goto: () => Promise<void>;
+    gotoTime: () => Promise<void>;
     speed: () => Promise<void>;
     identify: () => Promise<void>;
 }
@@ -282,6 +283,12 @@ export class DAAPlayer {
             goto: () => {
                 return new Promise(async (resolve, reject) => {
                     await this.gotoControl();
+                    resolve();
+                });
+            },
+            gotoTime: () => {
+                return new Promise(async (resolve, reject) => {
+                    await this.gotoTimeControl();
                     resolve();
                 });
             },
@@ -658,7 +665,7 @@ export class DAAPlayer {
         return this;
     }
     /**
-     * @function <a name="goto">goto</a>
+     * @function <a name="gotoControl">gotoControl</a>
      * @description Goes to a given target simulation step
      * @param step {nat} Target simulation step.
      * @return {nat} The current simulation step, which corresponds to the target step (value clipped if target is outside the simulation range). 
@@ -669,13 +676,54 @@ export class DAAPlayer {
         // get step from argument or from DOM
         step = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
         // sanity check
-        this.simulationStep = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        this.simulationStep = isNaN(step) ? 0 : step;
         // update DOM
         $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
         $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
         this.step({ preventIncrement: true });
         if (this.bridgedPlayer) {
             await this.bridgedPlayer.gotoControl(this.simulationStep);
+        }
+        return this;
+    }
+
+        /**
+     * @function <a name="gotoTimeControl">gotoTimeControl</a>
+     * @description Goes to a given target simulation step
+     * @param step {nat} Target simulation step.
+     * @return {nat} The current simulation step, which corresponds to the target step (value clipped if target is outside the simulation range). 
+     * @memberof module:DAAPlaybackPlayer
+     * @instance
+     */
+    async gotoTimeControl (time?: string): Promise<DAAPlayer> {
+        // get time from argument or from DOM
+        time = (time !== undefined && time !== null) ? time : <string> $(`#${this.id}-goto-time-input`).val();
+        // find time in the current scenario
+        if (this._scenarios && this._selectedScenario && this._scenarios[this._selectedScenario] && this._scenarios[this._selectedScenario].steps) {
+            const steps: string[] = this._scenarios[this._selectedScenario].steps;
+            const candidates: string[] = steps.filter((tm: string) => {
+                return tm === time || +tm === +time;
+            });
+            if (candidates && candidates.length === 1) {
+                const step: number = steps.indexOf(candidates[0]);
+                if (step >= 0) {
+                    this.simulationStep = step;
+                    // update DOM
+                    $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                    $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+                    this.step({ preventIncrement: true });
+                    if (this.bridgedPlayer) {
+                        await this.bridgedPlayer.gotoControl(this.simulationStep);
+                    }
+                } else {
+                    console.warn(`[daa-player] Warning: could not select candidate time ${candidates[0]}`);
+                }
+            } else {
+                console.warn(`[daa-player] Warning: could not goto time ${time}`);
+            }
+        } else {
+            console.warn(`[daa-player] Warning: could not got time ${time}`);
         }
         return this;
     }
@@ -1291,6 +1339,8 @@ export class DAAPlayer {
         $(`#${this.id}-back`).on("click", () => { this._handlers.back(); });
         $(`#${this.id}-goto`).on("click", () => { this._handlers.goto(); });
         $(`#${this.id}-goto-input`).on("change", () => { this._handlers.goto(); });
+        $(`#${this.id}-goto-time`).on("click", () => { this._handlers.gotoTime(); });
+        $(`#${this.id}-goto-time-input`).on("change", () => { this._handlers.gotoTime(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
         this._handlers.installConfigurationSelectors();
