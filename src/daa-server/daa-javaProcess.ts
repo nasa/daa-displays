@@ -82,110 +82,36 @@ export class JavaProcess {
 		}
 		return Promise.resolve(null);
 	}
-	// async execWellClear (daaLogic: string, daaConfig: string, scenarioName: string): Promise<string> {
-	// 	const wellClearFolder: string = path.join(__dirname, "../daa-logic");
-	// 	return await this.exec(wellClearFolder, daaLogic, daaConfig, scenarioName);
-	// 	// daaLogic = daaLogic || "DAAtoPVS-1.0.1";
-	// 	// daaConfig = daaConfig || "WC_SC_228_nom_b.txt";
-	// 	// scenarioName = scenarioName || "H1.daa";
-	// 	// const subFolder: string = await this.getVersion(wellClearFolder, daaLogic);
-	// 	// const outputPath: string = path.join("../daa-output/", subFolder);
-	// 	// // make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-	// 	// if (!fs.existsSync(outputPath)) {
-	// 	// 	fs.mkdirSync(outputPath);
-	// 	// }
-	// 	// const outputFileName: string = path.join(outputPath, fsUtils.getBandsFileName({ daaConfig, scenarioName }));
-	// 	// return new Promise((resolve, reject) => {
-	// 	// 	const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", scenarioName);
-	// 	// 	const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
-	// 	// 	const cmds: string[] = [
-	// 	// 		`cd ${wellClearFolder}`,
-	// 	// 		`java -jar ${daaLogic} --conf ${wellClearConfig} --output ${outputFileName} ${wellClearScenario}`
-	// 	// 	];
-	// 	// 	const cmd = cmds.join(" && ");
-	// 	// 	console.info(`Executing ${cmd}`);
-	// 	// 	exec(cmd, (error, stdout, stderr) => {
-	// 	// 		if (error) {
-	// 	// 		  console.error(`exec error: ${error}`);
-	// 	// 		  return;
-	// 	// 		} else if (stderr) {
-	// 	// 			console.error(`stderr: ${stderr}`);  
-	// 	// 		}
-	// 	// 		console.info(`stdout: ${stdout}`);
-	// 	// 		resolve(stdout);
-	// 	// 	});
-	// 	// });
-	// }
-	// async execLoS (losLogic: string, daaConfig: string, scenarioName: string): Promise<string> {
-	// 	const losFolder: string = path.join(__dirname, "../daa-logic");
-	// 	return await this.exec(losFolder, losLogic, daaConfig, scenarioName);
-	// 	// losLogic = losLogic || "DAALoS-1.0.1";
-	// 	// daaConfig = daaConfig || "WC_SC_228_nom_b.txt";
-	// 	// scenarioName = scenarioName || "H1.daa";
-	// 	// const wellClearFolder: string = path.join(__dirname, "../daa-logic");
-	// 	// const subFolder: string = await this.getVersion(wellClearFolder, losLogic);
-	// 	// const outputPath: string = path.join("../daa-output/", subFolder);
-	// 	// // make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-	// 	// if (!fs.existsSync(outputPath)) {
-	// 	// 	fs.mkdirSync(outputPath);
-	// 	// }
-	// 	// const outputFileName: string = path.join(outputPath, fsUtils.getLoSFileName({ daaConfig, scenarioName }));
-	// 	// return new Promise((resolve, reject) => {
-	// 	// 	const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", scenarioName);
-	// 	// 	const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
-	// 	// 	const cmds: string[] = [
-	// 	// 		`cd ${wellClearFolder}`,
-	// 	// 		`java -jar ${losLogic} --conf ${wellClearConfig} --output ${outputFileName} ${wellClearScenario}`
-	// 	// 	];
-	// 	// 	const cmd = cmds.join(" && ");
-	// 	// 	console.info(`Executing ${cmd}`);
-	// 	// 	exec(cmd, (error, stdout, stderr) => {
-	// 	// 		if (error) {
-	// 	// 			console.error(`exec error: ${error}`);
-	// 	// 			resolve(null);
-	// 	// 		} else if (stderr) {
-	// 	// 			console.error(`stderr: ${stderr}`);  
-	// 	// 		}
-	// 	// 		console.info(`stdout: ${stdout}`);
-	// 	// 		resolve(stdout);
-	// 	// 	});
-	// 	// });
-	// }
-	// async execVirtualPilot (virtualPilotLogic: string, daaConfig: string, scenarioName: string): Promise<string> {
-	// 	const virtualPilotFolder: string = path.join(__dirname, "../contrib/carreno");
-	// 	return await this.exec(virtualPilotFolder, virtualPilotLogic, daaConfig, scenarioName);
-	// 	// daaLogic = daaLogic || "SimDaidalus_2_3_1_wind";
-	// 	// daaConfig = daaConfig || "WC_SC_228_nom_b.txt";
-	// 	// scenarioName = scenarioName || "H1.ic";
-	// 	// const virtualPilotFolder: string = path.join(__dirname, "../contrib/carreno");
-	// 	// const subFolder: string = await this.getVersion(virtualPilotFolder, daaLogic);
-	// 	// const outputPath: string = path.join("../daa-output/virtual_pilot", subFolder);
-	// 	// // make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-	// 	// if (!fs.existsSync(outputPath)) {
-	// 	// 	fs.mkdirSync(outputPath);
-	// 	// }
-	// 	// const outputFileName: string = path.join(outputPath, fsUtils.getBandsFileName({ daaConfig, scenarioName }));
-	// 	// return new Promise((resolve, reject) => {
-	// 	// 	const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", scenarioName);
-	// 	// 	const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
-	// 	// 	const cmds: string[] = [
-	// 	// 		`cd ${virtualPilotFolder}`,
-	// 	// 		`java -jar ${daaLogic} --conf ${wellClearConfig} --output ${outputFileName} ${wellClearScenario}`
-	// 	// 	];
-	// 	// 	const cmd = cmds.join(" && ");
-	// 	// 	console.info(`Executing ${cmd}`);
-	// 	// 	exec(cmd, (error, stdout, stderr) => {
-	// 	// 		if (error) {
-	// 	// 		  console.error(`exec error: ${error}`);
-	// 	// 		  return;
-	// 	// 		} else if (stderr) {
-	// 	// 			console.error(`stderr: ${stderr}`);  
-	// 	// 		}
-	// 	// 		console.info(`stdout: ${stdout}`);
-	// 	// 		resolve(stdout);
-	// 	// 	});
-	// 	// });
-	// }
+	async daa2json (inputFileName: string, outputFileName: string): Promise<string> {
+		if (inputFileName && outputFileName) {
+			const outputFolder: string = "../daa-scenarios/";
+			// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
+			if (!fs.existsSync(outputFolder)) {
+				fs.mkdirSync(outputFolder);
+			}
+			const outputFilePath: string = path.join(outputFolder, outputFileName);
+			return new Promise((resolve, reject) => {
+				const scenario: string = path.join(__dirname, "../daa-scenarios", inputFileName);
+				const cmds: string[] = [
+					`cd ../daa-logic`,
+					`java -jar DAA2Json-2.x.jar --output ${outputFilePath} ${scenario}`
+				];
+				const cmd = cmds.join(" && ");
+				console.info(`Executing ${cmd}`);
+				exec(cmd, (error, stdout, stderr) => {
+					if (error) {
+						console.error(`exec error: ${error}`);
+						return;
+					} else if (stderr) {
+						console.error(`stderr: ${stderr}`);  
+					}
+					console.info(`stdout: ${stdout}`);
+					resolve(stdout);
+				});
+			});
+		}
+		return Promise.resolve(null);
+	}
 	async getVersion (folder: string, daaLogic: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const cmds: string[] = [

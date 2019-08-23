@@ -201,7 +201,7 @@ class DAAServer {
     }
     // Just one level of recursion, i.e., current folder and first-level sub-folders.
     // This is sufficient to navigate symbolic links placed in the current folder.
-    private async listFilesRecursive (folderName: string, ext: string, version?: string): Promise<string[]> {
+    private async listFilesRecursive (folderName: string, ext: string[], version?: string): Promise<string[]> {
         const listFilesInFolder = async (scenarioFolder: string) => {
             const elems: string[] = await fs.readdirSync(scenarioFolder);
             if (elems && elems.length > 0) {
@@ -210,7 +210,12 @@ class DAAServer {
                 });
                 if (allFiles) {
                     return allFiles.filter((name: string) => {
-                        return name.endsWith(ext);
+                        for (let i = 0; i < ext.length; i++) {
+                            if (name.endsWith(ext[i])) {
+                                return true;
+                            }
+                        }
+                        return false;
                     });
                 }
             }
@@ -261,7 +266,10 @@ class DAAServer {
         app.get('/split', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
         });
-        app.get('/gods', (req, res) => {
+        app.get('/split-view', (req, res) => { // alias for split
+            res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
+        });
+        app.get('/airspace', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, 'gods.html'));
         });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');
@@ -273,10 +281,10 @@ class DAAServer {
             res.sendFile(path.join(daaTestFolder, 'playground.html'));
         });
         const tileServerFolder: string = path.join(__dirname, 'tileServer');
-        console.log(`### serving ${tileServerFolder}`);
+        // console.log(`### serving ${tileServerFolder}`);
         app.use(express.static(tileServerFolder));
         app.get('/WMTSCapabilities.xml', (req, res) => {
-            console.log("received request for WMTSCapabilities.xml");
+            // console.log("received request for WMTSCapabilities.xml");
             res.sendFile(path.join(tileServerFolder, 'osm', 'WMTSCapabilities.xml'));
         });
         // create http server
@@ -400,15 +408,25 @@ class DAAServer {
                             const data: LoadScenarioRequest = <LoadScenarioRequest> content.data;
                             const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
                             if (scenarioName) {
-                                const ownship: { ownshipName?: string, ownshipSequenceNumber?: number } = data.ownship;
-                                const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
+                                await this.activateJavaProcess();
                                 try {
-                                    const daaScenario: DAAScenario = await this.loadScenario(scenarioName, scenarioFolder, ownship);
-                                    content.data = JSON.stringify(daaScenario);
+                                    await this.javaProcess.daa2json(scenarioName, `${scenarioName}.json`);
+                                    const jsonDaa: string = path.join(__dirname, "../daa-scenarios", `${scenarioName}.json`);
+                                    content.data = await fsUtils.readFile(jsonDaa);
                                     this.trySend(wsocket, content, `scenario ${scenarioName}`);
-                                } catch (loadError) {
-                                    console.error(`Error while loading scenario files :/`);
+                                } catch (javaError) {
+                                    console.error("[daa-server] Error: could not execute daa2json");
+                                    this.trySend(wsocket, null, `scenario ${scenarioName}`);
                                 }
+                                // const ownship: { ownshipName?: string, ownshipSequenceNumber?: number } = data.ownship;
+                                // const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
+                                // try {
+                                //     const daaScenario: DAAScenario = await this.loadScenario(scenarioName, scenarioFolder, ownship);
+                                //     content.data = JSON.stringify(daaScenario);
+                                //     this.trySend(wsocket, content, `scenario ${scenarioName}`);
+                                // } catch (loadError) {
+                                //     console.error(`Error while loading scenario files :/`);
+                                // }
                             } else {
                                 console.error('Error: could not load .daa file :/ (filename was not specified)');
                             }
@@ -418,7 +436,7 @@ class DAAServer {
                             const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                             let daaFiles: string[] = null;
                             try {
-                                daaFiles = await this.listFilesRecursive(scenarioFolder, '.daa');
+                                daaFiles = await this.listFilesRecursive(scenarioFolder, ['.daa', '.txt']);
                             } catch (listError) {
                                 console.error(`Error while reading scenario folder`, listError);
                             } finally {
@@ -432,7 +450,7 @@ class DAAServer {
                             const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                             let icFiles: string[] = null;
                             try {
-                                icFiles = await this.listFilesRecursive(scenarioFolder, '.ic');
+                                icFiles = await this.listFilesRecursive(scenarioFolder, ['.ic']);
                             } catch (listError) {
                                 console.error(`Error while reading scenario folder`, listError);
                             } finally {
@@ -447,7 +465,7 @@ class DAAServer {
                             const configurationsFolder: string = path.join(__dirname, "../daa-config");
                             let confFiles: string[] = null;
                             try {
-                                confFiles = await this.listFilesRecursive(configurationsFolder, '.conf', content['version']);
+                                confFiles = await this.listFilesRecursive(configurationsFolder, ['.conf'], content['version']);
                             } catch (confError) {
                                 console.error(`Error while reading configuratios folder`, confError);
                             } finally {

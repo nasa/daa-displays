@@ -506,7 +506,7 @@ export class DAAPlayer {
             this._scenarios[scenarioName] = JSON.parse(res.data);
             console.log(`Scenario ${scenarioName} successfully loaded`, this._scenarios[scenarioName]);
         } else {
-            console.error(`Error while loading daa files ${res}`);
+            console.error(`Error while loading scenario ${scenarioName}`);
         }
         return res.data;
     }

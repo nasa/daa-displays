@@ -63,7 +63,7 @@ endef
 clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download clean-jar compile daa2xyz #wrapper #los1.0.1 los1.0.2 los2.0.e 
+all: download clean-jar compile daa2json daa2xyz #wrapper #los1.0.1 los1.0.2 los2.0.e 
 
 download-wellclear-2.0.e:
 	@echo "\n\033[0;32m ** Downloading WellClear 2.0.e from LaRC **\033[0m" 
@@ -116,6 +116,10 @@ los2.0.e:
 daa2xyz:
 	@echo "\n\033[0;32m ** Building DAA2XYZ for Daidalus 2.x **\033[0m"
 	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAA2XYZ.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../DAA2XYZ-2.0.e.jar DAA2XYZ *.class && cd ../WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../DAA2XYZ-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl DAA2XYZ-2.0.e.jar
+
+daa2json:
+	@echo "\n\033[0;32m ** Building DAA2Json for Daidalus 2.x **\033[0m"
+	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAA2Json.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../DAA2Json-2.x.jar DAA2Json *.class && cd ../WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../DAA2Json-2.x.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl DAA2Json-2.x.jar
 
 wrapper:
 	@echo "\n\033[0;32m ** Building WellClear-DW-2.0.e.jar **\033[0m"
