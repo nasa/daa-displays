@@ -181,12 +181,6 @@ export class DAASplitView extends DAAPlayer {
         console.error(`splitView.getCurrentBands() should not be used. Please use splitView.getPlayers(..).getCurrentBands()`);
         return null;
     }
-    getCurrentSimulationStep (): number {
-        return this.simulationStep;
-    }
-    getCurrentSimulationTime (): string {
-        return this.players.left.getCurrentSimulationTime(); // left player is always the reference
-    }
     async activate () {
         await super.activate();
         if (this.players) {
