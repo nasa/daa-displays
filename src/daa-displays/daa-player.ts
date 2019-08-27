@@ -282,12 +282,14 @@ export class DAAPlayer {
             },
             goto: () => {
                 return new Promise(async (resolve, reject) => {
+                    await this._handlers.pause();
                     await this.gotoControl();
                     resolve();
                 });
             },
             gotoTime: () => {
                 return new Promise(async (resolve, reject) => {
+                    await this._handlers.pause();
                     await this.gotoTimeControl();
                     resolve();
                 });
@@ -1228,6 +1230,9 @@ export class DAAPlayer {
                     })
                 ];
                 await Promise.all(promises);
+                if (this.simulationStep >= this._simulationLength) {
+                    this.clearInterval();
+                }
             }
         }
         return this;
