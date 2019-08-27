@@ -67,7 +67,8 @@ public class DAA2Json {
 
 	protected Daidalus daa = null;
 	protected String daaConfig = null;
-	protected static final int precision = 16;
+	protected static final int precision16 = 16;
+	protected static final int precision2 = 2;
 
 	// 1 degree latitude is 69 miles and 60nmi
 	// 1 degree longitude is ~69 miles and ~60nmi
@@ -78,13 +79,13 @@ public class DAA2Json {
 	}
 
 	protected String format(double val) {
-		String tmp = f.FmPrecision(val, precision);
-		int max = precision + 8;
+		String tmp = f.FmPrecision(val, precision16);
+		int max = precision16 + 8;
 		int padding = max - tmp.length();
 		return tmp + " ".repeat(padding);
 	}
 	protected String format(String str) {
-		int max = precision + 8;
+		int max = precision16 + 8;
 		int padding = max - str.length();
 		return str + " ".repeat(padding);
 	}
@@ -125,13 +126,13 @@ public class DAA2Json {
 		return "{ "
 				+ "\"id\": \"" + intruder.getId() + "\", " 
 				+ "\"s\": { "
-				+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision) + "\", " 
-				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision) + "\", " 
-				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision) + "\" }, "
+				+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
+				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
+				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
 				+ "\"v\": { " 
-				+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision) + "\", " 
-				+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision) + "\", " 
-				+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision) + "\" }"
+				+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision2) + "\", " 
+				+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision2) + "\", " 
+				+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision2) + "\" }"
 				+ " }";
 	}
 
@@ -149,13 +150,13 @@ public class DAA2Json {
 		
 		return "{ "
 				+ "\"name\": \"" + intruder.getId() + "\", " 
-				+ "\"time\": \"" + f.FmPrecision(time, precision) + "\", " 
-				+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision) + "\", " 
-				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision) + "\", " 
-				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision) + "\", "
-				+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision) + "\", " 
-				+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision) + "\", " 
-				+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision) + "\""
+				+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
+				+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
+				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
+				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
+				+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision2) + "\", " 
+				+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision2) + "\", " 
+				+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision2) + "\""
 				+ " }";
 	}
 
@@ -227,8 +228,8 @@ public class DAA2Json {
 		while (!walker.atEnd()) {
 			double time = walker.getTime();
 			walker.readState(daidalus);
-			steps += "\"" + f.FmPrecision(time, precision) + "\""; // time at step i
-			lla += "\t\t\"" + f.FmPrecision(time, precision) + "\": {\n"; // time at step i
+			steps += "\"" + f.FmPrecision(time, precision16) + "\""; // time at step i
+			lla += "\t\t\"" + f.FmPrecision(time, precision16) + "\": {\n"; // time at step i
 			// print ownship state
 			TrafficState ownship = daidalus.getOwnshipState();
 			lla += "\t\t\t\"ownship\": " + daa2json.printLLA(ownship, ownship, time) + ",\n";
