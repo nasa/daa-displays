@@ -109,9 +109,9 @@ export declare interface DAAPlaybackHandlers {
 }
 
 export declare interface Handlers extends DAAPlaybackHandlers {
-    installScenarioSelectors: (scenarios: string[]) => void;
-    installConfigurationSelectors: () => void;
-    installVersionSelectors: () => void;
+    scenarioReloader: (scenarios: string[]) => Promise<void>;
+    configurationReloader: () => Promise<void>;
+    daidalusVersionReloader: () => Promise<void>;
 }
 
 export declare interface PlotDescriptor {
@@ -310,53 +310,46 @@ export class DAAPlayer {
                     }, 1600);
                 });
             },
-            installScenarioSelectors: (scenarios: string[]) => {
+            scenarioReloader: async (scenarios: string[]) => {
                 // define handler for the refresh button
-                $(`#${this.id}-refresh-scenarios`).on("click", async () => {
-                    console.log(`Refreshing scenario list...`);
-                    this.setStatus('Refreshing scenario list...');
-                    const scenarios: string[] = await this.listScenarioFiles();
-                    if (scenarios) {
-                        // if the selected scenario has been removed from the new list, select the first scenario in the list. Otherwise, keep the current selection.
-                        const scenarioStillExists: boolean = scenarios.some((name) => {
-                            return name === this._selectedScenario;
-                        });
-                        if (!scenarioStillExists) {
-                            await this.selectScenarioFile(scenarios[0]);
-                        }
-                    }
-                    this.refreshSimulationControls();
-                    this.listConfigurations();
-                    setTimeout(() => {
-                        this.statusReady();
-                        console.log(`Done`, scenarios);
-                    }, 500)
-                });
+                console.log(`Refreshing scenario list...`);
+                this.setStatus('Refreshing scenario list...');
+                // const scenarios: string[] = await this.listScenarioFiles();
+                if (scenarios && scenarios.length) {
+                    // if the selected scenario has been removed from the new list, select the first scenario in the list. Otherwise, keep the current selection.
+                    const scenarioStillExists: boolean = scenarios.some((name) => {
+                        return name === this._selectedScenario;
+                    });
+                    this._selectedScenario = (scenarioStillExists) ? this._selectedScenario : scenarios[0];
+                    await this.selectScenarioFile(this._selectedScenario, { forceReload: true });
+                }
+                this.refreshSimulationControls();
+                // await this.listConfigurations();
+                setTimeout(() => {
+                    this.statusReady();
+                    console.log(`Done`, scenarios);
+                }, 200)
             },
-            installConfigurationSelectors: () => {
+            configurationReloader: async () => {
                 // define handler for the refresh button
-                $(`#${this.id}-refresh-daidalus-configurations`).on("click", async () => {
-                    console.log(`Refreshing configuration list...`);
-                    this.setStatus('Refreshing configurations list...');
-                    const configurations: string[] = await this.listConfigurations();
-                    setTimeout(() => {
-                        this.statusReady();
-                        console.log(`Done`, configurations);
-                    }, 500)
-                });
+                console.log(`Refreshing configuration list...`);
+                this.setStatus('Refreshing configurations list...');
+                const configurations: string[] = await this.listConfigurations();
+                setTimeout(() => {
+                    this.statusReady();
+                    console.log(`Done`, configurations);
+                }, 200)
             },
-            installVersionSelectors: () => {
+            daidalusVersionReloader: async () => {
                 // define handler for the refresh button
-                $(`#${this.id}-refresh-daidalus-versions`).on("click", async () => {
-                    console.log(`Refreshing versions list...`);
-                    this.setStatus('Refreshing versions list...');
-                    const versions: string[] = await this.listVersions();
-                    this.listConfigurations();
-                    setTimeout(() => {
-                        this.statusReady();
-                        console.log(`Done`, versions);
-                    }, 500)
-                });
+                console.log(`Refreshing versions list...`);
+                this.setStatus('Refreshing versions list...');
+                const versions: string[] = await this.listVersions();
+                await this.listConfigurations();
+                setTimeout(() => {
+                    this.statusReady();
+                    console.log(`Done`, versions);
+                }, 200)
             }
         };
         // these functions that can re-defined by the user using, e.g., define("step", function () {...})
@@ -603,7 +596,7 @@ export class DAAPlayer {
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
-                if (!this._scenarios[scenario]) {
+                if (opt.forceReload || !this._scenarios[scenario]) {
                     console.log(`Loading scenario ${scenario}`); 
                     await this.loadDaaFile(scenario);
                     // console.log(`Loading complete!`);
@@ -989,18 +982,28 @@ export class DAAPlayer {
     async listConfigurations(): Promise<string[]> {
         await this.connectToServer();
         const version: string = this.getSelectedWellClearVersion();
-        const versionNumber: string = (version.split("-")[1].startsWith("1")) ? "1.x" : "2.x";
-        const res = await this.ws.send({
-            type: "list-config-files",
-            version: versionNumber
-        });
-        if (res && res.data) {
-            console.log(res);
-            this._wellClearConfigurations = JSON.parse(res.data);
-            // refresh front-end
-            await this.refreshConfigurationView();
+        if (version) {
+            const versionNumber: string = (version.split("-")[1].startsWith("1")) ? "1.x" : "2.x";
+            const res = await this.ws.send({
+                type: "list-config-files",
+                version: versionNumber
+            });
+            if (res && res.data) {
+                console.log(res);
+                const currentConfigurations: string = JSON.stringify(this._wellClearConfigurations);
+                if (currentConfigurations !== res.data) {
+                    this._wellClearConfigurations = JSON.parse(res.data);
+                    // refresh front-end
+                    await this.refreshConfigurationView();
+                } else {
+                    console.log(`[daa-player] Configurations for Daidalus ${versionNumber} already loaded`, res.data);
+                }
+            }
+            return this._wellClearConfigurations;
+        } else {
+            console.warn("[daa-player] Warning: daidalus configuration list is empty");
         }
-        return this._wellClearConfigurations;
+        return null;
     }
 
     // setVersionChangeCallback(f: () => void) {
@@ -1348,8 +1351,8 @@ export class DAAPlayer {
         $(`#${this.id}-goto-time-input`).on("change", () => { this._handlers.gotoTime(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
-        this._handlers.installConfigurationSelectors();
-        this._handlers.installVersionSelectors();
+        $(`#${this.id}-refresh-daidalus-configurations`).on("click", () => { this._handlers.configurationReloader(); });
+        $(`#${this.id}-refresh-daidalus-versions`).on("click", () => { this._handlers.daidalusVersionReloader(); });
 
         return this;
     }
@@ -1429,12 +1432,17 @@ export class DAAPlayer {
 
         // install handlers for simulation controls play/pause/restart/goto/...
         $(`#${this.id}-play`).on("click", () => { this.playControl(); });
-        $(`#${this.id}-pause`).on("click", () => { this.clearInterval(); });
+        $(`#${this.id}-pause`).on("click", () => { this._handlers.pause(); });
         $(`#${this.id}-step`).on("click", () => { this._handlers.step(); });
+        $(`#${this.id}-back`).on("click", () => { this._handlers.back(); });
         $(`#${this.id}-goto`).on("click", () => { this._handlers.goto(); });
         $(`#${this.id}-goto-input`).on("change", () => { this._handlers.goto(); });
+        $(`#${this.id}-goto-time`).on("click", () => { this._handlers.gotoTime(); });
+        $(`#${this.id}-goto-time-input`).on("change", () => { this._handlers.gotoTime(); });
         $(`#${this.id}-identify`).on("click", () => { this._handlers.identify(); });
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
+        // this._handlers.installConfigurationReloader();
+        // this._handlers.installDaidalusVersionReloader();
         return this;
     }
     /**
@@ -1498,7 +1506,7 @@ export class DAAPlayer {
         $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).on("change", async () => {
             this.loadingAnimation();
             // this will update the list of configurations for the selected version
-            this.listConfigurations();
+            await this.listConfigurations();
             // debug lines
             console.log(`new daidalus version selected: ${this.getSelectedWellClearVersion()}`);
             // this will trigger the init function of the simulation. The wellclear version is specified in the java command defined by the caller
@@ -1512,7 +1520,6 @@ export class DAAPlayer {
     async appendScenarioSelector(): Promise<DAAPlayer> {
         try {
             const scenarios: string[] = await this.listScenarioFiles();
-            this._handlers.installScenarioSelectors(scenarios);
             const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
                 scenarios: scenarios.map((name: string, index: number) => {
                     return {
@@ -1535,6 +1542,9 @@ export class DAAPlayer {
                     });
                 }
             }
+            $(`#${this.id}-refresh-scenarios`).on("click", () => {
+                this._handlers.scenarioReloader(scenarios);
+            });
             return this;
         } catch (error) {
             console.error("[daa-player] Warning: could not append scenario selector", error);

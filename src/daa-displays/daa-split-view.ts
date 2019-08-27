@@ -156,22 +156,6 @@ export class DAASplitView extends DAAPlayer {
                 // }
             }
         };
-        this._handlers.step = () => {
-            return new Promise(async (resolve, reject) => {
-                await this.stepControl();
-                resolve();
-            });
-        };
-        // this._handlers.init = () => {
-        //     return new Promise(async (resolve, reject) => {
-        //         this.clearInterval();
-        //         if (this.players) {
-        //             if (this.players.left) { await this.players.left.render(); }
-        //             if (this.players.right) { await this.players.right.render(); }
-        //         }
-        //         resolve();
-        //     });
-        // };
     }
     getCurrentFlightData (enc?: string): LLAData {
         console.error(`splitView.getCurrentFlightData() should not be used. Please use splitView.getPlayers(..).getCurrentFlightData()`);
@@ -180,6 +164,14 @@ export class DAASplitView extends DAAPlayer {
     getCurrentBands (): utils.DAABandsData {
         console.error(`splitView.getCurrentBands() should not be used. Please use splitView.getPlayers(..).getCurrentBands()`);
         return null;
+    }
+    // @override
+    async reloadScenarioFile () {
+        if (this.players) {
+            if (this.players.left) { await this.players.left.reloadScenarioFile(); }
+            if (this.players.right) { await this.players.right.reloadScenarioFile(); }
+        }
+        return this;
     }
     async activate () {
         await super.activate();
@@ -226,7 +218,7 @@ export class DAASplitView extends DAAPlayer {
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
-                if (!this._scenarios[scenario]) {
+                if (opt.forceReload || !this._scenarios[scenario]) {
                     console.log(`Loading scenario ${scenario}`); 
                     await this.loadDaaFile(scenario);
                     // console.log(`Loading complete!`);
