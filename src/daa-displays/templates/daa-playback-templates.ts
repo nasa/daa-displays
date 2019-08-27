@@ -17,7 +17,7 @@ export const playbackTemplate: string = `
             <div class="input-group input-group-sm mb-3">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; min-width:200px;">
                     Virtual time: 
-                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>
+                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>sec
             </div>
             <div class="input-group mb-3" style="width: 240px; margin-left:20px; margin-right:30px;">
                 <div class="btn-group btn-group-toggle" role="group" aria-label="View">

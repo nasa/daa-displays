@@ -124,6 +124,7 @@ export class DAASpectrogram {
     length: number;
     units: { from: string, to: string };
     label: { top: string, left: string };
+    time: { start: string, mid: string, end: string };
     div: HTMLElement;
     player: DAAPlayer;
     /**
@@ -145,6 +146,7 @@ export class DAASpectrogram {
         range?: { from: number, to: number },
         length?: number,
         label?: string | { top?: string, left?: string },
+        time?: { start: string, mid: string, end: string },
         player?: DAAPlayer,
         parent?: string
     }) {
@@ -168,6 +170,7 @@ export class DAASpectrogram {
             top: (typeof opt.label === "string") ? opt.label : opt.label.top,
             left: (typeof opt.label === "object") ? opt.label.left : null,
         } : { top: null, left: null };
+        this.time = opt.time;
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2, top: this.top, left: this.left });
         const theHTML = this.compileHTML();
         $(this.div).html(theHTML);
@@ -191,6 +194,7 @@ export class DAASpectrogram {
             height: this.height, 
             length: this.length
         });
+        
         return Handlebars.compile(templates.spectrogramTemplate)({
             id: this.id,
             zIndex: 2,
@@ -206,7 +210,12 @@ export class DAASpectrogram {
             label: this.label,
             from: this.range.from,
             to: this.range.to,
-            units: this.units.to
+            units: this.units.to,
+            markers: (this.time) ? {
+                start: { label: this.time.start, left: 0 },
+                mid: { label: this.time.mid, left: this.width / 2 },
+                end: { label: this.time.end, left: this.width - 1 }
+            } : null
         });
     }
     /**
@@ -216,9 +225,10 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    setLength(length: number): DAASpectrogram {
+    setLength(length: number, time?: { start: string, mid: string, end: string }): DAASpectrogram {
         if (length) {
             this.length = length;
+            this.time = time;
             let theHTML = this.compileHTML();
             $(this.div).html(theHTML);
         }

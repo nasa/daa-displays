@@ -1357,9 +1357,12 @@ export class DAAPlayer {
         return this;
     }
 
-    async activate() {
+    async activate(): Promise<DAAPlayer> {
         const scenarios = await this.listScenarioFiles();
-        await this.selectScenarioFile(scenarios[0]);
+        if (scenarios && scenarios.length) {
+            await this.selectScenarioFile(scenarios[0]);
+        }
+        return this;
     }
 
     /**
@@ -1389,6 +1392,11 @@ export class DAAPlayer {
                 length: this._simulationLength,
                 label: desc.label,
                 range: desc.range,
+                time: (this._scenarios && this._scenarios[this._selectedScenario] && this._scenarios[this._selectedScenario].steps) ? {
+                    start: this._scenarios[this._selectedScenario].steps[0],
+                    mid: this._scenarios[this._selectedScenario].steps[Math.floor(this._simulationLength / 2)],
+                    end: this._scenarios[this._selectedScenario].steps[this._simulationLength - 1]
+                } : null,
                 player: desc.player || this,
                 parent: desc.parent
             });
@@ -1454,7 +1462,11 @@ export class DAAPlayer {
     refreshSimulationPlots() {
         if (this._plot) {
             Object.keys(this._plot).forEach((plotID: string) => {
-                this._plot[plotID].setLength(this._simulationLength);
+                this._plot[plotID].setLength(this._simulationLength, { 
+                    start: this._scenarios[this._selectedScenario].steps[0],
+                    mid: this._scenarios[this._selectedScenario].steps[Math.floor(this._simulationLength / 2)],
+                    end: this._scenarios[this._selectedScenario].steps[this._simulationLength - 1]
+                });
             });
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
