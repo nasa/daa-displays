@@ -497,7 +497,7 @@ export class DAAPlayer {
                 const display: string = this._displays[i];
                 const width: number = $('.map-canvas').width() || 1072;
                 const height: number = $('.map-canvas').height() || 854;
-                const theHTML: string = Handlebars.compile(templates.loadingTemplate)({ width, height });
+                const theHTML: string = Handlebars.compile(templates.loadingTemplate)({ width, height, id: `${this.id}-${display}-daa-loading` });
                 $(`#${display}`).append(theHTML);
             }
         }
@@ -613,14 +613,17 @@ export class DAAPlayer {
      */
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
-        softReload?: boolean
+        softReload?: boolean,
+        hideLoadingAnimation?: boolean
     }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
             this.clearInterval();
             if (this._selectedScenario !== scenario || opt.forceReload || opt.softReload) {
                 this._loadingScenario = true;
-                this.loadingAnimation();
+                if (!opt.hideLoadingAnimation) {
+                    this.loadingAnimation();
+                }
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
@@ -648,7 +651,9 @@ export class DAAPlayer {
                 } finally {
                     this.refreshSimulationPlots();
                     this.enableSelection();
-                    this.loadingComplete();
+                    if (!opt.hideLoadingAnimation) {
+                        this.loadingComplete();
+                    }
                     this.statusReady();
                     this._loadingScenario = false;
                     console.log(`Done!`);

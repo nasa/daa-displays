@@ -162,19 +162,23 @@ splitView.getPlayer("right").define("plot", async () => {
                     const time: string = splitView.getTimeAt(step);
                     plot("right", bandsRight[step], step, time);
                     // check alerts
-                    const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts.alerts) !== JSON.stringify(bandsRight[step].Alerts.alerts);
+                    const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight[step].Alerts);
                     if (diffAlerts) {
                         let alertsR: string = "";
-                        bandsRight[step].Alerts.alerts.forEach(alert => {
-                            alertsR += `${alert.ac} [${alert.alert}]`; 
-                        });
+                        if (bandsRight[step] && bandsRight[step].Alerts) {
+                            bandsRight[step].Alerts.alerts.forEach(alert => {
+                                alertsR += `${alert.ac} [${alert.alert}]`; 
+                            });
+                        }
                         let alertsL: string = "";
-                        bandsLeft[step].Alerts.alerts.forEach(alert => {
-                            alertsL += `${alert.ac} [${alert.alert}]`; 
-                        });
+                        if (bandsLeft[step] && bandsLeft[step].Alerts) {
+                            bandsLeft[step].Alerts.alerts.forEach(alert => {
+                                alertsL += `${alert.ac} [${alert.alert}]`; 
+                            });
+                        }
                         splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
                         splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
-                    }
+                    }            
                     // check bands
                     for (let i = 0; i < daaPlots.length; i++) {
                         const plotID: string = daaPlots[i].id;
@@ -228,16 +232,51 @@ splitView.getPlayer("left").define("plot", async () => {
 // -- diff : returns true if alerts or bands are different
 function diff (): boolean {
     const step: number = splitView.getCurrentSimulationStep();
+    const time: string = splitView.getTimeAt(step);
     const bandsLeft: utils.DAABandsData = splitView.getPlayer("left").getCurrentBands();
     const bandsRight: utils.DAABandsData = splitView.getPlayer("right").getCurrentBands();
     let ans: boolean = false;
     if (bandsLeft && bandsRight) {
-        // check if alerts are different
-        if (bandsLeft.Alerts) {
-            ans =  JSON.stringify(bandsLeft.Alerts) !== JSON.stringify(bandsRight.Alerts);
-            if (ans) {
-                splitView.getPlayer("left").getPlot("alerts").revealMarker(step);
-                splitView.getPlayer("right").getPlot("alerts").revealMarker(step);
+        // check alerts
+        const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight[step].Alerts);
+        if (diffAlerts) {
+            let alertsR: string = "";
+            if (bandsRight[step] && bandsRight[step].Alerts) {
+                bandsRight[step].Alerts.alerts.forEach(alert => {
+                    alertsR += `${alert.ac} [${alert.alert}]`; 
+                });
+            }
+            let alertsL: string = "";
+            if (bandsLeft[step] && bandsLeft[step].Alerts) {
+                bandsLeft[step].Alerts.alerts.forEach(alert => {
+                    alertsL += `${alert.ac} [${alert.alert}]`; 
+                });
+            }
+            splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
+            splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
+        }     
+        // check bands
+        for (let i = 0; i < daaPlots.length; i++) {
+            const plotID: string = daaPlots[i].id;
+            const plotName: string = daaPlots[i].name;
+            const diffPlot: boolean = JSON.stringify(bandsLeft[step][plotName]) !== JSON.stringify(bandsRight[step][plotName]);
+            if (diffPlot) {
+                let bandsR: string = ""
+                let bandsL: string = ""
+                bandNames.forEach((band: string) => {
+                    if (bandsRight[step][plotName][band]) {
+                        bandsRight[step][plotName][band].forEach((range: utils.FromTo) => {
+                            bandsR += `<br>${band} [${range.from}, ${range.to}]`;
+                        });
+                    }
+                    if (bandsLeft[step][plotName][band]) {
+                        bandsLeft[step][plotName][band].forEach((range: utils.FromTo) => {
+                            bandsL += `<br>${band} [${range.from}, ${range.to}]`;
+                        });
+                    }
+                });
+                splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${bandsR}`);
+                splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${bandsL}`);
             }
         }
     } else {

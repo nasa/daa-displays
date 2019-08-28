@@ -253,7 +253,7 @@ export class DAASpectrogram {
                 "0": "0", // NONE
                 "1": "1", // FAR
                 "2": "2", // MID
-                "3": "0" // NEAR
+                "3": "3" // NEAR
             };
             const range: { from: number, to: number } = { from: 0, to: 3 };
             // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms

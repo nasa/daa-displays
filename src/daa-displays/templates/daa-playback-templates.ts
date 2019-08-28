@@ -130,7 +130,7 @@ export const sidePanelTemplate: string = `
 </div>`;
 
 export const loadingTemplate: string = `
-<div class="daa-loading" style="position:absolute; width:0px; height:0px;">
+<div id="{{id}}" class="daa-loading" style="position:absolute; width:0px; height:0px;">
     <div class="sk-cube-grid" style="width:{{width}}px; height:{{height}}px;">
         <div class="sk-cube sk-cube1"></div>
         <div class="sk-cube sk-cube2"></div>

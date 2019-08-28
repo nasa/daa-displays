@@ -205,7 +205,8 @@ export class DAASplitView extends DAAPlayer {
     // @overrides
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
-        softReload?: boolean
+        softReload?: boolean,
+        hideLoadingAnimation?: boolean
     }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
@@ -231,6 +232,7 @@ export class DAASplitView extends DAAPlayer {
                 try {
                     if (this.players) {
                         let promises = [];
+                        opt.hideLoadingAnimation = true;
                         if (this.players.left) {
                             promises.push(new Promise(async (resolve, reject) => {
                                 await this.players.left.loadDaaFile(scenario);
