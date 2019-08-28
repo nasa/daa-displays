@@ -39,12 +39,12 @@ import { LLAData, DAALosRegion } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 
-const playback: DAAPlayer = new DAAPlayer();
-playback.losMode();
+const player: DAAPlayer = new DAAPlayer();
+player.losMode();
 
 async function render(data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
-    const flightData: LLAData = <LLAData> playback.getCurrentFlightData();
+    const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setOwnshipPosition(flightData.ownship.s);
     data.map.setOwnshipVelocity(flightData.ownship.v);
     if (data.compass) {
@@ -63,7 +63,7 @@ async function render(data: { map: InteractiveMap, compass: Compass, airspeedTap
         data.altitudeTape.setAltitude(alt);
     }
     // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = playback.getCurrentBands();
+    const bands: utils.DAABandsData = player.getCurrentBands();
     if (bands) {
         if (data.compass) { data.compass.setBands(bands["Heading Bands"]); }
         if (data.airspeedTape) { data.airspeedTape.setBands(bands["Horizontal Speed Bands"]); }
@@ -81,80 +81,75 @@ async function render(data: { map: InteractiveMap, compass: Compass, airspeedTap
         };
     });
     data.map.setTraffic(traffic);
-    playback.getPlot("alerts").plotAlerts({
-        alerts: bands["Alerts"],
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlot("heading-bands").plot({
-        bands: bands["Heading Bands"],
-        units: "deg",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlot("altitude-bands").plot({
-        bands: bands["Altitude Bands"],
-        units: "ft",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlot("airspeed-bands").plot({
-        bands: bands["Horizontal Speed Bands"],
-        units: "knots",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlot("vs-bands").plot({
-        bands: bands["Vertical Speed Bands"],
-        units: "fpm",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    const los: DAALosRegion[] = playback.getCurrentLoS();
+
+    plot(bands, player.getCurrentSimulationStep(), player.getCurrentSimulationTime());
+
+    const los: DAALosRegion[] = player.getCurrentLoS();
     if (los) {
         data.map.setLoS(los, { nmi: 1 });
     }
     // console.log(`Bands`, bands);
 }
 
+function plot (bands: utils.DAABandsData, step: number, time: string) {
+    const daaPlots: { id: string, name: string, units: string }[] = [
+        { id: "heading-bands", units: "deg", name: "Heading Bands" },
+        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
+        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+        { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
+    ];
+    player.getPlot("alerts").plotAlerts({
+        alerts: bands["Alerts"],
+        step,
+        time
+    });
+    for (let i = 0; i < daaPlots.length; i++) {
+        player.getPlot(daaPlots[i].id).plotBands({
+            bands: bands[daaPlots[i].name],
+            step,
+            time
+        });
+    }
+}
+
 // single player, god's view
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true, los: true, callSignVisible: true });
 
-playback.define("step", async () => {
+player.define("step", async () => {
     render({
         map: map, compass: null, airspeedTape: null, 
         altitudeTape: null, verticalSpeedTape: null
     });
 });
-playback.define("init", async () => {
+player.define("init", async () => {
     // compute los regions
-    await playback.javaLoS({
-        losLogic: `${playback.getSelectedLoSVersion()}.jar`,
-        alertingConfig: playback.getSelectedConfiguration(),
-        scenario: playback.getSelectedScenario()
+    await player.javaLoS({
+        losLogic: `${player.getSelectedLoSVersion()}.jar`,
+        alertingConfig: player.getSelectedConfiguration(),
+        scenario: player.getSelectedScenario()
     });
     // compute bands
-    await playback.java({
-        alertingLogic: `${playback.getSelectedWellClearVersion()}.jar`,
-        alertingConfig: playback.getSelectedConfiguration(),
-        scenario: playback.getSelectedScenario()
+    await player.java({
+        alertingLogic: `${player.getSelectedWellClearVersion()}.jar`,
+        alertingConfig: player.getSelectedConfiguration(),
+        scenario: player.getSelectedScenario()
     });
     // center the map at the ownship location
-    const flightData: LLAData = <LLAData> playback.getCurrentFlightData();
+    const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     map.resetLoS();
     map.goTo(flightData.ownship.s);
     map.setOwnshipPosition(flightData.ownship.s);
     map.setOwnshipVelocity(flightData.ownship.v);
 });
 async function createPlayer() {
-    playback.appendSimulationPlot({
+    player.appendSimulationPlot({
         id: "alerts",
         width: 1100,
         label: "Alerts",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
     });
-    playback.appendSimulationPlot({
+    player.appendSimulationPlot({
         id: "heading-bands",
         top: 150,
         width: 1100,
@@ -162,7 +157,7 @@ async function createPlayer() {
         range: { from: 0, to: 360 },
         parent: "simulation-plot"
     });
-    playback.appendSimulationPlot({
+    player.appendSimulationPlot({
         id: "altitude-bands",
         top: 300,
         width: 1100,
@@ -170,7 +165,7 @@ async function createPlayer() {
         range: { from: -200, to: 60000 },
         parent: "simulation-plot"
     });
-    playback.appendSimulationPlot({
+    player.appendSimulationPlot({
         id: "airspeed-bands",
         top: 450,
         width: 1100,
@@ -178,7 +173,7 @@ async function createPlayer() {
         range: { from: 0, to: 1000 },
         parent: "simulation-plot"
     });
-    playback.appendSimulationPlot({
+    player.appendSimulationPlot({
         id: "vs-bands",
         top: 600,
         width: 1100,
@@ -186,16 +181,16 @@ async function createPlayer() {
         range: { from: -10000, to: 10000 },
         parent: "simulation-plot"
     });
-    playback.appendNavbar();
-    playback.appendSidePanelView();
-    await playback.appendWellClearVersionSelector();
-    await playback.appendWellClearConfigurationSelector();
-    await playback.appendSimulationControls({
+    player.appendNavbar();
+    player.appendSidePanelView();
+    await player.appendWellClearVersionSelector();
+    await player.appendWellClearConfigurationSelector();
+    await player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
     });
-    playback.setSpeed(1000);
-    await playback.activate();
+    player.setSpeed(1000);
+    await player.activate();
 }
 createPlayer();
 

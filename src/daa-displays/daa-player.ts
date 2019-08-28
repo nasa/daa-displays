@@ -144,9 +144,10 @@ export class DAAPlayer {
     readonly VERSION: string = "2.0.0";
     protected id: string;
     protected simulationStep: number;
-    init: (args?: any) => Promise<void> = async function () { console.warn("Warning, init function has not been defined :/"); };
-    step: (args?: any) => Promise<void> = async function () { console.warn("Warning, step function has not been defined :/"); };
-    render: (args?: any) => Promise<void> = async function () { console.warn("Warning, rendering function has not been defined :/"); };
+    init: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
+    step: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
+    render: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: rendering function has not been defined :/"); };
+    plot: (args?: any) => Promise<void> = async function () { console.error("[daa-player] Warning: plot function has not been defined :/"); };
     protected ms: number;
     protected precision: number;
     protected _displays: string[];
@@ -199,7 +200,7 @@ export class DAAPlayer {
         this.bridgedPlayer = player;
     }
 
-    public async stepControl(currentStep?: number): Promise<DAAPlayer> {
+    public async stepControl(currentStep?: number): Promise<void> {
         currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
         if (!isNaN(currentStep)) {
             this.simulationStep = currentStep;
@@ -216,7 +217,6 @@ export class DAAPlayer {
         } else {
             console.error("[daa-player] Warning: currentStep is NaN");
         }
-        return this;
     }
 
     /**
@@ -421,7 +421,7 @@ export class DAAPlayer {
             width: opt.width
         });
         $(this._simulationControls.parent).html(theHTML);
-        $("#" + this.id + "-tot-sim-steps").html(this._simulationLength.toString());
+        $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
         // activate dropdown menus
         //@ts-ignore -- dropdown function is introduced by bootstrap
         $('.dropdown-toggle').dropdown();
@@ -430,7 +430,7 @@ export class DAAPlayer {
     /**
      * utility function, renders the DOM elements necessary to select scenarios
      */
-    appendSidePanelView() {
+    appendSidePanelView(): DAAPlayer {
         const theHTML = Handlebars.compile(templates.sidePanelTemplate)({
             id: this.id
         });
@@ -453,6 +453,34 @@ export class DAAPlayer {
         $(document).on("mouseup", (e: JQuery.MouseUpEvent) => {
             $(document).unbind("mousemove");
         });
+        return this;
+    }
+
+    /**
+     * utility function, renders the DOM elements necessary for controlling spectrograms
+     */
+    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+        opt = opt || {};
+        opt.parent = opt.parent || (`${this.id}-simulation-controls`);
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        const theHTML = Handlebars.compile(templates.spectrogramControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-spectrogram-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-spectrogram-controls`).html(theHTML);
+        // install handlers
+        $(`#${this.id}-reset`).on("click", () => {
+            const selectedScenario: string = this.getSelectedScenario();
+            this.selectScenarioFile(selectedScenario, { softReload: true }); // async call
+        });
+        $(`#${this.id}-plot`).on("click", async () => {
+            await this.plot();
+        });
+        return this;
     }
 
     disableSelection() {
@@ -573,10 +601,9 @@ export class DAAPlayer {
     getCurrentSimulationStep (): number {
         return this.simulationStep;
     }
-    async reloadScenarioFile () {
+    async reloadScenarioFile (): Promise<void> {
         const selectedScenario: string = this.getSelectedScenario();
         await this.selectScenarioFile(selectedScenario, { forceReload: true });
-        return this;
     }
     /**
      * Loads the scenario to be simulated. The available scenarios are those provided in the constructor, using parameter scenarios.
@@ -585,12 +612,13 @@ export class DAAPlayer {
      * @instance
      */
     async selectScenarioFile (scenario: string, opt?: {
-        forceReload?: boolean
-    }): Promise<DAAPlayer> {
+        forceReload?: boolean,
+        softReload?: boolean
+    }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
             this.clearInterval();
-            if (this._selectedScenario !== scenario || opt.forceReload) {
+            if (this._selectedScenario !== scenario || opt.forceReload || opt.softReload) {
                 this._loadingScenario = true;
                 this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
@@ -610,20 +638,20 @@ export class DAAPlayer {
                 $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
                 $(`#${this.id}-selected-scenario`).html(scenario);
                 try {
-                    await this.init();
+                    if (opt.softReload) {
+                        await this.gotoControl(0);
+                    } else {
+                        await this.init();
+                    }
                 } catch (loadError) {
                     console.error(`unable to initialize scenario ${scenario}`);
                 } finally {
                     this.refreshSimulationPlots();
-                    // this.refreshConfigView();
-                    // this.refreshVersionsView();
-                    // this.refreshScenariosView();
                     this.enableSelection();
                     this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
                     console.log(`Done!`);
-                    return this;
                 }
             } else {
                 console.log(`Scenario ${scenario} already selected`);
@@ -631,7 +659,6 @@ export class DAAPlayer {
         } else {
             console.error(`Unable to select scenario ${scenario} :X`);
         }
-        return this;
     }
     /**
      * @function <a name="define">define</a>
@@ -654,6 +681,10 @@ export class DAAPlayer {
                 await this._defines.init(fbody, opt);
                 await this._defines.writeLog();
             }
+        } else if (fname === "plot") {
+            this.plot = async () => {
+                await fbody();
+            }
         } else {
             this[fname] = fbody;
         }
@@ -667,7 +698,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async gotoControl (step?: number): Promise<DAAPlayer> {
+    async gotoControl (step?: number): Promise<void> {
         // get step from argument or from DOM
         step = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
         // sanity check
@@ -680,7 +711,6 @@ export class DAAPlayer {
         if (this.bridgedPlayer) {
             await this.bridgedPlayer.gotoControl(this.simulationStep);
         }
-        return this;
     }
 
         /**
@@ -944,20 +974,17 @@ export class DAAPlayer {
         return null;
     }
 
-    wellclearMode (): DAAPlayer {
+    wellclearMode (): void {
         this.selectedAppType = this.appTypes[0];
         this.scenarioType = "daa";
-        return this;
     }
-    losMode (): DAAPlayer {
+    losMode (): void {
         this.selectedAppType = this.appTypes[1];
         this.scenarioType = "daa";
-        return this;
     }
-    virtualPilotMode (): DAAPlayer {
+    virtualPilotMode (): void {
         this.selectedAppType = this.appTypes[2];
         this.scenarioType = "ic";
-        return this;
     }
     getSelectedAppType (): string {
         return this.selectedAppType;
@@ -1102,12 +1129,15 @@ export class DAAPlayer {
     }
 
     getCurrentSimulationTime (): string {
-        if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
-            if (this.simulationStep < this._scenarios[this._selectedScenario].length) {
-                const time: string = this._scenarios[this._selectedScenario].steps[this.simulationStep];
-                return time;
+        return this.getTimeAt(this.simulationStep);
+    }
+
+    getTimeAt (step: number): string {
+        if (!isNaN(step) && this._selectedScenario && this._scenarios[this._selectedScenario]) {
+            if (step < this._scenarios[this._selectedScenario].length) {
+                return this._scenarios[this._selectedScenario].steps[step];
             } else {
-                console.error("[getCurrentSimulationTime] Error: Incorrect simulation step (array index out of range for flight data)");
+                console.error("[getTimeAt] Error: Incorrect simulation step (array index out of range for flight data)");
             }
         }
         return null;
@@ -1127,6 +1157,51 @@ export class DAAPlayer {
         return null;
     }
 
+    getBandsData (): utils.DAABandsData[] {
+        const ans: utils.DAABandsData[] = [];
+        if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
+            //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
+            if (this._bands) {
+                for (let step = 0; step < this._simulationLength; step++) {
+                    // convert bands to the DAA format
+                    const res: utils.DAABandsData = {
+                        Alerts: null,
+                        "Altitude Bands": {},
+                        "Heading Bands": {},
+                        "Horizontal Speed Bands": {},
+                        "Vertical Speed Bands": {}
+                    };
+                    const bandNames: string[] = utils.BAND_NAMES;
+                    for (const b in bandNames) {
+                        const band: string = bandNames[b];
+                        const data: BandElement = (this._bands[band] && step < this._bands[band].length) ? 
+                                                    this._bands[band][step] : null;
+                        if (data) {
+                            for (let i = 0; i < data.bands.length; i++) {
+                                const info: DaidalusBand = data.bands[i];
+                                if (info && info.range) {
+                                    const range: utils.FromTo = {
+                                        from: info.range[0],
+                                        to: info.range[1],
+                                        units: info.units
+                                    };
+                                    const alert: string = info.alert;
+                                    res[band][alert] = res[band][alert] || [];
+                                    res[band][alert].push(range);
+                                }
+                            }
+                        }
+                        if (this._bands && this._bands.Alerts && step < this._bands.Alerts.length) {
+                            // copy alerting info
+                            res.Alerts = this._bands.Alerts[step];
+                        }
+                    }
+                    ans.push(res);
+                }
+            }
+        }
+        return ans;
+    }
     getCurrentBands (): utils.DAABandsData {
         const res: utils.DAABandsData = {
             Alerts: null,
@@ -1263,7 +1338,7 @@ export class DAAPlayer {
 
     //-- append functions ------------
 
-    async appendNavbar() {
+    appendNavbar(): DAAPlayer {
         const theHTML: string = Handlebars.compile(templates.navbarTemplate)({
             id: this.id
         });
@@ -1271,24 +1346,22 @@ export class DAAPlayer {
         return this;
     }
 
-    async appendWellClearVersionSelector(wellClearVersionSelector?: string) {
+    async appendWellClearVersionSelector(wellClearVersionSelector?: string): Promise<void> {
         wellClearVersionSelector = wellClearVersionSelector || "sidebar-daidalus-version";
         this.wellClearVersionSelector = wellClearVersionSelector;
         // update data structures
         await this.listVersions();
         // update the front-end
         this.refreshVersionsView();
-        return this;
     }
 
-    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string) {
+    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string): Promise<void> {
         wellClearConfigurationSelector = wellClearConfigurationSelector || "sidebar-daidalus-configuration";
         this.wellClearConfigurationSelector = wellClearConfigurationSelector;
         // update data structures
         await this.listConfigurations();
         // update the front-end
         await this.refreshConfigurationView();
-        return this;
     }
 
     setDisplays (displays: string[]): DAAPlayer {
@@ -1307,14 +1380,14 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async appendSimulationControls(opt?: {
+    appendSimulationControls(opt?: {
         parent?: string,
         top?: number,
         left?: number,
         width?: number,
         htmlTemplate?: string,
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
-    }): Promise<DAAPlayer> {
+    }): void {
         opt = opt || {};
         opt.parent = opt.parent || (`${this.id}-simulation-controls`);
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
@@ -1335,7 +1408,6 @@ export class DAAPlayer {
             left: opt.left
         }; 
         this.renderSimulationControls(opt);
-        
 
         const speed: number = parseFloat(<string> $(`#${this.id}-speed-input`).val());
         this.setSpeed(speed);
@@ -1353,16 +1425,13 @@ export class DAAPlayer {
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
         $(`#${this.id}-refresh-daidalus-configurations`).on("click", () => { this._handlers.configurationReloader(); });
         $(`#${this.id}-refresh-daidalus-versions`).on("click", () => { this._handlers.daidalusVersionReloader(); });
-
-        return this;
     }
 
-    async activate(): Promise<DAAPlayer> {
+    async activate(): Promise<void> {
         const scenarios = await this.listScenarioFiles();
         if (scenarios && scenarios.length) {
             await this.selectScenarioFile(scenarios[0]);
         }
-        return this;
     }
 
     /**
@@ -1381,7 +1450,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    appendSimulationPlot(desc: PlotDescriptor) {
+    appendSimulationPlot(desc: PlotDescriptor): DAAPlayer {
         desc.id = desc.id;
         desc.type = desc.type || "spectrogram";
         if (desc.type === "spectrogram") {
@@ -1529,7 +1598,7 @@ export class DAAPlayer {
         return this;
     }
 
-    async appendScenarioSelector(): Promise<DAAPlayer> {
+    async appendScenarioSelector(): Promise<void> {
         try {
             const scenarios: string[] = await this.listScenarioFiles();
             const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
@@ -1557,10 +1626,8 @@ export class DAAPlayer {
             $(`#${this.id}-refresh-scenarios`).on("click", () => {
                 this._handlers.scenarioReloader(scenarios);
             });
-            return this;
         } catch (error) {
             console.error("[daa-player] Warning: could not append scenario selector", error);
-            return this;
         }
     }
 

@@ -4,7 +4,7 @@ export const playbackTemplate: string = `
         <div class="input-group-prepend">
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
-                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="100000" step="1" aria-label="simulation speed" class="form-control">
+                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
             </div>
             <div class="input-group input-group-sm mb-3" style="display:none; margin-right:30px;">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:400px;">
@@ -150,3 +150,17 @@ export const navbarTemplate: string = `
     <!-- <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">DAA-Displays 2.0.0</a> -->
     <span id="{{id}}-status" class="animated infinite pulse navbar-text col-sm-3 col-md-2 mr-0" style="color:white; display:none; position:absolute; left:950px; text-align:center;"></span>
 </nav>`;
+
+export const spectrogramControls: string = `
+<div id="{{id}}-spectrogram-controls-inner" style="position:absolute;width:100%;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="input-group-prepend">
+            <div class="input-group mb-3" style="width:500px; margin-right:30px;">
+                <div class="btn-group btn-group-toggle" role="group" aria-label="View">
+                    <button type="button" class="btn btn-sm btn-warning" id="{{id}}-reset" style="width:220px; margin-right:30px; white-space:nowrap;">Reset</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="{{id}}-plot" style="width:200px; white-space:nowrap;">Plot</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;

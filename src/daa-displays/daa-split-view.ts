@@ -166,64 +166,58 @@ export class DAASplitView extends DAAPlayer {
         return null;
     }
     // @override
-    async reloadScenarioFile () {
+    async reloadScenarioFile (): Promise<void> {
         if (this.players) {
             if (this.players.left) { await this.players.left.reloadScenarioFile(); }
             if (this.players.right) { await this.players.right.reloadScenarioFile(); }
         }
-        return this;
     }
     // @override
-    async activate (): Promise<DAASplitView> {
+    async activate (): Promise<void> {
         await super.activate();
         if (this.players) {
             if (this.players.left) { await this.players.left.activate(); }
             if (this.players.right) { await this.players.right.activate(); }
         }
-        return this;
     }
-    wellclearMode (): DAASplitView {
+    wellclearMode (): void {
         super.wellclearMode();
         if (this.players) {
             if (this.players.left) { this.players.left.wellclearMode(); }
             if (this.players.right) { this.players.right.wellclearMode(); }
         }
-        return this;
     }
-    losMode (): DAASplitView {
+    losMode (): void {
         super.losMode();
         if (this.players) {
             if (this.players.left) { this.players.left.losMode(); }
             if (this.players.right) { this.players.right.losMode(); }
         }
-        return this;
     }
-    virtualPilotMode (): DAASplitView {
+    virtualPilotMode (): void {
         super.virtualPilotMode();
         if (this.players) {
             if (this.players.left) { this.players.left.virtualPilotMode(); }
             if (this.players.right) { this.players.right.virtualPilotMode(); }
         }
-        return this;
     }
 
     // @overrides
     async selectScenarioFile (scenario: string, opt?: {
-        forceReload?: boolean
-    }): Promise<DAASplitView> {
+        forceReload?: boolean,
+        softReload?: boolean
+    }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
             this.clearInterval();
-            if (this._selectedScenario !== scenario || opt.forceReload) {
+            if (this._selectedScenario !== scenario || opt.forceReload || opt.softReload) {
                 this._loadingScenario = true;
-                // this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
                 if (opt.forceReload || !this._scenarios[scenario]) {
                     console.log(`Loading scenario ${scenario}`); 
                     await this.loadDaaFile(scenario);
-                    // console.log(`Loading complete!`);
                 }
                 this._selectedScenario = scenario;
                 this.simulationStep = 0;
@@ -248,15 +242,10 @@ export class DAASplitView extends DAAPlayer {
                     console.error(`[daa-split-view] Warning: unable to initialize scenario ${scenario}`);
                 } finally {
                     this.refreshSimulationPlots();
-                    // this.refreshConfigView();
-                    // this.refreshVersionsView();
-                    // this.refreshScenariosView();
                     this.enableSelection();
-                    // this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
                     console.log(`Done!`);
-                    return this;
                 }
             } else {
                 console.log(`Scenario ${scenario} already selected`);
@@ -264,7 +253,6 @@ export class DAASplitView extends DAAPlayer {
         } else {
             console.error(`Unable to select scenario ${scenario} :X`);
         }
-        return this;
     }
     
     /**
@@ -275,7 +263,7 @@ export class DAASplitView extends DAAPlayer {
      * @memberof module:DAASplitView
      * @instance
      */
-    async gotoControl(step: number): Promise<DAASplitView> {
+    async gotoControl(step: number): Promise<void> {
         this.clearInterval();
         this.simulationStep = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
         // update DOM
@@ -290,10 +278,9 @@ export class DAASplitView extends DAAPlayer {
                 await this.players.left.gotoControl(this.simulationStep); // right player is bridged
             }
         }
-        return this;
     }
 
-    public async stepControl(currentStep?: number): Promise<DAASplitView> {
+    public async stepControl(currentStep?: number): Promise<void> {
         // get step number either from function argument or from DOM
         currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
         // sanity check
@@ -307,7 +294,6 @@ export class DAASplitView extends DAAPlayer {
         if (this.players.left) { 
             this.players.left.gotoControl(this.simulationStep); // right player is bridged
         }
-        return this;
     }
 
     getPlayer(playerID: string): DAAPlayer {
@@ -318,7 +304,7 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    async appendWellClearVersionSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }) {
+    async appendWellClearVersionSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
         wellClearConfigurationSelector = wellClearConfigurationSelector || this.id;
         opt = opt || {};
         utils.createDiv("split-view-wellclear-version-selector", { parent: opt.parent });
@@ -330,10 +316,9 @@ export class DAASplitView extends DAAPlayer {
                 await this.players.right.appendWellClearVersionSelector("daidalus-version-right"); 
             }
         }
-        return this;
     }
 
-    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }) {
+    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
         wellClearConfigurationSelector = wellClearConfigurationSelector || "sidebar-daidalus-configuration";
         opt = opt || {};
         // utils.createDiv("split-view-wellclear-version-selector", { parent: opt.parent });
@@ -346,25 +331,17 @@ export class DAASplitView extends DAAPlayer {
                 await this.players.right.appendWellClearConfigurationSelector("daidalus-configuration-right"); 
             }
         }
-        return this;
     }
 
     // @overrides
-    async appendScenarioSelector(): Promise<DAAPlayer> {
-        await super.appendScenarioSelector();
-        return this;
-    }
-
-    // @overrides
-    async appendSimulationControls(opt?: {
+    appendSimulationControls(opt?: {
         parent?: string,
         top?: number,
         left?: number,
         width?: number,
         htmlTemplate?: string,
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
-    }): Promise<DAAPlayer> 
-    {
+    }): void {
         // await this.players.left.appendSimulationControls(opt);
         // await this.players.right.appendSimulationControls(opt);
         super.appendSimulationControls(opt);
@@ -382,6 +359,18 @@ export class DAASplitView extends DAAPlayer {
                 }
             }
         }
+    }
+
+    // @overrides
+    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+        super.appendPlotControls(opt);
+        // override the plot handler
+        $(`#${this.id}-plot`).on("click", async () => {
+            if (this.players) {
+                if (this.players.left) { this.players.left.plot(); }
+                if (this.players.right) { this.players.right.plot(); }
+            }
+        });
         return this;
     }
 }

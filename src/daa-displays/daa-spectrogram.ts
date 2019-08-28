@@ -111,7 +111,19 @@ function convert (val: number, unitsFrom: string, unitsTo: string): number {
     return Math.floor(val * 100) / 100; // [profiler] 0.1ms
 }
 
-
+export interface BandsData {
+    id: string;
+    bands: utils.Bands;
+    step: number;
+    time: string;
+    units?: string;
+}
+export interface AlertsData {
+    id: string;
+    alerts: AlertElement;
+    step: number; 
+    time: string;
+}
 
 export class DAASpectrogram {
     id: string;
@@ -304,7 +316,7 @@ export class DAASpectrogram {
         return this;
     }
     /**
-     * @function <a name="plot">plot</a>
+     * @function <a name="plotBands">plotBands</a>
      * @description Plot function, for rendering resolution bands in the spectrogram.
      * @param data {Object({ bands: Object, step: nat })} Resolution bands data
      *              <li>bands: Object in the form { b1: range1, b2: range2, ... }, where b1, b2, ... are band names (e.g,. NEAR, FAR, etc) and range1, range2, ... are range objects { from: nat, to: nat }</li>
@@ -312,7 +324,7 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plot (data: { bands: utils.Bands, step: number, time: string, units?: string }): DAASpectrogram {
+    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string }): DAASpectrogram {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
             const band_plot_data = {};
@@ -364,6 +376,19 @@ export class DAASpectrogram {
             $(`#${stepID}`).tooltip();
             this.installGotoHandler(data.step);
         }
+        return this;
+    }
+    plot (data: BandsData | AlertsData): DAASpectrogram {
+        if (data) {
+            if (data.id.toLocaleLowerCase() === "alerts") {
+                return this.plotAlerts(<AlertsData> data);
+            }
+            return this.plotBands(<BandsData> data);
+        }
+        return this;
+    }
+    resetCursorPosition (): DAASpectrogram {
+        $(`#${this.id}-cursor`).animate({ "left": 0 }, 500);
         return this;
     }
 }

@@ -43,7 +43,7 @@ import * as utils from './daa-displays/daa-utils';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
-    const flightData: LLAData = <LLAData> playback.getPlayer(playerID).getCurrentFlightData();
+    const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.compass.setCompass(flightData.ownship.v);
     const gs: number = Math.sqrt((+flightData.ownship.v.x * +flightData.ownship.v.x) + (+flightData.ownship.v.y * +flightData.ownship.v.y));
@@ -53,7 +53,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     const alt: number = +flightData.ownship.s.alt;
     data.altitudeTape.setAltitude(alt);
     // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = playback.getPlayer(playerID).getCurrentBands();
+    const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
@@ -70,36 +70,28 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         }
     }); 
     data.map.setTraffic(traffic);
-    playback.getPlayer(playerID).getPlot("alerts").plotAlerts({
+    plot(playerID, bands, splitView.getCurrentSimulationStep(), splitView.getCurrentSimulationTime());
+}
+
+function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
+    const daaPlots: { id: string, name: string, units: string }[] = [
+        { id: "heading-bands", units: "deg", name: "Heading Bands" },
+        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
+        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+        { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
+    ];
+    splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
         alerts: bands["Alerts"],
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
+        step,
+        time
     });
-    playback.getPlayer(playerID).getPlot("heading-bands").plot({
-        bands: bands["Heading Bands"],
-        units: "deg",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlayer(playerID).getPlot("altitude-bands").plot({
-        bands: bands["Altitude Bands"],
-        units: "ft",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlayer(playerID).getPlot("airspeed-bands").plot({
-        bands: bands["Horizontal Speed Bands"],
-        units: "knots",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    playback.getPlayer(playerID).getPlot("vs-bands").plot({
-        bands: bands["Vertical Speed Bands"],
-        units: "fpm",
-        step: playback.getCurrentSimulationStep(),
-        time: playback.getCurrentSimulationTime()
-    });
-    // console.log(`Bands`, bands);
+    for (let i = 0; i < daaPlots.length; i++) {
+        splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
+            bands: bands[daaPlots[i].name],
+            step,
+            time
+        });
+    }
 }
 
 // splitView player
@@ -126,11 +118,11 @@ const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { to
 const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", {top: 210, left: 600 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
 
 
-const playback: DAASplitView = new DAASplitView();
-playback.virtualPilotMode();
+const splitView: DAASplitView = new DAASplitView();
+splitView.virtualPilotMode();
 
 // -- step
-playback.getPlayer("left").define("step", async () => {
+splitView.getPlayer("left").define("step", async () => {
     // render left
     // await playback.getPlayer("left").render...
     render("left", {
@@ -138,7 +130,7 @@ playback.getPlayer("left").define("step", async () => {
         altitudeTape: altitudeTape_left, verticalSpeedTape: verticalSpeedTape_left
     });
 });
-playback.getPlayer("right").define("step", async () => {
+splitView.getPlayer("right").define("step", async () => {
     // render right
     render("right", {
         map: map_right, compass: compass_right, airspeedTape: airspeedTape_right, 
@@ -146,41 +138,41 @@ playback.getPlayer("right").define("step", async () => {
     });
 });
 // -- init
-playback.getPlayer("left").define("init", async () => {
+splitView.getPlayer("left").define("init", async () => {
     // init left
-    await playback.getPlayer("left").javaVirtualPilot({
-        virtualPilot: `${playback.getPlayer("left").getSelectedLogic()}.jar`,
-        alertingConfig: playback.getPlayer("left").getSelectedConfiguration(),
-        scenario: playback.getSelectedScenario()
+    await splitView.getPlayer("left").javaVirtualPilot({
+        virtualPilot: `${splitView.getPlayer("left").getSelectedLogic()}.jar`,
+        alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
+        scenario: splitView.getSelectedScenario()
     });
     // viewOptions_left.applyCurrentViewOptions();
 });
-playback.getPlayer("right").define("init", async () => {
+splitView.getPlayer("right").define("init", async () => {
     // init right
-    await playback.getPlayer("right").javaVirtualPilot({
-        virtualPilot: `${playback.getPlayer("right").getSelectedLogic()}.jar`,
-        alertingConfig: playback.getPlayer("right").getSelectedConfiguration(),
-        scenario: playback.getSelectedScenario()
+    await splitView.getPlayer("right").javaVirtualPilot({
+        virtualPilot: `${splitView.getPlayer("right").getSelectedLogic()}.jar`,
+        alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
+        scenario: splitView.getSelectedScenario()
     });
     // viewOptions_right.applyCurrentViewOptions();
 });
 async function createPlayer() {
-    playback.appendNavbar();
-    playback.appendSidePanelView();
-    await playback.appendWellClearVersionSelector();
-    await playback.appendWellClearConfigurationSelector();
-    await playback.appendSimulationControls({
+    splitView.appendNavbar();
+    splitView.appendSidePanelView();
+    await splitView.appendWellClearVersionSelector();
+    await splitView.appendWellClearConfigurationSelector();
+    await splitView.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp-left", "daa-disp-right" ]
     });
-    playback.getPlayer("left").appendSimulationPlot({
+    splitView.getPlayer("left").appendSimulationPlot({
         id: "alerts",
         width: 1040,
         label: "Alerting",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("right").appendSimulationPlot({
+    splitView.getPlayer("right").appendSimulationPlot({
         id: "alerts",
         left: 1120,
         width: 1040,
@@ -188,7 +180,7 @@ async function createPlayer() {
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("left").appendSimulationPlot({
+    splitView.getPlayer("left").appendSimulationPlot({
         id: "heading-bands",
         top: 150,
         width: 1040,
@@ -196,7 +188,7 @@ async function createPlayer() {
         range: { from: 0, to: 360 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("right").appendSimulationPlot({
+    splitView.getPlayer("right").appendSimulationPlot({
         id: "heading-bands",
         top: 150,
         left: 1120,
@@ -205,7 +197,7 @@ async function createPlayer() {
         range: { from: 0, to: 360 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("left").appendSimulationPlot({
+    splitView.getPlayer("left").appendSimulationPlot({
         id: "altitude-bands",
         top: 300,
         width: 1040,
@@ -213,7 +205,7 @@ async function createPlayer() {
         range: { from: -200, to: 60000 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("right").appendSimulationPlot({
+    splitView.getPlayer("right").appendSimulationPlot({
         id: "altitude-bands",
         top: 300,
         left: 1120,
@@ -222,7 +214,7 @@ async function createPlayer() {
         range: { from: -200, to: 60000 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("left").appendSimulationPlot({
+    splitView.getPlayer("left").appendSimulationPlot({
         id: "airspeed-bands",
         top: 450,
         width: 1040,
@@ -230,7 +222,7 @@ async function createPlayer() {
         range: { from: 0, to: 1000 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("right").appendSimulationPlot({
+    splitView.getPlayer("right").appendSimulationPlot({
         id: "airspeed-bands",
         top: 450,
         left: 1120,
@@ -239,7 +231,7 @@ async function createPlayer() {
         range: { from: 0, to: 1000 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("left").appendSimulationPlot({
+    splitView.getPlayer("left").appendSimulationPlot({
         id: "vs-bands",
         top: 600,
         width: 1040,
@@ -247,7 +239,7 @@ async function createPlayer() {
         range: { from: -10000, to: 10000 },
         parent: "simulation-plot"
     });
-    playback.getPlayer("right").appendSimulationPlot({
+    splitView.getPlayer("right").appendSimulationPlot({
         id: "vs-bands",
         top: 600,
         left: 1120,
@@ -256,6 +248,6 @@ async function createPlayer() {
         range: { from: -10000, to: 10000 },
         parent: "simulation-plot"
     });
-    await playback.activate();
+    await splitView.activate();
 }
 createPlayer();

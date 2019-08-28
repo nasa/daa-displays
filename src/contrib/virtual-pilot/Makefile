@@ -11,6 +11,7 @@ all: SimDaidalus BatchSimDaidalus
 
 SimDaidalus:
 	@echo "\n\033[0;32m ** Building JAR file for SimDaidalus **\033[0m"
+	-@rm *.jar
 	-@cd ../../daa-logic/utils && $(JAVAC) -cp ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src ../../contrib/virtual-pilot/SimDaidalus_2_3_1_wind.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
 	-$(JAR) cfe SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar SimDaidalus_2_3_1_wind *.class
 	-@cd ../../daa-logic/WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src && $(JAR) uf ../../../../../contrib/virtual-pilot/SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
