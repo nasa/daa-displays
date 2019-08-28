@@ -78,39 +78,6 @@ public class DAA2Json {
 		this.daa = daa;
 	}
 
-	protected String format(double val) {
-		String tmp = f.FmPrecision(val, precision16);
-		int max = precision16 + 8;
-		int padding = max - tmp.length();
-		return tmp + " ".repeat(padding);
-	}
-	protected String format(String str) {
-		int max = precision16 + 8;
-		int padding = max - str.length();
-		return str + " ".repeat(padding);
-	}
-
-	public String printXYZ(TrafficState ownship, TrafficState intruder, double time) {
-		// current intruder position
-		Vect3 si = intruder.get_s(); // projected position of the intruder
-		Velocity vi = intruder.get_v(); // projected velocity of the intruder
-		SUMData sum = intruder.sum();
-		return format(intruder.getId()) 
-					+ format(si.x) + format(si.y) + format(si.z) 
-					+ format(vi.x) + format(vi.y) + format(vi.z)
-					+ format(time)
-					+ format(intruder.getAlerterIndex()) 
-					+ format(sum.get_s_EW_std())
-					+ format(sum.get_s_NS_std())
-					+ format(sum.get_s_EN_std())
-					+ format(sum.get_sz_std())
-					+ format(sum.get_v_EW_std())
-					+ format(sum.get_v_NS_std())
-					+ format(sum.get_v_EN_std())
-					+ format(sum.get_vz_std())
-					;
-	}
-
 	public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder

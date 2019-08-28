@@ -102,16 +102,27 @@ public class DAA2XYZ {
 			+  "[none]     [deg]    [deg]    [ft]    [knot]   [knot]   [fpm]    [s]";
 	}
 
+	protected String repeat(String str, int n) {
+		String ans = str;
+		for (int i = 0; i < n; i++) {
+			ans += " ";
+		}
+		return ans;
+	}
 	protected String format(double val) {
 		String tmp = f.FmPrecision(val, precision);
 		int max = precision + 8;
 		int padding = max - tmp.length();
-		return tmp + " ".repeat(padding);
+		String pp = " ";
+		for (int i = 0; i < padding; i++) {
+			pp += " ";
+		}
+		return tmp + pp;
 	}
 	protected String format(String str) {
 		int max = precision + 8;
 		int padding = max - str.length();
-		return str + " ".repeat(padding);
+		return str + this.repeat(" ", padding);
 	}
 
 	public String printXYZ(TrafficState ownship, TrafficState intruder, double time) {
