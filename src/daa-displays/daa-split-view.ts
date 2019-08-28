@@ -212,6 +212,7 @@ export class DAASplitView extends DAAPlayer {
             this.clearInterval();
             if (this._selectedScenario !== scenario || opt.forceReload || opt.softReload) {
                 this._loadingScenario = true;
+                this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
                 console.log(`Scenario ${scenario} selected`); 
@@ -229,20 +230,29 @@ export class DAASplitView extends DAAPlayer {
                 $(`#${this.id}-selected-scenario`).html(scenario);
                 try {
                     if (this.players) {
+                        let promises = [];
                         if (this.players.left) {
-                            await this.players.left.loadDaaFile(scenario);
-                            await this.players.left.selectScenarioFile(scenario, opt);
+                            promises.push(new Promise(async (resolve, reject) => {
+                                await this.players.left.loadDaaFile(scenario);
+                                await this.players.left.selectScenarioFile(scenario, opt);
+                                resolve();
+                            }));
                         }
                         if (this.players.right) {
-                            await this.players.right.loadDaaFile(scenario);
-                            await this.players.right.selectScenarioFile(scenario, opt);
+                            promises.push(new Promise(async (resolve, reject) => {
+                                await this.players.right.loadDaaFile(scenario);
+                                await this.players.right.selectScenarioFile(scenario, opt);
+                                resolve();
+                            }));
                         }
+                        await Promise.all(promises);
                     }
                 } catch (loadError) {
                     console.error(`[daa-split-view] Warning: unable to initialize scenario ${scenario}`);
                 } finally {
                     this.refreshSimulationPlots();
                     this.enableSelection();
+                    this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
                     console.log(`Done!`);
@@ -272,10 +282,10 @@ export class DAASplitView extends DAAPlayer {
         // send players the control command
         if (this.players) {
             if (this.players.left) {
-                // if (step === 0) {
-                //     await this._handlers.init();
-                // }
                 await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            }
+            if (this["diff"]) {
+                this["diff"]();
             }
         }
     }
@@ -291,8 +301,13 @@ export class DAASplitView extends DAAPlayer {
         $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
         $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
         // send players the control command
-        if (this.players.left) { 
-            this.players.left.gotoControl(this.simulationStep); // right player is bridged
+        if (this.players) { 
+            if (this.players.left) { 
+                this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            }
+            if (this["diff"]) {
+                this["diff"]();
+            }
         }
     }
 

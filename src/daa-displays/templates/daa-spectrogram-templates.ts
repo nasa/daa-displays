@@ -10,10 +10,13 @@ export const spectrogramTemplate: string = `
             <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.mid.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.mid.label}} sec</button>
             <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.end.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.end.label}} sec</button>
         </div>{{/if}}
-        <div id="{{id}}-overlay-warning" class="spectrogram-overlay-warning" style="position:absolute; display:block;">
+        <div id="{{id}}-overlay-monitor" class="spectrogram-overlay-monitor" style="position:absolute; display:block; height:6px; top:{{markers.top}}px; width:{{width}}px; background:black;">
             {{#each grid}}
-            <div id="{{../id}}-warning_{{@index}}" style="display:none; opacity:1; text-align:center; color:red; left:{{left}}px; top:78px; height:{{height}}px; width:{{width}}px; position:absolute;">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div id="{{../id}}-monitor_{{@index}}"
+                 style="display:none; opacity:1; text-align:center; left:{{left}}px; top:-9px; width:{{width}}px; position:absolute;"
+                 data-toggle="tooltip" data-placement="bottom" data-html="true" boundary="window"
+                 title="<div>Syntactic difference at step {{@index}}</div>">
+                <i class="fa fa-caret-up" style="color:#ffc107;"></i>
             </div>
             {{/each}}
         </div>

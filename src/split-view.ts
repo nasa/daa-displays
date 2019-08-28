@@ -39,6 +39,7 @@ import { DAASplitView } from './daa-displays/daa-split-view';
 import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+import { DAAPlayer } from './daa-displays/daa-player';
 // import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
@@ -117,6 +118,21 @@ const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { to
 const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 600 }, { parent: "daa-disp-right" });
 const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", {top: 210, left: 600 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
 
+const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
+    { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
+    { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
+    { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
+    { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
+];
+
+const bandNames: string[] = [
+    "NONE",
+    "FAR",
+    "MID",
+    "NEAR",
+    "RECOVERY",
+    "UNKNOWN"
+];
 
 const splitView: DAASplitView = new DAASplitView();
 // -- step
@@ -135,17 +151,59 @@ splitView.getPlayer("right").define("step", async () => {
         altitudeTape: altitudeTape_right, verticalSpeedTape: verticalSpeedTape_right
     });
 });
+// -- plot
 splitView.getPlayer("right").define("plot", async () => {
-    const bandsData: utils.DAABandsData[] = splitView.getPlayer("right").getBandsData();
-    if (bandsData) {
+    const bandsRight: utils.DAABandsData[] = splitView.getPlayer("right").getBandsData();
+    const bandsLeft: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
+    if (bandsRight) {
         return new Promise((resolve, reject) => {
-            for (let i = 0; i < bandsData.length; i++) {
+            for (let step = 0; step < bandsRight.length; step++) {
                 setTimeout(() => {
-                    plot("right", bandsData[i], i, splitView.getTimeAt(i));
-                    if (i === bandsData.length - 1) {
+                    const time: string = splitView.getTimeAt(step);
+                    plot("right", bandsRight[step], step, time);
+                    // check alerts
+                    const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts.alerts) !== JSON.stringify(bandsRight[step].Alerts.alerts);
+                    if (diffAlerts) {
+                        let alertsR: string = "";
+                        bandsRight[step].Alerts.alerts.forEach(alert => {
+                            alertsR += `${alert.ac} [${alert.alert}]`; 
+                        });
+                        let alertsL: string = "";
+                        bandsLeft[step].Alerts.alerts.forEach(alert => {
+                            alertsL += `${alert.ac} [${alert.alert}]`; 
+                        });
+                        splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
+                        splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
+                    }
+                    // check bands
+                    for (let i = 0; i < daaPlots.length; i++) {
+                        const plotID: string = daaPlots[i].id;
+                        const plotName: string = daaPlots[i].name;
+                        const diffPlot: boolean = JSON.stringify(bandsLeft[step][plotName]) !== JSON.stringify(bandsRight[step][plotName]);
+                        if (diffPlot) {
+                            let bandsR: string = ""
+                            let bandsL: string = ""
+                            bandNames.forEach((band: string) => {
+                                if (bandsRight[step][plotName][band]) {
+                                    bandsRight[step][plotName][band].forEach((range: utils.FromTo) => {
+                                        bandsR += `<br>${band} [${range.from}, ${range.to}]`;
+                                    });
+                                }
+                                if (bandsLeft[step][plotName][band]) {
+                                    bandsLeft[step][plotName][band].forEach((range: utils.FromTo) => {
+                                        bandsL += `<br>${band} [${range.from}, ${range.to}]`;
+                                    });
+                                }
+                            });
+                            splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${bandsR}`);
+                            splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${bandsL}`);
+                        }
+                    }
+                    // resolve when done
+                    if (step === bandsRight.length - 1) {
                         resolve();
                     }
-                }, 8 * i);
+                }, 8 * step);
             }
         });
     }
@@ -167,6 +225,28 @@ splitView.getPlayer("left").define("plot", async () => {
     }
     return Promise.resolve();
 });
+// -- diff : returns true if alerts or bands are different
+function diff (): boolean {
+    const step: number = splitView.getCurrentSimulationStep();
+    const bandsLeft: utils.DAABandsData = splitView.getPlayer("left").getCurrentBands();
+    const bandsRight: utils.DAABandsData = splitView.getPlayer("right").getCurrentBands();
+    let ans: boolean = false;
+    if (bandsLeft && bandsRight) {
+        // check if alerts are different
+        if (bandsLeft.Alerts) {
+            ans =  JSON.stringify(bandsLeft.Alerts) !== JSON.stringify(bandsRight.Alerts);
+            if (ans) {
+                splitView.getPlayer("left").getPlot("alerts").revealMarker(step);
+                splitView.getPlayer("right").getPlot("alerts").revealMarker(step);
+            }
+        }
+    } else {
+        // report error
+        console.error("Warning: could not compute diff");
+    }
+    return ans;
+}
+splitView.define("diff", diff);
 // -- init
 splitView.getPlayer("left").define("init", async () => {
     // init left
@@ -218,90 +298,29 @@ async function createPlayer() {
         player: splitView,
         parent: "simulation-plot"
     });
-    splitView.getPlayer("left").appendSimulationPlot({
-        id: "heading-bands",
-        top: 150,
-        width: 1040,
-        label: "Heading Bands",
-        range: { from: 0, to: 360 },
-        player: splitView,
-        units: "[deg]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("right").appendSimulationPlot({
-        id: "heading-bands",
-        top: 150,
-        left: 1200,
-        width: 1040,
-        label: "Heading Bands",
-        range: { from: 0, to: 360 },
-        player: splitView,
-        units: "[deg]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("left").appendSimulationPlot({
-        id: "airspeed-bands",
-        top: 300,
-        width: 1040,
-        label: "Horizontal Speed Bands",
-        range: { from: 0, to: 1000 },
-        player: splitView,
-        units: "[knot]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("right").appendSimulationPlot({
-        id: "airspeed-bands",
-        top: 300,
-        left: 1200,
-        width: 1040,
-        label: "Horizontal Speed Bands",
-        range: { from: 0, to: 1000 },
-        player: splitView,
-        units: "[knot]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("left").appendSimulationPlot({
-        id: "vs-bands",
-        top: 450,
-        width: 1040,
-        label: "Vertical Speed Bands",
-        range: { from: -10000, to: 10000 },
-        player: splitView,
-        units: "[fpm]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("right").appendSimulationPlot({
-        id: "vs-bands",
-        top: 450,
-        left: 1200,
-        width: 1040,
-        label: "Vertical Speed Bands",
-        range: { from: -10000, to: 10000 },
-        player: splitView,
-        units: "[fpm]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("left").appendSimulationPlot({
-        id: "altitude-bands",
-        top: 600,
-        width: 1040,
-        label: "Altitude Bands",
-        range: { from: -200, to: 60000 },
-        player: splitView,
-        units: "[ft]",
-        parent: "simulation-plot"
-    });
-    splitView.getPlayer("right").appendSimulationPlot({
-        id: "altitude-bands",
-        top: 600,
-        left: 1200,
-        width: 1040,
-        label: "Altitude Bands",
-        range: { from: -200, to: 60000 },
-        player: splitView,
-        units: "[ft]",
-        parent: "simulation-plot"
-    });
+    for (let i = 0; i < daaPlots.length; i++) {
+        splitView.getPlayer("left").appendSimulationPlot({
+            id: daaPlots[i].id,
+            top: 150 * (i + 1),
+            width: 1040,
+            label: daaPlots[i].name,
+            range: daaPlots[i].range,
+            player: splitView,
+            units: `[${daaPlots[i].units}]`,
+            parent: "simulation-plot"
+        });
+        splitView.getPlayer("right").appendSimulationPlot({
+            id: daaPlots[i].id,
+            top: 150 * (i + 1),
+            left: 1200,
+            width: 1040,
+            label: daaPlots[i].name,
+            range: daaPlots[i].range,
+            player: splitView,
+            units: `[${daaPlots[i].units}]`,
+            parent: "simulation-plot"
+        });    
+    }
     await splitView.activate();
 }
 createPlayer();

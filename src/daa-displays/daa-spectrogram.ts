@@ -86,7 +86,7 @@ import { AlertElement } from '../daa-server/utils/daa-server';
 import { DAAPlayer } from './daa-player';
 
 // data is an object { width: real, height: real, length: nat }
-function createGrid (data) {
+function createGrid (data: { width: number, height: number, length: number }) {
     let barWidth = data.width / data.length;
     let grid = [];
     for (let i = 0; i < data.length; i++) {
@@ -226,7 +226,8 @@ export class DAASpectrogram {
             markers: (this.time) ? {
                 start: { label: this.time.start, left: 0 },
                 mid: { label: this.time.mid, left: this.width / 2 },
-                end: { label: this.time.end, left: this.width - 1 }
+                end: { label: this.time.end, left: this.width - 1 },
+                top: this.height + 25
             } : null
         });
     }
@@ -389,6 +390,17 @@ export class DAASpectrogram {
     }
     resetCursorPosition (): DAASpectrogram {
         $(`#${this.id}-cursor`).animate({ "left": 0 }, 500);
+        return this;
+    }
+    revealMarker (step: number, tooltip?: string): DAASpectrogram {
+        $(`#${this.id}-monitor_${step}`).css("display", "block");
+        $(`#${this.id}-monitor_${step}`).attr("title", `<div>Other simulation indicates<br>${tooltip}</div>`)
+        // @ts-ignore -- method tooltip is added by bootstrap
+        $(`#${this.id}-monitor_${step}`).tooltip();
+        return this;
+    }
+    hideMarker (i: number): DAASpectrogram {
+        $(`#${this.id}-monitor_${i}`).css("display", "none");
         return this;
     }
 }

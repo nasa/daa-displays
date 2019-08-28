@@ -73,14 +73,15 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     plot(bands, player.getCurrentSimulationStep(), player.getCurrentSimulationTime());
 }
 
+const daaPlots: { id: string, name: string, units: string }[] = [
+    { id: "heading-bands", units: "deg", name: "Heading Bands" },
+    { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
+    { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+    { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
+];
+
 function plot (bands: utils.DAABandsData, step: number, time: string) {
     // FIXME: band.id should be identical to band.name
-    const daaPlots: { id: string, name: string, units: string }[] = [
-        { id: "heading-bands", units: "deg", name: "Heading Bands" },
-        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
-        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
-        { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
-    ];
     player.getPlot("alerts").plotAlerts({
         alerts: bands["Alerts"],
         step,
@@ -124,6 +125,7 @@ player.define("init", async () => {
     });
     viewOptions.applyCurrentViewOptions();
 });
+//TODO: implement a function plotAll in spectrogram
 player.define("plot", async () => {
     const bandsData: utils.DAABandsData[] = player.getBandsData();
     if (bandsData) {
