@@ -146,9 +146,6 @@ splitView.getPlayer("right").define("plot", async () => {
                         resolve();
                     }
                 }, 8 * i);
-                // setTimeout(() => {
-                //     this.resetCursorPosition();
-                // }, 8 * bandsData.length)
             }
         });
     }
@@ -165,9 +162,6 @@ splitView.getPlayer("left").define("plot", async () => {
                         resolve();
                     }
                 }, 8 * i);
-                setTimeout(() => {
-                    this.resetCursorPosition();
-                }, 8 * bandsData.length)
             }
         });
     }
