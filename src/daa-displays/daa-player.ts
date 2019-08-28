@@ -1295,7 +1295,7 @@ export class DAAPlayer {
     async setInterval(fun: () => void, ms?: number) {
         if (!this._timer_active) {
             fun = (typeof fun === "function") ? fun : () => {
-                console.error("Warning, step function is malformed :/");
+                console.error("[daa-player] Warning, step function is malformed :/");
             };
             this.ms = ms || this.ms || 1000;
             this._timer_active = true;

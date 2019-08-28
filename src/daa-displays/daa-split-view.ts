@@ -364,6 +364,7 @@ export class DAASplitView extends DAAPlayer {
     // @overrides
     appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
         super.appendPlotControls(opt);
+        $(`#${this.id}-plot`).unbind("click", super.plot);
         // override the plot handler
         $(`#${this.id}-plot`).on("click", async () => {
             if (this.players) {
