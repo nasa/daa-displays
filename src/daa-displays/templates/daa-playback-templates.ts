@@ -56,7 +56,7 @@ export const daidalusParametersTemplate: string = `
 </select>`;
 
 export const daidalusVersionsTemplate: string = `
-<select id="{{id}}-daidalus-versions-list" class="form-control" size="1">
+<select id="{{id}}-daidalus-versions-list" class="form-control sim-selector" size="1">
     {{#each versions}}
     <option {{#if @first}}selected {{/if}}id="{{../id}}-{{this}}">{{this}}</option>
     {{/each}}
@@ -71,7 +71,7 @@ export const daaScenariosTemplate: string = `
 </select>`;
 
 export const daidalusConfigurationsTemplate: string = `
-<select id="{{id}}-daidalus-configurations-list" class="form-control" size="1">
+<select id="{{id}}-daidalus-configurations-list" class="form-control sim-selector" size="1">
     {{#each configurations}}
     <option id="{{../id}}-{{this}}">{{this}}</option>
     {{/each}}

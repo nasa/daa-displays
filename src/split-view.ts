@@ -167,7 +167,9 @@ splitView.getPlayer("right").define("plot", async () => {
                         let alertsR: string = "";
                         if (bandsRight[step] && bandsRight[step].Alerts) {
                             bandsRight[step].Alerts.alerts.forEach(alert => {
-                                alertsR += `${alert.ac} [${alert.alert}]`; 
+                                if (+alert.alert > 0) {
+                                    alertsR += `${alert.ac} [${alert.alert}]`;
+                                }
                             });
                         }
                         let alertsL: string = "";
@@ -243,7 +245,9 @@ function diff (): boolean {
             let alertsR: string = "";
             if (bandsRight[step] && bandsRight[step].Alerts) {
                 bandsRight[step].Alerts.alerts.forEach(alert => {
-                    alertsR += `${alert.ac} [${alert.alert}]`; 
+                    if (+alert.alert > 0) {
+                        alertsR += `${alert.ac} [${alert.alert}]`;
+                    }
                 });
             }
             let alertsL: string = "";
@@ -266,12 +270,12 @@ function diff (): boolean {
                 bandNames.forEach((band: string) => {
                     if (bandsRight[step][plotName][band]) {
                         bandsRight[step][plotName][band].forEach((range: utils.FromTo) => {
-                            bandsR += `<br>${band} [${range.from}, ${range.to}]`;
+                            bandsR += `<br>${band} [${Math.floor(range.from)}, ${Math.floor(range.to)}]`;
                         });
                     }
                     if (bandsLeft[step][plotName][band]) {
                         bandsLeft[step][plotName][band].forEach((range: utils.FromTo) => {
-                            bandsL += `<br>${band} [${range.from}, ${range.to}]`;
+                            bandsL += `<br>${band} [${Math.floor(range.from)}, ${Math.floor(range.to)}]`;
                         });
                     }
                 });

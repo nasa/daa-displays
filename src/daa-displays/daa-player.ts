@@ -468,6 +468,14 @@ export class DAAPlayer {
         $(`.simulation-controls`).animate({ "opacity": "1" });
     }
 
+    disableSelectors (): void {
+        $(`.sim-selector`).removeAttr("disabled");
+    }
+
+    enableSelectors (): void {
+        $(`.sim-selector`).removeAttr("disabled");
+    }
+
     revealActivationPanel (): void {
         $(`.activation-panel`).animate({ "opacity": "1" });
     }
@@ -492,6 +500,7 @@ export class DAAPlayer {
         // on click...
         $(`#${this.id}-load-scenario`).on("click", async () => {
             $(`#${this.id}-load-scenario`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
+            this.disableSelectors();
             const scenario: string = this.getSelectedScenario();
             if (scenario) {
                 await this.selectScenarioFile(scenario, { forceReload: true });
@@ -499,6 +508,7 @@ export class DAAPlayer {
                 console.error("[daa-player] Warning: selected scenario is null");
             }
             this.hideActivationPanel();
+            this.enableSelectors();
             this.enableSimulationControls();
         });
         this.activationControlsPresent = true;
