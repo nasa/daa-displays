@@ -269,7 +269,9 @@ export class DAASpectrogram {
                 // offset the circle, to improve visibility of the alert in the spectrogram
                 marginTop = (yScaleFactor - radius) / 2;
             }
-            data.alerts.forEach((elem: { ac: string, alert: string }) => {
+            // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
+            for (let a = 0; a < data.alerts.length; a++) {
+                const elem: utils.Alert = data.alerts[a];
                 band_plot_data[elem.alert] = [];
                 band_plot_data[elem.alert].push({
                     from: +elem.alert - 1,
@@ -283,7 +285,8 @@ export class DAASpectrogram {
                         marginTop
                     }
                 });
-            });
+            }
+            // });
 
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
