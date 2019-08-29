@@ -177,6 +177,7 @@ export class DAAPlayer {
         left?: number
     };
     protected _loadingScenario: boolean;
+    protected activationControlsPresent: boolean = false;
 
     // _versionCallback: () => void;
     // _configurationCallback: () => void;
@@ -456,12 +457,59 @@ export class DAAPlayer {
         return this;
     }
 
+    disableSimulationControls (): void {
+        $(`.sim-control`).prop("disabled", true);
+        $(`.simulation-controls`).animate({ "opacity": "0.5" });
+    }
+
+    enableSimulationControls (): void {
+        $(`.sim-control`).removeAttr("disabled");
+        $(`#${this.id}-load-scenario`).html(`Load Selected Scenario`);
+        $(`.simulation-controls`).animate({ "opacity": "1" });
+    }
+
+    revealActivationPanel (): void {
+        $(`.activation-panel`).animate({ "opacity": "1" });
+    }
+    hideActivationPanel (): void {
+        $(`.activation-panel`).animate({ "opacity": "0" });
+    }
+
+    appendActivationPanel (opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
+        opt = opt || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        const theHTML = Handlebars.compile(templates.activationPanel)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-activation-panel`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-activation-panel`).html(theHTML);
+        this.disableSimulationControls();
+        // on click...
+        $(`#${this.id}-load-scenario`).on("click", async () => {
+            $(`#${this.id}-load-scenario`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
+            const scenario: string = this.getSelectedScenario();
+            if (scenario) {
+                await this.selectScenarioFile(scenario, { forceReload: true });
+            } else {
+                console.error("[daa-player] Warning: selected scenario is null");
+            }
+            this.hideActivationPanel();
+            this.enableSimulationControls();
+        });
+        this.activationControlsPresent = true;
+    }
+
     /**
      * utility function, renders the DOM elements necessary for controlling spectrograms
      */
-    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+    appendPlotControls (opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
         opt = opt || {};
-        opt.parent = opt.parent || (`${this.id}-simulation-controls`);
+        opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
         opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
@@ -483,15 +531,15 @@ export class DAAPlayer {
         return this;
     }
 
-    disableSelection() {
+    disableSelection(): void {
         $(`#${this.id}-scenarios-list`).attr("disabled", "true");
     }
 
-    enableSelection() {
+    enableSelection(): void {
         $(`#${this.id}-scenarios-list`).removeAttr("disabled");
     }
 
-    loadingAnimation() {
+    loadingAnimation(): void {
         if (this._displays) {
             for (const i in this._displays) {
                 const display: string = this._displays[i];
@@ -502,7 +550,7 @@ export class DAAPlayer {
             }
         }
     }
-    loadingComplete() {
+    loadingComplete(): void {
         if (this._displays) {
             for (const i in this._displays) {
                 $('.daa-loading').remove();
@@ -1282,6 +1330,9 @@ export class DAAPlayer {
      * @instance
      */
     getSelectedScenario (): string {
+        if (!this._selectedScenario && Object.keys(this._scenarios).length) {
+            this._selectedScenario = Object.keys(this._scenarios)[0];
+        } 
         return this._selectedScenario;
     }
     /**
@@ -1435,7 +1486,7 @@ export class DAAPlayer {
 
     async activate(): Promise<void> {
         const scenarios = await this.listScenarioFiles();
-        if (scenarios && scenarios.length) {
+        if (!this.activationControlsPresent && scenarios && scenarios.length) {
             await this.selectScenarioFile(scenarios[0]);
         }
     }
@@ -1625,7 +1676,10 @@ export class DAAPlayer {
                 for (let i = 0; i < scenarios.length; i++) {
                     // event handler
                     $(`#${this.id}-scenario-${safeSelector(scenarios[i])}`).on("click", async () => {
-                        await this.selectScenarioFile(scenarios[i]);
+                        this._selectedScenario = scenarios[i];
+                        this.disableSimulationControls();
+                        this.revealActivationPanel();
+                        // await this.selectScenarioFile(scenarios[i]);
                     });
                 }
             }

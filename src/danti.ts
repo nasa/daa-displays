@@ -199,6 +199,10 @@ async function createPlayer() {
         parent: "simulation-controls",
         top: 60
     });
+    player.appendActivationPanel({
+        parent: "activation-controls",
+        width: 1072
+    });
     await player.activate();
 }
 createPlayer();

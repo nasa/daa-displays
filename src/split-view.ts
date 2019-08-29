@@ -360,6 +360,10 @@ async function createPlayer() {
             parent: "simulation-plot"
         });    
     }
+    splitView.appendActivationPanel({
+        parent: "activation-controls",
+        width: 1072
+    });
     await splitView.activate();
 }
 createPlayer();

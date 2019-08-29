@@ -175,9 +175,11 @@ export class DAASplitView extends DAAPlayer {
     // @override
     async activate (): Promise<void> {
         await super.activate();
-        if (this.players) {
-            if (this.players.left) { await this.players.left.activate(); }
-            if (this.players.right) { await this.players.right.activate(); }
+        if (!this.activationControlsPresent) {
+            if (this.players) {
+                if (this.players.left) { await this.players.left.activate(); }
+                if (this.players.right) { await this.players.right.activate(); }
+            }
         }
     }
     wellclearMode (): void {
