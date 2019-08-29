@@ -464,7 +464,7 @@ export class DAAPlayer {
 
     enableSimulationControls (): void {
         $(`.sim-control`).removeAttr("disabled");
-        $(`#${this.id}-load-scenario`).html(`Load Selected Scenario`);
+        $(`#${this.id}-load-scenario`).html(`Load Selected Scenario and Configuration`);
         $(`.simulation-controls`).animate({ "opacity": "1" });
     }
 
@@ -1624,11 +1624,13 @@ export class DAAPlayer {
 
         // update simulation when configuration changes
         $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list`).on("change", async () => {
-            const selectedConfig: string = this.getSelectedConfiguration();
-            console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
-            await refreshConfigurationAttributesView(selectedConfig);
-            await this.reloadScenarioFile();
-            this.refreshSimulationPlots();
+            this.disableSimulationControls();
+            this.revealActivationPanel();
+            // const selectedConfig: string = this.getSelectedConfiguration();
+            // console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
+            // await refreshConfigurationAttributesView(selectedConfig);
+            // await this.reloadScenarioFile();
+            // this.refreshSimulationPlots();
         });
         return this;
     }
@@ -1642,15 +1644,19 @@ export class DAAPlayer {
         $(`#${this.wellClearVersionSelector}`).append(theHTML);
         // append handlers for selection of well clear version
         $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).on("change", async () => {
-            this.loadingAnimation();
-            // this will update the list of configurations for the selected version
-            await this.listConfigurations();
-            // debug lines
-            console.log(`new daidalus version selected: ${this.getSelectedWellClearVersion()}`);
-            // this will trigger the init function of the simulation. The wellclear version is specified in the java command defined by the caller
-            await this.reloadScenarioFile();
-            this.refreshSimulationPlots();
-            this.loadingComplete();
+            this.disableSimulationControls();
+            this.revealActivationPanel();
+
+
+            // this.loadingAnimation();
+            // // this will update the list of configurations for the selected version
+            // await this.listConfigurations();
+            // // debug lines
+            // console.log(`new daidalus version selected: ${this.getSelectedWellClearVersion()}`);
+            // // this will trigger the init function of the simulation. The wellclear version is specified in the java command defined by the caller
+            // await this.reloadScenarioFile();
+            // this.refreshSimulationPlots();
+            // this.loadingComplete();
         });
         return this;
     }
