@@ -6,9 +6,9 @@ export const spectrogramTemplate: string = `
     <div style="position:absolute; transform:rotate(-90deg); height:{{height}}px;">{{label.left}}</div>{{/if}}
     <div style="position:absolute; width:{{width}}px; height:{{height}}px; background-color:#2c3541de;">
         {{#if markers}}<div class="spectrogram-x-axis" style="position:absolute;">
-            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.start.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.start.label}} sec</button>
-            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.mid.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.mid.label}} sec</button>
-            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.end.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.end.label}} sec</button>
+            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.start.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.start.label}}</button>
+            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.mid.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.mid.label}}</button>
+            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.end.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.end.label}} [sec]</button>
         </div>{{/if}}
         <div id="{{id}}-overlay-monitor" class="spectrogram-overlay-monitor" style="position:absolute; display:block; height:6px; top:{{markers.top}}px; width:{{width}}px; background:black;">
             {{#each grid}}
