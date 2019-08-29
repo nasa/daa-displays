@@ -71,7 +71,7 @@ async function render(data: { map: InteractiveMap, compass: Compass, airspeedTap
         if (data.altitudeTape) { data.altitudeTape.setBands(bands["Altitude Bands"]); }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = +bands.Alerts.alerts[index].alert;
+        const alert: number = +bands.Alerts[index].alert;
         if (isNaN(alert)) { console.error("Something's wrong with alert bands :/"); }
         return {
             callSign: data.id,

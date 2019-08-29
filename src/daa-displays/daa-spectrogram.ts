@@ -120,7 +120,7 @@ export interface BandsData {
 }
 export interface AlertsData {
     id: string;
-    alerts: AlertElement;
+    alerts: utils.Alert[];
     step: number; 
     time: string;
 }
@@ -247,7 +247,7 @@ export class DAASpectrogram {
         }
         return this;
     }
-    plotAlerts(data: { alerts: AlertElement, step: number, time: string }): DAASpectrogram {
+    plotAlerts(data: { alerts: utils.Alert[], step: number, time: string }): DAASpectrogram {
         if (data && data.alerts) {
             const alertTypes: { [level: string]: string } = {
                 "0": "0", // NONE
@@ -269,7 +269,7 @@ export class DAASpectrogram {
                 // offset the circle, to improve visibility of the alert in the spectrogram
                 marginTop = (yScaleFactor - radius) / 2;
             }
-            data.alerts.alerts.forEach((elem: { ac: string, alert: string }) => {
+            data.alerts.forEach((elem: { ac: string, alert: string }) => {
                 band_plot_data[elem.alert] = [];
                 band_plot_data[elem.alert].push({
                     from: +elem.alert - 1,
@@ -295,8 +295,8 @@ export class DAASpectrogram {
                 step: data.step,
                 time: data.time,
                 bands: band_plot_data,
-                alerts: (data && data.alerts && data.alerts.alerts) ? 
-                    data.alerts.alerts.filter((elem: { ac: string; alert: string }) => {
+                alerts: (data && data.alerts) ? 
+                    data.alerts.filter((elem: { ac: string; alert: string }) => {
                         return elem.alert !== "0";
                     }).map((elem: { ac: string; alert: string }) => {
                         return `${elem.ac} (${alertTypes[elem.alert]})`;

@@ -62,7 +62,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.altitudeTape.setBands(bands["Altitude Bands"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert: number = (bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -161,50 +161,7 @@ splitView.getPlayer("right").define("plot", async () => {
                 setTimeout(() => {
                     const time: string = splitView.getTimeAt(step);
                     plot("right", bandsRight[step], step, time);
-                    // check alerts
-                    const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight[step].Alerts);
-                    if (diffAlerts) {
-                        let alertsR: string = "";
-                        if (bandsRight[step] && bandsRight[step].Alerts) {
-                            bandsRight[step].Alerts.alerts.forEach(alert => {
-                                if (+alert.alert > 0) {
-                                    alertsR += `${alert.ac} [${alert.alert}]`;
-                                }
-                            });
-                        }
-                        let alertsL: string = "";
-                        if (bandsLeft[step] && bandsLeft[step].Alerts) {
-                            bandsLeft[step].Alerts.alerts.forEach(alert => {
-                                alertsL += `${alert.ac} [${alert.alert}]`; 
-                            });
-                        }
-                        splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
-                        splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
-                    }            
-                    // check bands
-                    for (let i = 0; i < daaPlots.length; i++) {
-                        const plotID: string = daaPlots[i].id;
-                        const plotName: string = daaPlots[i].name;
-                        const diffPlot: boolean = JSON.stringify(bandsLeft[step][plotName]) !== JSON.stringify(bandsRight[step][plotName]);
-                        if (diffPlot) {
-                            let bandsR: string = ""
-                            let bandsL: string = ""
-                            bandNames.forEach((band: string) => {
-                                if (bandsRight[step][plotName][band]) {
-                                    bandsRight[step][plotName][band].forEach((range: utils.FromTo) => {
-                                        bandsR += `<br>${band} [${range.from}, ${range.to}]`;
-                                    });
-                                }
-                                if (bandsLeft[step][plotName][band]) {
-                                    bandsLeft[step][plotName][band].forEach((range: utils.FromTo) => {
-                                        bandsL += `<br>${band} [${range.from}, ${range.to}]`;
-                                    });
-                                }
-                            });
-                            splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${bandsR}`);
-                            splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${bandsL}`);
-                        }
-                    }
+                    diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
                     // resolve when done
                     if (step === bandsRight.length - 1) {
                         resolve();
@@ -232,56 +189,78 @@ splitView.getPlayer("left").define("plot", async () => {
     return Promise.resolve();
 });
 // -- diff : returns true if alerts or bands are different
-function diff (): boolean {
-    const step: number = splitView.getCurrentSimulationStep();
-    const time: string = splitView.getTimeAt(step);
-    const bandsLeft: utils.DAABandsData = splitView.getPlayer("left").getCurrentBands();
-    const bandsRight: utils.DAABandsData = splitView.getPlayer("right").getCurrentBands();
+function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, step?: number, time?: string): boolean {
+    step = (step !== undefined) ? step : splitView.getCurrentSimulationStep();
+    time = (time !== undefined) ? time : splitView.getTimeAt(step);
+    bandsLeft = (bandsLeft !== undefined) ? bandsLeft : splitView.getPlayer("left").getCurrentBands();
+    bandsRight =  (bandsRight !== undefined) ? bandsRight : splitView.getPlayer("right").getCurrentBands();
     let ans: boolean = false;
     if (bandsLeft && bandsRight) {
         // check alerts
-        const diffAlerts: boolean = !(bandsLeft[step] === bandsRight[step] && JSON.stringify(bandsLeft[step].Alerts) === JSON.stringify(bandsRight[step].Alerts));
-        if (diffAlerts) {
-            let alertsR: string = "";
-            if (bandsRight[step] && bandsRight[step].Alerts) {
-                bandsRight[step].Alerts.alerts.forEach(alert => {
-                    if (+alert.alert > 0) {
-                        alertsR += `${alert.ac} [${alert.alert}]`;
-                    }
-                });
-            }
-            let alertsL: string = "";
-            if (bandsLeft[step] && bandsLeft[step].Alerts) {
-                bandsLeft[step].Alerts.alerts.forEach(alert => {
-                    alertsL += `${alert.ac} [${alert.alert}]`; 
-                });
-            }
+        // const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight.Alerts); // profiler 2ms
+        // if (diffAlerts) {
+        let alertsR: string = "";
+        if (bandsRight && bandsRight.Alerts) {
+            bandsRight.Alerts.forEach(alert => {
+                if (+alert.alert > 0) {
+                    alertsR += `${alert.ac} [${alert.alert}]`;
+                }
+            });
+        }
+        let alertsL: string = "";
+        if (bandsLeft && bandsLeft.Alerts) {
+            bandsLeft.Alerts.forEach(alert => {
+                alertsL += `${alert.ac} [${alert.alert}]`; 
+            });
+        }
+        if (alertsR !== alertsL) { // 0.1ms
             splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
             splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
-        }     
+        }
+        // }
         // check bands
         for (let i = 0; i < daaPlots.length; i++) {
             const plotID: string = daaPlots[i].id;
             const plotName: string = daaPlots[i].name;
-            const diffPlot: boolean = JSON.stringify(bandsLeft[step][plotName]) !== JSON.stringify(bandsRight[step][plotName]);
-            if (diffPlot) {
-                let bandsR: string = ""
-                let bandsL: string = ""
-                bandNames.forEach((band: string) => {
-                    if (bandsRight[step][plotName][band]) {
-                        bandsRight[step][plotName][band].forEach((range: utils.FromTo) => {
-                            bandsR += `<br>${band} [${Math.floor(range.from)}, ${Math.floor(range.to)}]`;
-                        });
-                    }
-                    if (bandsLeft[step][plotName][band]) {
-                        bandsLeft[step][plotName][band].forEach((range: utils.FromTo) => {
-                            bandsL += `<br>${band} [${Math.floor(range.from)}, ${Math.floor(range.to)}]`;
-                        });
-                    }
-                });
-                splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${bandsR}`);
-                splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${bandsL}`);
+            // const diffPlot: boolean = JSON.stringify(bandsLeft[plotName]) !== JSON.stringify(bandsRight[plotName]); // profiler 7.3ms
+            // if (diffPlot) {
+            let bandsR: { range: { from: number, to: number }, band: string }[] = []
+            let bandsL: { range: { from: number, to: number }, band: string }[] = []
+            //bandNames.forEach((band: string) => { // profiler 1.4ms
+            for (let b = 0; b < bandNames.length; b++) { // 0.3ms
+                const band: string = bandNames[b];
+                if (bandsRight[plotName][band]) {
+                    bandsRight[plotName][band].forEach((range: utils.FromTo) => {
+                        // bandsR += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
+                        bandsR.push({ band, range: { from: Math.floor(range.from * 100) / 100, to: Math.floor(range.to * 100) / 100 } });
+                    });
+                }
+                if (bandsLeft[plotName][band]) {
+                    bandsLeft[plotName][band].forEach((range: utils.FromTo) => {
+                        // bandsL += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
+                        bandsL.push({ band, range: { from: Math.floor(range.from * 100) / 100, to: Math.floor(range.to * 100) / 100 } });
+                    });
+                }
             }
+            bandsR = bandsR.sort((a, b) => {
+                return (a.range.from < b.range.from) ? -1 : 1;
+            });
+            bandsL = bandsL.sort((a, b) => {
+                return (a.range.from < b.range.from) ? -1 : 1;
+            });
+            let plotR: string = "";
+            let plotL: string = "";
+            for (let k = 0; k < bandsR.length; k++) {
+                plotR += `<br>${bandsR[k].band} [${bandsR[k].range.from}, ${bandsR[k].range.to}]`;
+            }
+            for (let k = 0; k < bandsL.length; k++) {
+                plotL += `<br>${bandsL[k].band} [${bandsL[k].range.from}, ${bandsL[k].range.to}]`;
+            }
+            if (plotR !== plotL) { // 1.2ms
+                splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${plotR}`);
+                splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${plotL}`);
+            }
+            // }
         }
     } else {
         // report error

@@ -61,7 +61,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.altitudeTape.setBands(bands["Altitude Bands"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert: number = (bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,

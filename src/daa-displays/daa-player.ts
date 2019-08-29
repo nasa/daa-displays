@@ -1229,7 +1229,7 @@ export class DAAPlayer {
                 for (let step = 0; step < this._simulationLength; step++) {
                     // convert bands to the DAA format
                     const res: utils.DAABandsData = {
-                        Alerts: null,
+                        Alerts: [],
                         "Altitude Bands": {},
                         "Heading Bands": {},
                         "Horizontal Speed Bands": {},
@@ -1257,7 +1257,7 @@ export class DAAPlayer {
                         }
                         if (this._bands && this._bands.Alerts && step < this._bands.Alerts.length) {
                             // copy alerting info
-                            res.Alerts = this._bands.Alerts[step];
+                            res.Alerts = this._bands.Alerts[step].alerts;
                         }
                     }
                     ans.push(res);
@@ -1300,7 +1300,7 @@ export class DAAPlayer {
                     }
                     if (this._bands && this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
                         // copy alerting info
-                        res.Alerts = this._bands.Alerts[this.simulationStep];
+                        res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
                     }
                 }
             }

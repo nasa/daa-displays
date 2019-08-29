@@ -71,6 +71,7 @@ export interface Bands {
     RECOVERY?: FromTo[],
     UNKNOWN?: FromTo[]
 };
+export interface Alert { ac: string; alert: string }
 export interface Coords {
     top?: number, left?: number, width?: number, height?: number
 }
@@ -78,10 +79,10 @@ export interface Coords {
 export const BAND_NAMES: string[] = [ "Altitude Bands", "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands" ];
 
 
-import { AlertElement, BandElement } from '../daa-server/utils/daa-server';
+//import { AlertElement, BandElement } from '../daa-server/utils/daa-server';
 
 export interface DAABandsData {
-    "Alerts": AlertElement;
+    "Alerts": Alert[];
     "Altitude Bands": Bands; // FIXME: use BandElement and get rid of Bands
     "Heading Bands": Bands;
     "Horizontal Speed Bands": Bands;

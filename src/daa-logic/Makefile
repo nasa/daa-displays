@@ -33,6 +33,7 @@ define compile-template
 compile-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
 	@echo Compiling for WellClear version $(1)
+	-@rm WellClear-$(1).jar
 	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
 	
 	@echo "\n\033[0;32m ** Building DAALoSRegion-${1} **\033[0m"
@@ -46,6 +47,7 @@ define compile-wrapper
 compile-wrapper$(1):
 	@echo "\n\033[0;32m ** Building WellClear-WR-$(1).jar **\033[0m"
 	@echo Compiling for WellClear version $(1) with Wrapper
+	-@rm WellClear-WR-$(1).jar
 	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src DAABandsV2.java DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2Wrapper.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-WR-$(1).jar DAABandsV2Wrapper *.class *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-WR-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-WR-$(1).jar && unzip -c WellClear-WR-$(1).jar META-INF/MANIFEST.MF
 endef
 compile-all-wrappers = $(foreach ver,$(VERSIONS_WITH_WRAPPER),$(eval $(call compile-wrapper,$(ver))))
@@ -63,7 +65,7 @@ endef
 clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download clean-jar compile daa2json daa2xyz #wrapper #los1.0.1 los1.0.2 los2.0.e 
+all: download compile daa2json daa2xyz #wrapper #los1.0.1 los1.0.2 los2.0.e 
 
 download-wellclear-2.0.e:
 	@echo "\n\033[0;32m ** Downloading WellClear 2.0.e from LaRC **\033[0m" 
