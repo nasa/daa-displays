@@ -36,6 +36,23 @@ public class DaidalusWrapper implements DaidalusWrapperInterface {
 
     protected double initial_heading = 0;
 
+	static protected Boolean VERBOSE = false;
+	static protected void print (String str) {
+		if (VERBOSE) {
+			System.out.print(str);
+		}
+	}
+	static protected void println (String str) {
+		if (VERBOSE) {
+			System.out.println(str);
+		}
+	}
+    static protected void println () {
+		if (VERBOSE) {
+			System.out.println();
+		}
+	}
+
     DaidalusWrapper (Daidalus daa) {
         this.daa = daa;
     }
@@ -99,15 +116,15 @@ public class DaidalusWrapper implements DaidalusWrapperInterface {
     	    Velocity g_velocity_own = daa.getOwnshipState().getGroundVelocity(); // degrees, knots, feet/min.
             double time_sim = daa.getCurrentTime();
 
-            System.out.println();
-            System.out.print(" Time " + time_sim);
-            System.out.print(" Ground Velocity vector own " + g_velocity_own);
-            System.out.println(" heading own " + heading_own * 180 / Math.PI + " airspeed " + airspeed_own * 3600 / 1852);
+            DaidalusWrapper.println();
+            DaidalusWrapper.print(" Time " + time_sim);
+            DaidalusWrapper.print(" Ground Velocity vector own " + g_velocity_own);
+            DaidalusWrapper.println(" heading own " + heading_own * 180 / Math.PI + " airspeed " + airspeed_own * 3600 / 1852);
 
             // Check if ownship's heading or vertical speed are inside conflict bands 
             int hor_dir_region = region2value(this.daa.regionOfHorizontalDirection(heading_own));
             int ver_speed_region = region2value(this.daa.regionOfVerticalSpeed(ver_speed_own));
-            System.out.println("Region of current direction " + hor_dir_region + "  Region of vertical speed " + ver_speed_region);
+            DaidalusWrapper.println("Region of current direction " + hor_dir_region + "  Region of vertical speed " + ver_speed_region);
 
             // if (hor_dir_region != ver_speed_region) {
             //     System.err.println(" ************************************************************************** ");
@@ -157,16 +174,16 @@ public class DaidalusWrapper implements DaidalusWrapperInterface {
                 athr.setAlertingTime(alerting_time_param);
             }
             
-            System.out.println(" AlertThresholds  " + athr);
-            // System.out.println(" Parameters in daa "+daa);
+            DaidalusWrapper.println(" AlertThresholds  " + athr);
+            // println(" Parameters in daa "+daa);
             
-            System.out.println("heading Bands [deg,deg]"); 
+            DaidalusWrapper.println("heading Bands [deg,deg]"); 
             for (int i = 0; i < this.daa.horizontalDirectionBandsLength(); ++i) {
                 Interval ii = this.daa.horizontalDirectionIntervalAt(i, "deg");
-                System.out.println("  " + this.daa.horizontalDirectionRegionAt(i) + ":\t" + ii.toString(2));
+                DaidalusWrapper.println("  " + this.daa.horizontalDirectionRegionAt(i) + ":\t" + ii.toString(2));
             }
         } else {
-            System.err.println("[DaidalusWrapper] Warning: Daidalus object is null");
+            DaidalusWrapper.println("[DaidalusWrapper] Warning: Daidalus object is null");
         }
     }
 }
