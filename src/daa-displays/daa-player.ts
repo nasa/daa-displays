@@ -1542,10 +1542,10 @@ export class DAAPlayer {
                     mid: this._scenarios[this._selectedScenario].steps[Math.floor(this._simulationLength / 2)],
                     end: this._scenarios[this._selectedScenario].steps[this._simulationLength - 1]
                 });
+                this._plot[plotID].resetCursorPosition();
             });
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
-            this.gotoControl(0); // note: this call is async
         }
         return this;
     }
