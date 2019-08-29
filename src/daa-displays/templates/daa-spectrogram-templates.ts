@@ -32,7 +32,7 @@ export const spectrogramTemplate: string = `
 export const spectrogramBandTemplate: string = `
 <div id="{{stepID}}" class="step_{{step}}" style="position:absolute; left:{{left}}px; opacity:0.9; height:{{height}}px; width:{{width}}px; overflow:hidden;"
     data-toggle="tooltip" data-placement="top" data-html="true" boundary="window"
-    title="<div>Time {{time}}</div>{{#each bands}}{{#each this}}<div style='white-space:nowrap;'>{{@../key}} [ {{from}}, {{to}} ]</div>{{/each}}{{/each}}">
+    title="<div>Time {{time}}{{tooltip}}</div>">
     {{#each bands}}
         {{#each this}}
         <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>

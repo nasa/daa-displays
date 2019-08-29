@@ -333,26 +333,36 @@ export class DAASpectrogram {
             const barWidth = this.width / this.length;
             
             const keys: string[] = Object.keys(data.bands);
+            let tooltipData: { band: string, range: { from: number, to: number }}[] = [];
             for (let k = 0; k < keys.length; k++) {
-                const alert: string = keys[k];
-                band_plot_data[alert] = [];
-                const info: { from: number, to: number }[] = data.bands[alert];
+                const band: string = keys[k];
+                band_plot_data[band] = [];
+                const info: { from: number, to: number }[] = data.bands[band];
                 for (let i = 0; i < info.length; i++) {
                     const range: { from: number, to: number } = info[i];
                     const from = convert(range.from, this.units.from, this.units.to);
                     const to = convert(range.to, this.units.from, this.units.to);
                     const height = to - from;
-                    band_plot_data[alert].push({
+                    tooltipData.push({ band, range });
+                    band_plot_data[band].push({
                         from: from,
-                        to: to, 
-                        color: utils.bandColors[alert].color,
-                        dash: utils.bandColors[alert].style === "dash",
+                        to: to,
+                        color: utils.bandColors[band].color,
+                        dash: utils.bandColors[band].style === "dash",
                         top: (this.range.to - to) * yScaleFactor,
                         height: height * yScaleFactor,
                         width: barWidth,
                         units: this.units.to
                     });
                 }
+            }
+            // sort tooltip data
+            tooltipData = tooltipData.sort((a, b) => {
+                return (a.range.from < b.range.from) ? -1 : 1;
+            });
+            let tooltip: string = "";
+            for (let i = 0; i < tooltipData.length; i++) {
+                tooltip += `<br>${tooltipData[i].band} [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
             }
             
             const stepID = `${this.id}-step-${data.step}`;
@@ -363,6 +373,7 @@ export class DAASpectrogram {
                 zIndex: 2,
                 step: data.step,
                 time: data.time,
+                tooltip,
                 bands: band_plot_data,
                 top: this.top,
                 left: leftMargin,
@@ -394,7 +405,7 @@ export class DAASpectrogram {
     }
     revealMarker (step: number, tooltip?: string): DAASpectrogram {
         $(`#${this.id}-monitor_${step}`).css("display", "block");
-        $(`#${this.id}-monitor_${step}`).attr("title", `<div>Other simulation indicates<br>${tooltip}</div>`)
+        $(`#${this.id}-monitor_${step}`).attr("title", `<div>The other run indicates<br>${tooltip}</div>`)
         // @ts-ignore -- method tooltip is added by bootstrap
         $(`#${this.id}-monitor_${step}`).tooltip();
         return this;
