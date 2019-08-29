@@ -638,6 +638,7 @@ export class DAAPlayer {
                 // update DOM
                 $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
                 $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+                $(`#${this.id}-goto-time-input`).val(this.simulationStep);
                 $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
                 $(`#${this.id}-selected-scenario`).html(scenario);
                 try {

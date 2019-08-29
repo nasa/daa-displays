@@ -238,7 +238,7 @@ function diff (): boolean {
     let ans: boolean = false;
     if (bandsLeft && bandsRight) {
         // check alerts
-        const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight[step].Alerts);
+        const diffAlerts: boolean = !(bandsLeft[step] === bandsRight[step] && JSON.stringify(bandsLeft[step].Alerts) === JSON.stringify(bandsRight[step].Alerts));
         if (diffAlerts) {
             let alertsR: string = "";
             if (bandsRight[step] && bandsRight[step].Alerts) {
