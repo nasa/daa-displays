@@ -60,8 +60,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.altitudeTape.setBands(bands["Altitude Bands"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
-        if (isNaN(alert)) { console.error("Something's wrong with alert bands :/"); }
+        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,

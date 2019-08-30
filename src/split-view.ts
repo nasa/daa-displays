@@ -62,7 +62,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.altitudeTape.setBands(bands["Altitude Bands"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -210,7 +210,9 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
         let alertsL: string = "";
         if (bandsLeft && bandsLeft.Alerts) {
             bandsLeft.Alerts.forEach(alert => {
-                alertsL += `${alert.ac} [${alert.alert}]`; 
+                if (+alert.alert > 0) {
+                    alertsL += `${alert.ac} [${alert.alert}]`; 
+                }
             });
         }
         if (alertsR !== alertsL) { // 0.1ms

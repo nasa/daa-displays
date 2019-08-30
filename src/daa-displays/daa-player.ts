@@ -464,7 +464,6 @@ export class DAAPlayer {
 
     enableSimulationControls (): void {
         $(`.sim-control`).removeAttr("disabled");
-        $(`#${this.id}-load-scenario`).html(`Load Selected Scenario and Configuration`);
         $(`.simulation-controls`).animate({ "opacity": "1" });
     }
 
@@ -477,9 +476,11 @@ export class DAAPlayer {
     }
 
     revealActivationPanel (): void {
+        $(`#${this.id}-load-scenario`).removeAttr("disabled");
         $(`.activation-panel`).animate({ "opacity": "1" });
     }
     hideActivationPanel (): void {
+        $(`#${this.id}-load-scenario`).prop("disabled", true);
         $(`.activation-panel`).animate({ "opacity": "0" });
     }
 
@@ -500,7 +501,6 @@ export class DAAPlayer {
         // on click...
         $(`#${this.id}-load-scenario`).on("click", async () => {
             $(`#${this.id}-load-scenario`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
-            this.disableSelectors();
             const scenario: string = this.getSelectedScenario();
             if (scenario) {
                 await this.selectScenarioFile(scenario, { forceReload: true });
@@ -508,6 +508,7 @@ export class DAAPlayer {
                 console.error("[daa-player] Warning: selected scenario is null");
             }
             this.hideActivationPanel();
+            $(`#${this.id}-load-scenario`).html(`Load Selected Scenario and Configuration`);
             this.enableSelectors();
             this.enableSimulationControls();
         });
@@ -573,23 +574,29 @@ export class DAAPlayer {
      * @param scenarioName Name of the scenario. Default is H1.
      * @param ownship Information necessary to identify the ownship in the .daa file (either sequenceNumber or name, default is sequenceNumber=0)
      */
-    async loadDaaFile (scenarioName: string, ownship?: {
-        ownshipName?: string,
-        ownshipSequenceNumber?: number
+    async loadDaaFile (scenarioName: string, opt?: {
+        scenarioData?: string
     }): Promise<string> {
-        await this.connectToServer();
-        const data: LoadScenarioRequest = { scenarioName, ownship };
-        const res: WebSocketMessage<string> = await this.ws.send({
-            type: "load-daa-file",
-            data
-        });
-        if (res && res.data) {
-            this._scenarios[scenarioName] = JSON.parse(res.data);
+        opt = opt || {};
+        let scenarioData: string = opt.scenarioData;
+        if (!scenarioData) {
+            await this.connectToServer();
+            const data: LoadScenarioRequest = { scenarioName };
+            const res: WebSocketMessage<string> = await this.ws.send({
+                type: "load-daa-file",
+                data
+            });
+            if (res && res.data) {
+                scenarioData = res.data;
+            }
+        }
+        if (scenarioData) {
+            this._scenarios[scenarioName] = JSON.parse(scenarioData);
             console.log(`Scenario ${scenarioName} successfully loaded`, this._scenarios[scenarioName]);
         } else {
             console.error(`Error while loading scenario ${scenarioName}`);
         }
-        return res.data;
+        return scenarioData;
     }
 
     /**
@@ -672,7 +679,8 @@ export class DAAPlayer {
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
         softReload?: boolean,
-        hideLoadingAnimation?: boolean
+        hideLoadingAnimation?: boolean,
+        scenarioData?: string
     }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
@@ -687,7 +695,7 @@ export class DAAPlayer {
                 console.log(`Scenario ${scenario} selected`); 
                 if (opt.forceReload || !this._scenarios[scenario]) {
                     console.log(`Loading scenario ${scenario}`); 
-                    await this.loadDaaFile(scenario);
+                    await this.loadDaaFile(scenario, { scenarioData: opt.scenarioData });
                     // console.log(`Loading complete!`);
                 }
                 this._selectedScenario = scenario;

@@ -208,7 +208,8 @@ export class DAASplitView extends DAAPlayer {
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
         softReload?: boolean,
-        hideLoadingAnimation?: boolean
+        hideLoadingAnimation?: boolean,
+        scenarioData?: string
     }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
@@ -218,10 +219,10 @@ export class DAASplitView extends DAAPlayer {
                 this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
-                console.log(`Scenario ${scenario} selected`); 
+                console.log(`Scenario ${scenario} selected`);
                 if (opt.forceReload || !this._scenarios[scenario]) {
                     console.log(`Loading scenario ${scenario}`); 
-                    await this.loadDaaFile(scenario);
+                    opt.scenarioData = await this.loadDaaFile(scenario);
                 }
                 this._selectedScenario = scenario;
                 this.simulationStep = 0;
@@ -238,14 +239,14 @@ export class DAASplitView extends DAAPlayer {
                         opt.hideLoadingAnimation = true;
                         if (this.players.left) {
                             promises.push(new Promise(async (resolve, reject) => {
-                                await this.players.left.loadDaaFile(scenario);
+                                // await this.players.left.loadDaaFile(scenario, { scenarioData });
                                 await this.players.left.selectScenarioFile(scenario, opt);
                                 resolve();
                             }));
                         }
                         if (this.players.right) {
                             promises.push(new Promise(async (resolve, reject) => {
-                                await this.players.right.loadDaaFile(scenario);
+                                // await this.players.right.loadDaaFile(scenario, { scenarioData });
                                 await this.players.right.selectScenarioFile(scenario, opt);
                                 resolve();
                             }));

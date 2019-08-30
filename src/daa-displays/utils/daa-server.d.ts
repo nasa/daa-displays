@@ -22,10 +22,6 @@ export declare interface WebSocketMessage<T> {
 
 export declare interface LoadScenarioRequest {
     scenarioName: string;
-    ownship?: {
-        ownshipName?: string,
-        ownshipSequenceNumber?: number
-    }
 }
 
 export declare interface LoadConfigRequest {
