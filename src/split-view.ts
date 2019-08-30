@@ -166,7 +166,7 @@ splitView.getPlayer("right").define("plot", async () => {
                     if (step === bandsRight.length - 1) {
                         resolve();
                     }
-                }, 20 * step);
+                }, 8 * step);
             }
         });
     }
