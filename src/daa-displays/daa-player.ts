@@ -476,11 +476,11 @@ export class DAAPlayer {
     }
 
     revealActivationPanel (): void {
-        $(`#${this.id}-load-scenario`).removeAttr("disabled");
         $(`.activation-panel`).animate({ "opacity": "1" });
+        $(`.load-scenario-btn`).removeAttr("disabled");
     }
     hideActivationPanel (): void {
-        $(`#${this.id}-load-scenario`).prop("disabled", true);
+        $(`.load-scenario-btn`).prop("disabled", true);
         $(`.activation-panel`).animate({ "opacity": "0" });
     }
 
@@ -499,8 +499,8 @@ export class DAAPlayer {
         $(`#${this.id}-activation-panel`).html(theHTML);
         this.disableSimulationControls();
         // on click...
-        $(`#${this.id}-load-scenario`).on("click", async () => {
-            $(`#${this.id}-load-scenario`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
+        $(`.load-scenario-btn`).on("click", async () => {
+            $(`.load-scenario-btn`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
             const scenario: string = this.getSelectedScenario();
             if (scenario) {
                 await this.selectScenarioFile(scenario, { forceReload: true });
@@ -508,7 +508,7 @@ export class DAAPlayer {
                 console.error("[daa-player] Warning: selected scenario is null");
             }
             this.hideActivationPanel();
-            $(`#${this.id}-load-scenario`).html(`Load Selected Scenario and Configuration`);
+            $(`.load-scenario-btn`).html(`Load Selected Scenario and Configuration`);
             this.enableSelectors();
             this.enableSimulationControls();
         });
