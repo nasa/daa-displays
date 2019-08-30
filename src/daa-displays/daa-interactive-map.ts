@@ -1483,7 +1483,7 @@ class DAA_Airspace {
         this.wwd = new WorldWind.WorldWindow(opt.canvas);
 
         this.wwd.surfaceOpacity = 0.999; // this should reduce flickering when loading tiles, see https://github.com/NASAWorldWind/WebWorldWind/issues/353
-        this.wwd.verticalExaggeration = (this.godsView) ? 1 : 0; // 0 is flat world. A value > 0 will make it 3D. Default in WorldWind is 1.
+        this.wwd.verticalExaggeration = (opt.los) ? 1 : 0; // 0 is flat world. A value > 0 will make it 3D. Default in WorldWind is 1.
         this.nmi = 5; // default eye view
 
         // Add map layers to worldwind.
