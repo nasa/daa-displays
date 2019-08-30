@@ -207,13 +207,14 @@ export class DAASpectrogram {
             length: this.length
         });
         
+        const cursorWidth: number = (this.width / this.length) - 1;
         return Handlebars.compile(templates.spectrogramTemplate)({
             id: this.id,
             zIndex: 2,
             grid: grid,
             cursor: {
                 height: this.height + 25,
-                width: (this.width / this.length) - 1
+                width: (cursorWidth < 2) ? 2 : cursorWidth
             },
             top: this.top,
             left: this.left,
@@ -272,50 +273,54 @@ export class DAASpectrogram {
             // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
             for (let a = 0; a < data.alerts.length; a++) {
                 const elem: utils.Alert = data.alerts[a];
-                band_plot_data[elem.alert] = [];
-                band_plot_data[elem.alert].push({
-                    from: +elem.alert - 1,
-                    to: +elem.alert,
-                    color: utils.alertingColors[elem.alert].color,
-                    top: (range.to - +elem.alert) * yScaleFactor,
-                    height: yScaleFactor,
-                    units: (typeof this.units === "string") ? this.units : this.units.to,
-                    indicator: {
-                        radius,
-                        marginTop
-                    }
-                });
+                if (elem && +elem.alert > 0) {
+                    band_plot_data[elem.alert] = [];
+                    band_plot_data[elem.alert].push({
+                        from: +elem.alert - 1,
+                        to: +elem.alert,
+                        color: utils.alertingColors[elem.alert].color,
+                        top: (range.to - +elem.alert) * yScaleFactor,
+                        height: yScaleFactor,
+                        units: (typeof this.units === "string") ? this.units : this.units.to,
+                        indicator: {
+                            radius,
+                            marginTop
+                        }
+                    });
+                }
             }
             // });
 
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
-            const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
-                id: this.id,
-                stepID: stepID,
-                zIndex: 2,
-                step: data.step,
-                time: data.time,
-                bands: band_plot_data,
-                alerts: (data && data.alerts) ? 
-                    data.alerts.filter((elem: { ac: string; alert: string }) => {
-                        return elem.alert !== "0";
-                    }).map((elem: { ac: string; alert: string }) => {
-                        return `${elem.ac} (${alertTypes[elem.alert]})`;
-                    }).join("\n") : "",
-                top: this.top,
-                left: leftMargin,
-                width: barWidth,
-                height: this.height
-            });
-            $(`#${stepID}`).remove();
-            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            if (Object.keys(band_plot_data).length) { // we reduce the complexity of the HTML template by removing slices with no alerts
+                const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
+                    id: this.id,
+                    stepID: stepID,
+                    zIndex: 2,
+                    step: data.step,
+                    time: data.time,
+                    bands: band_plot_data,
+                    alerts: (data && data.alerts) ? 
+                        data.alerts.filter((elem: { ac: string; alert: string }) => {
+                            return +elem.alert > 0;
+                        }).map((elem: { ac: string; alert: string }) => {
+                            return `${elem.ac} (${alertTypes[elem.alert]})`;
+                        }).join("\n") : "",
+                    top: this.top,
+                    left: leftMargin,
+                    width: barWidth,
+                    height: this.height
+                });
+                $(`#${stepID}`).remove();
+                $(`#${this.id}-spectrogram-data`).append(theHTML);
+                // @ts-ignore -- method tooltip is added by bootstrap
+                // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
+                $(`#${stepID}`).tooltip();
+                this.installGotoHandler(data.step);
+            }
             $(`#${this.id}-cursor`).css("left", leftMargin );
-            // @ts-ignore -- method tooltip is added by bootstrap
-            // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
-            $(`#${stepID}`).tooltip();
-            this.installGotoHandler(data.step);
         }
         return this;
     }
@@ -339,24 +344,26 @@ export class DAASpectrogram {
             let tooltipData: { band: string, range: { from: number, to: number }}[] = [];
             for (let k = 0; k < keys.length; k++) {
                 const band: string = keys[k];
-                band_plot_data[band] = [];
-                const info: { from: number, to: number }[] = data.bands[band];
-                for (let i = 0; i < info.length; i++) {
-                    const range: { from: number, to: number } = info[i];
-                    const from = convert(range.from, this.units.from, this.units.to);
-                    const to = convert(range.to, this.units.from, this.units.to);
-                    const height = to - from;
-                    tooltipData.push({ band, range });
-                    band_plot_data[band].push({
-                        from: from,
-                        to: to,
-                        color: utils.bandColors[band].color,
-                        dash: utils.bandColors[band].style === "dash",
-                        top: (this.range.to - to) * yScaleFactor,
-                        height: height * yScaleFactor,
-                        width: barWidth,
-                        units: this.units.to
-                    });
+                if (band !== "NONE") {
+                    band_plot_data[band] = [];
+                    const info: { from: number, to: number }[] = data.bands[band];
+                    for (let i = 0; i < info.length; i++) {
+                        const range: { from: number, to: number } = info[i];
+                        const from = convert(range.from, this.units.from, this.units.to);
+                        const to = convert(range.to, this.units.from, this.units.to);
+                        const height = to - from;
+                        tooltipData.push({ band, range });
+                        band_plot_data[band].push({
+                            from: from,
+                            to: to,
+                            color: utils.bandColors[band].color,
+                            dash: utils.bandColors[band].style === "dash",
+                            top: (this.range.to - to) * yScaleFactor,
+                            height: height * yScaleFactor,
+                            width: barWidth,
+                            units: this.units.to
+                        });
+                    }
                 }
             }
             // sort tooltip data
@@ -370,26 +377,28 @@ export class DAASpectrogram {
             
             const stepID = `${this.id}-step-${data.step}`;
             const leftMargin = data.step * barWidth;
-            const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
-                id: this.id,
-                stepID: stepID,
-                zIndex: 2,
-                step: data.step,
-                time: data.time,
-                tooltip,
-                bands: band_plot_data,
-                top: this.top,
-                left: leftMargin,
-                width: barWidth,
-                height: this.height
-            });
-            $(`#${stepID}`).remove(); 
-            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            if (Object.keys(band_plot_data).length) { // we reduce the complexity of the HTML template by removing slices with no bands
+                const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
+                    id: this.id,
+                    stepID: stepID,
+                    zIndex: 2,
+                    step: data.step,
+                    time: data.time,
+                    tooltip,
+                    bands: band_plot_data,
+                    top: this.top,
+                    left: leftMargin,
+                    width: barWidth,
+                    height: this.height
+                });
+                $(`#${stepID}`).remove(); 
+                $(`#${this.id}-spectrogram-data`).append(theHTML);
+                // @ts-ignore -- method tooltip is added by bootstrap
+                //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+                $(`#${stepID}`).tooltip();
+                this.installGotoHandler(data.step);
+            }
             $(`#${this.id}-cursor`).css("left", leftMargin );
-            // @ts-ignore -- method tooltip is added by bootstrap
-            //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
-            $(`#${stepID}`).tooltip();
-            this.installGotoHandler(data.step);
         }
         return this;
     }

@@ -43,7 +43,7 @@ export const activationPanel: string =`
 <div id="{{id}}-activation-panel" class="activation-panel" style="position:absolute;width:100%;">
     <div class="input-group mb-3" style="width:{{width}}px; margin-right:30px;">
         <div class="btn-group btn-group-toggle" role="group" aria-label="View">
-            <button type="button" class="btn btn-sm btn-success" id="{{id}}-load-scenario" style="white-space:nowrap; width:{{width}}px;">Load Selected Scenario and Configuration</button>
+            <button type="button" class="btn btn-sm btn-success load-scenario-btn" style="white-space:nowrap; width:{{width}}px;">Load Selected Scenario and Configuration</button>
         </div>
     </div>
 </div>`;
