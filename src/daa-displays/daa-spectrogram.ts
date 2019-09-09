@@ -117,7 +117,7 @@ export interface BandsData {
     step: number;
     time: string;
     units?: string;
-    marker: number;
+    marker?: number;
 }
 export interface AlertsData {
     id: string;
@@ -371,7 +371,7 @@ export class DAASpectrogram {
             tooltipData = tooltipData.sort((a, b) => {
                 return (a.range.from < b.range.from) ? -1 : 1;
             });
-            let tooltip: string = (data.marker) ? `<br>OWN: ${Math.floor(data.marker * 100) / 100}` : "";
+            let tooltip: string = (!isNaN(data.marker)) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
             for (let i = 0; i < tooltipData.length; i++) {
                 tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
             }
@@ -391,7 +391,7 @@ export class DAASpectrogram {
                     left: leftMargin,
                     width: barWidth,
                     height: this.height,
-                    marker: (data.marker) ? {
+                    marker: (!isNaN(data.marker))? {
                         value: data.marker,
                         top: data.marker * yScaleFactor,
                         width: barWidth,
