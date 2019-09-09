@@ -47,7 +47,8 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.compass.setCompass(flightData.ownship.v);
-    const gs: number = Math.sqrt((+flightData.ownship.v.x * +flightData.ownship.v.x) + (+flightData.ownship.v.y * +flightData.ownship.v.y));
+    const hd: number = Compass.v2deg(flightData.ownship.v)
+    const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
     data.airspeedTape.setAirSpeed(gs);
     const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
@@ -71,10 +72,10 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         }
     }); 
     data.map.setTraffic(traffic);
-    plot(playerID, bands, splitView.getCurrentSimulationStep(), splitView.getCurrentSimulationTime());
+    plot(playerID, { ownship: { gs, vs, alt, hd }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
-function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
+function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
     const daaPlots: { id: string, name: string, units: string }[] = [
         { id: "heading-bands", units: "deg", name: "Heading Bands" },
         { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands" },
@@ -82,15 +83,21 @@ function plot (playerID: string, bands: utils.DAABandsData, step: number, time: 
         { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
     ];
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
-        alerts: bands["Alerts"],
-        step,
-        time
+        alerts: desc.bands["Alerts"],
+        step: desc.step,
+        time: desc.time
     });
     for (let i = 0; i < daaPlots.length; i++) {
+        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
+                                : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs
+                                : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
+                                : null;
         splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
-            bands: bands[daaPlots[i].name],
-            step,
-            time
+            bands: desc.bands[daaPlots[i].name],
+            step: desc.step,
+            time: desc.time,
+            marker
         });
     }
 }
@@ -155,12 +162,18 @@ splitView.getPlayer("right").define("step", async () => {
 splitView.getPlayer("right").define("plot", async () => {
     const bandsRight: utils.DAABandsData[] = splitView.getPlayer("right").getBandsData();
     const bandsLeft: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
+    const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
     if (bandsRight) {
         return new Promise((resolve, reject) => {
             for (let step = 0; step < bandsRight.length; step++) {
                 setTimeout(() => {
                     const time: string = splitView.getTimeAt(step);
-                    plot("right", bandsRight[step], step, time);
+                    const lla: LLAData = flightData[step];
+                    const hd: number = Compass.v2deg(lla.ownship.v);
+                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                    const vs: number = +lla.ownship.v.z / 100;
+                    const alt: number = +lla.ownship.s.alt;
+                    plot("right", { ownship: { hd, gs, vs, alt }, bands: bandsRight[step], step, time });
                     diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
                     // resolve when done
                     if (step === bandsRight.length - 1) {
@@ -174,15 +187,22 @@ splitView.getPlayer("right").define("plot", async () => {
 });
 splitView.getPlayer("left").define("plot", async () => {
     const bandsData: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
+    const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
     if (bandsData) {
         return new Promise((resolve, reject) => {
-            for (let i = 0; i < bandsData.length; i++) {
+            for (let step = 0; step < bandsData.length; step++) {
                 setTimeout(() => {
-                    plot("left", bandsData[i], i, splitView.getTimeAt(i));
-                    if (i === bandsData.length - 1) {
+                    const time: string = splitView.getTimeAt(step);
+                    const lla: LLAData = flightData[step];
+                    const hd: number = Compass.v2deg(lla.ownship.v);
+                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                    const vs: number = +lla.ownship.v.z / 100;
+                    const alt: number = +lla.ownship.s.alt;
+                    plot("left", { ownship: { hd, gs, vs, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
+                    if (step === bandsData.length - 1) {
                         resolve();
                     }
-                }, 8 * i);
+                }, 8 * step);
             }
         });
     }

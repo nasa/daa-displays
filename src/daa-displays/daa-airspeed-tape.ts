@@ -92,6 +92,7 @@ require(["widgets/daa-displays/daa-airspeed-tape"], function (AirspeedTape) {
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-airspeed-templates';
+import * as server from '../daa-server/utils/daa-server';
 
 export class AirspeedTape {
     private id: string;
@@ -433,6 +434,14 @@ export class AirspeedTape {
      */
     getStep(): number {
         return this.airspeedStep;
+    }
+
+    static v2gs(v: utils.Vector3D | server.Vector3D): number {
+        if (v) {
+            return Math.sqrt((+v.x * +v.x) + (+v.y * +v.y));
+        }
+        console.error("[daa-airspeed-tape] Warning: v2gs invoked with null data");
+        return 0;
     }
 }
 

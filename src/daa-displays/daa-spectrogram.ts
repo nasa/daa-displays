@@ -117,6 +117,7 @@ export interface BandsData {
     step: number;
     time: string;
     units?: string;
+    marker: number;
 }
 export interface AlertsData {
     id: string;
@@ -333,7 +334,7 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string }): DAASpectrogram {
+    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number }): DAASpectrogram {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
             const band_plot_data = {};
@@ -370,9 +371,9 @@ export class DAASpectrogram {
             tooltipData = tooltipData.sort((a, b) => {
                 return (a.range.from < b.range.from) ? -1 : 1;
             });
-            let tooltip: string = "";
+            let tooltip: string = (data.marker) ? `<br>OWN: ${Math.floor(data.marker * 100) / 100}` : "";
             for (let i = 0; i < tooltipData.length; i++) {
-                tooltip += `<br>${tooltipData[i].band} [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
+                tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
             }
             
             const stepID = `${this.id}-step-${data.step}`;
@@ -389,7 +390,15 @@ export class DAASpectrogram {
                     top: this.top,
                     left: leftMargin,
                     width: barWidth,
-                    height: this.height
+                    height: this.height,
+                    marker: (data.marker) ? {
+                        value: data.marker,
+                        top: data.marker * yScaleFactor,
+                        width: barWidth,
+                        height: 2,
+                        color: "white",
+                        units: data.units
+                    } : null
                 });
                 $(`#${stepID}`).remove(); 
                 $(`#${this.id}-spectrogram-data`).append(theHTML);

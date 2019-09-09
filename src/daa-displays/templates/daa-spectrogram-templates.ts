@@ -38,6 +38,9 @@ export const spectrogramBandTemplate: string = `
         <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
         {{/each}}
     {{/each}}
+    {{#if marker}}
+        <div marker="{marker.value}} ({{marker.units}})" style="top:{{marker.top}}px; height:{{marker.height}}px; width:{{marker.width}}px; background-color:{{marker.color}}; position:absolute;"></div>
+    {{/if}}
 </div>`;
 
 export const spectrogramAlertsTemplate: string = `

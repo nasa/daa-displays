@@ -45,7 +45,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.compass.setCompass(flightData.ownship.v);
-    const gs: number = Math.sqrt((+flightData.ownship.v.x * +flightData.ownship.v.x) + (+flightData.ownship.v.y * +flightData.ownship.v.y));
+    const hd: number = Compass.v2deg(flightData.ownship.v);
+    const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
     data.airspeedTape.setAirSpeed(gs);
     const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
@@ -69,7 +70,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     });
     data.map.setTraffic(traffic);
-    plot(bands, player.getCurrentSimulationStep(), player.getCurrentSimulationTime());
+    plot({ ownship: { gs, vs, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -79,18 +80,24 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
-function plot (bands: utils.DAABandsData, step: number, time: string) {
+function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
-        alerts: bands["Alerts"],
-        step,
-        time
+        alerts: desc.bands["Alerts"],
+        step: desc.step,
+        time: desc.time
     });
     for (let i = 0; i < daaPlots.length; i++) {
+        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
+                                : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs
+                                : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
+                                : null;
         player.getPlot(daaPlots[i].id).plotBands({
-            bands: bands[daaPlots[i].name],
-            step,
-            time
+            bands: desc.bands[daaPlots[i].name],
+            step: desc.step,
+            time: desc.time,
+            marker
         });
     }
 }
@@ -127,15 +134,21 @@ player.define("init", async () => {
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", async () => {
     const bandsData: utils.DAABandsData[] = player.getBandsData();
+    const flightData: LLAData[] = player.getFlightData();
     if (bandsData) {
         return new Promise((resolve, reject) => {
-            for (let i = 0; i < bandsData.length; i++) {
+            for (let step = 0; step < bandsData.length; step++) {
                 setTimeout(() => {
-                    plot(bandsData[i], i, player.getTimeAt(i));
-                    if (i === bandsData.length - 1) {
+                    const lla: LLAData = flightData[step];
+                    const hd: number = Compass.v2deg(lla.ownship.v);
+                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                    const vs: number = +lla.ownship.v.z / 100;
+                    const alt: number = +lla.ownship.s.alt;
+                    plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
+                    if (step === bandsData.length - 1) {
                         resolve();
                     }
-                }, 8 * i);
+                }, 8 * step);
             }
         });
     }

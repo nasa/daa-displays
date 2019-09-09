@@ -475,6 +475,10 @@ class DAAServer {
                             }
                             break;
                         }
+                        case 'load-copilot-file': {
+                            //...
+                            break;
+                        }
                         case 'load-conf-file':
                         case 'load-config-file': {
                             const data: LoadConfigRequest = <LoadConfigRequest> content.data;

@@ -1200,6 +1200,15 @@ export class DAAPlayer {
         return null;
     }
 
+    getFlightData (enc?: string): LLAData[] {
+        if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
+            return Object.keys(this._scenarios[this._selectedScenario].lla).map((key: string) => {
+                return this._scenarios[this._selectedScenario].lla[key]
+            });
+        }
+        return null;
+    }
+
     getCurrentSimulationTime (): string {
         return this.getTimeAt(this.simulationStep);
     }

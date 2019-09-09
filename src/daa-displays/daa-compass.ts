@@ -315,6 +315,20 @@ export class Compass {
         _update_compass(this);
         return this;
     }
+
+    /**
+     * utility function, computes the ground speed based on a given velocity vector 
+     */
+    static v2deg(data: number | utils.Vector3D | server.Vector3D, opt?: { units?: string }): number {
+        opt = opt || {};
+        // x and y are swapped in atan2 because axes are inverted in the map view (x is the aircraft direction, and it's facing up)
+        const deg = (typeof data === "number")? data : 
+                        (opt && opt.units === "deg") ? 
+                            utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
+                            : utils.rad2deg(Math.atan2(+data.x, +data.y));
+        const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
+        return (angle % 360 + 360) % 360;
+    }
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
