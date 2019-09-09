@@ -77,7 +77,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
 function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
     const daaPlots: { id: string, name: string, units: string }[] = [
         { id: "heading-bands", units: "deg", name: "Heading Bands" },
-        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
+        { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands" },
         { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
         { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
     ];
