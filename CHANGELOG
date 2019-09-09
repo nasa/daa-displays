@@ -1,7 +1,14 @@
 ## ChangeLog
+
+### 1.0.2 (2019.09.10)
+- Improved playback performance and loading time
+- Improved playback controls: plot, reset, goto-time
+- Improved plot controls: point-and-click navigation
+- Improved split-view plots: highlighting of differences between plots; current flight data is now rendered also in the plots
+
 ### 1.0.1 (2019.08.01)
-- Added new App: God's view
-- Added new widgets: ViewOptions
+- Added new App: Airspace view
+- Added new widgets: ViewOptions (nrthup, traffic, call-sign)
 - Added support for rendering LoS regions
 - Improved interactive map: added support for displaying call sign, north up view, toggle traffic data
 
