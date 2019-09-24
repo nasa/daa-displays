@@ -281,10 +281,15 @@ export class DAASplitView extends DAAPlayer {
      */
     async gotoControl(step: number): Promise<void> {
         this.clearInterval();
-        this.simulationStep = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        // sanity check
+        step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        this.simulationStep = isNaN(step) ? 0 : step;
         // update DOM
+        const time: string = this.getCurrentSimulationTime();
         $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+        $(`#${this.id}-curr-sim-time`).html(time);
+        $(`#${this.id}-goto-input`).val(step);
+        $(`#${this.id}-goto-time-input`).val(time);
         // send players the control command
         if (this.players) {
             if (this.players.left) {

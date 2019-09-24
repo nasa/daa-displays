@@ -16,7 +16,7 @@ export const playbackTemplate: string = `
             </div>
             <div class="input-group input-group-sm mb-3">
                 <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; min-width:200px;">
-                    Virtual time: 
+                    Current Time: 
                 <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>sec
             </div>
             <div class="input-group mb-3" style="width: 240px; margin-left:20px; margin-right:30px;">
@@ -32,7 +32,7 @@ export const playbackTemplate: string = `
                 <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
             </div>
             <div class="input-group input-group-sm mb-3" style="margin-left:106px; margin-right:30px;">
-                <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Goto Time</button>
+                <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
                 <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
             </div>
         </div>

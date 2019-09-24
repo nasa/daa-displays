@@ -777,15 +777,18 @@ export class DAAPlayer {
         step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
         this.simulationStep = isNaN(step) ? 0 : step;
         // update DOM
-        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+        const time: string = this.getCurrentSimulationTime();
+        $(`#${this.id}-curr-sim-step`).html(step.toString());
+        $(`#${this.id}-curr-sim-time`).html(time);
+        $(`#${this.id}-goto-input`).val(step);
+        $(`#${this.id}-goto-time-input`).val(time);
         this.step({ preventIncrement: true });
         if (this.bridgedPlayer) {
             await this.bridgedPlayer.gotoControl(this.simulationStep);
         }
     }
 
-        /**
+    /**
      * @function <a name="gotoTimeControl">gotoTimeControl</a>
      * @description Goes to a given target simulation step
      * @param step {nat} Target simulation step.
@@ -794,8 +797,13 @@ export class DAAPlayer {
      * @instance
      */
     async gotoTimeControl (time?: string): Promise<DAAPlayer> {
-        // get time from argument or from DOM
-        time = (time !== undefined && time !== null) ? time : <string> $(`#${this.id}-goto-time-input`).val();
+        // if time is not provided, get it from DOM
+        if (time !== undefined && time !== null) {
+            time = <string> $(`#${this.id}-goto-time-input`).val();
+        } else {
+            // fill in goto-time-input with the provided time
+            $(`#${this.id}-goto-time-input`).val(time);
+        }
         // find time in the current scenario
         if (this._scenarios && this._selectedScenario && this._scenarios[this._selectedScenario] && this._scenarios[this._selectedScenario].steps) {
             const steps: string[] = this._scenarios[this._selectedScenario].steps;
