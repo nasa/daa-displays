@@ -310,8 +310,9 @@ export class Compass {
                             utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
                             : utils.rad2deg(Math.atan2(+data.x, +data.y));
         const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
-        const alt_angle: number = (angle % 360 + 360) % 360; // positive version of the angle
-        this.currentCompassAngle = (this.currentCompassAngle - angle < this.currentCompassAngle - alt_angle) ? angle : alt_angle; // choose the least variation from the current angle
+        const pos_angle: number = (angle % 360 + 360) % 360; // positive version of the angle, for counter-clockwise rotation
+        const neg_angle: number = pos_angle - 360; // negative version of the angle, for clockwise rotation
+        this.currentCompassAngle = (this.currentCompassAngle - pos_angle < this.currentCompassAngle - neg_angle) ? pos_angle : neg_angle; // choose the least variation from the current angle
         _update_compass(this);
         return this;
     }
