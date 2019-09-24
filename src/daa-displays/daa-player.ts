@@ -770,7 +770,8 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async gotoControl (step?: number): Promise<void> {
+    async gotoControl (step?: number, opt?: { updateInputs?: boolean }): Promise<void> {
+        opt = opt || {};
         // get step from argument or from DOM
         step = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
         // sanity check
@@ -780,8 +781,10 @@ export class DAAPlayer {
         const time: string = this.getCurrentSimulationTime();
         $(`#${this.id}-curr-sim-step`).html(step.toString());
         $(`#${this.id}-curr-sim-time`).html(time);
-        $(`#${this.id}-goto-input`).val(step);
-        $(`#${this.id}-goto-time-input`).val(time);
+        if (opt.updateInputs) {
+            $(`#${this.id}-goto-input`).val(step);
+            $(`#${this.id}-goto-time-input`).val(time);
+        }
         this.step({ preventIncrement: true });
         if (this.bridgedPlayer) {
             await this.bridgedPlayer.gotoControl(this.simulationStep);
@@ -798,7 +801,7 @@ export class DAAPlayer {
      */
     async gotoTimeControl (time?: string): Promise<DAAPlayer> {
         // if time is not provided, get it from DOM
-        if (time !== undefined && time !== null) {
+        if (time === undefined || time === null) {
             time = <string> $(`#${this.id}-goto-time-input`).val();
         } else {
             // fill in goto-time-input with the provided time
