@@ -295,32 +295,30 @@ export class DAASpectrogram {
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
-            if (Object.keys(band_plot_data).length) { // we reduce the complexity of the HTML template by removing slices with no alerts
-                const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
-                    id: this.id,
-                    stepID: stepID,
-                    zIndex: 2,
-                    step: data.step,
-                    time: data.time,
-                    bands: band_plot_data,
-                    alerts: (data && data.alerts) ? 
-                        data.alerts.filter((elem: { ac: string; alert: string }) => {
-                            return +elem.alert > 0;
-                        }).map((elem: { ac: string; alert: string }) => {
-                            return `${elem.ac} (${alertTypes[elem.alert]})`;
-                        }).join("\n") : "",
-                    top: this.top,
-                    left: leftMargin,
-                    width: barWidth,
-                    height: this.height + 30 // extend point-and-click area to the timeline
-                });
-                $(`#${stepID}`).remove();
-                $(`#${this.id}-spectrogram-data`).append(theHTML);
-                // @ts-ignore -- method tooltip is added by bootstrap
-                // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
-                $(`#${stepID}`).tooltip();
-                this.installGotoHandler(data.step);
-            }
+            const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
+                id: this.id,
+                stepID: stepID,
+                zIndex: 2,
+                step: data.step,
+                time: data.time,
+                bands: band_plot_data,
+                alerts: Object.keys(band_plot_data).length ? (data && data.alerts) ? 
+                    data.alerts.filter((elem: { ac: string; alert: string }) => {
+                        return +elem.alert > 0;
+                    }).map((elem: { ac: string; alert: string }) => {
+                        return `${elem.ac} (${alertTypes[elem.alert]})`;
+                    }).join("\n") : "" : null,
+                top: this.top,
+                left: leftMargin,
+                width: barWidth,
+                height: this.height + 30 // extend point-and-click area to the timeline
+            });
+            $(`#${stepID}`).remove();
+            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            // @ts-ignore -- method tooltip is added by bootstrap
+            // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
+            $(`#${stepID}`).tooltip();
+            this.installGotoHandler(data.step);
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
         return this;
