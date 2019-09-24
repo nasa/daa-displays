@@ -195,7 +195,7 @@ export class DAASpectrogram {
             $(`#${stepID}`).on("click", () => {
                 // @ts-ignore
                 $('[data-toggle="tooltip"]').tooltip('hide');
-                this.player.gotoControl(step);
+                this.player.gotoControl(step, { updateInputs: true });
             });
             $(`#${stepID}`).css("cursor", "pointer");
         }
@@ -312,7 +312,7 @@ export class DAASpectrogram {
                     top: this.top,
                     left: leftMargin,
                     width: barWidth,
-                    height: this.height
+                    height: this.height + 30 // extend point-and-click area to the timeline
                 });
                 $(`#${stepID}`).remove();
                 $(`#${this.id}-spectrogram-data`).append(theHTML);
@@ -391,7 +391,7 @@ export class DAASpectrogram {
                 top: this.top,
                 left: leftMargin,
                 width: barWidth,
-                height: this.height,
+                height: this.height + 30, // extend click-and-point area to the timeline
                 marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
                     value: data.marker,
                     top: (this.range.to - data.marker) * yScaleFactor,
