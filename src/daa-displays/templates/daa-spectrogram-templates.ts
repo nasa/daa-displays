@@ -1,7 +1,7 @@
 export const spectrogramTemplate: string = `
 <div id="{{id}}" style="position:absolute;{{#if label.top}} margin-top:30px;{{/if}}">
     {{#if label.top}}
-    <div style="position:absolute; white-space:nowrap; height:30px; top:-30px;">{{label.top}}</div>
+    <div style="position:absolute; white-space:nowrap; height:30px; top:-23px;">{{label.top}}</div>
     {{/if}}{{#if label.left}}
     <div style="position:absolute; transform:rotate(-90deg); height:{{height}}px;">{{label.left}}</div>{{/if}}
     <div style="position:absolute; width:{{width}}px; height:{{height}}px; background-color:#2c3541de;">

@@ -76,12 +76,6 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
 }
 
 function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
-    const daaPlots: { id: string, name: string, units: string }[] = [
-        { id: "heading-bands", units: "deg", name: "Heading Bands" },
-        { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands" },
-        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
-        { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
-    ];
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
         alerts: desc.bands["Alerts"],
         step: desc.step,
@@ -90,13 +84,14 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
     for (let i = 0; i < daaPlots.length; i++) {
         const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
                                 : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs
+                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
         splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
             step: desc.step,
             time: desc.time,
+            units: daaPlots[i].units,
             marker
         });
     }
@@ -127,7 +122,7 @@ const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertic
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
-    { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
+    { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
     { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
 ];

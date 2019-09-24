@@ -1,15 +1,15 @@
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
-    FAR: "yellow", // DASHED YELLOW
-    MID: "yellow", //"#ffbf00",
+    FAR: "#ffc107", // DASHED YELLOW
+    MID: "#ffc107", // yellow "#ffbf00",
     NEAR: "red",
     UNKNOWN: "gray",
     NONE: "transparent"
 };
 export const bandColors = {
     RECOVERY: { style: "dash", color: "#07dc0a" }, // DASH green
-    FAR: { style: "dash", color: "yellow" }, // DASH YELLOW
-    MID: { style: "solid", color: "yellow" }, // YELLOW
+    FAR: { style: "dash", color: "#ffc107" }, // DASH YELLOW
+    MID: { style: "solid", color: "#ffc107" }, // YELLOW
     NEAR: { style: "solid", color: "red" }, // red
     UNKNOWN: { style: "solid", color: "gray" }, // gray
     NONE: { style: "solid", color: "transparent" }
@@ -24,8 +24,8 @@ export const bandColorsDanti = {
 };
 export const bugColors = {
     RECOVERY: "#07dc0a", // DASHED green
-    FAR: "yellow", // DASHED YELLOW
-    MID: "yellow", //"#ffbf00",
+    FAR: "#ffc107", // DASHED YELLOW
+    MID: "#ffc107", //"#ffbf00",
     NEAR: "red",
     UNKNOWN: "gray",
     NONE: "white"
@@ -33,16 +33,16 @@ export const bugColors = {
 export const alertingColors = {
     NONE: { color: "transparent" },
     MONITOR: { color: "white" },
-    AVOID: { color: "yellow" },
+    AVOID: { color: "#ffc107" }, // yellow
     ALERT: { color: "red" },
     "0": { color: "transparent" },
     "1": { color: "white" },
-    "2": { color: "yellow" },
+    "2": { color: "#ffc107" }, // yellow
     "3": { color: "red" }
 };
 
 
-// m/sec to knots
+// units conversion functions
 export function msec2knots(msec: number): number {
     return msec * 1.94384;
 }

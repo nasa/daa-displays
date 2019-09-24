@@ -64,7 +64,7 @@ export const daidalusVersionsTemplate: string = `
 
 
 export const daaScenariosTemplate: string = `
-<select id={{id}}-scenarios-list class="form-control" size="16" style="overflow:auto;">
+<select id={{id}}-scenarios-list class="form-control" size="20" style="overflow:auto;">
     {{#each scenarios}}
     <option {{#if this.selected}}selected {{/if}}id="{{../id}}-scenario-{{this.id}}">{{this.name}}</option>
     {{/each}}

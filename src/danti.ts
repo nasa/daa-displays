@@ -90,13 +90,14 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
     for (let i = 0; i < daaPlots.length; i++) {
         const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
                                 : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs
+                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
             step: desc.step,
             time: desc.time,
+            units: daaPlots[i].units,
             marker
         });
     }

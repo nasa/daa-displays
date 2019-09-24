@@ -371,42 +371,42 @@ export class DAASpectrogram {
             tooltipData = tooltipData.sort((a, b) => {
                 return (a.range.from < b.range.from) ? -1 : 1;
             });
-            let tooltip: string = (!isNaN(data.marker)) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
+            let tooltip: string = (!isNaN(data.marker)) ? 
+                                    (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
+                                        : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
             for (let i = 0; i < tooltipData.length; i++) {
                 tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
             }
             
             const stepID = `${this.id}-step-${data.step}`;
             const leftMargin = data.step * barWidth;
-            if (Object.keys(band_plot_data).length) { // we reduce the complexity of the HTML template by removing slices with no bands
-                const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
-                    id: this.id,
-                    stepID: stepID,
-                    zIndex: 2,
-                    step: data.step,
-                    time: data.time,
-                    tooltip,
-                    bands: band_plot_data,
-                    top: this.top,
-                    left: leftMargin,
+            const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
+                id: this.id,
+                stepID: stepID,
+                zIndex: 2,
+                step: data.step,
+                time: data.time,
+                tooltip,
+                bands: (Object.keys(band_plot_data).length) ? band_plot_data : null, // we reduce the complexity of the HTML template by removing slices with no bands
+                top: this.top,
+                left: leftMargin,
+                width: barWidth,
+                height: this.height,
+                marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
+                    value: data.marker,
+                    top: (this.range.to - data.marker) * yScaleFactor,
+                    height: 4,
                     width: barWidth,
-                    height: this.height,
-                    marker: (!isNaN(data.marker))? {
-                        value: data.marker,
-                        top: data.marker * yScaleFactor,
-                        width: barWidth,
-                        height: 2,
-                        color: "white",
-                        units: data.units
-                    } : null
-                });
-                $(`#${stepID}`).remove(); 
-                $(`#${this.id}-spectrogram-data`).append(theHTML);
-                // @ts-ignore -- method tooltip is added by bootstrap
-                //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
-                $(`#${stepID}`).tooltip();
-                this.installGotoHandler(data.step);
-            }
+                    color: "white",
+                    units: data.units
+                } : null
+            });
+            $(`#${stepID}`).remove(); 
+            $(`#${this.id}-spectrogram-data`).append(theHTML);
+            // @ts-ignore -- method tooltip is added by bootstrap
+            //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+            $(`#${stepID}`).tooltip();
+            this.installGotoHandler(data.step);
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
         return this;
