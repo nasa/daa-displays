@@ -41,6 +41,7 @@ import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
 import * as utils from './daa-displays/daa-utils';
 import { DAAPlayer } from './daa-displays/daa-player';
 import { ViewOptions } from './daa-displays/daa-view-options';
+import { ConfigData } from './daa-server/utils/daa-server';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -49,18 +50,18 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     data.compass.setCompass(flightData.ownship.v);
     const hd: number = Compass.v2deg(flightData.ownship.v)
     const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    data.airspeedTape.setAirSpeed(gs);
+    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
     const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
     const alt: number = +flightData.ownship.s.alt;
-    data.altitudeTape.setAltitude(alt);
+    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
     const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
+        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"]);
+        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -83,8 +84,8 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
     });
     for (let i = 0; i < daaPlots.length; i++) {
         const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
-                                : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs * 100
+                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
         splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
@@ -122,8 +123,8 @@ const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertic
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
-    { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
-    { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
+    { id: "horizontal-speed-bands", units: "knot", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
+    { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
 ];
 
@@ -137,6 +138,7 @@ const bandNames: string[] = [
 ];
 
 const splitView: DAASplitView = new DAASplitView();
+
 // -- step
 splitView.getPlayer("left").define("step", async () => {
     // render left
@@ -295,6 +297,19 @@ splitView.getPlayer("left").define("init", async () => {
         scenario: splitView.getSelectedScenario()
     });
     // viewOptions_left.applyCurrentViewOptions();
+    // scale displays
+    // if (developerMode) {
+    //     const configData: ConfigData = await splitView.getPlayer("left").loadSelectedConfiguration();
+    //     airspeedTape_left.setUnits(configData["horizontal-speed"].units);
+    //     airspeedTape_left.revealUnits();
+    //     airspeedTape_left.setRange(configData["horizontal-speed"]);
+    //     airspeedTape_left.disableTapeSpinning();
+
+    //     altitudeTape_left.setUnits(configData.altitude.units);
+    //     altitudeTape_left.revealUnits();
+    //     altitudeTape_left.setRange(configData["altitude"]);
+    //     altitudeTape_left.disableTapeSpinning();
+    // }
 });
 splitView.getPlayer("right").define("init", async () => {
     // init right
@@ -304,7 +319,69 @@ splitView.getPlayer("right").define("init", async () => {
         scenario: splitView.getSelectedScenario()
     });
     // viewOptions_right.applyCurrentViewOptions();
+    // if (developerMode) {
+    //     const configData: ConfigData = await splitView.getPlayer("right").loadSelectedConfiguration();
+    //     airspeedTape_right.revealUnits();
+    //     airspeedTape_right.setRange(configData["horizontal-speed"]);
+    //     airspeedTape_right.disableTapeSpinning();
+    //     altitudeTape_right.revealUnits();
+    //     altitudeTape_right.setRange(configData["altitude"]);
+    //     altitudeTape_right.disableTapeSpinning();
+    // }
 });
+
+// -- normal mode
+function normalMode () {
+    // left
+    airspeedTape_left.defaultUnits();
+    airspeedTape_left.hideUnits();
+    airspeedTape_left.defaultStep();
+    airspeedTape_left.enableTapeSpinning();
+
+    altitudeTape_left.defaultUnits();
+    altitudeTape_left.hideUnits();
+    altitudeTape_left.defaultStep();
+    altitudeTape_left.enableTapeSpinning();
+
+    // right
+    airspeedTape_right.defaultUnits();
+    airspeedTape_right.hideUnits();
+    airspeedTape_right.defaultStep();
+    airspeedTape_right.enableTapeSpinning();
+
+    altitudeTape_right.defaultUnits();
+    altitudeTape_right.hideUnits();
+    altitudeTape_right.defaultStep();
+    altitudeTape_right.enableTapeSpinning();
+}
+
+// -- developer mode
+async function developerMode (): Promise<void> {
+    const configData_left: ConfigData = await splitView.getPlayer("left").loadSelectedConfiguration();
+    const configData_right: ConfigData = await splitView.getPlayer("right").loadSelectedConfiguration();
+
+    // left
+    airspeedTape_left.setUnits(configData_left["horizontal-speed"].units);
+    airspeedTape_left.revealUnits();
+    airspeedTape_left.setRange(configData_left["horizontal-speed"]);
+    airspeedTape_left.disableTapeSpinning();
+
+    altitudeTape_left.setUnits(configData_left.altitude.units);
+    altitudeTape_left.revealUnits();
+    altitudeTape_left.setRange(configData_left["altitude"]);
+    altitudeTape_left.disableTapeSpinning();
+
+    // right
+    airspeedTape_right.setUnits(configData_right["horizontal-speed"].units);
+    airspeedTape_right.revealUnits();
+    airspeedTape_right.setRange(configData_right["horizontal-speed"]);
+    airspeedTape_right.disableTapeSpinning();
+
+    altitudeTape_right.setUnits(configData_right.altitude.units);
+    altitudeTape_right.revealUnits();
+    altitudeTape_right.setRange(configData_right["altitude"]);
+    altitudeTape_right.disableTapeSpinning();
+}
 
 async function createPlayer() {
     splitView.appendNavbar();
@@ -319,6 +396,14 @@ async function createPlayer() {
     splitView.appendPlotControls({
         parent: "simulation-controls",
         top: 60
+    });
+    splitView.appendDeveloperControls({
+        normalMode,
+        developerMode
+    }, {
+        parent: "simulation-controls",
+        top: 56,
+        left: 858
     });
     splitView.getPlayer("left").appendSimulationPlot({
         id: "alerts",

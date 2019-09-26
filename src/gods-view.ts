@@ -79,8 +79,8 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
 function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
     const daaPlots: { id: string, name: string, units: string }[] = [
         { id: "heading-bands", units: "deg", name: "Heading Bands" },
-        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
-        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+        { id: "horizontal-speed-bands", units: "ft", name: "Horizontal Speed Bands" },
+        { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands" },
         { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
     ];
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
@@ -122,8 +122,8 @@ const verticalSpeedTape_right: VerticalSpeedTape = null;//new VerticalSpeedTape(
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
-    { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
-    { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
+    { id: "horizontal-speed-bands", units: "ft", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
+    { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
 ];
 

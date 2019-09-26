@@ -156,3 +156,54 @@ export declare interface DAAScenario {
 export declare interface DAAAlerts {
     
 }
+
+export declare interface BandIDs {
+    hs: "horizontal-speed-bands",
+    vs: "vertical-speed-bands",
+    alt: "altitude-bands"
+}
+
+declare interface ConfigRange<_type> {
+    "horizontal-speed": _type; // horizontal speed
+    "vertical-speed": _type; // vertical speed
+    "altitude": _type; // altitude
+}
+
+
+export declare interface ConfigData extends ConfigRange<{ from: string, to: string, units: string }> {
+    "horizontal-speed": {
+        from: string;
+        to: string;
+        units: string;
+    };
+    "vertical-speed": {
+        from: string;
+        to: string;
+        units: string;
+    };
+    "altitude": {
+        from: string;
+        to: string;
+        units: string;
+    };
+}
+
+export declare interface ConfigFile extends ConfigData {
+    fileContent: string;
+    "horizontal-speed": {
+        from: string;
+        to: string;
+        units: string;
+    };
+    "vertical-speed": {
+        from: string;
+        to: string;
+        units: string;
+    };
+    "altitude": {
+        from: string;
+        to: string;
+        units: string;
+    };
+}
+

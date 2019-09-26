@@ -47,18 +47,18 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     data.map.setPosition(flightData.ownship.s);
     data.compass.setCompass(flightData.ownship.v);
     const gs: number = Math.sqrt((+flightData.ownship.v.x * +flightData.ownship.v.x) + (+flightData.ownship.v.y * +flightData.ownship.v.y));
-    data.airspeedTape.setAirSpeed(gs);
+    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
     const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
     const alt: number = +flightData.ownship.s.alt;
-    data.altitudeTape.setAltitude(alt);
+    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
     const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
+        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"]);
+        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -76,8 +76,8 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
 function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
     const daaPlots: { id: string, name: string, units: string }[] = [
         { id: "heading-bands", units: "deg", name: "Heading Bands" },
-        { id: "airspeed-bands", units: "ft", name: "Horizontal Speed Bands" },
-        { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+        { id: "horizontal-speed-bands", units: "ft", name: "Horizontal Speed Bands" },
+        { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands" },
         { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
     ];
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
@@ -215,7 +215,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     splitView.getPlayer("left").appendSimulationPlot({
-        id: "airspeed-bands",
+        id: "horizontal-speed-bands",
         top: 450,
         width: 1040,
         label: "Horizontal Speed  Bands",
@@ -223,7 +223,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     splitView.getPlayer("right").appendSimulationPlot({
-        id: "airspeed-bands",
+        id: "horizontal-speed-bands",
         top: 450,
         left: 1120,
         width: 1040,
@@ -232,7 +232,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     splitView.getPlayer("left").appendSimulationPlot({
-        id: "vs-bands",
+        id: "vertical-speed-bands",
         top: 600,
         width: 1040,
         label: "Vertical Speed Bands",
@@ -240,7 +240,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     splitView.getPlayer("right").appendSimulationPlot({
-        id: "vs-bands",
+        id: "vertical-speed-bands",
         top: 600,
         left: 1120,
         width: 1040,

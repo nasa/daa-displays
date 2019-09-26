@@ -99,7 +99,7 @@ function createGrid (data: { width: number, height: number, length: number }) {
     return grid;
 }
 
-// utility function for converting values between units
+// utility function, converts values between units
 function convert (val: number, unitsFrom: string, unitsTo: string): number {
     if (unitsFrom !== unitsTo) {
         if (unitsFrom === "rad" && unitsTo === "deg") { return parseFloat(utils.rad2deg(val).toFixed(2)); }
@@ -234,6 +234,21 @@ export class DAASpectrogram {
         });
     }
     /**
+     * @function <a name="setRange">setRange</a>
+     * @description Defines the range of the y axis of the spectrogram.
+     * @param range { from: number | string, to: number | string }
+     * @memberof module:DAASpectrogram
+     * @instance
+     */
+    setRange(range: { from: number | string, to: number | string, units: string }): DAASpectrogram {
+        if (range && !isNaN(+range.from) && !isNaN(+range.to)) {
+            const from: number = convert(+range.from, range.units, this.units.to);
+            const to: number = convert(+range.to, range.units, this.units.to);
+            this.range = { from, to };
+        }
+        return this;
+    }
+    /**
      * @function <a name="setLength">setLength</a>
      * @description Defines the temporal length of the spectrogram, i.e., the number of time instants represented in the spectrogram.
      * @param length {nat} The length of the spectrogram.
@@ -244,7 +259,7 @@ export class DAASpectrogram {
         if (length) {
             this.length = length;
             this.time = time;
-            let theHTML = this.compileHTML();
+            const theHTML: string = this.compileHTML();
             $(this.div).html(theHTML);
         }
         return this;
@@ -378,6 +393,7 @@ export class DAASpectrogram {
             
             const stepID = `${this.id}-step-${data.step}`;
             const leftMargin = data.step * barWidth;
+            const lineHeight: number = 4;
             const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
                 id: this.id,
                 stepID: stepID,
@@ -392,8 +408,8 @@ export class DAASpectrogram {
                 height: this.height + 30, // extend click-and-point area to the timeline
                 marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
                     value: data.marker,
-                    top: (this.range.to - data.marker) * yScaleFactor,
-                    height: 4,
+                    top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
+                    height: lineHeight,
                     width: barWidth,
                     color: "white",
                     units: data.units

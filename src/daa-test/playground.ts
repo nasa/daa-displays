@@ -86,17 +86,17 @@ const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { par
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 
 airspeedTape.setBands({
-    RECOVERY: [ { from: 100, to: 200, units: airspeedTape.units.knots } ],
-    NEAR: [ { from: 200, to: 220, units: airspeedTape.units.knots } ]
-});
+    RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
+    NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
+}, AirspeedTape.units.knots);
 altitudeTape.setBands({
-    RECOVERY: [ { from: 100, to: 200, units: altitudeTape.units.ft } ],
-    NEAR: [ { from: 200, to: 220, units: airspeedTape.units.knots } ]
-});
+    RECOVERY: [ { from: 100, to: 200, units: AltitudeTape.units.ft } ],
+    NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
+}, AltitudeTape.units.ft);
 verticalSpeedTape.setBands({
     RECOVERY: [ { from: -2000, to: 4000, units: verticalSpeedTape.units.fpm } ],
     NEAR: [ { from: -6000, to: -2000, units: verticalSpeedTape.units.fpm } ]
-})
+});
 
 declare interface DaaWidgets {
     map: InteractiveMap,
@@ -125,7 +125,7 @@ class Playground {
         $("#test-airspeed").on("click", () => {
             const val: number = +$("#test-airspeed-input").val();
             console.log("Setting airspeed to " + val + " knots");
-            this.daaWidgets.airspeedTape.setAirSpeed(val);
+            this.daaWidgets.airspeedTape.setAirSpeed(val, AirspeedTape.units.knots);
         });
         $("#test-airspeed-step").on("click", () => {
             const val: number = +$("#test-airspeed-step-input").val();
@@ -147,7 +147,7 @@ class Playground {
         $("#test-altitude").on("click", () => {
             const val: number = +$("#test-altitude-input").val();
             console.log("Setting altitude to " + val + " feet");
-            this.daaWidgets.altitudeTape.setAltitude(val);
+            this.daaWidgets.altitudeTape.setAltitude(val, AltitudeTape.units.ft);
         });
         $("#test-altitude-step").on("click", () => {
             const val: number = +$("#test-altitude-step-input").val();

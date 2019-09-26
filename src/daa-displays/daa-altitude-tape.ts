@@ -94,28 +94,51 @@ import * as utils from './daa-utils';
 import * as templates from './templates/daa-altitude-templates';
 
 export class AltitudeTape {
-    private id: string;
-    private top: number;
-    private left: number;
-    private altitudeStep: number;
-    private nAltitudeTicks: number;
-    private currentAltitude: number;
-    private trailerTicks: number;
-    private tickHeight: number;
-    private tapeLength: number;
-    private zero: number;
-    private bands: utils.Bands;
-    private div: HTMLElement;
+    protected id: string;
+    protected top: number;
+    protected left: number;
+    protected altitudeStep: number;
+    protected nAltitudeTicks: number;
+    protected currentAltitude: number;
+    protected trailerTicks: number;
+    protected tickHeight: number;
+    protected tapeLength: number;
+    protected zero: number;
+    protected bands: utils.Bands;
+    protected div: HTMLElement;
 
-    readonly units = {
+    protected tapeCanSpin: boolean = true;
+    protected range: { from: number, to: number };
+    protected spinnerBox: boolean = true;
+    protected tapeUnits: string = "feet";
+
+    static readonly defaultTapeUnits: string = "feet";
+    static readonly defaultTapeStep: number = 100;
+
+    static readonly units = {
         meters: "meters",
         m: "meters",
         feet: "feet",
         ft: "feet"
     };
 
+    setUnits (units: string): void {
+        this.tapeUnits = units;
+    }
+    defaultUnits (): void {
+        this.tapeUnits = AltitudeTape.defaultTapeUnits;
+    }
+    revealUnits (): void {
+        $(".altitude-units").css("display", "block");
+    }
+    hideUnits (): void {
+        $(".altitude-units").css("display", "none");
+    }
+
+    
+
     // utility function for drawing resolution bands
-    private _draw_bands() {
+    protected draw_bands() {
         let theHTML = "";
         Object.keys(this.bands).forEach(alert => {
             const segments: utils.FromTo[] = this.bands[alert];
@@ -147,8 +170,8 @@ export class AltitudeTape {
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for creating altitude tick marks
-    private _create_altitude_ticks () {
-        let ticks: { top: number, label: string }[] = [];
+    protected create_altitude_ticks () {
+        let ticks: { top: number, label?: string, units?: string }[] = [];
         let n = this.nAltitudeTicks + this.trailerTicks;
         let maxAltitudeValue = (this.nAltitudeTicks - 1) * 2 * this.altitudeStep;
         for (let i = 0; i < n; i++) {
@@ -161,6 +184,7 @@ export class AltitudeTape {
                     tickValue = val.toString();
                 }
             }
+            ticks.push({ top: this.tickHeight * 2 * i - 82, units: this.tapeUnits });
             ticks.push({ top: this.tickHeight * 2 * i, label: tickValue });
         }
         const altitudeTicks: string = Handlebars.compile(templates.altitudeTicksTemplate)({
@@ -178,24 +202,34 @@ export class AltitudeTape {
         });
     }
     // utility function for creating altiude spinner
-    private _create_altitude_spinner () {
+    protected create_altitude_spinner (): boolean {
         const tickHeight: number = 36; //px
         const base: string[] = [ "90", "80", "70", "60", "50", "40", "30", "20", "10", "00" ];
         const maxAltitudeValue: number = (this.nAltitudeTicks - 1) * 2 * this.altitudeStep;
-        const reps: number = maxAltitudeValue / 100;
-        let ticks: { top: number, label: string }[] = [];
-        for (let i = 0; i < reps; i++) {
-            for (let j = 0; j < 10; j++) {
-                ticks = ticks.concat({
-                    label: base[j],
-                    top: tickHeight * i * 10 + tickHeight * (j + 1)
-                });
+        const reps: number = Math.floor(maxAltitudeValue / 100);
+        if (reps < 100) {
+            let ticks: { top: number, label: string }[] = [];
+            for (let i = 0; i < reps; i++) {
+                for (let j = 0; j < 10; j++) {
+                    ticks = ticks.concat({
+                        label: base[j],
+                        top: tickHeight * i * 10 + tickHeight * (j + 1)
+                    });
+                }
             }
+            const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
+                ticks
+            });
+            $(`#${this.id}-indicator-spinner`).html(spinner);
+            return true;
+        } else {
+            const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
+                ticks: [ { label: "00", top: 0 } ]
+            });
+            this.spinnerBox = false;
+            $(`#${this.id}-indicator-spinner`).html(spinner);
         }
-        const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
-            ticks
-        });
-        $(`#${this.id}-indicator-spinner`).html(spinner);
+        return false; // could not create spinner, too many values -- need to change this and create a spinning cilinder
     }
     /**
      * @function <a name="AltitudeTape">AltitudeTape</a>
@@ -220,7 +254,7 @@ export class AltitudeTape {
         this.left = (isNaN(+coords.left)) ? 274 : +coords.left;
 
         // altitudeStep is a parameter that can be specified using the options of the constructor
-        this.altitudeStep = opt.altitudeStep || 100;
+        this.altitudeStep = opt.altitudeStep || AltitudeTape.defaultTapeStep;
 
         // the following are constants, should not be modified (unless you know what you're doing!)
         this.nAltitudeTicks = 400;
@@ -244,10 +278,21 @@ export class AltitudeTape {
             height: (this.nAltitudeTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
-        this._create_altitude_ticks();
-        this._create_altitude_spinner();
-        this.setAltitude(this.currentAltitude, { transitionDuration: "0ms" });
+        this.create_altitude_ticks();
+        this.create_altitude_spinner();
+        this.setAltitude(this.currentAltitude, this.tapeUnits, { transitionDuration: "0ms" });
     }
+
+    // utility function, converts values between units
+    static convert (val: number, unitsFrom: string, unitsTo: string): number {
+        if (unitsFrom !== unitsTo) {
+            if ((unitsFrom === "meters" || unitsFrom === "m") && (unitsTo === "feet" || unitsTo === "ft")) { return parseFloat(utils.meters2feet(val).toFixed(2)); }
+            if ((unitsFrom === "feet" || unitsFrom === "ft") && (unitsTo === "meters" || unitsTo === "m")) { return parseFloat(utils.feet2meters(val).toFixed(2)) / 100; }
+        }
+        // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
+        return Math.floor(val * 100) / 100; // [profiler] 0.1ms
+    }
+    
     /**
      * @function <a name="setBands">setBands</a>
      * @description Renders airspeed resolution bands.
@@ -270,16 +315,22 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }): AltitudeTape {
-        opt = opt || {};
+    setBands(bands: utils.Bands, units: string): AltitudeTape {
+        // opt = opt || {};
+        const tapeUnits: string = this.tapeUnits;
         function normaliseAltitudeBand(b: utils.FromTo[]) {
             if (b && b.length > 0) {
                 return b.map((range: utils.FromTo) => {
-                    if (opt.units === "meters") {
-                        // if bands are given in metres, we need to convert in feet
-                        return { from: utils.meters2feet(range.from), to: utils.meters2feet(range.to), units: "meters" };
-                    }
-                    return { from: range.from, to: range.to, units: range.units };
+                    return {
+                        from: AltitudeTape.convert(range.from, units, tapeUnits),
+                        to: AltitudeTape.convert(range.to, units, tapeUnits),
+                        units: tapeUnits
+                    };
+                    // if (opt.units === "meters") {
+                    //     // if bands are given in metres, we need to convert in feet
+                    //     return { from: utils.meters2feet(range.from), to: utils.meters2feet(range.to), units: "meters" };
+                    // }
+                    // return { from: range.from, to: range.to, units: range.units };
                 });
             }
             return [];
@@ -291,8 +342,38 @@ export class AltitudeTape {
         this.bands.RECOVERY = normaliseAltitudeBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseAltitudeBand(bands.UNKNOWN);
         // console.log(this.id + "-altitude-bands", this.bands);
-        this._draw_bands();
+        this.draw_bands();
         return this;
+    }
+    disableTapeSpinning (): void {
+        this.tapeCanSpin = false;
+        // move the tape to the middle of the range
+        const val: number = (this.range.to - this.range.from) / 2 + this.range.from;
+        this.spinTapeTo(val, "0ms");
+        // remove indicator pointer
+        $(`#${this.id}-indicator-pointer`).css("display", "none");
+        // move indicator box to the left-top so tape display is entirely visible
+        $(`#${this.id}-indicator-box`).animate({ "margin-left": "58px" }, 500);
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).animate({ "top": "0px" }, 500);
+        }, 800)
+    }
+    enableTapeSpinning (): void {
+        this.tapeCanSpin = true;
+        this.spinTapeTo(this.currentAltitude, "500ms");
+        $(`#${this.id}-indicator-pointer`).css("display", "block");
+        // move indicator box back to its place
+        $(`#${this.id}-indicator-box`).animate({ "top": "281px" }, 500); // see DOM element in daa-altitude-templates.ts
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).animate({ "margin-left": "0px" }, 500);
+        }, 800);
+    }
+    protected spinTapeTo (val: number, transitionDuration: string): void {
+        if (!isNaN(+val)) {
+            transitionDuration = transitionDuration || "500ms";
+            const spinValueTranslation: number = this.zero + val * this.tickHeight / this.altitudeStep;
+            $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
+        }
     }
     /**
      * @function <a name="setAltitude">setAltitude</a>
@@ -305,19 +386,17 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setAltitude(val: number, opt?: {
-        units?: string,
+    setAltitude(val: number, units: string, opt?: {
         transitionDuration?: string
     }): AltitudeTape {
         opt = opt || {};
-        val = (opt.units === "meters") ? utils.meters2feet(val) : val;
+        // val = utils.limit(-200, 60000, "altitude")(val);
+        this.currentAltitude = AltitudeTape.convert(val, units, this.tapeUnits);
 
-        val = utils.limit(-200, 60000, "altitude")(val);
-        this.currentAltitude = val;
-
-        const transitionDuration: string = opt.transitionDuration || "500ms";
-        const spinValueTranslation: number = this.zero + val * this.tickHeight / this.altitudeStep;
-        $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
+        if (this.tapeCanSpin) {
+            const transitionDuration = opt.transitionDuration || "500ms";
+            this.spinTapeTo(val, transitionDuration);
+        }
 
         const firstStillDigit: number = Math.abs(Math.trunc(val / 10000) % 10);
         const secondStillDigit: number = Math.abs(Math.trunc(val / 1000) % 10);
@@ -333,12 +412,21 @@ export class AltitudeTape {
         }
         $(`#${this.id}-indicator-second-still-digit`).html(secondStillDigit.toString());
         $(`#${this.id}-indicator-third-still-digit`).html(thirdStillDigit.toString());
-        const ratio2: number = 36; // px, obtained by inspecting the DOM
-        const spinIndicatorValue: number = (val % 100) / 10;
-        const spinGroup: number = Math.trunc(val / 100);
-        const reps: number = ((this.nAltitudeTicks - 1) * 2 * this.altitudeStep) / 100;
-        const spinIndicatorTranslation: number = (-1 * reps * 10 * ratio2) + (spinGroup * ratio2 * 10) + spinIndicatorValue * ratio2; // -287579 is the number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
-        $(`#${this.id}-indicator-spinner`).css({ "transition-duration": "500ms", "transform": `translateY(${spinIndicatorTranslation}px)`});
+        const spinIndicatorValue: number = Math.floor((val % 100) / 10);
+        if (this.spinnerBox) {
+            const ratio2: number = 36; // px, obtained by inspecting the DOM
+            const spinGroup: number = Math.trunc(val / 100);
+            const reps: number = Math.floor(((this.nAltitudeTicks - 1) * 2 * this.altitudeStep) / 100);
+            const spinIndicatorTranslation: number = (-1 * reps * 10 * ratio2) + (spinGroup * ratio2 * 10) + spinIndicatorValue * ratio2; // -287579 is the number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
+            $(`#${this.id}-indicator-spinner`).css({ "transition-duration": "500ms", "transform": `translateY(${spinIndicatorTranslation}px)`});
+        } else {
+            // static spinner
+            const dispValue: string = (spinIndicatorValue < 10) ? `0${spinIndicatorValue}` : `${spinIndicatorValue}`;
+            const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
+                ticks: [ { label: dispValue, top: 0 } ]
+            });
+            $(`#${this.id}-indicator-spinner`).html(spinner);
+        }
         return this;
     }
     /**
@@ -354,10 +442,46 @@ export class AltitudeTape {
             return this;
         }
         this.altitudeStep = val;
-        this._create_altitude_ticks();
-        this._create_altitude_spinner();
-        this._draw_bands();
-        return this.setAltitude(this.currentAltitude, { transitionDuration: "0ms" });
+        if (this.altitudeStep > 10) {
+            if (this.altitudeStep > 100) {
+                if (this.altitudeStep > 1000) {
+                    // make it a round number, multiple of 1000
+                    this.altitudeStep = Math.floor(this.altitudeStep / 1000) * 1000;
+                } else {
+                    // make it a round number, multiple of 100
+                    this.altitudeStep = Math.floor(this.altitudeStep / 100) * 100;
+                }
+            } else {
+                // make it a round number, multiple of 100
+                this.altitudeStep = Math.floor(this.altitudeStep / 10) * 10; 
+            }
+        } else if (this.altitudeStep < 1) {
+            // make it 1
+            this.altitudeStep = 1; 
+        }
+        this.create_altitude_ticks();
+        this.create_altitude_spinner();
+        this.draw_bands();
+        return this.setAltitude(this.currentAltitude, this.tapeUnits, { transitionDuration: "0ms" });
+    }
+    /**
+     * @function <a name="setRange">setRange</a>
+     * @description Sets the range of the tape display.
+     * @memberof module:AirspeedTape
+     * @instance
+     */
+    setRange (range: { from: number | string, to: number | string, units: string }): AltitudeTape {
+        if (range && !isNaN(+range.from) && !isNaN(+range.to) && +range.from < +range.to) {
+            this.range = {
+                from: +range.from,
+                to: +range.to
+            };
+            const step: number = (this.range.to - this.range.from) / 6; // the displays can show 5 labelled ticks at the same time -- we want to have all labels visible when the tape is half way through the range
+            this.setStep(step);
+        } else {
+            console.error("[daa-altitude-tape] Warning: could not autoscale altitude tape", range);
+        }
+        return this;
     }
     /**
      * @function <a name="getStep">getStep</a>
@@ -368,5 +492,8 @@ export class AltitudeTape {
      */
     getStep(): number {
         return this.altitudeStep;
+    }
+    defaultStep(): void {
+        this.setStep(AltitudeTape.defaultTapeStep);
     }
 }

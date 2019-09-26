@@ -95,31 +95,59 @@ import * as templates from './templates/daa-airspeed-templates';
 import * as server from '../daa-server/utils/daa-server';
 
 export class AirspeedTape {
-    private id: string;
-    private top: number;
-    private left: number;
-    private airspeedStep: number;
-    private nAirspeedTicks: number;
-    private trailerTicks: number;
-    private tickHeight: number;
-    private tapeLength: number;
-    private zero: number;
-    private bands: utils.Bands;
-    private currentAirspeed: number;
-    private windSpeed: number;
-    private windDirection: number;
-    private trueAirspeed: number;
-    private div: HTMLElement;
+    protected id: string;
+    protected top: number;
+    protected left: number;
+    protected airspeedStep: number;
+    protected nAirspeedTicks: number;
+    protected trailerTicks: number;
+    protected tickHeight: number;
+    protected tapeLength: number;
+    protected zero: number;
+    protected bands: utils.Bands;
+    protected currentAirspeed: number;
+    protected windSpeed: number;
+    protected windDirection: number;
+    protected trueAirspeed: number;
+    protected div: HTMLElement;
 
-    readonly units = {
+    protected tapeCanSpin: boolean = true;
+    protected range: { from: number, to: number };
+    protected tapeUnits: string = "knots";
+    static readonly defaultTapeUnits: string = "knots";
+    static readonly defaultTapeStep: number = 20;
+
+    static readonly units = {
         knots: "knots",
         msec: "msec",
         default: "knots"
     };
 
+    static convert (val: number, unitsFrom: string, unitsTo: string): number {
+        if (unitsFrom !== unitsTo) {
+            if ((unitsFrom === "knot" || unitsFrom === "kn" || unitsFrom === "knots") && (unitsTo === "msec" || unitsTo === "ms" || unitsTo === "m/s")) { return parseFloat(utils.knots2msec(val).toFixed(2)); }
+            if ((unitsFrom === "msec" || unitsFrom === "ms" || unitsFrom === "m/s") && (unitsTo === "knot" || unitsTo === "kn" || unitsTo === "knots")) { return parseFloat(utils.msec2knots(val).toFixed(2)) / 100; }
+        }
+        // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
+        return Math.floor(val * 100) / 100; // [profiler] 0.1ms
+    }
+
+    setUnits (units: string): void {
+        this.tapeUnits = units;
+    }
+    defaultUnits (): void {
+        this.tapeUnits = AirspeedTape.defaultTapeUnits;
+    }
+    revealUnits (): void {
+        $(".airspeed-units").css("display", "block");
+    }
+    hideUnits (): void {
+        $(".airspeed-units").css("display", "none");
+    }
+
     // utility function for creating airspeed tick marks
-    private _create_airspeed_ticks (): void {
-        let ticks: { top: number, label: string }[] = [];
+    protected create_airspeed_ticks (): void {
+        let ticks: { top: number, label?: string, units?: string }[] = [];
         const n = this.nAirspeedTicks + this.trailerTicks;
         const maxAirspeedValue = (this.nAirspeedTicks - 1) * 2 * this.airspeedStep;
         for (let i = 0; i < n; i++) {
@@ -132,6 +160,7 @@ export class AirspeedTape {
                     tickValue = val.toString();
                 }
             }
+            ticks.push({ top: this.tickHeight * 2 * i - 54, units: this.tapeUnits });
             ticks.push({ top: this.tickHeight * 2 * i, label: tickValue });
         }
         const airspeedTicks: string = Handlebars.compile(templates.airspeedTicksTemplate)({
@@ -149,12 +178,12 @@ export class AirspeedTape {
         });
     }
     // utility function for creating airspeed spinner
-    private _create_airspeed_spinner (): void {
+    protected create_airspeed_spinner (): void {
         const tickHeight: number = 36;
         const base: string[] = [ "9", "8", "7", "6", "5", "4", "3", "2", "1", "0" ];
         const maxAirspeedValue: number = (this.nAirspeedTicks - 1) * this.airspeedStep;
 
-        const reps: number = maxAirspeedValue / 10;
+        const reps: number = Math.floor(maxAirspeedValue / 10);
         let ticks: { top: number, label: string }[] = [];
         for (let i = 0; i < reps; i++) {
             for (let j = 0; j < 10; j++) {
@@ -170,7 +199,7 @@ export class AirspeedTape {
         $(`#${this.id}-indicator-spinner`).html(spinner);
     }
     // utility function for drawing resolution bands
-    private _draw_bands(): void {
+    protected draw_bands(): void {
         let theHTML = "";
         const keys: string[] = Object.keys(this.bands);
         for (let i = 0; i < keys.length; i++) {
@@ -204,18 +233,18 @@ export class AirspeedTape {
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for updating ground speed display (if any is rendered)
-    private _updateGroundSpeed(): void {
+    protected updateGroundSpeed(): void {
         // ground speed is obtained from airspeed and windspeed (groundspeed = currentAirspeed + windspeed)
         let gs = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // the indicator can render only integer numbers, and they have always 3 digits
         $(`#${this.id}-ground-speed`).html(gs);
     }
     // utility function for updating true airspeed display (if any is rendered)
-    private _updateTAS(): void {
+    protected updateTAS(): void {
         let tas = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // FIXME: what is the formula???
         $(`#${this.id}-tas`).html(tas);
     }
     // utility function for updating wind speed and direction (if any is rendered)
-    private _updateWind(): void {
+    protected updateWind(): void {
         $(`#${this.id}-wind-direction`).html(this.windDirection.toString());
         $(`#${this.id}-wind-speed`).html(this.windSpeed.toString());
     }
@@ -243,7 +272,7 @@ export class AirspeedTape {
         this.left = (isNaN(+coords.left)) ? 74 : +coords.left;
 
         // airspeedStep is a parameter that can be specified using the options of the constructor
-        this.airspeedStep = opt.airspeedStep || 20;
+        this.airspeedStep = opt.airspeedStep || AirspeedTape.defaultTapeStep;
 
         // the following are constants, should not be modified (unless you know what you're doing!)
         this.nAirspeedTicks = 26;
@@ -272,9 +301,9 @@ export class AirspeedTape {
             height: (this.nAirspeedTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
-        this._create_airspeed_ticks();
-        this._create_airspeed_spinner();
-        this.setAirSpeed(this.currentAirspeed);
+        this.create_airspeed_ticks();
+        this.create_airspeed_spinner();
+        this.setAirSpeed(this.currentAirspeed, this.tapeUnits);
     }
     /**
      * @function <a name="setBands">setBands</a>
@@ -298,16 +327,22 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }): AirspeedTape {
-        opt = opt || {};
+    setBands(bands: utils.Bands, units: string): AirspeedTape {
+        // opt = opt || {};
+        const tapeUnits: string = this.tapeUnits;
         const normaliseAirspeedBand = (b: utils.FromTo[]) => {
             if (b && b.length > 0) {
                 return b.map((range: utils.FromTo) => {
-                    if (opt.units === "msec") {
-                        // if bands are given in metres per second, we need to convert in knots
-                        return { from: utils.msec2knots(range.from), to: utils.msec2knots(range.to), units: "msec" };
-                    }
-                    return { from: range.from, to: range.to, units: this.units.default };
+                    return {
+                        from: AirspeedTape.convert(range.from, units, tapeUnits),
+                        to: AirspeedTape.convert(range.to, units, tapeUnits),
+                        units: tapeUnits
+                    };
+                    // if (opt.units === "msec") {
+                    //     // if bands are given in metres per second, we need to convert in knots
+                    //     return { from: utils.msec2knots(range.from), to: utils.msec2knots(range.to), units: "msec" };
+                    // }
+                    // return { from: range.from, to: range.to, units: this.units.default };
                 });
             }
             return [];
@@ -318,9 +353,40 @@ export class AirspeedTape {
         this.bands.NEAR = normaliseAirspeedBand(bands.NEAR);
         this.bands.RECOVERY = normaliseAirspeedBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseAirspeedBand(bands.UNKNOWN);
-        // console.log(this.id + "-airspeed-bands", this.bands);
-        this._draw_bands();
+        // console.log(this.id + "-horizontal-speed-bands", this.bands);
+        this.draw_bands();
         return this;
+    }
+    protected spinTapeTo (val: number, transitionDuration: string): void {
+        if (!isNaN(+val)) {
+            transitionDuration = transitionDuration || "500ms";
+            let spinValueTranslation = this.zero + val * this.tickHeight / this.airspeedStep;
+            spinValueTranslation = (spinValueTranslation > 0) ? 0 : spinValueTranslation;
+            $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
+        }
+    }
+    disableTapeSpinning (): void {
+        this.tapeCanSpin = false;
+        // move the tape to the middle of the range
+        const val: number = (this.range.to - this.range.from) / 2 + this.range.from;
+        this.spinTapeTo(val, "0ms");
+        // remove indicator pointer
+        $(`#${this.id}-indicator-pointer`).css("display", "none");
+        // move indicator box to the left-top so tape display is entirely visible
+        $(`#${this.id}-indicator-box`).animate({ "margin-left": "-59px" }, 500);
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).animate({ "top": "0px" }, 500);
+        }, 800)
+    }
+    enableTapeSpinning (): void {
+        this.tapeCanSpin = true;
+        this.spinTapeTo(this.currentAirspeed, "500ms");
+        $(`#${this.id}-indicator-pointer`).css("display", "block");
+        // move indicator box back to its place
+        $(`#${this.id}-indicator-box`).animate({ "top": "281px" }, 500); // see the DOM element in daa-airspeed-templates.ts
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).animate({ "margin-left": "0px" }, 500);
+        }, 800);
     }
     /**
      * @function <a name="setAirSpeed">setAirSpeed</a>
@@ -333,31 +399,29 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setAirSpeed(val: number, opt?: { units?: string, transitionDuration?: string }): AirspeedTape {
+    setAirSpeed(val: number, units: string, opt?: { transitionDuration?: string }): AirspeedTape {
         opt = opt || {};
-        val = utils.limit(0, 300, "airspeed")(val); // the display range is 0..300
-        this.currentAirspeed = (opt.units === "msec") ? utils.msec2knots(val) : val;
+        // val = utils.limit(0, 300, "airspeed")(val); // the display range is 0..300
+        this.currentAirspeed = AirspeedTape.convert(val, units, this.tapeUnits);
 
-        let transitionDuration = opt.transitionDuration || "500ms";
-        let spinValueTranslation = this.zero + val * this.tickHeight / this.airspeedStep;
-        spinValueTranslation = (spinValueTranslation > 0) ? 0 : spinValueTranslation;
-        // FIXME: the spinner position drifts at when changing zoom level --- need to understand why and fix it!
-        $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
+        if (this.tapeCanSpin) {
+            const transitionDuration = opt.transitionDuration || "500ms";
+            this.spinTapeTo(val, transitionDuration);
+        }
         
         const stillDigits: number = Math.trunc(this.currentAirspeed / 10);
         const stillDigitsString: string = (stillDigits < 10) ? "0" + stillDigits : stillDigits.toString();
         $(`#${this.id}-indicator-still-digits`).html(stillDigitsString);
-        // with 26 ticks, max airspeed that can be displayed is 440
         const ratio: number = 36; // px, obtained by inspecting the DOM
         const spinIndicatorValue: number = this.currentAirspeed % 10;
         const spinGroup: number = Math.trunc(this.currentAirspeed / 10);
-        const reps: number = ((this.nAirspeedTicks - 1) * 2 * this.airspeedStep) / 100;
+        const reps: number = Math.floor(((this.nAirspeedTicks - 1) * 2 * this.airspeedStep) / 100);
         const spinIndicatorTranslation: number = (-1 * reps * 100 * ratio / 2) + (spinGroup * ratio * 10) + spinIndicatorValue * ratio; // number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
         $(`#${this.id}-indicator-spinner`).css({ "transition-duration": "500ms", "transform": `translateY(${spinIndicatorTranslation}px)`});
         
         // ground speed and true airspeed need to be updated every time we set air speed
-        this._updateGroundSpeed();
-        this._updateTAS();
+        this.updateGroundSpeed();
+        this.updateTAS();
         return this;
     }
     /**
@@ -383,7 +447,7 @@ export class AirspeedTape {
     setWindDirection(deg: number, opt?: { units?: string }): AirspeedTape {
         opt = opt || {};
         this.windDirection = (opt.units === "rad") ? utils.rad2deg(deg) : deg;
-        this._updateWind();
+        this.updateWind();
         // do we need to update airspeed??
         // return this.setAirSpeed(this.ground_speed - ???);
         return this;
@@ -401,10 +465,10 @@ export class AirspeedTape {
     setWindSpeed(val: number, opt?: { units?: string }): AirspeedTape {
         opt = opt || {};
         this.windSpeed = (opt.units === "msec") ? utils.msec2knots(val) : val;
-        this._updateWind();
+        this.updateWind();
         // ground speed and true airspeed need to be updated every time wind speed changes
-        this._updateGroundSpeed();
-        this._updateTAS();
+        this.updateGroundSpeed();
+        this.updateTAS();
         return this;
     }
     /**
@@ -420,10 +484,17 @@ export class AirspeedTape {
             return this;
         }
         this.airspeedStep = val;
-        this._create_airspeed_ticks();
-        this._create_airspeed_spinner();
-        this._draw_bands();
-        return this.setAirSpeed(this.currentAirspeed, { transitionDuration: "0ms" });
+        if (this.airspeedStep > 10) {
+            // make it a round number, multiple of 10
+            this.airspeedStep = Math.floor(this.airspeedStep / 10) * 10;
+        } else if (this.airspeedStep < 1) {
+            // make it 1
+            this.airspeedStep = 1;
+        }
+        this.create_airspeed_ticks();
+        this.create_airspeed_spinner();
+        this.draw_bands();
+        return this.setAirSpeed(this.currentAirspeed, this.tapeUnits, { transitionDuration: "0ms" });
     }
     /**
      * @function <a name="getStep">getStep</a>
@@ -435,7 +506,34 @@ export class AirspeedTape {
     getStep(): number {
         return this.airspeedStep;
     }
-
+    defaultStep(): void {
+        this.setStep(AirspeedTape.defaultTapeStep);
+    }
+    /**
+     * @function <a name="setRange">setRange</a>
+     * @description Sets the range of the tape display.
+     * @memberof module:AirspeedTape
+     * @instance
+     */
+    setRange (range: { from: number | string, to: number | string, units: string }): AirspeedTape {
+        if (range && !isNaN(+range.from) && !isNaN(+range.to) && +range.from < +range.to) {
+            this.range = {
+                from: +range.from,
+                to: +range.to
+            };
+            const step: number = (this.range.to - this.range.from) / 8; // the displays can show 6 labelled ticks at the same time -- we want to have all labels visible when the tape is half way through the range
+            this.setStep(step);
+        } else {
+            console.error("[daa-airspeed-tape] Warning: could not autoscale airspeed tape", range);
+        }
+        return this;
+    }
+    /**
+     * @function <a name="v2gs">v2gs</a>
+     * @description Utility function, computes horizontal speed value based on a given speed vector.
+     * @return {real} Airspeed value, in knots.
+     * @memberof module:AirspeedTape
+     */
     static v2gs(v: utils.Vector3D | server.Vector3D): number {
         if (v) {
             return Math.sqrt((+v.x * +v.x) + (+v.y * +v.y));

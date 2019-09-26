@@ -1,5 +1,5 @@
 export const playbackTemplate: string = `
-<div id="{{id}}" class="simulation-controls" style="position:absolute;width:100%;">
+<div id="{{id}}" class="simulation-controls" style="position:absolute;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="input-group-prepend">
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
@@ -172,4 +172,14 @@ export const spectrogramControls: string = `
             </div>
         </div>
     </div>
+</div>`;
+
+export const developersControls: string = `
+<div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px;">
+  <div id="{{id}}-developer-mode-button" class="input-group-prepend">
+    <div class="input-group-text" style="width:215px;">
+      <input id="{{id}}-developer-mode-checkbox" type="checkbox" aria-label="Enable developer mode">
+      <span style="margin-left: 4px;">Developer mode</span>
+    </div>
+  </div>
 </div>`;

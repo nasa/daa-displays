@@ -5,9 +5,11 @@ import * as http from 'http';
 import * as path from 'path';
 import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
-import { JavaMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ } from './utils/daa-server';
+import { JavaMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile } from './utils/daa-server';
 import * as utils from '../daa-displays/daa-utils';
 import * as fsUtils from './utils/fsUtils';
+
+
 
 class DAAServer {
     useCache: boolean = false;
@@ -485,13 +487,40 @@ class DAAServer {
                             const configurationsFolder: string = path.join(__dirname, "../daa-config");
                             const configName: string = (data && data.config)? data.config : null;
                             if (configName) {
-                                let fileContent: Buffer = null;
                                 try {
-                                    fileContent = fs.readFileSync(path.join(configurationsFolder, configName));
+                                    const fileContent = fs.readFileSync(path.join(configurationsFolder, configName)).toLocaleString().trim();
+                                    // parse band parameters from the file content
+                                    console.log(fileContent);
+                                    const min_hs: RegExpMatchArray = /\bmin_hs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const max_hs: RegExpMatchArray = /\bmax_hs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const min_gs: RegExpMatchArray = /\bmin_gs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const max_gs: RegExpMatchArray = /\bmax_gs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const min_vs: RegExpMatchArray = /\bmin_vs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const max_vs: RegExpMatchArray = /\bmax_vs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const min_alt: RegExpMatchArray = /\bmin_alt\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const max_alt: RegExpMatchArray = /\bmax_alt\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
+                                    const data: ConfigFile = {
+                                        fileContent,
+                                        "horizontal-speed": {
+                                            from: (min_gs && min_gs.length > 1) ? min_gs[1] : (min_hs && min_hs.length > 1) ? min_hs[1] : null,
+                                            to: (max_gs && max_gs.length > 1) ? max_gs[1] : (max_hs && max_hs.length > 1) ? max_hs[1] : null,
+                                            units: (min_gs && min_gs.length > 2) ? min_gs[2] : (min_hs && min_hs.length > 2) ? min_hs[2] : null
+                                        },
+                                        "vertical-speed": {
+                                            from: (min_vs && min_vs.length > 1) ? min_vs[1] : null,
+                                            to: (max_vs && max_vs.length > 1) ? max_vs[1] : null,
+                                            units: (min_vs && min_vs.length > 2) ? min_vs[2] : null
+                                        },
+                                        "altitude": {
+                                            from: (min_alt && min_alt.length > 1) ? min_alt[1] : null,
+                                            to: (max_alt && max_alt.length > 1) ? max_alt[1] : null,
+                                            units: (min_alt && min_alt.length > 2) ? min_alt[2] : null
+                                        }
+                                    };
+                                    content.data = data;
                                 } catch (loadConfFileError) {
                                     console.error(`Error while reading configuratios file ${configName}`, loadConfFileError);
                                 } finally {
-                                    content.data = fileContent.toLocaleString();
                                     console.log(content.data);
                                     this.trySend(wsocket, content, `.conf file ${configName}`);
                                 }

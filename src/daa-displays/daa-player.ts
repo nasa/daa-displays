@@ -94,7 +94,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -164,6 +164,10 @@ export class DAAPlayer {
     readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
 
+    static readonly modes = {
+        developerMode: "developerMode",
+        normalMode: "normalMode"
+    };
     protected scenarioType: string = "daa"; // "daa" or "ic"
 
     protected _handlers: Handlers;
@@ -189,6 +193,7 @@ export class DAAPlayer {
 
     protected wellClearVersionSelector: string;
     protected wellClearConfigurationSelector: string;
+    protected configInfo: ConfigFile;
 
     getWellClearVersionSelector(): string {
         return this.wellClearVersionSelector;
@@ -358,6 +363,7 @@ export class DAAPlayer {
             init: async (f: (p: DAAPlayer) => void, opt?) => {
                 opt = opt || {};
                 try {
+                    this.clearInterval();
                     await f(this);
                 } catch (stepError) {
                     console.error("Init function has thrown a runtime exception: ", stepError);
@@ -373,11 +379,12 @@ export class DAAPlayer {
                         await f(this);
                     } catch (stepError) {
                         console.error("Step function has thrown a runtime exception: ", stepError);
-                    }
-                    $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-                    $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
-                    if (!opt.preventIncrement) {
-                        this.simulationStep++;
+                    } finally {
+                        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+                        if (!opt.preventIncrement) {
+                            this.simulationStep++;
+                        }
                     }
                 } else {
                     console.log("Simulation complete!");
@@ -392,6 +399,17 @@ export class DAAPlayer {
                 // }
             }
         };
+    }
+
+    getConfigData (): ConfigData {
+        if (this.configInfo) {
+            return {
+                "horizontal-speed": this.configInfo["horizontal-speed"],
+                "vertical-speed": this.configInfo["vertical-speed"],
+                "altitude": this.configInfo["altitude"]
+            };
+        }
+        return null;
     }
 
     /**
@@ -409,7 +427,7 @@ export class DAAPlayer {
     /**
      * utility function, renders the DOM elements necessary to control a simulation (start, stop, goto, etc.)
      */
-    private renderSimulationControls(opt?: {
+    protected renderSimulationControls(opt?: {
         top?: number,
         left?: number,
         width?: number
@@ -513,6 +531,38 @@ export class DAAPlayer {
             this.enableSimulationControls();
         });
         this.activationControlsPresent = true;
+    }
+
+    /**
+     * utility function, renders the DOM elements necessary for developers
+     */
+    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+        opt = opt || {};
+        desc = desc || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        const theHTML = Handlebars.compile(templates.developersControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-developers-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-developers-controls`).html(theHTML);
+        // install handlers
+        const _this: DAAPlayer = this;
+        $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
+            const isChecked = $(`#${_this.id}-developer-mode-checkbox`).prop("checked");
+            if (isChecked && desc.developerMode) {
+                desc.developerMode();
+            } else {
+                if (desc.normalMode) {
+                    desc.normalMode();
+                }
+            }
+        });
+        return this;
     }
 
     /**
@@ -641,14 +691,22 @@ export class DAAPlayer {
         return daaFiles;
     }
 
-    async loadConfigFile (config: string): Promise<string> {
+    async loadSelectedConfiguration (): Promise<ConfigFile> {
+        const selectedConfig: string = this.getSelectedConfiguration();
+        if (selectedConfig) {
+            return await this.loadConfigFile(selectedConfig);
+        }
+        return null;
+    }
+
+    async loadConfigFile (config: string): Promise<ConfigFile> {
         await this.connectToServer();
         const data: LoadConfigRequest = { config };
-        const res: WebSocketMessage<string> = await this.ws.send({
+        const res: WebSocketMessage<ConfigFile> = await this.ws.send({
             type: "load-config-file",
             data
         });
-        if (res && res.data) {
+        if (res && res.data && res.data) {
             console.log(`Configuration ${config} successfully loaded`, res.data);
             return res.data;
         } else {
@@ -775,19 +833,20 @@ export class DAAPlayer {
         // get step from argument or from DOM
         step = (step !== undefined && step !== null) ? step : parseInt(<string> $(`#${this.id}-goto-input`).val());
         // sanity check
-        step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
-        this.simulationStep = isNaN(step) ? 0 : step;
-        // update DOM
-        const time: string = this.getCurrentSimulationTime();
-        $(`#${this.id}-curr-sim-step`).html(step.toString());
-        $(`#${this.id}-curr-sim-time`).html(time);
-        if (opt.updateInputs) {
-            $(`#${this.id}-goto-input`).val(step);
-            $(`#${this.id}-goto-time-input`).val(time);
-        }
-        this.step({ preventIncrement: true });
-        if (this.bridgedPlayer) {
-            await this.bridgedPlayer.gotoControl(this.simulationStep);
+        if (step < this._simulationLength) {
+            this.simulationStep = isNaN(step) ? 0 : step;
+            // update DOM
+            const time: string = this.getCurrentSimulationTime();
+            $(`#${this.id}-curr-sim-step`).html(step.toString());
+            $(`#${this.id}-curr-sim-time`).html(time);
+            if (opt.updateInputs) {
+                $(`#${this.id}-goto-input`).val(step);
+                $(`#${this.id}-goto-time-input`).val(time);
+            }
+            this.step({ preventIncrement: true });
+            if (this.bridgedPlayer) {
+                await this.bridgedPlayer.gotoControl(this.simulationStep);
+            }
         }
     }
 
@@ -1626,6 +1685,32 @@ export class DAAPlayer {
     refreshSimulationPlots() {
         if (this._plot) {
             Object.keys(this._plot).forEach((plotID: string) => {
+                // update range
+                switch (plotID) {
+                    case "horizontal-speed-bands": {
+                        if (this.configInfo) {
+                            this._plot[plotID].setRange(this.configInfo["horizontal-speed"]);
+                        }
+                        break;
+                    }
+                    case "vertical-speed-bands": {
+                        if (this.configInfo) {
+                            this._plot[plotID].setRange(this.configInfo["vertical-speed"]);
+                        }
+                        break;
+                    }
+                    case "altitude-bands": {
+                        if (this.configInfo) {
+                            this._plot[plotID].setRange(this.configInfo["altitude"]);
+                        }
+                        break;
+                    }
+                    default: {
+                        // do nothing
+                        break;
+                    }
+                }
+                // update length
                 this._plot[plotID].setLength(this._simulationLength, { 
                     start: this._scenarios[this._selectedScenario].steps[0],
                     mid: this._scenarios[this._selectedScenario].steps[Math.floor(this._simulationLength / 2)],
@@ -1639,7 +1724,7 @@ export class DAAPlayer {
         return this;
     }
 
-    private async refreshConfigurationView() {
+    protected async refreshConfigurationView() {
         const theHTML: string = Handlebars.compile(templates.daidalusConfigurationsTemplate)({
             configurations: this._wellClearConfigurations,
             id: this.wellClearConfigurationSelector
@@ -1648,14 +1733,16 @@ export class DAAPlayer {
         $(`#${this.wellClearConfigurationSelector}`).append(theHTML);
 
         const refreshConfigurationAttributesView = async (config: string) => {
-            const attributes = await this.loadConfigFile(config);
-            const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
-                fileName: config,
-                attributes: attributes.trim().split("\n"),
-                id: this.wellClearConfigurationSelector
-            });
-            $(`#${this.wellClearConfigurationSelector}-daidalus-configuration-attributes-list`).remove();
-            $(`#sidebar-daidalus-configuration-attributes`).append(theAttributes);    
+            this.configInfo = await this.loadConfigFile(config);
+            if (this.configInfo) {
+                const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
+                    fileName: config,
+                    attributes: this.configInfo.fileContent.split("\n"),
+                    id: this.wellClearConfigurationSelector
+                });
+                $(`#${this.wellClearConfigurationSelector}-daidalus-configuration-attributes-list`).remove();
+                $(`#sidebar-daidalus-configuration-attributes`).append(theAttributes);
+            }
         }
         const selectedConfig: string = this.getSelectedConfiguration();
         await refreshConfigurationAttributesView(selectedConfig);
@@ -1673,7 +1760,7 @@ export class DAAPlayer {
         return this;
     }
 
-    private refreshVersionsView(): DAAPlayer {
+    protected refreshVersionsView(): DAAPlayer {
         const theHTML: string = Handlebars.compile(templates.daidalusVersionsTemplate)({
             versions: this._wellClearVersions,
             id: this.wellClearVersionSelector

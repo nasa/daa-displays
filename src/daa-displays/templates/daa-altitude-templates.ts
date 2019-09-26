@@ -18,8 +18,8 @@ export const altitudeTemplate = `
             </div>
         </div>
     </div>
-    <div class="tape-right-indicator" style="position:absolute;">
-        <div class="tape-right-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:98px; height: 86px; top:281px; left:34px;">
+    <div id="{{id}}-indicator" style="position:absolute;">
+        <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:98px; height: 86px; top:281px; left:34px;">
             <div id="{{id}}-indicator-first-still-digit" class="green-stripes" style="z-index:1; position:absolute; top:28px; left:2px; width:18%; height:28px; color:white; font-size:34px; text-align: center; line-height:85px; font-family:serif;">
                 &nbsp;
             </div>
@@ -33,15 +33,15 @@ export const altitudeTemplate = `
                80 60 40 20 00
             </div>
         </div>
-        <div class="tape-right-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(135deg); width:20px; height: 20px; top:314px; left:24px;"></div>
+        <div id="{{id}}-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(135deg); width:20px; height: 20px; top:314px; left:24px;"></div>
     </div>
 </div>`;
 
 export const altitudeTicksTemplate = `
-{{#each ticks}}<div style='top:{{top}}px; position:absolute; width:100%; border-top:2px solid white; border-bottom:2px solid white;height:82px;'></div>{{/each}}`;
+{{#each ticks}}<div style='top:{{top}}px; position:absolute; width:100%; border-bottom:2px solid white; height:82px;'></div>{{/each}}`;
 
 export const altitudeValuesTemplate = `
-{{#each ticks}}<div style='top:{{top}}px; position:absolute; width:100%; height:82px;'>{{label}}</div>{{/each}}`;
+{{#each ticks}}<div {{#if units}}class='altitude-units' {{/if}}style='top:{{top}}px; position:absolute; width:100%; text-align:center; {{#if units}}font-size:medium; display:none; {{/if}}height:82px;'>{{label}}{{units}}</div>{{/each}}`;
 
 export const altitudeIndicatorSpinnerTemplate = `
 {{#each ticks}}<div style='top:{{top}}px; position:absolute; width:100%; height:36px;'>{{label}}</div>{{/each}}`;

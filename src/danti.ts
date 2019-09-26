@@ -47,18 +47,18 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     data.compass.setCompass(flightData.ownship.v);
     const hd: number = Compass.v2deg(flightData.ownship.v);
     const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    data.airspeedTape.setAirSpeed(gs);
+    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
     const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
     const alt: number = +flightData.ownship.s.alt;
-    data.altitudeTape.setAltitude(alt);
+    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
     const bands: utils.DAABandsData = player.getCurrentBands();
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
+        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"]);
+        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -75,8 +75,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
 
 const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands" },
-    { id: "airspeed-bands", units: "knot", name: "Horizontal Speed Bands" },
-    { id: "vs-bands", units: "fpm", name: "Vertical Speed Bands" },
+    { id: "horizontal-speed-bands", units: "knot", name: "Horizontal Speed Bands" },
+    { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands" },
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
@@ -89,8 +89,8 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
     });
     for (let i = 0; i < daaPlots.length; i++) {
         const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
-                                : (daaPlots[i].id === "airspeed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vs-bands") ? desc.ownship.vs * 100
+                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
         player.getPlot(daaPlots[i].id).plotBands({
@@ -173,7 +173,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     player.appendSimulationPlot({
-        id: "airspeed-bands",
+        id: "horizontal-speed-bands",
         top: 300,
         width: 1100,
         label: "Horizontal Speeds Bands",
@@ -182,7 +182,7 @@ async function createPlayer() {
         parent: "simulation-plot"
     });
     player.appendSimulationPlot({
-        id: "vs-bands",
+        id: "vertical-speed-bands",
         top: 450,
         width: 1100,
         label: "Vertical Speed Bands",

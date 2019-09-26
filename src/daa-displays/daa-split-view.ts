@@ -307,18 +307,22 @@ export class DAASplitView extends DAAPlayer {
         // sanity check
         currentStep = (currentStep < this._simulationLength - 1) ? currentStep : this._simulationLength - 1;
         // advance simulation step
-        this.simulationStep = (currentStep < this._simulationLength - 1) ? currentStep + 1 : currentStep;
-        // update DOM
-        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
-        // send players the control command
-        if (this.players) { 
-            if (this.players.left) { 
-                this.players.left.gotoControl(this.simulationStep); // right player is bridged
+        this.simulationStep++;
+        if (this.simulationStep < this._simulationLength) {
+            // update DOM
+            $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+            $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+            // send players the control command
+            if (this.players) { 
+                if (this.players.left) { 
+                    this.players.left.gotoControl(this.simulationStep); // right player is bridged
+                }
+                if (this["diff"]) {
+                    this["diff"]();
+                }
             }
-            if (this["diff"]) {
-                this["diff"]();
-            }
+        } else {
+            this.clearInterval();
         }
     }
 

@@ -46,6 +46,9 @@ export const alertingColors = {
 export function msec2knots(msec: number): number {
     return msec * 1.94384;
 }
+export function knots2msec(knots: number): number {
+    return knots / 1.94384;
+}
 export function rad2deg(rad: number): number {
     return rad * 180 / Math.PI;
 }
