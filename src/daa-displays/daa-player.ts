@@ -1152,10 +1152,10 @@ export class DAAPlayer {
         await this.connectToServer();
         const version: string = this.getSelectedWellClearVersion();
         if (version) {
-            const versionNumber: string = (version.split("-")[1].startsWith("1")) ? "1.x" : "2.x";
+            // const versionNumber: string = (version.split("-")[1].startsWith("1")) ? "1.x" : "2.x";
             const res = await this.ws.send({
-                type: "list-config-files",
-                version: versionNumber
+                type: "list-config-files"//,
+                // version: versionNumber
             });
             if (res && res.data) {
                 console.log(res);
@@ -1165,7 +1165,7 @@ export class DAAPlayer {
                     // refresh front-end
                     await this.refreshConfigurationView();
                 } else {
-                    console.log(`[daa-player] Configurations for Daidalus ${versionNumber} already loaded`, res.data);
+                    console.log(`[daa-player] Configurations already loaded`, res.data);
                 }
             }
             return this._wellClearConfigurations;

@@ -203,12 +203,12 @@ class DAAServer {
     }
     // Just one level of recursion, i.e., current folder and first-level sub-folders.
     // This is sufficient to navigate symbolic links placed in the current folder.
-    private async listFilesRecursive (folderName: string, ext: string[], version?: string): Promise<string[]> {
-        const listFilesInFolder = async (scenarioFolder: string) => {
-            const elems: string[] = await fs.readdirSync(scenarioFolder);
+    private async listFilesRecursive (folderName: string, ext: string[]): Promise<string[]> {
+        const listFilesInFolder = async (folder: string) => {
+            const elems: string[] = await fs.readdirSync(folder);
             if (elems && elems.length > 0) {
                 const allFiles: string[] = elems.filter(async (name: string) => {
-                    return await fs.lstatSync(path.join(scenarioFolder, name)).isFile();
+                    return await fs.lstatSync(path.join(folder, name)).isFile();
                 });
                 if (allFiles) {
                     return allFiles.filter((name: string) => {
@@ -223,12 +223,7 @@ class DAAServer {
             }
             return null;
         }
-        version = version || "";
-        folderName = path.join(folderName, version);
-        let daaFiles: string[] = await listFilesInFolder(folderName);
-        daaFiles = (daaFiles) ?
-                        (version) ? daaFiles.map(name => { return `${version}/${name}`; }) : daaFiles
-                        : [];
+        const files: string[] = await listFilesInFolder(folderName);
         // check sub-folders, just one level
         const elems: string[] = await fs.readdirSync(folderName);
         if (elems && elems.length > 0) {
@@ -241,20 +236,20 @@ class DAAServer {
                     const subfolder: string = elems[i];
                     try {
                         // console.log(`Reading subfolder ${subfolder}`);
-                        const files: string[] = await listFilesInFolder(path.join(folderName, subfolder));
-                        if (files && files.length > 0) {
-                            files.forEach((name: string) => {
-                                name = (version) ? `${version}/${subfolder}/${name}` : `${subfolder}/${name}`;
-                                daaFiles.push(name);
+                        const sfiles: string[] = await listFilesInFolder(path.join(folderName, subfolder));
+                        if (sfiles && sfiles.length > 0) {
+                            sfiles.forEach((name: string) => {
+                                name = `${subfolder}/${name}`;
+                                files.push(name);
                             });
                         }
                     } catch (subfolderError) {
-                        console.warn(`ignoring subfolder ${subfolder} (read error)`);
+                        console.warn(`[daa-server.listFileRecursive] ignoring subfolder ${subfolder} (read error)`);
                     }
                 }
             }
         }
-        return daaFiles;
+        return files;
     }
     async activate () {
         // try to load configuration file
@@ -467,7 +462,7 @@ class DAAServer {
                             const configurationsFolder: string = path.join(__dirname, "../daa-config");
                             let confFiles: string[] = null;
                             try {
-                                confFiles = await this.listFilesRecursive(configurationsFolder, ['.conf'], content['version']);
+                                confFiles = await this.listFilesRecursive(configurationsFolder, ['.conf']);
                             } catch (confError) {
                                 console.error(`Error while reading configuratios folder`, confError);
                             } finally {
