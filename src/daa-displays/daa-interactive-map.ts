@@ -1063,8 +1063,8 @@ class DAA_Aircraft extends Aircraft {
                 label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
             }
         } else {
-            label.offsetY = -16;
             label.text = `${Math.floor(this.position.alt)}ft`;
+            label.offsetY = -16;
         }
         // indicate whether the aircraft is climbing or descending, based on the velocity vector
         if (this.getVelocity()) {
