@@ -886,6 +886,16 @@ export class DAAPlayer {
                 } else {
                     console.warn(`[daa-player] Warning: could not select candidate time ${candidates[0]}`);
                 }
+            } else if (+time === 0) {
+                // move to step 0
+                this.simulationStep = 0;
+                // update DOM
+                $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+                $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+                this.step({ preventIncrement: true });
+                if (this.bridgedPlayer) {
+                    await this.bridgedPlayer.gotoControl(this.simulationStep);
+                }
             } else {
                 console.warn(`[daa-player] Warning: could not goto time ${time}`);
             }

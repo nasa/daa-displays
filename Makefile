@@ -31,6 +31,7 @@ compile:
 	cp src/split.html dist/
 	cp src/virtual-pilot.html dist/
 	cp src/gods.html dist/
+	cp src/3d.html dist/
 	cp src/package.json dist/
 	# compile java files
 	cd dist && make compile
