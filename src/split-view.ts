@@ -156,54 +156,41 @@ splitView.getPlayer("right").define("step", async () => {
     });
 });
 // -- plot
-splitView.getPlayer("right").define("plot", async () => {
+splitView.getPlayer("right").define("plot", () => {
     const bandsRight: utils.DAABandsData[] = splitView.getPlayer("right").getBandsData();
     const bandsLeft: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
     if (bandsRight) {
-        return new Promise((resolve, reject) => {
-            for (let step = 0; step < bandsRight.length; step++) {
-                setTimeout(() => {
-                    const time: string = splitView.getTimeAt(step);
-                    const lla: LLAData = flightData[step];
-                    const hd: number = Compass.v2deg(lla.ownship.v);
-                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                    const vs: number = +lla.ownship.v.z / 100;
-                    const alt: number = +lla.ownship.s.alt;
-                    plot("right", { ownship: { hd, gs, vs, alt }, bands: bandsRight[step], step, time });
-                    diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
-                    // resolve when done
-                    if (step === bandsRight.length - 1) {
-                        resolve();
-                    }
-                }, 8 * step);
-            }
-        });
+        for (let step = 0; step < bandsRight.length; step++) {
+            splitView.getPlayer("right").setTimerJiffy("plot", () => {
+                const time: string = splitView.getTimeAt(step);
+                const lla: LLAData = flightData[step];
+                const hd: number = Compass.v2deg(lla.ownship.v);
+                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                const vs: number = +lla.ownship.v.z / 100;
+                const alt: number = +lla.ownship.s.alt;
+                plot("right", { ownship: { hd, gs, vs, alt }, bands: bandsRight[step], step, time });
+                diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
+            }, 8 * step);
+        }
     }
-    return Promise.resolve();
 });
-splitView.getPlayer("left").define("plot", async () => {
+splitView.getPlayer("left").define("plot", () => {
     const bandsData: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
     if (bandsData) {
-        return new Promise((resolve, reject) => {
-            for (let step = 0; step < bandsData.length; step++) {
-                setTimeout(() => {
-                    const time: string = splitView.getTimeAt(step);
-                    const lla: LLAData = flightData[step];
-                    const hd: number = Compass.v2deg(lla.ownship.v);
-                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                    const vs: number = +lla.ownship.v.z / 100;
-                    const alt: number = +lla.ownship.s.alt;
-                    plot("left", { ownship: { hd, gs, vs, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
-                    if (step === bandsData.length - 1) {
-                        resolve();
-                    }
-                }, 8 * step);
-            }
-        });
+        for (let step = 0; step < bandsData.length; step++) {
+            splitView.getPlayer("left").setTimerJiffy("plot", () => {
+                const time: string = splitView.getTimeAt(step);
+                const lla: LLAData = flightData[step];
+                const hd: number = Compass.v2deg(lla.ownship.v);
+                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                const vs: number = +lla.ownship.v.z / 100;
+                const alt: number = +lla.ownship.s.alt;
+                plot("left", { ownship: { hd, gs, vs, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
+            }, 8 * step);
+        }
     }
-    return Promise.resolve();
 });
 // -- diff : returns true if alerts or bands are different
 function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, step?: number, time?: string): boolean {

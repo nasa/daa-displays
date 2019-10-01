@@ -141,7 +141,8 @@ export function safeSelector(str: string): string {
 }
 
 export class DAAPlayer {
-    readonly VERSION: string = "2.0.0";
+    static readonly VERSION: string = "2.0.0";
+    static readonly timerJiffy: number = 8; // 8ms
     protected id: string;
     protected simulationStep: number;
     init: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
@@ -160,6 +161,7 @@ export class DAAPlayer {
     protected _repl: { [key: string]: DAAClient };
     protected _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
     protected href: string;
+    protected timers: { [ tname: string ]: NodeJS.Timer } = {};
 
     readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
@@ -790,6 +792,7 @@ export class DAAPlayer {
             console.error(`Unable to select scenario ${scenario} :X`);
         }
     }
+
     /**
      * @function <a name="define">define</a>
      * @description Utility function for defining player functionalities that are simulation-specific.
@@ -1411,7 +1414,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    getParams (conf) {
+    getParams (conf: string): string {
         // conf can be std, nomA, nomB
         conf = conf || "std";
         console.log(`loading configuration ${conf}`);
@@ -1485,9 +1488,23 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    clearInterval() {
+    clearInterval (): DAAPlayer {
         this._timer_active = false;
+        this.clearTimerJiffy();
         return this;
+    }
+
+    setTimerJiffy (tname: string, f: () => void, step: number): void {
+        this.timers[`${tname}-${step}`] = setTimeout(f, DAAPlayer.timerJiffy * step);
+    }
+    clearTimerJiffy (tname?: string): void {
+        const keys: string[] = Object.keys(this.timers);
+        const tk: string[] = (tname) ? keys.filter((timer) => { return timer.startsWith(`${tname}-`); }) : keys;
+        if (tk && tk.length) {
+            for (let i = 0; i < tk.length; i++) {
+                clearTimeout(this.timers[tk[i]]);
+            }
+        }
     }
  
 

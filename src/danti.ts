@@ -133,27 +133,21 @@ player.define("init", async () => {
     viewOptions.applyCurrentViewOptions();
 });
 //TODO: implement a function plotAll in spectrogram
-player.define("plot", async () => {
+player.define("plot", () => {
     const bandsData: utils.DAABandsData[] = player.getBandsData();
     const flightData: LLAData[] = player.getFlightData();
     if (bandsData) {
-        return new Promise((resolve, reject) => {
-            for (let step = 0; step < bandsData.length; step++) {
-                setTimeout(() => {
-                    const lla: LLAData = flightData[step];
-                    const hd: number = Compass.v2deg(lla.ownship.v);
-                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                    const vs: number = +lla.ownship.v.z / 100;
-                    const alt: number = +lla.ownship.s.alt;
-                    plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
-                    if (step === bandsData.length - 1) {
-                        resolve();
-                    }
-                }, 8 * step);
-            }
-        });
+        for (let step = 0; step < bandsData.length; step++) {
+            player.setTimerJiffy("plot", () => {
+                const lla: LLAData = flightData[step];
+                const hd: number = Compass.v2deg(lla.ownship.v);
+                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                const vs: number = +lla.ownship.v.z / 100;
+                const alt: number = +lla.ownship.s.alt;
+                plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
+            }, step);
+        }
     }
-    return Promise.resolve();
 });
 async function createPlayer() {
     player.appendSimulationPlot({

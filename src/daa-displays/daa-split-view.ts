@@ -326,6 +326,16 @@ export class DAASplitView extends DAAPlayer {
         }
     }
 
+    // @override
+    clearInterval (): DAASplitView {
+        super.clearInterval();
+        if (this.players) {
+            if (this.players.right) { this.players.right.clearInterval(); }
+            if (this.players.left) { this.players.left.clearInterval(); }
+        }
+        return this;
+    }
+
     getPlayer(playerID: string): DAAPlayer {
         if (this.players) {
             return this.players[playerID];
