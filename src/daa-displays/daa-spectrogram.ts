@@ -266,74 +266,77 @@ export class DAASpectrogram {
     }
     plotAlerts(data: { alerts: utils.Alert[], step: number, time: string }): DAASpectrogram {
         if (data && data.alerts) {
-            const alertTypes: { [level: string]: string } = {
-                "0": "0", // NONE
-                "1": "1", // FAR
-                "2": "2", // MID
-                "3": "3" // NEAR
-            };
-            const range: { from: number, to: number } = { from: 0, to: 3 };
-            // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms
-            const band_plot_data = {};
-            const yScaleFactor = this.height / 3;
-            let radius: number = (this.width / this.length) - 1;
-            if (radius < 4) { radius = 4; } // 4px is the minimum radius
-            let marginTop: number = 0;
-            if (radius > yScaleFactor) {
-                // reduce radius size, otherwise it will not fit vertically
-                radius = yScaleFactor;
-            } else {
-                // offset the circle, to improve visibility of the alert in the spectrogram
-                marginTop = (yScaleFactor - radius) / 2;
-            }
-            // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
-            for (let a = 0; a < data.alerts.length; a++) {
-                const elem: utils.Alert = data.alerts[a];
-                if (elem && +elem.alert > 0) {
-                    band_plot_data[elem.alert] = [];
-                    band_plot_data[elem.alert].push({
-                        from: +elem.alert - 1,
-                        to: +elem.alert,
-                        color: utils.alertingColors[elem.alert].color,
-                        top: (range.to - +elem.alert) * yScaleFactor,
-                        height: yScaleFactor,
-                        units: (typeof this.units === "string") ? this.units : this.units.to,
-                        indicator: {
-                            radius,
-                            marginTop
-                        }
-                    });
-                }
-            }
-            // });
-
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
             const leftMargin = data.step * barWidth;
-            const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
-                id: this.id,
-                stepID: stepID,
-                zIndex: 2,
-                step: data.step,
-                time: data.time,
-                bands: band_plot_data,
-                alerts: Object.keys(band_plot_data).length ? (data && data.alerts) ? 
-                    data.alerts.filter((elem: { ac: string; alert: string }) => {
-                        return +elem.alert > 0;
-                    }).map((elem: { ac: string; alert: string }) => {
-                        return `${elem.ac} (${alertTypes[elem.alert]})`;
-                    }).join("\n") : "" : null,
-                top: this.top,
-                left: leftMargin,
-                width: barWidth,
-                height: this.height + 30 // extend point-and-click area to the timeline
-            });
-            $(`#${stepID}`).remove();
-            $(`#${this.id}-spectrogram-data`).append(theHTML);
-            // @ts-ignore -- method tooltip is added by bootstrap
-            // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
-            $(`#${stepID}`).tooltip();
-            this.installGotoHandler(data.step);
+
+            if ($(`#${stepID}`).length === 0) { // profiler: 0.4ms (without optimisation 3.4ms)
+                const alertTypes: { [level: string]: string } = {
+                    "0": "0", // NONE
+                    "1": "1", // FAR
+                    "2": "2", // MID
+                    "3": "3" // NEAR
+                };
+                const range: { from: number, to: number } = { from: 0, to: 3 };
+                // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms
+                const band_plot_data = {};
+                const yScaleFactor = this.height / 3;
+                let radius: number = (this.width / this.length) - 1;
+                if (radius < 4) { radius = 4; } // 4px is the minimum radius
+                let marginTop: number = 0;
+                if (radius > yScaleFactor) {
+                    // reduce radius size, otherwise it will not fit vertically
+                    radius = yScaleFactor;
+                } else {
+                    // offset the circle, to improve visibility of the alert in the spectrogram
+                    marginTop = (yScaleFactor - radius) / 2;
+                }
+                // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
+                for (let a = 0; a < data.alerts.length; a++) {
+                    const elem: utils.Alert = data.alerts[a];
+                    if (elem && +elem.alert > 0) {
+                        band_plot_data[elem.alert] = [];
+                        band_plot_data[elem.alert].push({
+                            from: +elem.alert - 1,
+                            to: +elem.alert,
+                            color: utils.alertingColors[elem.alert].color,
+                            top: (range.to - +elem.alert) * yScaleFactor,
+                            height: yScaleFactor,
+                            units: (typeof this.units === "string") ? this.units : this.units.to,
+                            indicator: {
+                                radius,
+                                marginTop
+                            }
+                        });
+                    }
+                }
+                // });
+
+                const theHTML = Handlebars.compile(templates.spectrogramAlertsTemplate)({
+                    id: this.id,
+                    stepID: stepID,
+                    zIndex: 2,
+                    step: data.step,
+                    time: data.time,
+                    bands: band_plot_data,
+                    alerts: Object.keys(band_plot_data).length ? (data && data.alerts) ? 
+                        data.alerts.filter((elem: { ac: string; alert: string }) => {
+                            return +elem.alert > 0;
+                        }).map((elem: { ac: string; alert: string }) => {
+                            return `${elem.ac} (${alertTypes[elem.alert]})`;
+                        }).join("\n") : "" : null,
+                    top: this.top,
+                    left: leftMargin,
+                    width: barWidth,
+                    height: this.height + 30 // extend point-and-click area to the timeline
+                });
+                $(`#${stepID}`).remove();
+                $(`#${this.id}-spectrogram-data`).append(theHTML);
+                // @ts-ignore -- method tooltip is added by bootstrap
+                // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
+                $(`#${stepID}`).tooltip();
+                this.installGotoHandler(data.step);
+            }
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
         return this;
@@ -353,74 +356,76 @@ export class DAASpectrogram {
             const band_plot_data = {};
             const yScaleFactor = this.height / (this.range.to - this.range.from);
             const barWidth = this.width / this.length;
-            
-            const keys: string[] = Object.keys(data.bands);
-            let tooltipData: { band: string, range: { from: number, to: number }}[] = [];
-            for (let k = 0; k < keys.length; k++) {
-                const band: string = keys[k];
-                if (band !== "NONE") {
-                    band_plot_data[band] = [];
-                    const info: { from: number, to: number }[] = data.bands[band];
-                    for (let i = 0; i < info.length; i++) {
-                        const range: { from: number, to: number } = info[i];
-                        const from = convert(range.from, this.units.from, this.units.to);
-                        const to = convert(range.to, this.units.from, this.units.to);
-                        const height = to - from;
-                        tooltipData.push({ band, range });
-                        band_plot_data[band].push({
-                            from: from,
-                            to: to,
-                            color: utils.bandColors[band].color,
-                            dash: utils.bandColors[band].style === "dash",
-                            top: (this.range.to - to) * yScaleFactor,
-                            height: height * yScaleFactor,
-                            width: barWidth,
-                            units: this.units.to
-                        });
-                    }
-                }
-            }
-            // sort tooltip data
-            tooltipData = tooltipData.sort((a, b) => {
-                return (a.range.from < b.range.from) ? -1 : 1;
-            });
-            let tooltip: string = (!isNaN(data.marker)) ? 
-                                    (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
-                                        : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
-            for (let i = 0; i < tooltipData.length; i++) {
-                tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
-            }
-            
             const stepID = `${this.id}-step-${data.step}`;
             const leftMargin = data.step * barWidth;
-            const lineHeight: number = 4;
-            const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
-                id: this.id,
-                stepID: stepID,
-                zIndex: 2,
-                step: data.step,
-                time: data.time,
-                tooltip,
-                bands: (Object.keys(band_plot_data).length) ? band_plot_data : null, // we reduce the complexity of the HTML template by removing slices with no bands
-                top: this.top,
-                left: leftMargin,
-                width: barWidth,
-                height: this.height + 30, // extend click-and-point area to the timeline
-                marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
-                    value: data.marker,
-                    top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
-                    height: lineHeight,
+
+            if ($(`#${stepID}`).length === 0) { // profiler: 0.6ms (without optimisation 14.4ms)
+                const keys: string[] = Object.keys(data.bands);
+                let tooltipData: { band: string, range: { from: number, to: number }}[] = [];
+                for (let k = 0; k < keys.length; k++) {
+                    const band: string = keys[k];
+                    if (band !== "NONE") {
+                        band_plot_data[band] = [];
+                        const info: { from: number, to: number }[] = data.bands[band];
+                        for (let i = 0; i < info.length; i++) {
+                            const range: { from: number, to: number } = info[i];
+                            const from = convert(range.from, this.units.from, this.units.to);
+                            const to = convert(range.to, this.units.from, this.units.to);
+                            const height = to - from;
+                            tooltipData.push({ band, range });
+                            band_plot_data[band].push({
+                                from: from,
+                                to: to,
+                                color: utils.bandColors[band].color,
+                                dash: utils.bandColors[band].style === "dash",
+                                top: (this.range.to - to) * yScaleFactor,
+                                height: height * yScaleFactor,
+                                width: barWidth,
+                                units: this.units.to
+                            });
+                        }
+                    }
+                }
+                // sort tooltip data
+                tooltipData = tooltipData.sort((a, b) => { // profiler: 2.1ms
+                    return (a.range.from < b.range.from) ? -1 : 1;
+                });
+                let tooltip: string = (!isNaN(data.marker)) ? 
+                                        (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
+                                            : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
+                for (let i = 0; i < tooltipData.length; i++) {
+                    tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
+                }
+                
+                const lineHeight: number = 4;
+                const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
+                    id: this.id,
+                    stepID: stepID,
+                    zIndex: 2,
+                    step: data.step,
+                    time: data.time,
+                    tooltip,
+                    bands: (Object.keys(band_plot_data).length) ? band_plot_data : null, // we reduce the complexity of the HTML template by removing slices with no bands
+                    top: this.top,
+                    left: leftMargin,
                     width: barWidth,
-                    color: "white",
-                    units: data.units
-                } : null
-            });
-            $(`#${stepID}`).remove(); 
-            $(`#${this.id}-spectrogram-data`).append(theHTML);
-            // @ts-ignore -- method tooltip is added by bootstrap
-            //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
-            $(`#${stepID}`).tooltip();
-            this.installGotoHandler(data.step);
+                    height: this.height + 30, // extend click-and-point area to the timeline
+                    marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
+                        value: data.marker,
+                        top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
+                        height: lineHeight,
+                        width: barWidth,
+                        color: "white",
+                        units: data.units
+                    } : null
+                });
+                $(`#${stepID}`).remove(); 
+                $(`#${this.id}-spectrogram-data`).append(theHTML);
+                // @ts-ignore -- method tooltip is added by bootstrap
+                //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
+                $(`#${stepID}`).tooltip();
+                this.installGotoHandler(data.step);
+            }
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
         return this;
