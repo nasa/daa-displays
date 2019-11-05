@@ -1,10 +1,14 @@
 ## ChangeLog
 
+### 1.0.3 (2019.11.05)
+- Added support for the execution of C++ implementation of DAIDALUS
+- Added new App: 3d-view
+
 ### 1.0.2 (2019.09.10)
 - Improved playback performance and loading time
 - Improved playback controls: plot, reset, goto-time
 - Improved plot controls: point-and-click navigation
-- Improved split-view plots: highlighting of differences between plots; current flight data is now rendered also in the plots
+- Improved split-view plots: diff markers & current flight data rendered in plots
 
 ### 1.0.1 (2019.08.01)
 - Added new App: Airspace view
