@@ -7,6 +7,13 @@ SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java
 OBJS  = $(SRCS:.java=.class)
 JAVAC = javac
 JAR   = jar
+CPP   = c++
+SRC0   = $(wildcard src/*.cpp)
+SRC1   = $(SRC0:src/DaidalusExample.cpp=)
+SRC2   = $(SRC1:src/DaidalusAlerting.cpp=)
+SRC3   = $(SRC2:src/DaidalusBatch.cpp=)
+SRCS   = $(SRC3)
+OBJS   = $(SRCS:.cpp=.o)
 
 # $(call file-exists, file-name)
 #   Return non-null if a file exists.
@@ -32,10 +39,14 @@ COMPILE_TARGETS = $(foreach ver,$(VERSIONS), compile-$(ver))
 define compile-template
 compile-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
-	@echo Compiling for WellClear version $(1)
+	@echo Compiling WellClear version $(1) in Java
 	-@rm WellClear-$(1).jar
 	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
-	
+
+	@echo Compiling WellClear version $(1) in C++
+	-@cd WellClear-$(1)/DAIDALUS/C++/ && make lib && mv lib/DAIDALUS2e.a lib/DAIDALUS$(1).a ## FIXME: the original makefile produces DAIDALUS2e.a, but according to the conventions used here we need a DAIDALUS2.0.e.a
+	-@cd utils && $(CPP) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/DAIDALUS$(1).a $(if $(call version1, WellClear-$(1)) , DAABands.cpp, DAABandsV2.cpp) -o ../WellClear-$(1).exe
+
 	@echo "\n\033[0;32m ** Building DAALoSRegion-${1} **\033[0m"
 	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAALoSRegion.java, DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../LoSRegion-${1}.jar $(if $(call version1, WellClear-$(1)) , DAALoSRegion, DAALoSRegionV2 ) *.class && cd ../WellClear-${1}/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl LoSRegion-$(1).jar && unzip -c LoSRegion-$(1).jar META-INF/MANIFEST.MF
 endef

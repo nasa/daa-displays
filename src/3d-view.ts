@@ -120,8 +120,8 @@ player.define("step", async () => {
 });
 player.define("init", async () => {
     // compute java output
-    await player.java({
-        alertingLogic: `${player.getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+    await player.exec({
+        alertingLogic: player.getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: player.getSelectedConfiguration(),
         scenario: player.getSelectedScenario()
     });

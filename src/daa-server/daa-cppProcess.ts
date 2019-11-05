@@ -1,9 +1,8 @@
 /**
- * @module JavaProcess
- * @version 2019.02.07
+ * @module CppProcess
  * Java process wrapper
  * @author Paolo Masci
- * @date 2019.04.26
+ * @date 2019.11.05
  * @copyright 
  * Copyright 2016 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration. No
@@ -44,7 +43,7 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
-export class JavaProcess {
+export class CppProcess {
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
 		opt = opt || {};
 		if (daaFolder && daaLogic && daaConfig && scenarioName && outputFileName) {
@@ -53,7 +52,7 @@ export class JavaProcess {
 			scenarioName = scenarioName || "H1.daa";
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
 			const f1: string = path.join("../daa-output", ver);
-			const outputFolder: string = path.join(f1, "java");
+			const outputFolder: string = path.join(f1, "cpp");
 			// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
 			if (!fs.existsSync(f1)) {
 				fs.mkdirSync(f1);
@@ -67,7 +66,7 @@ export class JavaProcess {
 				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`java -jar ${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} ${wellClearScenario}`
+					`./${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} ${wellClearScenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);
@@ -85,41 +84,11 @@ export class JavaProcess {
 		}
 		return Promise.resolve(null);
 	}
-	async daa2json (inputFileName: string, outputFileName: string): Promise<string> {
-		if (inputFileName && outputFileName) {
-			const outputFolder: string = "../daa-scenarios/";
-			// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-			if (!fs.existsSync(outputFolder)) {
-				fs.mkdirSync(outputFolder);
-			}
-			const outputFilePath: string = path.join(outputFolder, outputFileName);
-			return new Promise((resolve, reject) => {
-				const scenario: string = path.join(__dirname, "../daa-scenarios", inputFileName);
-				const cmds: string[] = [
-					`cd ../daa-logic`,
-					`java -jar DAA2Json-2.x.jar --output ${outputFilePath} ${scenario}`
-				];
-				const cmd = cmds.join(" && ");
-				console.info(`Executing ${cmd}`);
-				exec(cmd, (error, stdout, stderr) => {
-					if (error) {
-						console.error(`exec error: ${error}`);
-						return;
-					} else if (stderr) {
-						console.error(`stderr: ${stderr}`);  
-					}
-					console.info(`stdout: ${stdout}`);
-					resolve(stdout);
-				});
-			});
-		}
-		return Promise.resolve(null);
-	}
 	async getVersion (folder: string, daaLogic: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
-				`java -jar ${daaLogic} --version`
+				`./${daaLogic} --version`
 			];
 			const cmd = cmds.join(" && ");
 			console.info("Executing " + cmd);

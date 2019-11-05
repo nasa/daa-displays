@@ -93,7 +93,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
-import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
+import { ExecMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
 import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
 
 
@@ -973,7 +973,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    async java (data: {
+    async exec (data: {
         alertingLogic: string,
         alertingConfig: string,
         scenario: string
@@ -981,7 +981,7 @@ export class DAAPlayer {
         err: string,
         bands: DaidalusBandsDescriptor
     }> {
-        const msg: JavaMsg = {
+        const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "DAAtoPVS-1.0.1.jar",
             daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
             scenarioName: data.scenario || "H1.daa"
@@ -993,7 +993,7 @@ export class DAAPlayer {
             this._repl[msg.daaLogic] = ws;
         }
         const res = await this._repl[msg.daaLogic].send({
-            type: "java",
+            type: "exec",
             data: msg
         });
         try {
@@ -1032,7 +1032,7 @@ export class DAAPlayer {
         err: string,
         los: DAALosDescriptor
     }> {
-        const msg: JavaMsg = {
+        const msg: ExecMsg = {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
             daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
             scenarioName: data.scenario || "H1.daa"
@@ -1083,7 +1083,7 @@ export class DAAPlayer {
         //scenario: .... 
         bands: DaidalusBandsDescriptor
     }> {
-        const msg: JavaMsg = {
+        const msg: ExecMsg = {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
             daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
             scenarioName: data.scenario || "H1.ic"
@@ -1152,7 +1152,7 @@ export class DAAPlayer {
         });
         if (res && res.data) {
             console.log(res);
-            const versions: string [] = JSON.parse(res.data);
+            const versions: string[] = JSON.parse(res.data);
             if (versions) {
                 // sort in descending order, so that newest version comes first
                 this._wellClearVersions = versions.sort((a: string, b: string) => { return (a < b) ? 1 : -1; });
@@ -1163,29 +1163,21 @@ export class DAAPlayer {
 
     async listConfigurations(): Promise<string[]> {
         await this.connectToServer();
-        const version: string = this.getSelectedWellClearVersion();
-        if (version) {
-            // const versionNumber: string = (version.split("-")[1].startsWith("1")) ? "1.x" : "2.x";
-            const res = await this.ws.send({
-                type: "list-config-files"//,
-                // version: versionNumber
-            });
-            if (res && res.data) {
-                console.log(res);
-                const currentConfigurations: string = JSON.stringify(this._wellClearConfigurations);
-                if (currentConfigurations !== res.data) {
-                    this._wellClearConfigurations = JSON.parse(res.data);
-                    // refresh front-end
-                    await this.refreshConfigurationView();
-                } else {
-                    console.log(`[daa-player] Configurations already loaded`, res.data);
-                }
+        const res = await this.ws.send({
+            type: "list-config-files"
+        });
+        if (res && res.data) {
+            console.log(res);
+            const currentConfigurations: string = JSON.stringify(this._wellClearConfigurations);
+            if (currentConfigurations !== res.data) {
+                this._wellClearConfigurations = JSON.parse(res.data);
+                // refresh front-end
+                await this.refreshConfigurationView();
+            } else {
+                console.log(`[daa-player] Configurations already loaded`, res.data);
             }
-            return this._wellClearConfigurations;
-        } else {
-            console.warn("[daa-player] Warning: daidalus configuration list is empty");
         }
-        return null;
+        return this._wellClearConfigurations;
     }
 
     // setVersionChangeCallback(f: () => void) {

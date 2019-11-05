@@ -278,8 +278,8 @@ splitView.define("diff", diff);
 // -- init
 splitView.getPlayer("left").define("init", async () => {
     // init left
-    await splitView.getPlayer("left").java({
-        alertingLogic: `${splitView.getPlayer("left").getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+    await splitView.getPlayer("left").exec({
+        alertingLogic: splitView.getPlayer("left").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario()
     });
@@ -300,8 +300,8 @@ splitView.getPlayer("left").define("init", async () => {
 });
 splitView.getPlayer("right").define("init", async () => {
     // init right
-    await splitView.getPlayer("right").java({
-        alertingLogic: `${splitView.getPlayer("right").getSelectedWellClearVersion()}.jar`, //"DAAtoPVS-1.0.1.jar",
+    await splitView.getPlayer("right").exec({
+        alertingLogic: splitView.getPlayer("right").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario()
     });

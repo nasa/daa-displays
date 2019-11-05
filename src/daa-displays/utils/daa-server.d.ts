@@ -1,7 +1,7 @@
 /**
  * Descriptor for Java evaluation requests
  */ 
-export declare interface JavaMsg {
+export declare interface ExecMsg {
     daaLogic: string; // full path of the executable (path is relative to daa-logic)
     daaConfig: string; // todo: need to decide if we want a standard forlder for the configurations. For now it's subfolder DAIDALUS/Configurations of the well clear logic
     scenarioName: string; // all scenarios are in folder daa-scenarios/

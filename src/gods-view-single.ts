@@ -123,13 +123,13 @@ player.define("step", async () => {
 player.define("init", async () => {
     // compute los regions
     await player.javaLoS({
-        losLogic: `${player.getSelectedLoSVersion()}.jar`,
+        losLogic: player.getSelectedLoSVersion(),
         alertingConfig: player.getSelectedConfiguration(),
         scenario: player.getSelectedScenario()
     });
     // compute bands
-    await player.java({
-        alertingLogic: `${player.getSelectedWellClearVersion()}.jar`,
+    await player.exec({
+        alertingLogic: player.getSelectedWellClearVersion(),
         alertingConfig: player.getSelectedConfiguration(),
         scenario: player.getSelectedScenario()
     });

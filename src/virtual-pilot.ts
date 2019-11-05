@@ -141,7 +141,7 @@ splitView.getPlayer("right").define("step", async () => {
 splitView.getPlayer("left").define("init", async () => {
     // init left
     await splitView.getPlayer("left").javaVirtualPilot({
-        virtualPilot: `${splitView.getPlayer("left").getSelectedLogic()}.jar`,
+        virtualPilot: splitView.getPlayer("left").getSelectedLogic(),
         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario()
     });
@@ -150,7 +150,7 @@ splitView.getPlayer("left").define("init", async () => {
 splitView.getPlayer("right").define("init", async () => {
     // init right
     await splitView.getPlayer("right").javaVirtualPilot({
-        virtualPilot: `${splitView.getPlayer("right").getSelectedLogic()}.jar`,
+        virtualPilot: splitView.getPlayer("right").getSelectedLogic(),
         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario()
     });

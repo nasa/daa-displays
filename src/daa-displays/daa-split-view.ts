@@ -86,7 +86,7 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  **/
 import * as utils from './daa-utils';
 import { DAAPlayer, safeSelector } from './daa-player';
-import { JavaMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from 'src/daa-server/utils/daa-server';
+import { ExecMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from 'src/daa-server/utils/daa-server';
     
 export class DAASplitView extends DAAPlayer {
     private players: { [key: string]: DAAPlayer };

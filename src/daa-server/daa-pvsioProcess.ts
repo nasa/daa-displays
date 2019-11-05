@@ -76,10 +76,10 @@ class PvsLispParser {
 }
 
 export class PVSioProcess {
-    private pvsExecutable: string = null;
-    private pvsProcess: ChildProcess = null;
-    private pvsProcessBusy: boolean = false;
-	private cmdQueue: Promise<PvsResponse> = Promise.resolve({ res: null, error: null });	
+    protected pvsExecutable: string = null;
+    protected pvsProcess: ChildProcess = null;
+    protected pvsProcessBusy: boolean = false;
+	protected cmdQueue: Promise<PvsResponse> = Promise.resolve({ res: null, error: null });	
 	/**
 	 * @constructor
 	 * @param pvsExecutable Location of the pvs executable. Must be an absolute path.
@@ -92,7 +92,7 @@ export class PVSioProcess {
 	 * Executes a pvs lisp command using the pvs process
 	 * @param cmd PVSio commands to be evaluted
 	 */
-	private pvsioExec(cmd: string): Promise<PvsResponse> {
+	protected pvsioExec(cmd: string): Promise<PvsResponse> {
 		// utility function, automatically responds to lisp interactive commands, such as when pvs crashes into lisp
 		async function getResult(pvsLispResponse: string): Promise<PvsResponse> {
             const ans: PvsResponse = JSON.parse(pvsLispResponse);
@@ -123,7 +123,7 @@ export class PVSioProcess {
 			this.pvsProcess.stdin.write(cmd + "\n");
 		});
     }
-    // private pvsExec(commandId: string, cmd: string): Promise<PvsResponse> {
+    // protected pvsExec(commandId: string, cmd: string): Promise<PvsResponse> {
 	// 	this.pvsCmdQueue = new Promise((resolve, reject) => {
 	// 		this.pvsCmdQueue.then(() => {
 	// 			this.pvsExecAux(commandId, cmd).then((ans: PvsResponse) => {
@@ -137,7 +137,7 @@ export class PVSioProcess {
 	/**
 	 * Starts the pvsio process
 	 */
-	private async spawnProcess (): Promise<{}> {
+	protected async spawnProcess (): Promise<{}> {
 		if (!this.pvsProcess) {
             this.pvsProcessBusy = true;
 			return new Promise((resolve, reject) => {

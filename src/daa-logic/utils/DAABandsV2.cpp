@@ -295,7 +295,7 @@ public:
 	}
 
 	std::string getVersion () const {
-		return "2.x"; //VERSION;
+		return larcfm::DaidalusParameters::VERSION; //VERSION;
 	}
 
 	void parseCliArgs (char* const args[], int length) {
