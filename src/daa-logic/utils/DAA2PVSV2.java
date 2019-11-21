@@ -42,23 +42,21 @@ TERMINATION OF THIS AGREEMENT.
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Optional;
-import java.nio.file.FileSystems;
+import java.util.regex.Matcher;
+// import java.util.ArrayList;
+import java.util.regex.Pattern;
 
-import gov.nasa.larcfm.ACCoRD.BandsRegion;
+// import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
-import gov.nasa.larcfm.ACCoRD.KinematicBandsParameters;
-import gov.nasa.larcfm.ACCoRD.KinematicMultiBands;
-import gov.nasa.larcfm.Util.Units;
-import gov.nasa.larcfm.Util.Util;
-import gov.nasa.larcfm.Util.f;
+// import gov.nasa.larcfm.Util.f;
 
-public class DAA2PVS {
+import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
-	protected String tool_name = "DAA2PVS";
+public class DAA2PVSV2 {
+
+	protected String tool_name = "DAA2PVSV2";
 
 	Daidalus daa = null;
 
@@ -69,21 +67,74 @@ public class DAA2PVS {
 
 	PrintWriter printWriter = null;
 
-	DAA2PVS () {
+	DAA2PVSV2 () {
 		/* Create Daidalus object and setting the configuration parameters */
 		this.daa = new Daidalus();
 	}
 
-	String getVersion () {
-		return KinematicBandsParameters.VERSION;
+	String getScenario() {
+		return this.scenario;
 	}
-
+	String getConfigFileName() {
+		return this.daaConfig;
+	}
 	String getDaaConfig () {
-		return daaConfig;
+		if (daaConfig != null) {
+			return daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
+		}
+		return null;
+	}
+	String getOutputFileName() {
+		return this.ofname;
+	}
+	String getInputFileName() {
+		return this.ifname;
 	}
 
-	String getInputFileName () {
-		return ifname;
+	protected void printHelpMsg() {
+		System.out.println("Version: DAIDALUS " + getVersion());
+		System.out.println("Converts Daidalus configurations in PVS format");
+		System.out.println("Usage:");
+		System.out.println("  " + tool_name + " [options] file");
+		System.out.println("Options:");
+		System.out.println("  --help\n\tPrint this message");
+		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
+		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
+		System.exit(0);
+	}
+
+
+
+	Boolean loadDaaConfig () {
+		if (daa != null) {
+			if (daaConfig != null) {
+				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
+				if (paramLoaded) {
+					// System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
+					return true;
+				} else {
+					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default WellClear configuration.");
+				}
+			} else {
+				System.err.println("** Warning: Configuration file not specified. Using default WellClear configuration.");
+			}
+		} else {
+			System.err.println("** Error: Daidalus is not initialized.");
+		}
+		return false;
+	}
+	
+	public void walkFile () {
+
+		/* Create DaidalusFileWalker */
+		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
+
+		/* Processing the input file time step by time step and writing output file */
+		while (!walker.atEnd()) {
+			walker.readState(daa);
+			System.out.println(daa.toPVS());
+		}
+
 	}
 
 	static String getFileName (String fname) {
@@ -100,36 +151,8 @@ public class DAA2PVS {
 					: fname;
 	}
 
-	protected void printHelpMsg() {
-		System.out.println("Version: DAIDALUS " + getVersion());
-		System.out.println("Generates a file that can be processed with the Python script drawmultibands.py");
-		System.out.println("Usage:");
-		System.out.println("  " + tool_name + " [options] file");
-		System.out.println("Options:");
-		System.out.println("  --help\n\tPrint this message");
-		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
-		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
-		System.exit(0);
-    }
-    
-
-	Boolean loadDaaConfig () {
-		if (daa != null) {
-			if (daaConfig != null) {
-				Boolean paramLoaded = this.daa.parameters.loadFromFile(daaConfig);
-				if (paramLoaded) {
-					// System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
-					return true;
-				} else {
-					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default WellClear configuration.");
-				}
-			} else {
-				System.err.println("** Warning: Configuration file not specified. Using default WellClear configuration.");
-			}
-		} else {
-			System.err.println("** Error: Daidalus is not initialized.");
-		}
-		return false;
+	String getVersion () {
+		return VERSION;
 	}
 
 	protected void parseCliArgs (String[] args) {
@@ -138,42 +161,44 @@ public class DAA2PVS {
 			printHelpMsg();
 			System.exit(0);
 		}
-		for (int a = 0; a < args.length; a++) {
+		int a = 0;
+		for (; a < args.length && args[a].startsWith("-"); a++) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
 				printHelpMsg();
 			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
-				a++;
-				if (a < args.length) {
-					daaConfig = args[a];
-					System.out.println("[ Info ] Configuration file: " + daaConfig);
-				}
+				daaConfig = args[++a];
 			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
-				a++;
-				if (a < args.length) {
-					ofname = args[a];
-					System.out.println("[ Info ] Output file: " + ofname);
-				}
+				ofname = args[++a];
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(getVersion());
 				System.exit(0);
 			} else if (args[a].startsWith("-")) {
-				System.err.println("** Error: Invalid option (" + args[a] + ")");
+				System.err.println("** Error: Invalid option ("+args[a]+")");
 				System.exit(1);
 			} else {
 				// scenario name
-				ifname = args[a];
-				scenario = removeExtension(getFileName(ifname));
+				this.ifname = args[a];
+				this.scenario = removeExtension(getFileName(this.ifname));
+				if (ofname == null) {
+					ofname = scenario + ".json";
+				}		
 			}
 		}
-		if (scenario != null && ofname == null) {
-			ofname = scenario + ".daa.pvs";
+	}
+
+	public Boolean inputFileReadable () {
+		String inputFile = getInputFileName();
+		File file = new File(inputFile);
+		if (!file.exists() || !file.canRead()) {
+			return false;
 		}
+		return true;
 	}
 
 	protected Boolean createPrintWriter () {
 		try {
-			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)), true);
-			// System.out.println("Creating output file " + ofname);
+			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
+			System.out.println("Creating output file " + ofname);
 		} catch (Exception e) {
 			System.err.println("** Error: " + e);
 			return false;
@@ -188,63 +213,27 @@ public class DAA2PVS {
 		return false;
 	}
 
-	public void walkFile () {
-		if (ofname != null) { this.createPrintWriter(); }
-
-		/* Create DaidalusFileWalker */
-		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
-
-		/* Processing the input file time step by time step and writing output file */
-		if (ofname != null) {
-			printWriter.println("(:");
-		}
-		while (!walker.atEnd()) {
-			walker.readState(daa);
-			String ans =  daa.aircraftListToPVS(8); // 8 is the precision
-			if (ofname != null) {
-				printWriter.print("(" + daa.getCurrentTime() + ", " + ans + ")");
-				if (!walker.atEnd()) {
-					printWriter.println(",");
-				}
-			} else {
-				System.out.println(ans);
-			}
-		}
-
-		if (ofname != null) {
-			printWriter.println("\n:)");
-			this.closePrintWriter();
-			System.out.println("Created file " + ofname);
-		}
-
-	}
-
 	String getPvsConfiguration () {
-		return this.daa.parameters.toPVS(8);
+		String out = this.daa.toPVS();
+		// System.out.println(out);
+		Matcher match = Pattern.compile("%%%\\s*Parameters\\s*:\\s*([^%]+)").matcher(out);
+		if (match.find()) {
+			return match.group(1);
+		}
+		return null;
 	}
 
 	public static void main(String[] args) {
-		DAA2PVS daa2pvs = new DAA2PVS();
+		DAA2PVSV2 daa2pvs = new DAA2PVSV2();
 		daa2pvs.parseCliArgs(args);
 
-		if (daa2pvs.getDaaConfig() != null) {
-			daa2pvs.loadDaaConfig();
-			String out = daa2pvs.getPvsConfiguration();
-			if (out != null) {
-				try {
-					String configFile = daa2pvs.getDaaConfig() + ".pvs";
-					PrintWriter conf = new PrintWriter(new BufferedWriter(new FileWriter(configFile)),true);
-					conf.println(out);
-					conf.close();
-					System.out.println("Created file " + configFile);
-				} catch (IOException ex) {
-					System.out.println(out);
-				}
-			}
+		daa2pvs.loadDaaConfig();
+		String out = daa2pvs.getPvsConfiguration();
+		if (out != null) {
+			System.out.println(out);
 		}
-
-		if (daa2pvs.getInputFileName() != null) {
-			daa2pvs.walkFile();
-		}
+		// System.out.println(daa2pvs.daa.toPVS());
+		// daa2pvs.walkFile();
 	}
+
 }

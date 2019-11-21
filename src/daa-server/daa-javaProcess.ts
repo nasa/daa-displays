@@ -115,6 +115,7 @@ export class JavaProcess {
 		}
 		return Promise.resolve(null);
 	}
+	// conveerts configuration file and .daa scenario file in pvs format
 	async daa2pvs (wellClearFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string): Promise<{ configFile: string, scenarioFile: string }> {
 		if (daaLogic) {
 			return new Promise((resolve, reject) => {
@@ -123,7 +124,7 @@ export class JavaProcess {
 				const scenarioFile: string = path.join(__dirname, "../daa-scenarios", scenarioName);
 				const cmds: string[] = [
 					`cd ../daa-logic`,
-					`java -jar DAA2PVS-1.x.jar -conf ${configFile} ${scenarioFile} -out ${outputFile}`
+					`java -jar DAA2PVS-1.x.jar -conf ${configFile} -output ${outputFile} ${scenarioFile}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);

@@ -174,7 +174,7 @@ public class DAA2Json {
 				output = scenario + ".json";
 			}
 			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
-			System.out.println("Writing output into file " + output);
+			System.out.println("Writing output file " + output);
 		} catch (Exception e) {
 			System.err.println("** Error: " + e);
 			System.exit(1);

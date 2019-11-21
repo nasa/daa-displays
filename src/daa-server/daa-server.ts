@@ -49,7 +49,6 @@ class DAAServer {
             for (let i = 0; i < javaFiles.length; i++) {
                 const candidate: string = javaFiles[i].replace(".jar", "");
                 const fname: string = path.join(wellclearLogicFolder, `${candidate}`, "PVS/DAABands.pvs");
-                console.log("CHECKING " + fname);
                 if (fs.existsSync(fname)) {
                     versions.push(`${candidate}.pvsio`);
                 }
@@ -219,7 +218,7 @@ class DAAServer {
                                             break;
                                         }
                                         case "pvsio": {
-                                            const res: { configFile: string, scenarioFile: string } = await this.javaProcess.daa2pvs(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, `${outputFileName}.pvs`);
+                                            const res: { configFile: string, scenarioFile: string } = await this.javaProcess.daa2pvs(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, `${data.scenarioName}.pvs`);
                                             try {
                                                 const contextFolder: string = path.join(wellClearFolder, `WellClear-${wellClearVersion}`, "PVS");
                                                 await this.pvsioProcess.pvsioMode(contextFolder, "DAABands");
