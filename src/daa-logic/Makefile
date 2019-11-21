@@ -137,6 +137,8 @@ daa2json:
 daa2pvs:
 	@echo "\n\033[0;32m ** Building DAA2PVS for Daidalus 1.x **\033[0m"
 	@cd utils && $(JAVAC) -cp ../WellClear-1.0.2/DAIDALUS/Java/src DAA2PVS.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-1.0.2/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../DAA2PVS-1.x.jar DAA2PVS *.class && cd ../WellClear-1.0.2/DAIDALUS/Java/src && $(JAR) uf ../../../../DAA2PVS-1.x.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl DAA2PVS-1.x.jar
+	-@cp utils/DAABands.pvs WellClear-1.0.1/PVS
+	-@cp utils/DAABands.pvs WellClear-1.0.2/PVS
 
 daa2pvsv2:
 	@echo "\n\033[0;32m ** Building DAA2PVS for Daidalus 2.x **\033[0m"

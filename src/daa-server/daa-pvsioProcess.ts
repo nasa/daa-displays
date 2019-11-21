@@ -117,11 +117,11 @@ export class PVSioProcess {
 			const listener = (data: string) => {
 				console.log(data); // this is the crude pvs lisp output, useful for debugging
 				pvslispParser.parse(data, async (pvsOut: PvsResponse) => {
-					const match: RegExpMatchArray = /\<JSON\>([\w\W\s]+)\<\/\/JSON\>/.exec(data);
-					if (match && match.length > 1) {
-						const bands = JSON.parse(match[1]);
-						console.dir(bands, { depth: null });
-					}
+					// const match: RegExpMatchArray = /\<JSON\>([\w\W\s]+)\<\/\/JSON\>/.exec(data);
+					// if (match && match.length > 1) {
+					// 	const bands = JSON.parse(match[1]);
+					// 	console.dir(bands, { depth: null });
+					// }
 					this.pvsProcess.stdout.removeListener("data", listener); // remove listener otherwise this will capture the output of other commands
 					this.pvsProcessBusy = false;
 					resolve(pvsOut);
@@ -189,8 +189,13 @@ export class PVSioProcess {
 			this.pvsioModeActive = true;
 		}
 	}
-	async getVersion (): Promise<string> {
-		return "1.0.0";
+	async getVersion (wellClearFolder: string, daaLogic: string): Promise<string> {
+		const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/g.exec(daaLogic);
+		if (match && match.length > 1) {
+			console.log("[daa-pvsio-process] pvsio well-clear version " + match[1]);
+			return match[1];
+		}
+		return null;
 	}
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
 		try {
@@ -202,14 +207,19 @@ export class PVSioProcess {
 				const json_bands: string = response.res.replace("==>", "").replace("TRUE", "").replace("<PVSio>", "");
 				// console.log(json_bands);
 
-				const ver: string = "1.0.0";
-				const f1: string = path.join("../daa-output", ver);
-				const outputFolder: string = path.join(f1, "pvsio");
-				// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-				if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
-				if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
-				const outputFilePath: string = path.join(outputFolder, outputFileName);
-				await fs.writeFileSync(outputFilePath, json_bands);
+				const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);
+				if (match && match.length > 1) {
+					const ver: string = match[1];
+					const f1: string = path.join("../daa-output", ver);
+					const outputFolder: string = path.join(f1, "pvsio");
+					// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
+					if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
+					if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
+					const outputFilePath: string = path.join(outputFolder, outputFileName);
+					fs.writeFileSync(outputFilePath, json_bands);
+				} else {
+					console.error("[daa-pvsio-process] Error: could not identify pvsio well-clear version", daaLogic);
+				}
 			} else {
 				console.error(response);
 			}

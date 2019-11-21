@@ -192,9 +192,8 @@ public class DAA2PVS {
 		}
 		while (!walker.atEnd()) {
 			walker.readState(daa);
-			String ans =  daa.aircraftListToPVS(16); // 16 is the precision
+			String ans =  daa.aircraftListToPVS(8); // 8 is the precision
 			if (ofname != null) {
-				// printWriter.print('"' + daa.aircraftListToPVS(16).replaceAll("\"", "\\\\\"") + '"');
 				printWriter.print("(" + daa.getCurrentTime() + ", " + ans + ")");
 				if (!walker.atEnd()) {
 					printWriter.println(",");
@@ -213,14 +212,7 @@ public class DAA2PVS {
 	}
 
 	String getPvsConfiguration () {
-		return this.daa.parameters.toPVS(16);
-		// String out = this.daa.parameters.toPVS(16); // 16 is the precision
-		// // System.out.println(out);
-		// Matcher match = Pattern.compile("%%%\\s*Parameters\\s*:\\s*([^%]+)").matcher(out);
-		// if (match.find()) {
-		// 	return match.group(1);
-		// }
-		// return null;
+		return this.daa.parameters.toPVS(8);
 	}
 
 	public static void main(String[] args) {

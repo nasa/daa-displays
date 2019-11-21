@@ -1,3 +1,3 @@
 #!/bin/bash
 cd daa-server
-./start-server.sh
+./start-server.sh "$@"

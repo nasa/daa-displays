@@ -1,2 +1,2 @@
 #!/bin/bash
-node daa-server.js
+node daa-server.js "$@"
