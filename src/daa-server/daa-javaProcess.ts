@@ -115,6 +115,37 @@ export class JavaProcess {
 		}
 		return Promise.resolve(null);
 	}
+	async daa2pvs (wellClearFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string): Promise<{ configFile: string, scenarioFile: string }> {
+		if (daaLogic) {
+			return new Promise((resolve, reject) => {
+				const configFile: string = path.join(__dirname, "../daa-config", daaConfig);
+				const outputFile: string = path.join(__dirname, "../daa-scenarios", outputFileName);
+				const scenarioFile: string = path.join(__dirname, "../daa-scenarios", scenarioName);
+				const cmds: string[] = [
+					`cd ../daa-logic`,
+					`java -jar DAA2PVS-1.x.jar -conf ${configFile} ${scenarioFile} -out ${outputFile}`
+				];
+				const cmd = cmds.join(" && ");
+				console.info(`Executing ${cmd}`);
+				exec(cmd, { maxBuffer: 1024 * 5000 }, (error, stdout, stderr) => {
+					if (error) {
+						console.error(`exec error: ${error}`);
+						return reject(error);
+					} else if (stderr) {
+						console.error(`stderr: ${stderr}`);
+					}
+					console.info(`stdout: ${stdout}`);
+					resolve({
+						configFile: `${configFile}.pvs`,
+						scenarioFile: outputFile
+					});
+				});
+			});
+		} else {
+			console.error("[daa2pvs] Error: daaLogic is null");
+		}
+		return Promise.resolve(null);
+	}
 	async getVersion (folder: string, daaLogic: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const cmds: string[] = [

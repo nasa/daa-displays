@@ -42,6 +42,7 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 interface PvsResponse {
     res: string;
@@ -53,11 +54,11 @@ const cmds: { [key: string]: string } = {
 };
 
 class PvsLispParser {
-    pvsOut: string;
+    protected pvsOut: string;
     constructor () {
         this.pvsOut = "";
     }
-    parse(data: string, cb: (pvsout: PvsResponse) => void) {
+    parse(data: string, cb: (pvsout: PvsResponse) => void): void {
 		this.pvsOut += data;
 		// see also regexp from emacs-src/ilisp/ilisp-acl.el
 		const PVS_COMINT_PROMPT_REGEXP: RegExp = /\s*pvs\(\d+\):|([\w\W\s]*)\spvs\(\d+\):/g;
@@ -80,6 +81,7 @@ export class PVSioProcess {
     protected pvsProcess: ChildProcess = null;
     protected pvsProcessBusy: boolean = false;
 	protected cmdQueue: Promise<PvsResponse> = Promise.resolve({ res: null, error: null });	
+	protected pvsioModeActive: boolean = false;
 	/**
 	 * @constructor
 	 * @param pvsExecutable Location of the pvs executable. Must be an absolute path.
@@ -94,33 +96,39 @@ export class PVSioProcess {
 	 */
 	protected pvsioExec(cmd: string): Promise<PvsResponse> {
 		// utility function, automatically responds to lisp interactive commands, such as when pvs crashes into lisp
-		async function getResult(pvsLispResponse: string): Promise<PvsResponse> {
-            const ans: PvsResponse = JSON.parse(pvsLispResponse);
-			if (/.*==>\s*(.*)\s*<PVSio>/.test(ans.res)) {
-				let match: RegExpMatchArray = /.*==>\s*(.*)\s*<PVSio>/.exec(ans.res);
-				ans.res = match[1];
-                console.info("PVSio response: ", ans.res);
-			}
-			return ans; 
-		}
+		// async function getResult(pvsLispResponse: string): Promise<PvsResponse> {
+        //     const ans: PvsResponse = JSON.parse(pvsLispResponse);
+		// 	if (/.*==>\s*(.*)\s*<PVSio>/.test(ans.res)) {
+		// 		let match: RegExpMatchArray = /.*==>\s*(.*)\s*<PVSio>/.exec(ans.res);
+		// 		ans.res = match[1];
+        //         console.info("PVSio response: ", ans.res);
+		// 	}
+		// 	return ans; 
+		// }
 		if (this.pvsProcessBusy) {
 			const msg: string = "PVSio busy, cannot execute " + cmd + ":/";
 			return Promise.reject(msg);
-		}	
+		}
 		this.pvsProcessBusy = true;
 		const pvslispParser = new PvsLispParser();
-		console.info("Executing command " + cmd);
+		// console.info("Executing command " + cmd);
+		console.log(cmd);
 		return new Promise(async (resolve, reject) => {
-			let listener = (data: string) => {
+			const listener = (data: string) => {
 				console.log(data); // this is the crude pvs lisp output, useful for debugging
 				pvslispParser.parse(data, async (pvsOut: PvsResponse) => {
+					const match: RegExpMatchArray = /\<JSON\>([\w\W\s]+)\<\/\/JSON\>/.exec(data);
+					if (match && match.length > 1) {
+						const bands = JSON.parse(match[1]);
+						console.dir(bands, { depth: null });
+					}
 					this.pvsProcess.stdout.removeListener("data", listener); // remove listener otherwise this will capture the output of other commands
 					this.pvsProcessBusy = false;
 					resolve(pvsOut);
 				});
 			};
 			this.pvsProcess.stdout.on("data", listener);
-			this.pvsProcess.stdin.write(cmd + "\n");
+			this.pvsProcess.stdin.write(cmd);
 		});
     }
     // protected pvsExec(commandId: string, cmd: string): Promise<PvsResponse> {
@@ -137,41 +145,79 @@ export class PVSioProcess {
 	/**
 	 * Starts the pvsio process
 	 */
-	protected async spawnProcess (): Promise<{}> {
+	protected async spawnProcess (): Promise<void> {
 		if (!this.pvsProcess) {
             this.pvsProcessBusy = true;
 			return new Promise((resolve, reject) => {
-                console.info("Spawning PVSio process " + this.pvsExecutable);
-				this.pvsProcess = spawn(this.pvsExecutable, ["-raw"]);
-				this.pvsProcess.stdout.setEncoding("utf8");
-                this.pvsProcess.stderr.setEncoding("utf8");
-                const pvsLispParser: PvsLispParser = new PvsLispParser();
-                const _this = this;
-				let listener = function (data: string) {
-					console.log(data); // this is the crude pvs lisp output, useful for debugging
+                console.info("Spawning PVS process " + this.pvsExecutable); 
+				const proc = spawn(this.pvsExecutable, ["-raw"]);
+				proc.stdout.setEncoding("utf8");
+                proc.stderr.setEncoding("utf8");
+				const pvsLispParser: PvsLispParser = new PvsLispParser();
+				const _this = this;
+				function listener (data: string) {
+					// console.log(data); // this is the crude pvs lisp output, useful for debugging
 					pvsLispParser.parse(data, (ans: PvsResponse) => {
 						// console.info(ans.res);
-						_this.pvsProcess.stdout.removeListener("data", listener); // remove listener otherwise this will capture the output of other commands
+						proc.stdout.removeListener("data", listener); // remove listener otherwise this will capture the output of other commands
 						_this.pvsProcessBusy = false;
+						console.log("PVS ready!");
 						resolve();
 					});
 				};
-				this.pvsProcess.stdout.on("data", listener);
-				this.pvsProcess.stderr.on("data", (data: string) => {
-					console.log(data);
+				proc.stdout.on("data", (data: string) => {
+					listener(data);
 				});
+				proc.stderr.on("data", (data: string) => {
+					console.error(data);
+				});
+				this.pvsProcess = proc;
 			});
 		}
 	}
 	async activate () {
         await this.spawnProcess();
 	}
-    async init (contextFolder: string, file: string, theory: string) {
-        await this.pvsioExec(cmds['disable-gc-printout']);
-        await this.pvsioExec(`(change-context "${contextFolder}" t)`);
-        await this.pvsioExec(`(typecheck-file "${file}" nil nil nil)`);
-        await this.pvsioExec('(load-pvs-attachments)');
-        await this.pvsioExec(`(evaluation-mode-pvsio "${theory}" nil nil nil)`);
-    }
+    async pvsioMode (contextFolder: string, fileName: string, theoryName?: string): Promise<void> {
+		if (this.pvsioModeActive === false) {
+			theoryName = theoryName || fileName;
+			await this.pvsioExec(`(setq *disable-gc-printout* t)`);
+			await this.pvsioExec(`(change-context "${contextFolder}" t)`);
+			await this.pvsioExec(`(typecheck-file "${fileName}" nil nil nil)`);
+			await this.pvsioExec('(load-pvs-attachments)');
+			await this.pvsioExec(`(evaluation-mode-pvsio "${theoryName}" nil nil)`);
+			this.pvsioModeActive = true;
+		}
+	}
+	async getVersion (): Promise<string> {
+		return "1.0.0";
+	}
+	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
+		try {
+			const pvsConfig: string = fs.readFileSync(daaConfig).toLocaleString();
+			await this.pvsioExec(`load_parameters(${pvsConfig});`)
+			const pvsScenario: string = fs.readFileSync(scenarioName).toLocaleString();
+			const response: PvsResponse = await this.pvsioExec(`LET scenario: Scenario = ${pvsScenario} IN print_json_bands(scenario);`);
+			if (response && response.res) {
+				const json_bands: string = response.res.replace("==>", "").replace("TRUE", "").replace("<PVSio>", "");
+				// console.log(json_bands);
+
+				const ver: string = "1.0.0";
+				const f1: string = path.join("../daa-output", ver);
+				const outputFolder: string = path.join(f1, "pvsio");
+				// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
+				if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
+				if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
+				const outputFilePath: string = path.join(outputFolder, outputFileName);
+				await fs.writeFileSync(outputFilePath, json_bands);
+			} else {
+				console.error(response);
+			}
+		} catch (pvsio_error) {
+			console.error("[daa-pvsio-process] Error: ", pvsio_error);
+		}
+		// await this.pvsioExec(`LET ${scenarioName}: Scenario = ${scenarioData};`);
+		return null;
+	}
 
 }

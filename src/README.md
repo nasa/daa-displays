@@ -3,15 +3,20 @@ DAA-Displays is a toolkit for model-based design and analysis of cockpit
 displays. It includes a library of interactive graphical display elements (widgets)
 for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.
 
+## Requirements
+The following software is necessary to compile and execute DAA-Displays
+- NodeJS (https://nodejs.org/en/download)
+- Java compiler
+- C++ compiler
+
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
-2. Download and install NodeJS from https://nodejs.org/en/download
-3. Open a terminal window and change directory to the daadisplays folder.
-4. Run `make`.
+2. Open a terminal window and change directory to the daadisplays folder.
+3. Run `make` in the terminal window.
    This command will create a folder dist/ with the JavaScript distribution.
-5. Run the bash script `./restart.sh`.
-   The script will install the dependencies and launch the daa-server on port 8082.
-6. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
+4. Run the bash script `./restart.sh` in the terminal window.
+   The script will download the dependencies and launch the daa-server on port 8082.
+5. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
 
 ## Notices
 ### Copyright 

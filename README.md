@@ -12,15 +12,20 @@ daa-displays-1.0.3
 - Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
 - Simulation tools supporting comparative analysis of cockpit displays
 
+## Requirements
+The following software is necessary to compile and execute DAA-Displays
+- NodeJS (https://nodejs.org/en/download)
+- Java
+- C++
+
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
-2. Download and install NodeJS from https://nodejs.org/en/download
-3. Open a terminal window and change directory to the daadisplays folder.
-4. Run `make`.
+2. Open a terminal window and change directory to the daadisplays folder.
+3. Run `make` in the terminal window.
    This command will create a folder dist/ with the JavaScript distribution.
-5. Run the bash script `./restart.sh`.
-   The script will install the dependencies and launch the daa-server on port 8082.
-6. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
+4. Run the bash script `./restart.sh` in the terminal window.
+   The script will download the dependencies and launch the daa-server on port 8082.
+5. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
 
 ## Structure
 ```

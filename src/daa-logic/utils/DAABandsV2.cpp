@@ -307,12 +307,12 @@ public:
 		}
 		int a = 1;
 		for (; a < length && larcfm::startsWith(args[a], "-"); a++) {
-			if (strcmp(args[a], "--help") == 0 || strcmp(args[a], "-help") == 0 || strcmp(args[a], "-h") == 0) {
+			if (std::strcmp(args[a], "--help") == 0 || std::strcmp(args[a], "-help") == 0 || std::strcmp(args[a], "-h") == 0) {
 				std::cout << "DAABandsV2 help" << std::endl;
 				printHelpMsg();
-			} else if (larcfm::startsWith(args[a], "--conf") || larcfm::startsWith(args[a], "-conf") || strcmp(args[a], "-c") == 0) {
+			} else if (larcfm::startsWith(args[a], "--conf") || larcfm::startsWith(args[a], "-conf") || std::strcmp(args[a], "-c") == 0) {
 				daa_config = args[++a];
-			} else if (larcfm::startsWith(args[a], "--out") || larcfm::startsWith(args[a], "-out") || strcmp(args[a], "-o") == 0) {
+			} else if (larcfm::startsWith(args[a], "--out") || larcfm::startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0) {
 				ofname = args[++a];
 			} else if (larcfm::startsWith(args[a], "--version") || larcfm::startsWith(args[a], "-version")) {
 				std::cout << getVersion() << std::endl;
