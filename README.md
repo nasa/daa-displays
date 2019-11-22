@@ -27,6 +27,13 @@ The following software is necessary to compile and execute DAA-Displays
    The script will download the dependencies and launch the daa-server on port 8082.
 5. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
 
+## Tips for developers
+The `./restart.sh` script supports the following options:
+- `-pvsio`               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
+- `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires nasalib)
+- `-dev`                 (Enables developer mode; in this mode, caching of simulation results is disabled)
+- `-port <port number>`  (The server will use the given port)
+
 ## Structure
 ```
 .
