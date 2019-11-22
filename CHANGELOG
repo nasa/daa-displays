@@ -1,5 +1,9 @@
 ## ChangeLog
 
+### 1.0.4 (2019.11.22)
+- Added support for the execution of PVSio specifications of DAIDALUS
+- Added command line options for the server
+
 ### 1.0.3 (2019.11.05)
 - Added support for the execution of C++ implementation of DAIDALUS
 - Added new App: 3d-view
