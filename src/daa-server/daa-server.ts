@@ -7,12 +7,18 @@ import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
 import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile } from './utils/daa-server';
-import * as utils from '../daa-displays/daa-utils';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 
-// TODO: to find these version, check if DAABands.pvs exists in the wellclear folder
-const pvsioWellClear: string[] = [ "WellClear-1.0.1.pvsio", "WellClear-1.0.2.pvsio" ];
+const helpMsg: string = `
+  Usage: node daa-server.js [options]
+  Options:
+    -pvsio               (Enables the pvsio process; the pvsio command must be in the path)
+    -pvsio <path>        (Enables the pvsio process; the given pvsio path is used for executing pvsio)
+    -cache               (Enables caching of output bands, i.e., does not re-generate a file in the output folder if the file already exists)
+    -port <port number>  (The server will use the given port)
+`;
+
 
 class DAAServer {
     pvsioPath: string = null;
@@ -68,7 +74,7 @@ class DAAServer {
                 if (tmp && tmp.port) {
                     const port: number = parseInt(tmp.port);
                     this.config.port = port;
-                    console.info(`Server port: ${port}`)
+                    console.info(`Server port: ${port}`);
                 }
                 if (tmp && tmp.pvs) {
                     const pvs: string = tmp.pvs;
@@ -550,25 +556,31 @@ class DAAServer {
                 switch (elem) {
                     case "-pvsio": {
                         this.pvsioProcessEnabled = true;
-                        console.log("[daa-displays] PVS process enabled");
-                        break;
-                    }
-                    case "-pvsiopath": {
-                        i++;
-                        if (i < args.length) {
+                        console.log("[daa-displays] PVSio process enabled");
+                        if ((i + 1) < args.length && !args[i + 1].startsWith("-")) {
+                            i++;
                             this.pvsioPath = args[i];
-                            console.log("[daa-displays] PVS path: ", this.pvsioPath);
-                            this.pvsioProcessEnabled = true;
-                            console.log("[daa-displays] PVS process enabled");
-                            } else {
-                            console.warn("[daa-server] Warning: -pvspath option is not followed by the pvs path specification");
+                            console.log("[daa-displays] PVSio path: ", this.pvsioPath);
                         }
                         break;
                     }
-                    case "-usecache": {
+                    case "-port": {
+                        if ((i + 1) < args.length && !isNaN(+args[i + 1])) {
+                            i++;
+                            this.config.port = +args[i];
+                            console.info(`Server port: ${this.config.port}`)
+                        } else {
+                            console.warn("Warning: port number not provided, using default port " + this.config.port);
+                        }
+                    }
+                    case "-cache": {
                         this.useCache = true;
-                        console.log("[daa-displays] Using cache to speed up scenario loading");
+                        console.log("[daa-displays] Using cache to speed up the computation of bands");
                         break;
+                    }
+                    case "-help": {
+                        console.log(helpMsg);
+                        process.exit(1);
                     }
                     default: {
                         console.warn("[daa-server] Warning: unrecognized option ", args[i]);
@@ -578,13 +590,14 @@ class DAAServer {
         }
     }
     async activate () {
-        // parse command line arguments
+        // try to load configuration file
+        await this.loadDaaServerConfiguration("daa-server.json");
+
+        // parse command line arguments, if any
         const args: string[] = process.argv.slice(2);
         console.log("args: ", args);
         this.parseCliArgs(args);
 
-        // try to load configuration file
-        await this.loadDaaServerConfiguration("daa-server.json");
         // create http service provider
         const app = express();
         const daaDisplaysRoot: string = path.join(__dirname, '..');

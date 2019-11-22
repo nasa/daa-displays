@@ -198,19 +198,18 @@ export class PVSioProcess {
 		return null;
 	}
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
-		try {
-			const pvsConfig: string = fs.readFileSync(daaConfig).toLocaleString();
-			await this.pvsioExec(`load_parameters(${pvsConfig});`)
-			const pvsScenario: string = fs.readFileSync(scenarioName).toLocaleString();
-			const response: PvsResponse = await this.pvsioExec(`LET scenario: Scenario = ${pvsScenario} IN print_json_bands(scenario);`);
-			if (response && response.res) {
-				const json_bands: string = response.res.replace("==>", "").replace("TRUE", "").replace("<PVSio>", "");
-				// console.log(json_bands);
-
-				const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);
-				if (match && match.length > 1) {
-					const ver: string = match[1];
-					const f1: string = path.join("../daa-output", ver);
+		const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);
+		if (match && match.length > 1) {
+			const ver: string = match[1];
+			const f1: string = path.join("../daa-output", ver);
+			try {
+				const pvsConfig: string = fs.readFileSync(daaConfig).toLocaleString();
+				await this.pvsioExec(`load_parameters(${pvsConfig});`)
+				const pvsScenario: string = fs.readFileSync(scenarioName).toLocaleString();
+				const response: PvsResponse = await this.pvsioExec(`LET scenario: Scenario = ${pvsScenario} IN print_json_bands(scenario,  (# version := "${ver}", configuration := "${daaConfig}", scenario := "${scenarioName}" #));`);
+				if (response && response.res) {
+					const json_bands: string = response.res.replace("==>", "").replace("TRUE", "").replace("<PVSio>", "");
+					// console.log(json_bands);
 					const outputFolder: string = path.join(f1, "pvsio");
 					// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
 					if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
@@ -218,13 +217,13 @@ export class PVSioProcess {
 					const outputFilePath: string = path.join(outputFolder, outputFileName);
 					fs.writeFileSync(outputFilePath, json_bands);
 				} else {
-					console.error("[daa-pvsio-process] Error: could not identify pvsio well-clear version", daaLogic);
+					console.error(response);
 				}
-			} else {
-				console.error(response);
+			} catch (pvsio_error) {
+				console.error("[daa-pvsio-process] Error: ", pvsio_error);
 			}
-		} catch (pvsio_error) {
-			console.error("[daa-pvsio-process] Error: ", pvsio_error);
+		} else {
+			console.error("[daa-pvsio-process] Error: could not identify pvsio well-clear version", daaLogic);
 		}
 		// await this.pvsioExec(`LET ${scenarioName}: Scenario = ${scenarioData};`);
 		return null;
