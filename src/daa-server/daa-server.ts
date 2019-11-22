@@ -13,9 +13,9 @@ import WebSocket = require('ws');
 const helpMsg: string = `
   Usage: node daa-server.js [options]
   Options:
-    -pvsio               (Enables the pvsio process; the pvsio command must be in the path)
-    -pvsio <path>        (Enables the pvsio process; the given pvsio path is used for executing pvsio)
-    -cache               (Enables caching of output bands, i.e., does not re-generate a file in the output folder if the file already exists)
+    -pvsio               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
+    -pvsio <path>        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires nasalib)
+    -dev                 (Enables developer mode; in this mode, caching of simulation results is disabled)
     -port <port number>  (The server will use the given port)
 `;
 
@@ -23,7 +23,7 @@ const helpMsg: string = `
 class DAAServer {
     pvsioPath: string = null;
     pvsioProcessEnabled: boolean = false;
-    useCache: boolean = false;
+    useCache: boolean = true;
     httpServer: http.Server;
     wsServer: ws.Server;
     pvsioProcess: PVSioProcess; // TODO: create an array of processes for parallel execution of multiple pvs files
@@ -573,9 +573,9 @@ class DAAServer {
                             console.warn("Warning: port number not provided, using default port " + this.config.port);
                         }
                     }
-                    case "-cache": {
-                        this.useCache = true;
-                        console.log("[daa-displays] Using cache to speed up the computation of bands");
+                    case "-dev": {
+                        this.useCache = false;
+                        console.log("[daa-displays] Developer mode");
                         break;
                     }
                     case "-help": {
