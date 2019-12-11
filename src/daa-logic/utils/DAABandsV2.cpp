@@ -44,6 +44,7 @@ TERMINATION OF THIS AGREEMENT.
 #include "Daidalus.h"
 #include "WCV_tvar.h"
 #include "DaidalusFileWalker.h"
+#include <cstring>
 
 class DaidalusWrapperInterface {
 	public:

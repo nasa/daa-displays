@@ -29,9 +29,11 @@
 		"@types/jquery": "^3.3.29",
 		"@types/ws": "^6.0.1",
 		"ts-node": "^8.3.0",
-		"@types/jasmine": "^3.3.13",
+		"@types/jasmine": "^3.5.0",
 		"@types/node": "^8.9.1",
-		"jasmine": "^3.4.0",
+		"jasmine": "^3.4.0"
+	},
+	"_obsolete_dep_": {
 		"jasmine-ts": "^0.3.0"
 	}
 }

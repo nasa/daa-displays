@@ -77,6 +77,21 @@ import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class SimDaidalus_2_3_1_wind {
 
+	static protected Boolean VERBOSE = false;
+
+	static protected void print (String str) {
+		if (VERBOSE) {
+			System.out.print(str);
+		}
+	}
+
+
+	static protected void println (String str) {
+		if (VERBOSE) {
+			System.out.println(str);
+		}
+	}
+
 	static String VP_VERSION = "2.3.1-" + VERSION;
 
     static Optional<Detection3D> detector;
@@ -112,10 +127,6 @@ public class SimDaidalus_2_3_1_wind {
 			case RECOVERY: return 4;
 			default: return -1;
 		}
-	}
-	
-	protected static void println(String str) {
-		// if 
 	}
 	
     public static void main(String[] args) {
@@ -370,29 +381,29 @@ public class SimDaidalus_2_3_1_wind {
 			// Ground velocity.
 			g_velocity_own = daa.getOwnshipState().getGroundVelocity(); // degrees, knots, feet/min.
 
-			System.out.println();
-			System.out.print(" Time "+time_sim);
-			System.out.print(" Ground Velocity vector own "+g_velocity_own);
-			System.out.println(" heading own "+heading_own*180/Math.PI+" airspeed "+airspeed_own*3600/1852);
+			println("");
+			print(" Time "+time_sim);
+			print(" Ground Velocity vector own "+g_velocity_own);
+			println(" heading own "+heading_own*180/Math.PI+" airspeed "+airspeed_own*3600/1852);
 			
 			//  Obtain resolutions.
 			// Horizontal
 			hor_dir_reso_right = daa.horizontalDirectionResolution(true);
 			hor_dir_reso_left = daa.horizontalDirectionResolution(false);
 			
-			System.out.print("  heading reso right  "+hor_dir_reso_right*180/Math.PI);
-			System.out.println(" heading reso left  "+hor_dir_reso_left*180/Math.PI);
+			print("  heading reso right  "+hor_dir_reso_right*180/Math.PI);
+			println(" heading reso left  "+hor_dir_reso_left*180/Math.PI);
 
 			// Vertical
 			ver_speed_reso_up = daa.verticalSpeedResolution(true);
 			ver_speed_reso_down = daa.verticalSpeedResolution(false);
 
 			
-			System.out.print("ver speed reso up "+ver_speed_reso_up*60*3.28084);
-			System.out.println("  ver speed reso down "+ver_speed_reso_down*60*3.28084);
+			print("ver speed reso up "+ver_speed_reso_up*60*3.28084);
+			println("  ver speed reso down "+ver_speed_reso_down*60*3.28084);
 			
 			det = daa.violationOfAlertThresholds(1,2);
-			System.out.println(" time to cpa 2D "+det.tcpa2D()+"; time to cpa 3D "+det.tcpa3D()+"; time to coalt "+det.tcoa());
+			println(" time to cpa 2D "+det.tcpa2D()+"; time to cpa 3D "+det.tcpa3D()+"; time to coalt "+det.tcoa());
 
 			
 			/* Wrapper to dynamically adjust the alerting time of DAIDALUS to prevent
@@ -403,12 +414,12 @@ public class SimDaidalus_2_3_1_wind {
 			// Check if ownship's heading or vertical speed are inside conflict bands 
 			hor_dir_region = region2value(daa.regionOfHorizontalDirection(heading_own));
 			ver_speed_region = region2value(daa.regionOfVerticalSpeed(ver_speed_own));
-			System.out.println("Region of current direction "+hor_dir_region+"  Region of vertical speed "+ver_speed_region);
+			println("Region of current direction "+hor_dir_region+"  Region of vertical speed "+ver_speed_region);
 
 			if (hor_dir_region != ver_speed_region) {
-				System.out.println(" ************************************************************************** ");
-				System.out.println(" ********* horizontal direction and vertical speed regions not equal ****** ");
-				System.out.println(" ************************************************************************** ");		    
+				println(" ************************************************************************** ");
+				println(" ********* horizontal direction and vertical speed regions not equal ****** ");
+				println(" ************************************************************************** ");		    
 			}
 	    
 	    	if (hor_dir_region >= 2 || ver_speed_region >= 2) {
@@ -454,13 +465,13 @@ public class SimDaidalus_2_3_1_wind {
 				hd_delay_clock = 0.0;
 			}
 	    
-			System.out.println(" AlertThresholds  "+athr);
+			println(" AlertThresholds  "+athr);
 			// System.out.println(" Parameters in daa "+daa);
 			
-			System.out.println("heading Bands [deg,deg]"); 
+			println("heading Bands [deg,deg]"); 
 	    	for (int i=0; i < daa.horizontalDirectionBandsLength(); ++i) {
 				Interval ii = daa.horizontalDirectionIntervalAt(i,"deg");
-				System.out.println("  "+daa.horizontalDirectionRegionAt(i)+":\t"+ii.toString(2));
+				println("  "+daa.horizontalDirectionRegionAt(i)+":\t"+ii.toString(2));
 	    	} 
 
 
@@ -509,10 +520,10 @@ public class SimDaidalus_2_3_1_wind {
 	    
 		} // End Simulation loop.
 	
-		System.out.print(+max_squircle.x()*100+", "+max_squircle.y()*3.281+", "+max_squircle.z()*3.281);
-		System.out.print(", "+min_horizontal_distance.x()*3.281+", "+min_horizontal_distance.y()*3.281);
-		System.out.print(", "+min_vertical_distance.x()*3.281+", "+min_vertical_distance.y()*3.281);
-		System.out.println(", "+time_impl_delay);
+		print(+max_squircle.x()*100+", "+max_squircle.y()*3.281+", "+max_squircle.z()*3.281);
+		print(", "+min_horizontal_distance.x()*3.281+", "+min_horizontal_distance.y()*3.281);
+		print(", "+min_vertical_distance.x()*3.281+", "+min_vertical_distance.y()*3.281);
+		println(", "+time_impl_delay);
 		
 		// Write last state.
 		writeState(daa, out);
@@ -627,11 +638,11 @@ public class SimDaidalus_2_3_1_wind {
 				switch (hd_resolution_type) {
 					case 0: hd_guidance = hor_dir_own; // No turn.
 							break;
-					case 1: System.out.print(" time "+time);
-							System.out.print("  heading "+hor_dir_own*180/Math.PI+"  reso right "+implement_right*180/Math.PI);
-						System.out.println("  reso left "+implement_left*180/Math.PI);
-						System.out.print(" turn delta right "+Util.turnDelta(hor_dir_own, implement_right)*180/Math.PI);
-						System.out.println(" turn delta left "+Util.turnDelta(hor_dir_own, implement_left)*180/Math.PI);
+					case 1: print(" time "+time);
+							print("  heading "+hor_dir_own*180/Math.PI+"  reso right "+implement_right*180/Math.PI);
+						println("  reso left "+implement_left*180/Math.PI);
+						print(" turn delta right "+Util.turnDelta(hor_dir_own, implement_right)*180/Math.PI);
+						println(" turn delta left "+Util.turnDelta(hor_dir_own, implement_left)*180/Math.PI);
 						if (Util.turnDelta(hor_dir_own, implement_right) <
 							Util.turnDelta(hor_dir_own, implement_left)) { // Smallest turn.
 							hd_guidance = implement_right;
