@@ -27,11 +27,13 @@ compile:
 	cp -R src/daa-displays/wwd dist/daa-displays/
 	cp -R src/contrib dist/contrib
 	cp src/index.html dist/
+	cp src/danti.html dist/
 	cp src/split.html dist/
 	cp src/virtual-pilot.html dist/
 	cp src/gods.html dist/
 	cp src/3d.html dist/
 	cp src/package.json dist/
+	cp -R src/images dist
 	# compile java files
 	cd dist && make compile
 	@echo "\033[0;32m Done! \033[0m"

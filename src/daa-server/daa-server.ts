@@ -619,6 +619,9 @@ class DAAServer {
         app.get('/3D', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
+        app.get('/danti', (req, res) => {
+            res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
+        });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');
         app.use(express.static(daaTestFolder));
         app.get('/test', (req, res) => {

@@ -1,4 +1,4 @@
-# DAA-Displays: A Toolkit for Rapid Prototyping Interactive Cockpit Displays
+# DAA-Displays: DAA-Displays: A Toolkit for the Analysis of Detect-And-Avoid Functions in Cockpit Displays
 DAA-Displays is a toolkit for model-based design and analysis of cockpit
 displays. It includes a library of interactive graphical display elements (widgets)
 for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.

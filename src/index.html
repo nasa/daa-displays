@@ -26,36 +26,78 @@
  * PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, 
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
 -->
-<!DOCTYPE HTML>
-<html style="background-color:white; transform-origin:left top;">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
-        <link rel="stylesheet" href="node_modules/animate.css/animate.min.css">
-        <link rel="stylesheet" href="daa-displays/css/daa-displays.css">
-    </head>
-    <body>
+<DOCTYPE HTML>
+    <html style="background-color:white; transform-origin:left top;">
+        <head>
+            <meta charset="utf-8">
+            <meta http-equiv="X-UA-Compatible">
+            <title>DAA-Displays</title>
+            <meta name="viewport" content="width=device-width">
+            <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        </head>
+        <body>
 
-        <div id="daa-cockpit" style="position:absolute; left:25.5%;">
-            <div id="daa-disp" style="margin-top:64px;"></div>
-            <div id="daa-disp-left" style="margin-left:50px;"></div>
-            <div id="daa-disp-right" style="margin-left:1200px;"></div>
-        </div>
-        <div id="activation-controls" style="position:absolute; top:940px; width:80%; left:25%;">
-        </div>
-        <div id="simulation-controls" style="position:absolute; top:1000px; width:80%; left:25%;">
-        </div>
-        <div id="simulation-plot" style="position:absolute; top:1140px; height:200px; width:1020px; left:25%;">
-        </div>
 
-        <script src="node_modules/jquery/dist/jquery.min.js"></script>
-        <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="node_modules/handlebars/dist/handlebars.min.js"></script>
-        <script src="node_modules/requirejs/require.js" data-main="danti.js"></script>
+			<div class="navbar navbar-dark bg-dark shadow-sm">
+                <a href="#" class="navbar-brand d-flex align-items-center">
+                <strong>DAA-Displays: A Toolkit for the Analysis of Detect-And-Avoid Functions in Cockpit Displays</strong>
+                </a>
+			</div>
 
-    </body>
-</html>
+
+			<div class="row" style="margin-top:20px; margin-left:auto; text-align:center;">
+				<a href="https://github.com/nasa/daa-displays" target=_blank><img style="position: absolute; top: 0; right: 0; border: 0;" src="images/forkme.png" alt="Fork me on GitHub"></a>
+
+				<div class="card" style="width:300px; margin:20px;">
+				<div class="card-header" style="margin-bottom:10px;">
+					DANTi
+				</div>
+				<div style="background-color:white;">
+					<div style="width:250px; margin:auto;">
+						<a href="danti"><img src="images/danti.gif" alt="danti" height="200"></a>
+					</div>
+				</div>
+				<div class="card-body" style="min-height:200px;">
+					<p><a href="danti" class="btn btn-sm btn-outline-secondary">Launch DANTi</a></p>
+					<p class="card-text">Prototype tablet application providing DAA capabilities in the cockpit.</p>
+				</div>
+				</div>
+				
+				<div class="card" style="width:400px; margin:20px;">
+				<div class="card-header" style="margin-bottom:10px;">
+					Split View
+				</div>
+				<div style="background-color:white;">
+					<div style="width:400px; margin:auto;">
+						<a href="split"><img src="images/split.gif" alt="danti" height="200"></a>
+					</div>
+				</div>
+				<div class="card-body" style="min-height:200px">
+					<p><a href="split" class="btn btn-sm btn-outline-secondary">Launch Split View</a></p>
+					<p class="card-text">Execute two simulation runs in lock-step and visualize the outputs side-by-side.</p>
+				</div>
+				</div>
+
+				<div class="card" style="width:300px; margin:20px;">
+					<div class="card-header" style="margin-bottom:10px;">
+						3D View
+					</div>
+					<div style="background-color:white;">
+						<div style="width:250px; margin:auto;">
+							<a href="3d"><img src="images/3d.gif" alt="3D view" height="200"></a>
+						</div>
+					</div>
+					<div class="card-body" style="min-height:200px;">
+						<p><a href="3d" class="btn btn-sm btn-outline-secondary">Launch 3D View</a></p>
+						<p class="card-text">3D simulation of flight scenarios.</p>
+					</div>
+				</div>
+
+				
+			</div>
+			  
+			
+			
+        </body>
+    </html>
+    
