@@ -112,7 +112,7 @@ function plot (bands: utils.DAABandsData, step: number, time: string) {
 }
 
 // single player, god's view
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap", godsView: true, los: true, callSignVisible: true });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp", godsView: true, los: true, callSignVisible: true });
 
 player.define("step", async () => {
     render({

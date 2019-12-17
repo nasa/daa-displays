@@ -9,13 +9,13 @@ export const checkButtons: string = `
                 </div>
                 <div id="{{id}}-checkbox2" class="form-check" style="position:absolute; left: 208px; color:white; width:207px; height:40px; border: 2px solid white; padding-top:4px; padding-left: 28px; font-size:20px; font-family:sans-serif;">
                         <input type="checkbox" name="{{id}}-topcheck" class="form-check-input" id="{{id}}-checkbox-2" style="transform:scale(1.5);">
-                        <label class="form-check-label" for="{{id}}-checkbox-2" style="margin-left:4px;">traffic</label>
+                        <label class="form-check-label" for="{{id}}-checkbox-2" style="margin-left:4px;">call-sign</label>
                 </div>
                 <div id="{{id}}-checkbox2-overlay" style="position:absolute; left:208px; width:207px; height:40px; cursor:pointer;">
                 </div>
                 <div id="{{id}}-checkbox3" class="form-check" style="position:absolute; left: 416px; color:white; width:207px; height:40px; border: 2px solid white; padding-top:4px; padding-left: 28px; font-size:20px; font-family:sans-serif;">
                         <input type="checkbox" name="{{id}}-topcheck" class="form-check-input" id="{{id}}-checkbox-3" style="transform:scale(1.5);">
-                        <label class="form-check-label" for="{{id}}-checkbox-3" style="margin-left:4px;">call-sign</label>
+                        <label class="form-check-label" for="{{id}}-checkbox-3" style="margin-left:4px;">terrain</label>
                 </div>
                 <div id="{{id}}-checkbox3-overlay" style="position:absolute; left:416px; width:207px; height:40px; cursor:pointer;">
                 </div>

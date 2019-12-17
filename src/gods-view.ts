@@ -98,7 +98,7 @@ function plot (playerID: string, bands: utils.DAABandsData, step: number, time: 
 }
 
 // splitView player
-const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 6}, { parent: "daa-disp-left" , terrain: "OpenStreetMap", godsView: true, callSignVisible: true });
+const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 6}, { parent: "daa-disp-left", godsView: true, callSignVisible: true });
 // map heading is controlled by the compass
 const compass_left: Compass = null;//new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left });
 // map zoom is controlled by nmiSelector
@@ -109,7 +109,7 @@ const airspeedTape_left: AirspeedTape = null;//new AirspeedTape("airspeed-left",
 const altitudeTape_left: AltitudeTape = null;//new AltitudeTape("altitude-left", { top: 100, left: 600 }, { parent: "daa-disp-left" });
 const verticalSpeedTape_left: VerticalSpeedTape = null;//new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
 
-const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left: 6}, { parent: "daa-disp-right" , terrain: "OpenStreetMap", godsView: true, callSignVisible: true });
+const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left: 6}, { parent: "daa-disp-right", godsView: true, callSignVisible: true });
 // map heading is controlled by the compass
 const compass_right: Compass = null;//new Compass("compass-right", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_right });
 // map zoom is controlled by nmiSelector

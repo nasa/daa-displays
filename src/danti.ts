@@ -105,7 +105,7 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
 
 
 // single player
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrain: "OpenStreetMap" });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector

@@ -10,9 +10,9 @@ export class ViewOptions {
     protected map: InteractiveMap;
     protected compass: Compass;
     protected div: HTMLElement;
-    readonly nChecks: number = 3; // will be 5 when all options are implemented
+    readonly nChecks: number = 3; // this will be 5 when all options are implemented
     protected readonly viewOptions: string[] = [ null, // valid checkbox IDs start from 1
-        "nrthup", "traffic", "call-sign", 
+        "nrthup", "call-sign", "terrain",
         "lay-lines", "trailing-lines" // these two are to be implemented
     ];
 
@@ -54,7 +54,7 @@ export class ViewOptions {
         }
 
         // check traffic by default
-        this.showTraffic(true);
+        // this.showTraffic(true);
     }
     applyCurrentViewOptions (): ViewOptions {
         for (let i = 0; i < this.nChecks; i++) {
@@ -118,15 +118,19 @@ export class ViewOptions {
                 if (this.compass) { this.compass.nrthupView(true); }
                 break;
             }
-            case "traffic": {
-                if (this.map) {
-                    this.map.showTraffic(true);
-                    this.enableInput("call-sign");
-                }
-                break;
-            }
+            // case "traffic": {
+            //     if (this.map) {
+            //         this.map.showTraffic(true);
+            //         this.enableInput("call-sign");
+            //     }
+            //     break;
+            // }
             case "call-sign": {
                 if (this.map) { this.map.showCallSign(true); }
+                break;
+            }
+            case "terrain": {
+                if (this.map) { this.map.terrainMode(); }
                 break;
             }
             default: // do nothing
@@ -140,33 +144,37 @@ export class ViewOptions {
                 if (this.compass) { this.compass.nrthupView(false); }
                 break;
             }
-            case "traffic": {
-                if (this.map) {
-                    this.map.showTraffic(false);
-                    this.disableInput("call-sign");
-                }
-                break;
-            }
+            // case "traffic": {
+            //     if (this.map) {
+            //         this.map.showTraffic(false);
+            //         this.disableInput("call-sign");
+            //     }
+            //     break;
+            // }
             case "call-sign": {
                 if (this.map) { this.map.showCallSign(false); }
+                break;
+            }
+            case "terrain": {
+                if (this.map) { this.map.streetMode(); }
                 break;
             }
             default: // do nothing
         }
         return this;
     }
-    showTraffic (flag: boolean): ViewOptions {
-        if (this.map) {
-            if (flag) {
-                this.check("traffic");
-            } else {
-                this.uncheck("traffic");
-            }
-        } else {
-            console.warn("Warning: ViewOptions is not linked to a map");
-        }
-        return this;
-    }
+    // showTraffic (flag: boolean): ViewOptions {
+    //     if (this.map) {
+    //         if (flag) {
+    //             this.check("traffic");
+    //         } else {
+    //             this.uncheck("traffic");
+    //         }
+    //     } else {
+    //         console.warn("Warning: ViewOptions is not linked to a map");
+    //     }
+    //     return this;
+    // }
     nrthupView (on: boolean): ViewOptions {
         if (this.compass) {
             if (on) {

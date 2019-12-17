@@ -1451,23 +1451,28 @@ class DAA_Aircraft extends Aircraft {
 
 
 // utility function, creates a wwd terrain layer
-function _get_terrain(t: string): WorldWind.RenderableLayer {
+function _get_terrainMap(t: string): WorldWind.RenderableLayer {
     if (t === "BMNG") {
         return new WorldWind.BMNGLayer(); // terrain, low res
     } else if (t === "BMNGOne") {
         return new WorldWind.BMNGOneImageLayer(); // terrain, low res
     } else if (t === "BMNGLandsat") {
         return new WorldWind.BMNGLandsatLayer(); // landsat image, low res
-    } else if (t === "BingAerial") {
-        return new WorldWind.BingAerialLayer(null); // terrain, high res
     } else if (t === "BingAerialWithLabels") {
-        return new WorldWind.BingAerialWithLabelsLayer(null); // terrain, high res with labels
-    } else if (t === "OpenStreetMap") {
-        return new OpenStreetMapRestLayer();
+        return new WorldWind.BingAerialWithLabelsLayer(null); // terrain, high res with labels 
+    }
+    // else if (t === "BingAerial") {
+    return new WorldWind.BingAerialLayer(null); // terrain, high res
+}
+
+function _get_streetMap(t: string): WorldWind.RenderableLayer {
+    if (t === "BingRoards") {
+        return new WorldWind.BingRoadsLayer(); // plain map with labels
     } else if (t === "OpenStreetMap-Hampton") {
         return new OpenStreetMapRestLayer({ useTileCache: true });
     }
-    return new WorldWind.BingRoadsLayer(); // plain map with labels
+    // else if (t === "OpenStreetMap") {
+    return new OpenStreetMapRestLayer();    
 }
 
 class DAA_Airspace {
@@ -1476,6 +1481,8 @@ class DAA_Airspace {
     protected nmi: number;
     protected _ownship: DAA_Aircraft;
     protected _traffic: DAA_Aircraft[];
+    protected terrainLayer: WorldWind.RenderableLayer;
+    protected streetLayer: WorldWind.RenderableLayer;
     protected atmosphereLayer: WorldWind.RenderableLayer;
     protected losLayer: WorldWind.RenderableLayer;
     protected trafficLayer: WorldWind.RenderableLayer;
@@ -1502,7 +1509,7 @@ class DAA_Airspace {
      * @inner
      */
     constructor(opt?: { ownship?: utils.LatLonAlt | serverInterface.LatLonAlt, traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, callSign: string }[], 
-                        canvas?: string, shader?: number, godsView?: boolean, offlineMap?: string, terrain?: string, atmosphere?: boolean, view3D?: boolean,
+                        canvas?: string, shader?: number, godsView?: boolean, offlineMap?: string, terrainMap?: string, streetMap?: string, terrainMode?: boolean, atmosphere?: boolean, view3D?: boolean,
                         los?: boolean, callSignVisible?: boolean, trafficVisible?: boolean }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -1526,10 +1533,15 @@ class DAA_Airspace {
 
         // Add map layers to worldwind.
         if (this.offlineMap) {
-            this.wwd.addLayer(new WorldWind.BMNGRestLayer(null, this.offlineMap));
+            this.terrainLayer = this.streetLayer = new WorldWind.BMNGRestLayer(null, this.offlineMap)
+            this.wwd.addLayer(this.terrainLayer);
         } else {
-            let terrain = _get_terrain(opt.terrain);
-            this.wwd.addLayer(terrain);
+            this.terrainLayer = _get_terrainMap(opt.terrainMap);
+            this.wwd.addLayer(this.terrainLayer);
+            this.terrainLayer.enabled = !!opt.terrainMode;
+            this.streetLayer = _get_streetMap(opt.streetMap);
+            this.wwd.addLayer(this.streetLayer);
+            this.streetLayer.enabled = !opt.terrainMode;
             if (opt.shader > 0) {
                 // Add shader, to enhance visibility of DAA symbols over Bing map
                 let surfaceImage2 = new WorldWind.SurfaceImage(WorldWind.Sector.FULL_SPHERE, utils.baseUrl + "images/black.png");
@@ -1612,6 +1624,18 @@ class DAA_Airspace {
             // set 2D view
             this.view2D();
         }
+    }
+    terrainMode (): DAA_Airspace {
+        this.terrainLayer.enabled = true;
+        this.streetLayer.enabled = false;
+        this.redraw();
+        return this;
+    }
+    streetMode (): DAA_Airspace {
+        this.terrainLayer.enabled = false;
+        this.streetLayer.enabled = true;
+        this.redraw();
+        return this;
     }
     resetLoS (): DAA_Airspace {
         if (this.losLayer) {
@@ -2022,7 +2046,7 @@ export class InteractiveMap {
      * @instance
      */
     constructor(id: string, coords: { top?: number, left?: number, width?: number, height?: number},
-                opt?: { parent?: string, pos?: utils.LatLonAlt, offlineMap?: string, terrain?: string, atmosphere?: boolean, view3D?: boolean,
+                opt?: { parent?: string, pos?: utils.LatLonAlt, offlineMap?: string, terrainMap?: string, streetMap?: string, terrainMode?: boolean, atmosphere?: boolean, view3D?: boolean,
                         godsView?: boolean, los?: boolean, callSignVisible?: boolean }) {
         opt = opt || {};
         this.id = id;
@@ -2047,7 +2071,9 @@ export class InteractiveMap {
         this.airspace = new DAA_Airspace({
             canvas: this.id + "-canvas",
             offlineMap: opt.offlineMap,
-            terrain: opt.terrain,
+            terrainMap: opt.terrainMap,
+            streetMap: opt.streetMap,
+            terrainMode: opt.terrainMode,
             atmosphere: opt.atmosphere,
             godsView: opt.godsView,
             view3D: opt.view3D,
@@ -2280,6 +2306,16 @@ export class InteractiveMap {
 
     view2D (): InteractiveMap {
         this.airspace.view2D();
+        return this;
+    }
+
+    terrainMode (): InteractiveMap {
+        this.airspace.terrainMode();
+        return this;
+    }
+
+    streetMode (): InteractiveMap {
+        this.airspace.streetMode();
         return this;
     }
 
