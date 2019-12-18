@@ -1,4 +1,7 @@
 ## ChangeLog
+### 1.0.5 (2019.12.18)
+- Added terrain mode
+- Added 2D geofences
 
 ### 1.0.4 (2019.11.22)
 - Added support for the execution of PVSio specifications of DAIDALUS

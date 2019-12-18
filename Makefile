@@ -6,7 +6,7 @@ compile:
 	@echo "\033[0;32m ** Building dist folder for daa-displays **\033[0m"
 	# generate javascript files
 	npm run build
-	# copy remaining files
+	# copying remaining files
 	cp src/daa-test/*.html dist/daa-test/
 	cp src/restart.sh dist/
 	cp src/README.md dist/

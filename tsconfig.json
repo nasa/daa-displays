@@ -11,8 +11,9 @@
 			"*": [ "node_modules/*", "node_modules/@types/*" ] // This mapping is relative to "baseUrl"
 		},
 		"types": [
-			"handlebars", "jquery", "node", "express", "ws", "connect", "events", "body-parser", "jasmine"
-		]
+			"handlebars", "jquery", "node", "express", "ws", "connect", "body-parser", "jasmine"
+		],
+		"diagnostics": true
 	},
 	"include": [
 		"./src/**/*"

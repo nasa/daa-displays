@@ -109,6 +109,22 @@
 
             <div class="input-group input-group-sm mb-3">
                 <div class="input-group-prepend">
+                    <span class="input-group-text">Heading (degs)</span>
+                </div>
+                <input type="number" class="form-control" id="test-compass-input" value="10" aria-label="Heading">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-compass">Submit</button>
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">GeoFence (Array([lat, lon, alt]))</span>
+                </div>
+                <input type="text" class="form-control" id="test-geofence-input" value="[[40,-100,1e5],[45,-110,1e5],[40,-120,1e5]]" aria-label="Heading">
+                <button type="button" class="btn btn-sm btn-secondary" id="test-geofence">Submit</button>
+            </div>
+
+            <!-- <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
                     <span class="input-group-text">Roll (degs)</span>
                 </div>
                 <input type="number" class="form-control" id="test-roll-input" value="10" aria-label="Roll">
@@ -120,7 +136,8 @@
                 </div>
                 <input type="number" class="form-control" id="test-pitch-input" value="2" aria-label="Pitch">
                 <button type="button" class="btn btn-sm btn-secondary" id="test-pitch">Submit</button>
-            </div>
+            </div> -->
+
         </div>
 
     </body>

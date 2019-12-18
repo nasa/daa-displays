@@ -28,7 +28,11 @@ export declare class ShapeAttributes {
     outlineColor: Color;
     interiorColor: Color;
     applyLighting: boolean;
-    constructor  (attributes)
+    depthTest: boolean;
+    drawInterior: boolean;
+    drawOutline: boolean;
+    drawVerticals: boolean;
+    constructor  (attributes: ShapeAttributes)
 }
 export declare class Color {
     constructor (red: number, green: number, blue: number, alpha: number)
@@ -161,6 +165,15 @@ export declare class SurfaceShape extends Renderable {
 }
 export declare class SurfacePolygon extends SurfaceShape {
     constructor(boundaries: Location[], attributes: ShapeAttributes);
+}
+export declare class SurfacePolyline extends SurfaceShape {
+    constructor(boundaries: Location[], attributes: ShapeAttributes);
+}
+export declare class Polygon extends AbstractShape {
+    altitudeMode: string;
+    extrude: boolean;
+    attributes: ShapeAttributes;
+    constructor(boundaries: Position[][] | Position[], attributes: ShapeAttributes);
 }
 export declare class Location {
     latitude: number;
