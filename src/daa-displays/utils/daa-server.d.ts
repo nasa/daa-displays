@@ -57,6 +57,11 @@ export declare interface LatLonAlt {
     alt: string;
 }
 
+export declare interface LatLon {
+    lat: string;
+    lon: string;
+}
+
 export declare interface Vector3D {
     x: string;
     y: string;

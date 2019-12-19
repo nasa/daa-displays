@@ -26,21 +26,51 @@ export declare class Angle {
 }
 export declare class ShapeAttributes {
     outlineColor: Color;
+    outlineWidth: number;
     interiorColor: Color;
     applyLighting: boolean;
     depthTest: boolean;
     drawInterior: boolean;
     drawOutline: boolean;
     drawVerticals: boolean;
+    outlineStipplePattern: number;
+    outlineStippleFactor: number;
+    imageSource: string | ImageSource;
     constructor  (attributes: ShapeAttributes)
 }
+export declare class ImageSource {
+    readonly image;
+    key: string;
+    constructor (image);
+}
 export declare class Color {
-    constructor (red: number, green: number, blue: number, alpha: number)
-    static readonly CYAN: number;
-    static readonly RED: number;
-    static readonly WHITE: number;
-    static readonly YELLOW: number;
-    static readonly BLUE: number;
+    constructor (red: number, green: number, blue: number, alpha: number);
+    alpha: number;
+    blue: number;
+    green: number;
+    red: number;
+    static colorFromByteArray (bytes: number[]): Color;
+    static colorFromBytes (redByte: number, greenByte: number, blueByte: number, alphaByte: number): Color;
+    clone(): Color;
+    copy(): Color;
+    equals(): boolean;
+    equalsBytes(bytes: number[]): boolean;
+    nextColor (): Color;
+    premultipliedComponents (array: number[]): number[];
+    set(red: number, green: number, blue: number): Color;
+    toByteString(): string;
+    toCssColorString(): string;
+    static readonly BLACK: Color;
+    static readonly BLUE: Color;
+    static readonly CYAN: Color;
+    static readonly GREEN: Color;
+    static readonly LIGHT_GRAY: Color;
+    static readonly MAGENTA: Color;
+    static readonly MEDIUM_GRAY: Color;
+    static readonly RED: Color;
+    static readonly TRANSPARENT: Color;
+    static readonly WHITE: Color;
+    static readonly YELLOW: Color;
 }
 export declare class DrawContext {
     canvas2D: HTMLElement;

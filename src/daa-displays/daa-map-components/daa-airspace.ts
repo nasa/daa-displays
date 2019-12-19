@@ -403,6 +403,9 @@ export class DAA_Airspace {
         if (this._ownship) {
             this._ownship.setScale(NMI);
         }
+        if (this.geofence) {
+            this.geofence.setScale(NMI);
+        }
         this.redraw();
         return this;
     }
@@ -417,10 +420,17 @@ export class DAA_Airspace {
         this.nmi = NMI || this.nmi;
         // wwd.navigator.range is the diagonal size of the wwd map displayed in the canvas.
         this.wwd.navigator.range = NMI * scaleFactor;
-        this._traffic.forEach(function (aircraft) {
-            aircraft.setScale(NMI);
-        });
-        this._ownship.setScale(NMI);
+        if (this._traffic) {
+            this._traffic.forEach(function (aircraft) {
+                aircraft.setScale(NMI);
+            });
+        }
+        if (this._ownship) {
+            this._ownship.setScale(NMI);
+        }
+        if (this.geofence) {
+            this.geofence.setScale(NMI);
+        }
         return this.redraw();
     }
     /**
@@ -739,9 +749,14 @@ export class DAA_Airspace {
         return this.redraw();
     }
 
-    addGeoFencePolygon (id: string, outerBoundaries: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { opacity?: number, color?: { r: number, g: number, b: number } }) : DAA_Airspace {
+    addGeoFencePolygon (
+        id: string, 
+        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        floor: { top: number | string, bottom: number | string }, 
+        opt?: { opacity?: number, color?: { r: number, g: number, b: number } }
+    ) : DAA_Airspace {
         if (this.geofence) {
-            this.geofence.addPolygon2D(id, outerBoundaries, opt);
+            this.geofence.addPolygon2D(id, perimeter, floor, opt);
             this.redraw();
         }
         return this;

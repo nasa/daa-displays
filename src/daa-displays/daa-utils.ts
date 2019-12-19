@@ -45,27 +45,28 @@ export const alertingColors = {
 // units conversion functions
 export function msec2knots(msec: number): number {
     return msec * 1.94384;
-}
+};
 export function knots2msec(knots: number): number {
     return knots / 1.94384;
-}
+};
 export function rad2deg(rad: number): number {
     return rad * 180 / Math.PI;
-}
+};
 export function deg2rad(deg: number): number {
     return deg * Math.PI / 180;
-}
+};
 export function meters2feet(m: number): number {
     return m * 3.28084;
-}
+};
 export function feet2meters(ft: number): number {
     return ft / 3.28084;
-}
+};
 
 // interface definitions
-export interface Vector3D { x: number, y: number, z: number }
-export interface FromTo { from: number, to: number, units: string }
-export interface LatLonAlt { lat: number, lon: number, alt: number }
+export interface Vector3D { x: number, y: number, z: number };
+export interface FromTo { from: number, to: number, units: string };
+export interface LatLonAlt { lat: number, lon: number, alt: number };
+export interface LatLon { lat: number, lon: number };
 export interface Bands {
     NONE?: FromTo[],
     FAR?: FromTo[],
@@ -77,7 +78,7 @@ export interface Bands {
 export interface Alert { ac: string; alert: string }
 export interface Coords {
     top?: number, left?: number, width?: number, height?: number
-}
+};
 
 export const BAND_NAMES: string[] = [ "Altitude Bands", "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands" ];
 
@@ -90,7 +91,7 @@ export interface DAABandsData {
     "Heading Bands": Bands;
     "Horizontal Speed Bands": Bands;
     "Vertical Speed Bands": Bands;
-}
+};
 
 
 // y axis identifies the direction of the aircraft
@@ -100,34 +101,34 @@ export function v2rad(v3: Vector3D): number {
         return 0; // atan2 is undefined if y and x are both zero
     }
     return Math.atan2(v3.y, v3.x);
-}
+};
 // y axis identifies the direction of the aircraft
 export function yaw(v3: Vector3D): number {
     // this is the compass
     return rad2deg(Math.atan2(v3.y, v3.x)) - 90; // the rotation on 90 degs is necessary because the aircraft moves over the x axis to go ahead, but in the canvas this corresponds to the x axis
-}
+};
 // y axis identifies the direction of the aircraft
 export function pitch(v3: Vector3D): number {
     return rad2deg(Math.atan2(v3.z, v3.y));
-}
+};
 // y axis identifies the direction of the aircraft
 export function roll(v3: Vector3D): number {
     return rad2deg(Math.atan2(v3.z, v3.x));
-}
+};
 export function fixed3(val: number): string {
     return (val < 10) ? "00" + val
             : (val < 100) ? "0" + val : val.toString();
-}
+};
 export function fixed2(val: number): string {
     return (val < 10) ? "0" + val : val.toString();
-}
+};
 export function modulo(v: Vector3D): number {
     v = v || { x: 0, y: 0, z: 0 };
     v.x = v.x || 0;
     v.y = v.y || 0;
     v.z = v.z || 0;
     return Math.sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
-}
+};
 export function limit(min: number, max: number, name?: string): (val: number) => number {
     return (val) => {
         if (val < min) {
@@ -139,7 +140,7 @@ export function limit(min: number, max: number, name?: string): (val: number) =>
         }
         return val;
     };
-}
+};
 
 export function createDiv(id: string, opt?: { zIndex?: number, top?: number, left?: number, parent?: string }): HTMLElement {
     opt = opt || {};
@@ -151,7 +152,7 @@ export function createDiv(id: string, opt?: { zIndex?: number, top?: number, lef
     const parentDIV: JQuery<HTMLElement> = (opt.parent && $(`#${opt.parent}`).length) ? $(`#${opt.parent}`) : $('BODY');
     $(parentDIV).append(div);
     return $(div)[0];
-}
+};
 
 export const baseUrl: string = "daa-displays/"; // important, baseUrl should always end with '/'
 

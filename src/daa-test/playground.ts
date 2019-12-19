@@ -4,6 +4,7 @@ import { VerticalSpeedTape } from '../daa-displays/daa-vertical-speed-tape';
 import { Compass } from '../daa-displays/daa-compass';
 import { HScale } from '../daa-displays/daa-hscale';
 import { VirtualHorizon } from '../daa-displays/daa-virtual-horizon';
+import { ViewOptions } from '../daa-displays/daa-view-options';
 
 import { InteractiveMap } from '../daa-displays/daa-interactive-map';
 import * as utils from '../daa-displays/daa-utils';
@@ -70,25 +71,30 @@ let others = [
     }
 ];
 
-const geofence_1: utils.LatLonAlt[] = [
-    { lat: cities.hampton.lat, lon: cities.hampton.lon, alt: 0 },
-    { lat: cities.newportnews.lat, lon: cities.newportnews.lon, alt: 0 },
-    { lat: cities.poquoson.lat, lon: cities.poquoson.lon, alt: 0 }
+const geofence_perimeter: utils.LatLon[] = [
+    { lat: cities.hampton.lat, lon: cities.hampton.lon },
+    { lat: cities.newportnews.lat, lon: cities.newportnews.lon },
+    { lat: cities.poquoson.lat, lon: cities.poquoson.lon }
 ];
+
+const geofence_floor: { top: string | number, bottom: string | number } = { top: 120, bottom: "SFC" };
 
 // interactive map
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
 // add geofence to the map
-map.addGeoFence("g1", geofence_1);
+map.addGeoFence("g1", geofence_perimeter, geofence_floor);
 map.showGeoFence(true);
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
+// map view options
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
+viewOptions.applyCurrentViewOptions();
+// tape displays
 const airspeedTape: AirspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
 const altitudeTape: AltitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { parent: "daa-disp" });
 const verticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
-
 
 airspeedTape.setBands({
     RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
@@ -185,10 +191,10 @@ class Playground {
             const json: number[][] = JSON.parse(input);
             if (typeof json === "object" && json.length > 0) {
                 const polygon = json.map(elem => {
-                    return { lat: elem[0], lon: elem[1], alt: elem[2] };
+                    return { lat: elem[0], lon: elem[1] };
                 });
                 console.log("Setting geofence ", polygon);
-                this.daaWidgets.map.addGeoFence("g2", polygon);
+                this.daaWidgets.map.addGeoFence("g2", polygon, { top: 110, bottom: "SFC" });
             }
         });
     }
