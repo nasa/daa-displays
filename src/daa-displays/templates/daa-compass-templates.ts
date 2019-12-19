@@ -40,7 +40,7 @@ export const compassTemplate = '<div id="{{id}}-inner" style="position:absolute;
 +    '</div>'
 +    '<!-- ownship -->'
 +    '<div id="{{id}}-ownship" style="z-index:1;">'
-+        '<div style="position:absolute; margin-left:307px; margin-top:300px;">'
++        '<div style="position:absolute; margin-left:306px; margin-top:300px;">'
 +            '<!-- <i class="fas fa-2x fa-location-arrow" style="color: #00fefe; transform-origin:center; transform:rotate(-45deg);"></i> -->'
 +            '<object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="width:22px;position:absolute;"></object>'
 +        '</div>'
