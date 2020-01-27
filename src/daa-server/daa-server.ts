@@ -15,7 +15,7 @@ const helpMsg: string = `
   Options:
     -pvsio               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
     -pvsio <path>        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires nasalib)
-    -dev                 (Enables developer mode; in this mode, caching of simulation results is disabled)
+    -fast                (Enables optimizations, including caching of simulation results)
     -port <port number>  (The server will use the given port)
 `;
 
@@ -23,7 +23,7 @@ const helpMsg: string = `
 class DAAServer {
     pvsioPath: string = null;
     pvsioProcessEnabled: boolean = false;
-    useCache: boolean = true;
+    useCache: boolean = false;
     httpServer: http.Server;
     wsServer: ws.Server;
     pvsioProcess: PVSioProcess; // TODO: create an array of processes for parallel execution of multiple pvs files
@@ -573,8 +573,8 @@ class DAAServer {
                             console.warn("Warning: port number not provided, using default port " + this.config.port);
                         }
                     }
-                    case "-dev": {
-                        this.useCache = false;
+                    case "-fast": {
+                        this.useCache = true;
                         console.log("[daa-displays] Developer mode");
                         break;
                     }
