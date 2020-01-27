@@ -610,6 +610,12 @@ class DAAServer {
         app.get('/split-view', (req, res) => { // alias for split
             res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
         });
+        app.get('/single', (req, res) => {
+            res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
+        });
+        app.get('/single-view', (req, res) => { // alias for single
+            res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
+        });
         app.get('/airspace', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, 'gods.html'));
         });

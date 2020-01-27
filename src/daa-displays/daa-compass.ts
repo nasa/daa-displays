@@ -128,7 +128,12 @@ class ResolutionBug {
      */
     setAngle(deg: number): ResolutionBug {
         this.deg = deg;
-        this.refresh();
+        if (isFinite(deg)) {
+            this.reveal();
+            this.refresh();            
+        } else {
+            this.hide();
+        }
         return this;
     }
     /**
@@ -155,6 +160,12 @@ class ResolutionBug {
         $(`.${this.id}-bg`).css({ "background-color": utils.bugColors[alert] });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${utils.bugColors[alert]}` });
         return this;
+    }
+    reveal (): void {
+        $(`#${this.id}`).css({ "display": "block"});
+    }
+    hide (): void {
+        $(`#${this.id}`).css({ "display": "none"});
     }
 }
 
@@ -291,6 +302,7 @@ export class Compass {
         // create resolution bug
         this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this);
         this.resolutionBug.setAngle(0);
+        this.resolutionBug.hide();
     }
     /**
      * @function <a name="setCompass">setCompass</a>

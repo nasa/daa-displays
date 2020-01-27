@@ -62,6 +62,10 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+        // set resolutions
+        if (bands["Heading Resolution"]) {
+            data.compass.setBug(bands["Heading Resolution"]["val"]);
+        }
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -88,12 +92,18 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"]) ? desc.bands["Heading Resolution"]["val"]
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"]) ? desc.bands["Horizontal Speed Resolution"]["val"]
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"]) ? desc.bands["Vertical Speed Resolution"]["val"]
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"]) ? desc.bands["Altitude Resolution"]["val"]
+                                : null;
         splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
             step: desc.step,
             time: desc.time,
             units: daaPlots[i].units,
-            marker
+            marker,
+            resolution
         });
     }
 }
@@ -349,24 +359,24 @@ async function developerMode (): Promise<void> {
 
     // left
     airspeedTape_left.setUnits(configData_left["horizontal-speed"].units);
-    airspeedTape_left.revealUnits();
     airspeedTape_left.setRange(configData_left["horizontal-speed"]);
+    airspeedTape_left.revealUnits();
     airspeedTape_left.disableTapeSpinning();
 
     altitudeTape_left.setUnits(configData_left.altitude.units);
-    altitudeTape_left.revealUnits();
     altitudeTape_left.setRange(configData_left["altitude"]);
+    altitudeTape_left.revealUnits();
     altitudeTape_left.disableTapeSpinning();
 
     // right
     airspeedTape_right.setUnits(configData_right["horizontal-speed"].units);
-    airspeedTape_right.revealUnits();
     airspeedTape_right.setRange(configData_right["horizontal-speed"]);
+    airspeedTape_right.revealUnits();
     airspeedTape_right.disableTapeSpinning();
 
     altitudeTape_right.setUnits(configData_right.altitude.units);
-    altitudeTape_right.revealUnits();
     altitudeTape_right.setRange(configData_right["altitude"]);
+    altitudeTape_right.revealUnits();
     altitudeTape_right.disableTapeSpinning();
 }
 

@@ -113,11 +113,12 @@ public class DAABandsV2 {
 		}
 	}
 
-	protected static void printBands(PrintWriter out, ArrayList<String> bands, String label) {
+	protected static void printArray(PrintWriter out, ArrayList<String> info, String label) {
 		out.println("\"" + label + "\": [");
-		for (int i = 0; i < bands.size(); i++) {
-			out.print(bands.get(i));
-			if (i < bands.size() - 1) {
+		int n = info.size();
+		for (int i = 0; i < n; i++) {
+			out.print(info.get(i));
+			if (i < n - 1) {
 				out.println(",");
 			} else {
 				out.println("");
@@ -151,10 +152,12 @@ public class DAABandsV2 {
 				+   "\"Scenario\": \"" + this.scenario + "\",";  
 	}
 
-	protected String jsonBands (Daidalus daa, ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray) {
+	protected String jsonBands (Daidalus daa, ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
+								ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray) {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
+		String trk_units = daa.getUnitsOf("step_hdir");
 
 		String time = f.FmPrecision(daa.getCurrentTime());
 		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
@@ -172,8 +175,8 @@ public class DAABandsV2 {
 		String trk = "{ \"time\": " + time;
 		trk += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, "deg");
-			trk += ", \"units\": \"deg\"";
+			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units);
+			trk += ", \"units\": \"" +  trk_units + "\"";
 			trk += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
 		}
@@ -213,6 +216,30 @@ public class DAABandsV2 {
 		alt += " ]}";
 		altArray.add(alt);
 
+		String resTrk = "{ \"time\": " + time;
+		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
+		resTrk += ", \"resolution\": { \"val\": \"" + daa.horizontalDirectionResolution(preferredTrk, trk_units) + "\", \"units\": \"" + trk_units + "\" }"; // resolution can be number, NaN or infinity
+		resTrk += " }";
+		resTrkArray.add(resTrk);
+
+		String resGs = "{ \"time\": " + time;
+		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
+		resGs += ", \"resolution\": { \"val\": \"" + daa.horizontalSpeedResolution(preferredGs, hs_units) + "\", \"units\": \"" + hs_units + "\" }"; // resolution can be number, NaN or infinity
+		resGs += " }";
+		resGsArray.add(resGs);
+
+		String resVs = "{ \"time\": " + time;
+		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
+		resVs += ", \"resolution\": { \"val\": \"" + daa.verticalSpeedResolution(preferredVs, vs_units) + "\", \"units\": \"" + vs_units + "\" }"; // resolution can be number, NaN or infinity
+		resVs += " }";
+		resVsArray.add(resVs);
+
+		String resAlt = "{ \"time\": " + time;
+		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
+		resAlt += ", \"resolution\": { \"val\": \"" + daa.altitudeResolution(preferredAlt, alt_units) + "\", \"units\": \"" + alt_units + "\" }"; // resolution can be number, NaN or infinity
+		resAlt += " }";
+		resAltArray.add(resAlt);
+
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
 					+ ", \"units\": \"" + hs_units + "\" },\n"
@@ -239,6 +266,12 @@ public class DAABandsV2 {
 		ArrayList<String> altArray = new ArrayList<String>();
 		ArrayList<String> alertsArray = new ArrayList<String>();
 
+		ArrayList<String> resTrkArray = new ArrayList<String>();
+		ArrayList<String> resGsArray = new ArrayList<String>();
+		ArrayList<String> resVsArray = new ArrayList<String>();
+		ArrayList<String> resAltArray = new ArrayList<String>();
+
+
 		String jsonStats = null;
 
 		/* Processing the input file time step by time step and writing output file */
@@ -247,20 +280,28 @@ public class DAABandsV2 {
 			if (wrapper != null) {
 				wrapper.adjustAlertingTime();
 			}
-			jsonStats = this.jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray);
+			jsonStats = this.jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray, resTrkArray, resGsArray, resVsArray, resAltArray);
 		}
 
 		printWriter.println(jsonStats + ",");
 
-		DAABandsV2.printBands(printWriter, alertsArray, "Alerts");
+		DAABandsV2.printArray(printWriter, alertsArray, "Alerts");
 		printWriter.println(",");
-		DAABandsV2.printBands(printWriter, trkArray, "Heading Bands");
+		DAABandsV2.printArray(printWriter, trkArray, "Heading Bands");
 		printWriter.println(",");
-		DAABandsV2.printBands(printWriter, gsArray, "Horizontal Speed Bands");
+		DAABandsV2.printArray(printWriter, gsArray, "Horizontal Speed Bands");
 		printWriter.println(",");
-		DAABandsV2.printBands(printWriter, vsArray, "Vertical Speed Bands");
+		DAABandsV2.printArray(printWriter, vsArray, "Vertical Speed Bands");
 		printWriter.println(",");
-		DAABandsV2.printBands(printWriter, altArray, "Altitude Bands");
+		DAABandsV2.printArray(printWriter, altArray, "Altitude Bands");
+		printWriter.println(",");
+		DAABandsV2.printArray(printWriter, resTrkArray, "Heading Resolution");
+		printWriter.println(",");
+		DAABandsV2.printArray(printWriter, resGsArray, "Horizontal Speed Resolution");
+		printWriter.println(",");
+		DAABandsV2.printArray(printWriter, resVsArray, "Vertical Speed Resolution");
+		printWriter.println(",");
+		DAABandsV2.printArray(printWriter, resAltArray, "Altitude Resolution");
 		printWriter.println("}");
 
 		this.closePrintWriter();

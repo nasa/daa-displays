@@ -94,7 +94,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DaidalusResolution, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -1325,26 +1325,37 @@ export class DAAPlayer {
                         "Altitude Bands": {},
                         "Heading Bands": {},
                         "Horizontal Speed Bands": {},
-                        "Vertical Speed Bands": {}
+                        "Vertical Speed Bands": {},
+                        "Altitude Resolution": {},
+                        "Heading Resolution": {},
+                        "Horizontal Speed Resolution": {},
+                        "Vertical Speed Resolution": {}
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
-                        const band: string = bandNames[b];
-                        const data: BandElement = (this._bands[band] && step < this._bands[band].length) ? 
-                                                    this._bands[band][step] : null;
+                        const band_or_resolution: string = bandNames[b];
+                        const data: BandElement = (this._bands[band_or_resolution] && step < this._bands[band_or_resolution].length) ? 
+                                                    this._bands[band_or_resolution][step] : null;
                         if (data) {
-                            for (let i = 0; i < data.bands.length; i++) {
-                                const info: DaidalusBand = data.bands[i];
-                                if (info && info.range) {
-                                    const range: utils.FromTo = {
-                                        from: info.range[0],
-                                        to: info.range[1],
-                                        units: info.units
-                                    };
-                                    const alert: string = info.alert;
-                                    res[band][alert] = res[band][alert] || [];
-                                    res[band][alert].push(range);
+                            if (data.bands) {
+                                // bands info
+                                for (let i = 0; i < data.bands.length; i++) {
+                                    const info: DaidalusBand = data.bands[i];
+                                    if (info && info.range) {
+                                        const range: utils.FromTo = {
+                                            from: info.range[0],
+                                            to: info.range[1],
+                                            units: info.units
+                                        };
+                                        const alert: string = info.alert;
+                                        res[band_or_resolution][alert] = res[band_or_resolution][alert] || [];
+                                        res[band_or_resolution][alert].push(range);
+                                    }
                                 }
+                            } else if (data.resolution) {
+                                // resolution info
+                                const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units };
+                                res[band_or_resolution] = resolution;
                             }
                         }
                         if (this._bands && this._bands.Alerts && step < this._bands.Alerts.length) {
@@ -1360,11 +1371,15 @@ export class DAAPlayer {
     }
     getCurrentBands (): utils.DAABandsData {
         const res: utils.DAABandsData = {
-            Alerts: null,
+            "Alerts": [],
             "Altitude Bands": {},
             "Heading Bands": {},
             "Horizontal Speed Bands": {},
-            "Vertical Speed Bands": {}
+            "Vertical Speed Bands": {},
+            "Altitude Resolution": {},
+            "Heading Resolution": {},
+            "Horizontal Speed Resolution": {},
+            "Vertical Speed Resolution": {}
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
@@ -1372,25 +1387,32 @@ export class DAAPlayer {
                 // convert bands to the DAA format
                 const bandNames: string[] = utils.BAND_NAMES;
                 for (const b in bandNames) {
-                    const band: string = bandNames[b];
-                    const data: BandElement = (this._bands[band] && this._bands[band].length > this.simulationStep) ? 
-                                                this._bands[band][this.simulationStep] : null;
+                    const band_or_resolution: string = bandNames[b];
+                    const data: BandElement = (this._bands[band_or_resolution] && this._bands[band_or_resolution].length > this.simulationStep) ? 
+                                                this._bands[band_or_resolution][this.simulationStep] : null;
                     if (data) {
-                        for (let i = 0; i < data.bands.length; i++) {
-                            const info: DaidalusBand = data.bands[i];
-                            if (info && info.range) {
-                                const range: utils.FromTo = {
-                                    from: info.range[0],
-                                    to: info.range[1],
-                                    units: info.units
-                                };
-                                const alert: string = info.alert;
-                                res[band][alert] = res[band][alert] || [];
-                                res[band][alert].push(range);
+                        if (data.bands) {
+                            // bands info
+                            for (let i = 0; i < data.bands.length; i++) {
+                                const info: DaidalusBand = data.bands[i];
+                                if (info && info.range) {
+                                    const range: utils.FromTo = {
+                                        from: info.range[0],
+                                        to: info.range[1],
+                                        units: info.units
+                                    };
+                                    const alert: string = info.alert;
+                                    res[band_or_resolution][alert] = res[band_or_resolution][alert] || [];
+                                    res[band_or_resolution][alert].push(range);
+                                }
                             }
+                        } else if (data.resolution) {
+                            // resolution info
+                            const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units };
+                            res[band_or_resolution] = resolution;
                         }
                     }
-                    if (this._bands && this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
+                    if (this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
                         // copy alerting info
                         res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
                     }
@@ -1770,9 +1792,9 @@ export class DAAPlayer {
         $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list`).on("change", async () => {
             this.disableSimulationControls();
             this.revealActivationPanel();
-            // const selectedConfig: string = this.getSelectedConfiguration();
+            const selectedConfig: string = this.getSelectedConfiguration();
             // console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
-            // await refreshConfigurationAttributesView(selectedConfig);
+            await refreshConfigurationAttributesView(selectedConfig);
             // await this.reloadScenarioFile();
             // this.refreshSimulationPlots();
         });

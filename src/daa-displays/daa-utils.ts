@@ -65,6 +65,7 @@ export function feet2meters(ft: number): number {
 // interface definitions
 export interface Vector3D { x: number, y: number, z: number };
 export interface FromTo { from: number, to: number, units: string };
+export interface Val { val: number, units: string };
 export interface LatLonAlt { lat: number, lon: number, alt: number };
 export interface LatLon { lat: number, lon: number };
 export interface Bands {
@@ -80,17 +81,24 @@ export interface Coords {
     top?: number, left?: number, width?: number, height?: number
 };
 
-export const BAND_NAMES: string[] = [ "Altitude Bands", "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands" ];
+export const BAND_NAMES: string[] = [
+    "Altitude Bands", "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands", 
+    "Altitude Resolution", "Heading Resolution", "Horizontal Speed Resolution", "Vertical Speed Resolution"
+];
 
 
 //import { AlertElement, BandElement } from '../daa-server/utils/daa-server';
 
 export interface DAABandsData {
-    "Alerts": Alert[];
-    "Altitude Bands": Bands; // FIXME: use BandElement and get rid of Bands
-    "Heading Bands": Bands;
-    "Horizontal Speed Bands": Bands;
-    "Vertical Speed Bands": Bands;
+    "Alerts": Alert[],
+    "Altitude Bands": Bands, // FIXME: use BandElement and get rid of Bands
+    "Heading Bands": Bands,
+    "Horizontal Speed Bands": Bands,
+    "Vertical Speed Bands": Bands,
+    "Altitude Resolution": {},
+    "Heading Resolution": {},
+    "Horizontal Speed Resolution": {},
+    "Vertical Speed Resolution": {}
 };
 
 

@@ -101,9 +101,15 @@ export declare interface DaidalusBand {
     units: string;
 }
 
+export declare interface DaidalusResolution {
+    val: number;
+    units: string;
+}
+
 export declare interface BandElement {
     time: number,
-    bands: DaidalusBand[]
+    bands?: DaidalusBand[],
+    resolution?: DaidalusResolution
 }
 
 export declare interface AlertElement {

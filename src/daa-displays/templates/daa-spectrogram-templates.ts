@@ -41,6 +41,9 @@ export const spectrogramBandTemplate: string = `
     {{#if marker}}
         <div marker="{marker.value}} ({{marker.units}})" style="top:{{marker.top}}px; height:{{marker.height}}px; width:{{marker.width}}px; background-color:{{marker.color}}; position:absolute;"></div>
     {{/if}}
+    {{#if resolution}}
+        <div resolution="{resolution.value}} ({{resolution.units}})" style="top:{{resolution.top}}px; height:{{resolution.height}}px; width:{{resolution.width}}px; background-color:{{resolution.color}}; position:absolute;"></div>
+    {{/if}}
 </div>`;
 
 export const spectrogramAlertsTemplate: string = `

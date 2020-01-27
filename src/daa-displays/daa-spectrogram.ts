@@ -118,6 +118,7 @@ export interface BandsData {
     time: string;
     units?: string;
     marker?: number;
+    resolution?: number;
 }
 export interface AlertsData {
     id: string;
@@ -350,7 +351,7 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number }): DAASpectrogram {
+    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number, resolution?: number }): DAASpectrogram {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
             const band_plot_data = {};
@@ -390,9 +391,12 @@ export class DAASpectrogram {
                 tooltipData = tooltipData.sort((a, b) => { // profiler: 2.1ms
                     return (a.range.from < b.range.from) ? -1 : 1;
                 });
-                let tooltip: string = (!isNaN(data.marker)) ? 
+                let tooltip: string = (isFinite(data.marker)) ? 
                                         (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
                                             : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
+                tooltip += (data.resolution !== null && data.resolution !== undefined && isFinite(+data.resolution)) ? 
+                                (data.units) ? `<br>Resolution: ${Math.floor(data.resolution * 100) / 100} ${data.units}` 
+                                    : `<br>Resolution: ${Math.floor(data.resolution * 100) / 100}` : `<br>Resolution: ${data.resolution}`;
                 for (let i = 0; i < tooltipData.length; i++) {
                     tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
                 }
@@ -416,6 +420,14 @@ export class DAASpectrogram {
                         height: lineHeight,
                         width: barWidth,
                         color: "white",
+                        units: data.units
+                    } : null,
+                    resolution: (!isNaN(data.resolution))? {
+                        value: data.resolution,
+                        top: (this.range.to - data.resolution) * yScaleFactor - (lineHeight / 2),
+                        height: lineHeight,
+                        width: barWidth,
+                        color: "deepskyblue",
                         units: data.units
                     } : null
                 });

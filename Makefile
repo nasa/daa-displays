@@ -28,6 +28,7 @@ compile:
 	cp -R src/contrib dist/contrib
 	cp src/index.html dist/
 	cp src/danti.html dist/
+	cp src/single.html dist/
 	cp src/split.html dist/
 	cp src/virtual-pilot.html dist/
 	cp src/gods.html dist/
