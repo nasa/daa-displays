@@ -119,14 +119,14 @@ class ResolutionBug {
         this.deg = 0;
     }
     /**
-     * @function <a name="ResolutionBug_setAngle">setAngle</a>
+     * @function <a name="ResolutionBug_setValue">setValue</a>
      * @desc Sets the bug position to a given heading angle, given in degrees, clockwise rotation, north is 0 deg.
      * @param deg (real) Heading degrees
      * @memberof module:Compass
      * @instance
      * @inner
      */
-    setAngle(deg: number): ResolutionBug {
+    setValue(deg: number): ResolutionBug {
         this.deg = deg;
         if (isFinite(deg)) {
             this.reveal();
@@ -301,7 +301,7 @@ export class Compass {
 
         // create resolution bug
         this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this);
-        this.resolutionBug.setAngle(0);
+        this.resolutionBug.setValue(0);
         this.resolutionBug.hide();
     }
     /**
@@ -345,13 +345,15 @@ export class Compass {
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
-     * @param val {real} Bug position value. Default units is degrees.
+     * @param val {real | Object(val: number | string, units: string )} Bug position value. Default units is degrees.
      * @memberof module:Compass
      * @instance
      */
-    setBug(deg: number): Compass {
-        this.resolutionBug.setAngle(deg);
-        return this;
+    setBug(deg: number | { val: number | string, units: string }): void {
+        if (deg !== null && deg !== undefined) {
+            const d: number = (typeof deg === "number") ? deg : +deg.val;
+            this.resolutionBug.setValue(d);
+        }
     }
     /**
      * @function <a name="setBands">setBands</a>
@@ -425,14 +427,14 @@ export class Compass {
      * @function <a name="getAlert">getAlert</a>
      * @description Returns the alert indicated at a given angle on the compass.
      * @return {String} The alert type, one of "FAR", "MID", "NEAR", "RECOVERY", "UNKNOWN", "NONE"
-     * @memberof module:VerticalSpeedTape
+     * @memberof module:Compass
      * @instance
      */
     getAlert(deg: number): string {
         function normalise(deg: number) {
             return (deg % 360 + 360) % 360;
         }
-        function isWithinBand(b) {
+        function isWithinBand(b: { from: number, to: number }[]) {
             for (let i = 0; i < b.length; i++) {
                 if (deg >= b[i].from && deg <= b[i].to) {
                     return true;

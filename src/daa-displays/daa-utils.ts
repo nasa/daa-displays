@@ -95,10 +95,10 @@ export interface DAABandsData {
     "Heading Bands": Bands,
     "Horizontal Speed Bands": Bands,
     "Vertical Speed Bands": Bands,
-    "Altitude Resolution": {},
-    "Heading Resolution": {},
-    "Horizontal Speed Resolution": {},
-    "Vertical Speed Resolution": {}
+    "Altitude Resolution": { val: string, units: string },
+    "Heading Resolution": { val: string, units: string },
+    "Horizontal Speed Resolution": { val: string, units: string },
+    "Vertical Speed Resolution": { val: string, units: string }
 };
 
 

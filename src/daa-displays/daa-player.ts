@@ -1326,10 +1326,10 @@ export class DAAPlayer {
                         "Heading Bands": {},
                         "Horizontal Speed Bands": {},
                         "Vertical Speed Bands": {},
-                        "Altitude Resolution": {},
-                        "Heading Resolution": {},
-                        "Horizontal Speed Resolution": {},
-                        "Vertical Speed Resolution": {}
+                        "Altitude Resolution": null,
+                        "Heading Resolution": null,
+                        "Horizontal Speed Resolution": null,
+                        "Vertical Speed Resolution": null
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
@@ -1376,10 +1376,10 @@ export class DAAPlayer {
             "Heading Bands": {},
             "Horizontal Speed Bands": {},
             "Vertical Speed Bands": {},
-            "Altitude Resolution": {},
-            "Heading Resolution": {},
-            "Horizontal Speed Resolution": {},
-            "Vertical Speed Resolution": {}
+            "Altitude Resolution": null,
+            "Heading Resolution": null,
+            "Horizontal Speed Resolution": null,
+            "Vertical Speed Resolution": null
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData

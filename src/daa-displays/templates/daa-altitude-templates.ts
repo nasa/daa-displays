@@ -16,6 +16,22 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute;top:24px;">
             </div>
+            <div id="{{id}}-bug" style="position:absolute; left:8px; opacity:0.9; margin-top:98px;">
+                <div style="position:absolute;">
+                    <!-- back -->
+                    <div class="{{id}}-bug" style="width:9px; margin-left:9px; height:12px; border:1px solid white; background-color:black;"></div>
+                    <!-- pointer -->
+                    <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
+                </div>
+            </div>
+            <div id="{{id}}-resolution-bug" style="position:absolute; left:24px; opacity:0.9; margin-top:98px;">
+                <div style="position:absolute;">
+                    <!-- back -->
+                    <div class="{{id}}-resolution-bug" style="width:58px; margin-left:10px; height:12px; border:1px solid white; background-color:white;"></div>
+                    <!-- pointer -->
+                    <div class="{{id}}-resolution-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:6px; border-bottom:2px solid white; border-right:2px solid white; background-color:white; transform:rotate(135deg);"></div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="{{id}}-indicator" style="position:absolute;">

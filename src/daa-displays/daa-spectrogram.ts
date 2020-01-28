@@ -414,7 +414,7 @@ export class DAASpectrogram {
                     left: leftMargin,
                     width: barWidth,
                     height: this.height + 30, // extend click-and-point area to the timeline
-                    marker: (!isNaN(data.marker))? { // marker is used to represent the ownship state
+                    marker: (isFinite(data.marker))? { // marker is used to represent the ownship state
                         value: data.marker,
                         top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,
@@ -422,7 +422,7 @@ export class DAASpectrogram {
                         color: "white",
                         units: data.units
                     } : null,
-                    resolution: (!isNaN(data.resolution))? {
+                    resolution: (isFinite(data.resolution))? {
                         value: data.resolution,
                         top: (this.range.to - data.resolution) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,

@@ -94,6 +94,98 @@ import * as utils from './daa-utils';
 import * as templates from './templates/daa-airspeed-templates';
 import * as server from '../daa-server/utils/daa-server';
 
+// internal class, renders a resolution bug over the tape
+class ResolutionBug {
+    protected id: string;
+    protected tape: AirspeedTape;
+    protected val: number = 0;
+    protected zero: number = 0;
+    protected tickHeight: number = 0;
+    protected airspeedStep: number = 1;
+    protected useColors: boolean = false;
+    /**
+     * @function <a name="ResolutionBug">ResolutionBug</a>
+     * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
+     * @param id {String} Unique bug identifier.
+     * @param daaCompass {Object} DAA widget over which the resolution bug should be rendered.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    constructor (id: string, tape: AirspeedTape) {
+        this.id = id;
+        this.tape = tape;
+    }
+    /**
+     * @function <a name="ResolutionBug_setValue">setValue</a>
+     * @desc Sets the bug position to a given value.
+     * @param val (real) Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setValue(val: number): void {
+        this.val = val;
+        if (isFinite(val)) {
+            this.reveal();
+            this.refresh();            
+        } else {
+            this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_getValue">getValue</a>
+     * @desc Returns the value of the bug.
+     * @return {real} Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    getValue(): number {
+        return this.val;
+    }
+    /**
+     * @function <a name="ResolutionBug_refresh">refresh</a>
+     * @desc Triggers re-rendering of the resolution bug.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    refresh(): void {
+        let bugPosition = this.zero - this.val * this.tickHeight / this.airspeedStep;
+        $(`#${this.id}`).css({ "transition-duration": "500ms", "transform": `translateY(${bugPosition}px)`});
+        if (this.useColors) {
+            const alert = (this.tape) ? this.tape.getAlert(this.val) : "NONE";
+            $(`.${this.id}`).css({ "background-color": utils.bugColors[alert] });
+        }
+    }
+    reveal (flag?: boolean): void {
+        if (flag === false) {
+            this.hide();
+        } else {
+            $(`#${this.id}`).css({ "display": "block"});
+        }
+    }
+    hide (): void {
+        $(`#${this.id}`).css({ "display": "none"});
+    }
+    setZero (zero: number): void {
+        this.zero = zero;
+    }
+    setTickHeight (tickHeight: number): void {
+        this.tickHeight = tickHeight;
+    }
+    setAirspeedStep (airspeedStep: number): void {
+        if (airspeedStep) {
+            // airspeed step should always be != 0
+            this.airspeedStep = airspeedStep;
+        }
+    }
+    setUseColors (flag: boolean): void {
+        this.useColors = flag;
+    }
+}
+
 export class AirspeedTape {
     protected id: string;
     protected top: number;
@@ -110,6 +202,9 @@ export class AirspeedTape {
     protected windDirection: number;
     protected trueAirspeed: number;
     protected div: HTMLElement;
+
+    protected resolutionBug: ResolutionBug;
+    protected speedBug: ResolutionBug; // this is visible when tapeCanSpin === false
 
     protected tapeCanSpin: boolean = true;
     protected range: { from: number, to: number };
@@ -156,6 +251,11 @@ export class AirspeedTape {
                 const val = maxAirspeedValue - i * 2 * this.airspeedStep;
                 if (val === 0) {
                     tickValue = "00";
+                    // update bugs
+                    this.resolutionBug.setZero(this.tickHeight * 2 * i);
+                    this.resolutionBug.setAirspeedStep(this.airspeedStep);
+                    this.speedBug.setZero(this.tickHeight * 2 * i);
+                    this.speedBug.setAirspeedStep(this.airspeedStep);
                 } else {
                     tickValue = val.toString();
                 }
@@ -301,9 +401,48 @@ export class AirspeedTape {
             height: (this.nAirspeedTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
+        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this); // resolution bug
+        this.resolutionBug.setTickHeight(this.tickHeight);
+        this.resolutionBug.setUseColors(true);
+        this.speedBug = new ResolutionBug(this.id + "-bug", this); // speed bug, visible when the tape cannot spin
+        this.speedBug.setTickHeight(this.tickHeight);
+        this.speedBug.reveal(this.tapeCanSpin);
         this.create_airspeed_ticks();
         this.create_airspeed_spinner();
         this.setAirSpeed(this.currentAirspeed, this.tapeUnits);
+
+        // set position of resolution bug
+        this.resolutionBug.setValue(0);
+        this.resolutionBug.hide();
+    }
+    /**
+     * @function <a name="getAlert">getAlert</a>
+     * @description Returns the alert indicated at a given angle on the compass.
+     * @return {String} The alert type, one of "FAR", "MID", "NEAR", "RECOVERY", "UNKNOWN", "NONE"
+     * @memberof module:AirspeedTape
+     * @instance
+     */
+    getAlert(val: number): string {
+        function isWithinBand(b: { from: number, to: number }[]) {
+            for (let i = 0; i < b.length; i++) {
+                if (val >= b[i].from && val <= b[i].to) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (this.bands.FAR && isWithinBand(this.bands.FAR)) {
+            return "FAR";
+        } else if (this.bands.MID && isWithinBand(this.bands.MID)) {
+            return "MID";
+        } else if (this.bands.NEAR && isWithinBand(this.bands.NEAR)) {
+            return "NEAR";
+        } else if (this.bands.RECOVERY && isWithinBand(this.bands.RECOVERY)) {
+            return "RECOVERY";
+        } else if (this.bands.UNKNOWN && isWithinBand(this.bands.UNKNOWN)) {
+            return "UNKNONW";
+        }
+        return "NONE";
     }
     /**
      * @function <a name="setBands">setBands</a>
@@ -377,6 +516,8 @@ export class AirspeedTape {
         setTimeout(() => {
             $(`#${this.id}-indicator-box`).animate({ "top": "0px" }, 500);
         }, 800)
+        // show speed bug
+        this.speedBug.setValue(this.currentAirspeed);
     }
     enableTapeSpinning (): void {
         this.tapeCanSpin = true;
@@ -387,6 +528,21 @@ export class AirspeedTape {
         setTimeout(() => {
             $(`#${this.id}-indicator-box`).animate({ "margin-left": "0px" }, 500);
         }, 800);
+        // hide speed bug
+        this.speedBug.hide();
+    }
+    /**
+     * @function <a name="setBug">setBug</a>
+     * @description Sets the bug position.
+     * @param info {real | Object(val: number | string, units: string )} Bug position value. Default units is degrees.
+     * @memberof module:AirspeedTape
+     * @instance
+     */
+    setBug(info: number | { val: number | string, units: string }): void {
+        if (info !== null && info !== undefined) {
+            const d: number = (typeof info === "number") ? info : +info.val;
+            this.resolutionBug.setValue(d);
+        }
     }
     /**
      * @function <a name="setAirSpeed">setAirSpeed</a>
@@ -407,6 +563,9 @@ export class AirspeedTape {
         if (this.tapeCanSpin) {
             const transitionDuration = opt.transitionDuration || "500ms";
             this.spinTapeTo(val, transitionDuration);
+            this.speedBug.hide();
+        } else {
+            this.speedBug.setValue(val);
         }
         
         const stillDigits: number = Math.trunc(this.currentAirspeed / 10);
@@ -516,13 +675,16 @@ export class AirspeedTape {
      * @instance
      */
     setRange (range: { from: number | string, to: number | string, units: string }): AirspeedTape {
-        if (range && !isNaN(+range.from) && !isNaN(+range.to) && +range.from < +range.to) {
+        if (range && isFinite(+range.from) && isFinite(+range.to) && +range.from < +range.to) {
             this.range = {
                 from: +range.from,
                 to: +range.to
             };
             const step: number = (this.range.to - this.range.from) / 8; // the displays can show 6 labelled ticks at the same time -- we want to have all labels visible when the tape is half way through the range
             this.setStep(step);
+            // // updated resolution bug info
+            // this.resolutionBug.setRange(this.range.to - this.range.from);
+            // this.resolutionBug.setStep(step);
         } else {
             console.error("[daa-airspeed-tape] Warning: could not autoscale airspeed tape", range);
         }

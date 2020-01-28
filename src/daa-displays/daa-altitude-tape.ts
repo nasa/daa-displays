@@ -93,6 +93,98 @@ require(["widgets/daa-displays/daa-altitude-tape"], function (AltitudeTape) {
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-altitude-templates';
 
+// internal class, renders a resolution bug over the tape
+class ResolutionBug {
+    protected id: string;
+    protected tape: AltitudeTape;
+    protected val: number = 0;
+    protected zero: number = 0;
+    protected tickHeight: number = 0;
+    protected altitudeStep: number = 1;
+    protected useColors: boolean = false;
+    /**
+     * @function <a name="ResolutionBug">ResolutionBug</a>
+     * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
+     * @param id {String} Unique bug identifier.
+     * @param daaCompass {Object} DAA widget over which the resolution bug should be rendered.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    constructor (id: string, tape: AltitudeTape) {
+        this.id = id;
+        this.tape = tape;
+    }
+    /**
+     * @function <a name="ResolutionBug_setValue">setValue</a>
+     * @desc Sets the bug position to a given value.
+     * @param val (real) Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setValue(val: number): void {
+        this.val = val;
+        if (isFinite(val)) {
+            this.reveal();
+            this.refresh();            
+        } else {
+            this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_getValue">getValue</a>
+     * @desc Returns the value of the bug.
+     * @return {real} Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    getValue(): number {
+        return this.val;
+    }
+    /**
+     * @function <a name="ResolutionBug_refresh">refresh</a>
+     * @desc Triggers re-rendering of the resolution bug.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    refresh(): void {
+        let bugPosition = this.zero - this.val * this.tickHeight / this.altitudeStep;
+        $(`#${this.id}`).css({ "transition-duration": "500ms", "transform": `translateY(${bugPosition}px)`});
+        if (this.useColors) {
+            const alert = (this.tape) ? this.tape.getAlert(this.val) : "NONE";
+            $(`.${this.id}`).css({ "background-color": utils.bugColors[alert] });
+        }
+    }
+    reveal (flag?: boolean): void {
+        if (flag === false) {
+            this.hide();
+        } else {
+            $(`#${this.id}`).css({ "display": "block"});
+        }
+    }
+    hide (): void {
+        $(`#${this.id}`).css({ "display": "none"});
+    }
+    setZero (zero: number): void {
+        this.zero = zero;
+    }
+    setTickHeight (tickHeight: number): void {
+        this.tickHeight = tickHeight;
+    }
+    setAltitudeStep (altitudeStep: number): void {
+        if (altitudeStep) {
+            // altitude step should always be != 0
+            this.altitudeStep = altitudeStep;
+        }
+    }
+    setUseColors (flag: boolean): void {
+        this.useColors = flag;
+    }
+}
+
 export class AltitudeTape {
     protected id: string;
     protected top: number;
@@ -104,8 +196,12 @@ export class AltitudeTape {
     protected tickHeight: number;
     protected tapeLength: number;
     protected zero: number;
+    protected zeroPx: number = 0;
     protected bands: utils.Bands;
     protected div: HTMLElement;
+
+    protected resolutionBug: ResolutionBug;
+    protected speedBug: ResolutionBug; // this is visible when tapeCanSpin === false
 
     protected tapeCanSpin: boolean = true;
     protected range: { from: number, to: number };
@@ -180,6 +276,12 @@ export class AltitudeTape {
                 const val = maxAltitudeValue - i * 2 * this.altitudeStep;
                 if (val === 0) {
                     tickValue = "000";
+                    this.zeroPx = this.tickHeight * 2 * i;
+                    // update bugs
+                    this.resolutionBug.setZero(this.tickHeight * 2 * i);
+                    this.resolutionBug.setAltitudeStep(this.altitudeStep);
+                    this.speedBug.setZero(this.tickHeight * 2 * i);
+                    this.speedBug.setAltitudeStep(this.altitudeStep);
                 } else {
                     tickValue = val.toString();
                 }
@@ -278,9 +380,49 @@ export class AltitudeTape {
             height: (this.nAltitudeTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
+        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this); // resolution bug
+        this.resolutionBug.setTickHeight(this.tickHeight);
+        this.resolutionBug.setUseColors(true);
+        this.speedBug = new ResolutionBug(this.id + "-bug", this); // speed bug, visible when the tape cannot spin
+        this.speedBug.setTickHeight(this.tickHeight);
+        this.speedBug.reveal(this.tapeCanSpin);
         this.create_altitude_ticks();
         this.create_altitude_spinner();
         this.setAltitude(this.currentAltitude, this.tapeUnits, { transitionDuration: "0ms" });
+
+        // set position of resolution bug
+        this.resolutionBug.setValue(0);
+        this.resolutionBug.hide();
+    }
+
+    /**
+     * @function <a name="getAlert">getAlert</a>
+     * @description Returns the alert indicated at a given angle on the compass.
+     * @return {String} The alert type, one of "FAR", "MID", "NEAR", "RECOVERY", "UNKNOWN", "NONE"
+     * @memberof module:AltitudeTape
+     * @instance
+     */
+    getAlert(val: number): string {
+        function isWithinBand(b: { from: number, to: number }[]) {
+            for (let i = 0; i < b.length; i++) {
+                if (val >= b[i].from && val <= b[i].to) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (this.bands.FAR && isWithinBand(this.bands.FAR)) {
+            return "FAR";
+        } else if (this.bands.MID && isWithinBand(this.bands.MID)) {
+            return "MID";
+        } else if (this.bands.NEAR && isWithinBand(this.bands.NEAR)) {
+            return "NEAR";
+        } else if (this.bands.RECOVERY && isWithinBand(this.bands.RECOVERY)) {
+            return "RECOVERY";
+        } else if (this.bands.UNKNOWN && isWithinBand(this.bands.UNKNOWN)) {
+            return "UNKNONW";
+        }
+        return "NONE";
     }
 
     // utility function, converts values between units
@@ -357,6 +499,8 @@ export class AltitudeTape {
         setTimeout(() => {
             $(`#${this.id}-indicator-box`).animate({ "top": "0px" }, 500);
         }, 800)
+        // show speed bug
+        this.speedBug.setValue(this.currentAltitude);
     }
     enableTapeSpinning (): void {
         this.tapeCanSpin = true;
@@ -367,6 +511,21 @@ export class AltitudeTape {
         setTimeout(() => {
             $(`#${this.id}-indicator-box`).animate({ "margin-left": "0px" }, 500);
         }, 800);
+        // hide speed bug
+        this.speedBug.hide();
+    }
+    /**
+     * @function <a name="setBug">setBug</a>
+     * @description Sets the bug position.
+     * @param info {real | Object(val: number | string, units: string )} Bug position value. Default units is degrees.
+     * @memberof module:AltitudeTape
+     * @instance
+     */
+    setBug(info: number | { val: number | string, units: string }): void {
+        if (info !== null && info !== undefined) {
+            const d: number = (typeof info === "number") ? info : +info.val;
+            this.resolutionBug.setValue(d);
+        }
     }
     protected spinTapeTo (val: number, transitionDuration: string): void {
         if (!isNaN(+val)) {
@@ -396,6 +555,9 @@ export class AltitudeTape {
         if (this.tapeCanSpin) {
             const transitionDuration = opt.transitionDuration || "500ms";
             this.spinTapeTo(val, transitionDuration);
+            this.speedBug.hide();
+        } else {
+            this.speedBug.setValue(val);
         }
 
         const firstStillDigit: number = Math.abs(Math.trunc(val / 10000) % 10);

@@ -29,10 +29,10 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
         <div id="{{id}}-bug" style="position:absolute; transform:rotate(90deg); left:57px;">
             <div style="position:absolute;">
-                <!-- back -->
-                <div style="width:12px; height:12px; border:1px solid white; background-color:black;"></div>
+                <!-- line -->
+                <div id="{{id}}-bug-bl" style="width:12px; height:12px; border:1px solid white; background-color:black;"></div>
                 <!-- pointer -->
-                <div style="width:8px; height:8px; margin-top:-4px; margin-left:2px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(45deg);"></div>
+                <div id="{{id}}-bug-bg" style="width:8px; height:8px; margin-top:-4px; margin-left:2px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(45deg);"></div>
             </div>
         </div>
     </div>`;

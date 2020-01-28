@@ -168,7 +168,7 @@ async function createPlayer() {
         id: "horizontal-speed-bands",
         top: 450,
         width: 1100,
-        label: "Horizontal Speeds Bands",
+        label: "Horizontal Speed Bands",
         range: { from: 0, to: 1000 },
         parent: "simulation-plot"
     });
