@@ -354,7 +354,7 @@ export class DAASpectrogram {
     plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number, resolution?: number }): DAASpectrogram {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
-            const band_plot_data = {};
+            const band_plot_data: utils.Bands = {};
             const yScaleFactor = this.height / (this.range.to - this.range.from);
             const barWidth = this.width / this.length;
             const stepID = `${this.id}-step-${data.step}`;

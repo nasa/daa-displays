@@ -121,6 +121,44 @@ class DAAServer {
     // Just one level of recursion, i.e., current folder and first-level sub-folders.
     // This is sufficient to navigate symbolic links placed in the current folder.
     protected listFilesRecursive (folderName: string, ext: string[]): string[] {
+        const listFilesInFolderAndSubfolders = (folder: string) => {
+            const elems: string[] = fs.readdirSync(folder);
+            if (elems && elems.length > 0) {
+                const allFiles: string[] = elems.filter((name: string) => {
+                    return fs.lstatSync(path.join(folder, name)).isFile();
+                });
+                const allSubfolders: string[] = elems.filter((name: string) => {
+                    return fs.lstatSync(path.join(folder, name)).isDirectory() || fs.lstatSync(path.join(folder, name)).isSymbolicLink();
+                });
+                let ans: string[] = [];
+                if (allFiles) {
+                    ans = allFiles.filter((name: string) => {
+                        for (let i = 0; i < ext.length; i++) {
+                            if (name.endsWith(ext[i])) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                    
+                }
+                if (allSubfolders) {
+                    for (let i in allSubfolders) {
+                        const subf: string = path.join(folder, allSubfolders[i]);
+                        const files: string[] = listFilesInFolder(subf);
+                        if (files) {
+                            ans = ans.concat(files.map((fileName: string) => {
+                                return path.join(allSubfolders[i], fileName);
+                            }));
+                        }
+                    }
+                }
+                if (ans.length > 0) {
+                    return ans;
+                }
+            }
+            return null;
+        }
         const listFilesInFolder = (folder: string) => {
             const elems: string[] = fs.readdirSync(folder);
             if (elems && elems.length > 0) {
@@ -141,7 +179,7 @@ class DAAServer {
             return null;
         }
         const files: string[] = listFilesInFolder(folderName);
-        // check sub-folders, just one level
+        // check sub-folders, two levels
         const elems: string[] = fs.readdirSync(folderName);
         if (elems && elems.length > 0) {
             for (let i = 0; i < elems.length; i++) {
@@ -153,7 +191,7 @@ class DAAServer {
                     const subfolder: string = elems[i];
                     try {
                         // console.log(`Reading subfolder ${subfolder}`);
-                        const sfiles: string[] = listFilesInFolder(path.join(folderName, subfolder));
+                        const sfiles: string[] = listFilesInFolderAndSubfolders(path.join(folderName, subfolder));
                         if (sfiles && sfiles.length > 0) {
                             sfiles.forEach((name: string) => {
                                 name = `${subfolder}/${name}`;

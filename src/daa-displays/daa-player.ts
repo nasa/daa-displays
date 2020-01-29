@@ -329,7 +329,7 @@ export class DAAPlayer {
                         return name === this._selectedScenario;
                     });
                     this._selectedScenario = (scenarioStillExists) ? this._selectedScenario : scenarios[0];
-                    await this.selectScenarioFile(this._selectedScenario, { forceReload: true });
+                    // await this.selectScenarioFile(this._selectedScenario, { forceReload: true });
                 }
                 this.refreshSimulationControls();
                 // await this.listConfigurations();
@@ -1689,7 +1689,7 @@ export class DAAPlayer {
         scenarios?: string[],
         selectedScenario?: string,
         htmlTemplate?: string
-    }) {
+    }): void {
         opt = opt || {};
         if (opt.scenarios && opt.scenarios.length > 0) {
             opt.selectedScenario = opt.selectedScenario || opt.scenarios[0];
@@ -1715,7 +1715,6 @@ export class DAAPlayer {
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
         // this._handlers.installConfigurationReloader();
         // this._handlers.installDaidalusVersionReloader();
-        return this;
     }
     /**
      * @function <a name="refreshSimulationPlots">refreshSimulationPlots</a>
@@ -1723,7 +1722,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    refreshSimulationPlots() {
+    refreshSimulationPlots(): void {
         if (this._plot) {
             Object.keys(this._plot).forEach((plotID: string) => {
                 // update range
@@ -1762,10 +1761,9 @@ export class DAAPlayer {
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
         }
-        return this;
     }
 
-    protected async refreshConfigurationView() {
+    protected async refreshConfigurationView(): Promise<void> {
         const theHTML: string = Handlebars.compile(templates.daidalusConfigurationsTemplate)({
             configurations: this._wellClearConfigurations,
             id: this.wellClearConfigurationSelector
@@ -1798,7 +1796,6 @@ export class DAAPlayer {
             // await this.reloadScenarioFile();
             // this.refreshSimulationPlots();
         });
-        return this;
     }
 
     protected refreshVersionsView(): DAAPlayer {
@@ -1870,7 +1867,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    getPlot(plotID: string) {
+    getPlot(plotID: string): DAASpectrogram {
         return this._plot[plotID];
     }
 }

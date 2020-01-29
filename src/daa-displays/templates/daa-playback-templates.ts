@@ -93,7 +93,7 @@ export const sidePanelTemplate: string = `
         <div class="sidebar-sticky">
             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                 <span><b>Scenarios</b></span> 
-                <button id="{{id}}-refresh-scenarios" class="btn btn-secondary btn-sm" type="button">
+                <button id="{{id}}-refresh-scenarios" class="btn btn-secondary btn-sm" type="button" style="display:none">
                     <i class="fa fa-refresh" aria-hidden="true"></i>
                 </button>
             </h6>
@@ -105,7 +105,7 @@ export const sidePanelTemplate: string = `
             <div id="single-view">
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span><b>Daidalus Version</b></span>
-                    <button id="{{id}}-refresh-daidalus-versions" class="btn btn-secondary btn-sm" type="button">
+                    <button id="{{id}}-refresh-daidalus-versions" class="btn btn-secondary btn-sm" type="button" style="display:none">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </h6>
@@ -116,7 +116,7 @@ export const sidePanelTemplate: string = `
 
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span><b>Daidalus Configuration</b></span>
-                    <button id="{{id}}-refresh-daidalus-configurations" class="btn btn-secondary btn-sm" type="button">
+                    <button id="{{id}}-refresh-daidalus-configurations" class="btn btn-secondary btn-sm" type="button" style="display:none">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </h6>
