@@ -29,9 +29,10 @@ The following software is necessary to compile and execute DAA-Displays
 
 ## Tips for developers
 The `./restart.sh` script supports the following options:
+- `-help`                (Shows the available options)
 - `-pvsio`               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
 - `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires nasalib)
-- `-dev`                 (Enables developer mode; in this mode, caching of simulation results is disabled)
+- `-fast`                (Enables optimizations, including caching of simulation results)
 - `-port <port number>`  (The server will use the given port)
 
 ## Structure
