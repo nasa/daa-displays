@@ -155,7 +155,7 @@ class ResolutionBug {
      * @inner
      */
     refresh(): ResolutionBug {
-        $(`#${this.id}`).css({ "transition-duration": "500ms", "transform": `rotate(${this.deg}deg)` });
+        $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `rotate(${this.deg}deg)` });
         let alert = (this.compass) ? this.compass.getAlert(this.deg) : "NONE";
         $(`.${this.id}-bg`).css({ "background-color": utils.bugColors[alert] });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${utils.bugColors[alert]}` });
@@ -322,9 +322,9 @@ export class Compass {
                             utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
                             : utils.rad2deg(Math.atan2(+data.x, +data.y));
         const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
-        const pos_angle: number = (angle % 360 + 360) % 360; // positive version of the angle, for counter-clockwise rotation
-        const neg_angle: number = pos_angle - 360; // negative version of the angle, for clockwise rotation
-        this.currentCompassAngle = (this.currentCompassAngle - pos_angle < this.currentCompassAngle - neg_angle) ? pos_angle : neg_angle; // choose the least variation from the current angle
+        const pos_angle: number = Math.abs((angle % 360 + 360) % 360); // clockwise rotation
+        const neg_angle: number = Math.abs((angle % 360 - 360) % 360); // counter-clockwise rotation
+        this.currentCompassAngle = (pos_angle < neg_angle) ? pos_angle : -neg_angle; // choose the least variation from the current angle
         _update_compass(this);
         return this;
     }
