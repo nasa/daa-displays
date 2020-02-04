@@ -547,14 +547,14 @@ export class AirspeedTape {
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
-     * @param info {real | Object(val: number | string, units: string )} Bug position value. Default units is degrees.
+     * @param info {real | Object(val: number | string, units: string, alert: string )} Bug position value. Default units is degrees.
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string, color: number | string }): void {
+    setBug(info: number | { val: number | string, units: string, alert: string }): void {
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "number") ? info : +info.val;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.color}`] : utils.bugColors["UNKNOWN"];
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
         }

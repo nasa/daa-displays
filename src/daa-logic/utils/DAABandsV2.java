@@ -219,32 +219,32 @@ public class DAABandsV2 {
 		String resTrk = "{ \"time\": " + time;
 		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		String colorTrk = region2str(daa.regionOfHorizontalDirection(valueTrk, trk_units));
-		resTrk += ", \"resolution\": { \"val\": \"" + valueTrk + "\", \"units\": \"" + trk_units + "\", \"color\": \"" + colorTrk + "\" }"; // resolution can be number, NaN or infinity
+		String alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units).toString();
+		resTrk += ", \"resolution\": { \"val\": \"" + valueTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + alertTrk + "\" }"; // resolution can be number, NaN or infinity
 		resTrk += " }";
 		resTrkArray.add(resTrk);
 
 		String resGs = "{ \"time\": " + time;
 		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		double valueGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
-		String colorGs = region2str(daa.regionOfHorizontalSpeed(valueGs, hs_units));
-		resGs += ", \"resolution\": { \"val\": \"" + valueGs + "\", \"units\": \"" + hs_units + "\", \"color\": \"" + colorGs + "\" }"; // resolution can be number, NaN or infinity
+		String alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units).toString();
+		resGs += ", \"resolution\": { \"val\": \"" + valueGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + alertGs + "\" }"; // resolution can be number, NaN or infinity
 		resGs += " }";
 		resGsArray.add(resGs);
 
 		String resVs = "{ \"time\": " + time;
 		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		double valueVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		String colorVs = region2str(daa.regionOfVerticalSpeed(valueVs, vs_units));
-		resVs += ", \"resolution\": { \"val\": \"" + valueVs + "\", \"units\": \"" + vs_units + "\", \"color\": \"" + colorVs + "\" }"; // resolution can be number, NaN or infinity
+		String alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units).toString();
+		resVs += ", \"resolution\": { \"val\": \"" + valueVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + alertVs + "\" }"; // resolution can be number, NaN or infinity
 		resVs += " }";
 		resVsArray.add(resVs);
 
 		String resAlt = "{ \"time\": " + time;
 		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
 		double valueAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		String colorAlt = region2str(daa.regionOfAltitude(valueAlt, alt_units));
-		resAlt += ", \"resolution\": { \"val\": \"" + valueAlt + "\", \"units\": \"" + alt_units + "\", \"color\": \"" + colorAlt + "\" }"; // resolution can be number, NaN or infinity
+		String alertAlt = daa.regionOfAltitude(valueAlt, alt_units).toString();
+		resAlt += ", \"resolution\": { \"val\": \"" + valueAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + alertAlt + "\" }"; // resolution can be number, NaN or infinity
 		resAlt += " }";
 		resAltArray.add(resAlt);
 

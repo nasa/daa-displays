@@ -104,7 +104,7 @@ export declare interface DaidalusBand {
 export declare interface DaidalusResolution {
     val: number;
     units: string;
-    color: number;
+    alert: string;
 }
 
 export declare interface BandElement {

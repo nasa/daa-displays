@@ -534,10 +534,10 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string, color: number | string }): void {
+    setBug(info: number | { val: number | string, units: string, alert: string }): void {
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "number") ? info : +info.val;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.color}`] : utils.bugColors["UNKNOWN"];
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
         }

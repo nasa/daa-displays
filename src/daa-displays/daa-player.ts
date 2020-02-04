@@ -1354,7 +1354,7 @@ export class DAAPlayer {
                                 }
                             } else if (data.resolution) {
                                 // resolution info
-                                const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, color: +data.resolution.color };
+                                const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, alert: data.resolution.alert };
                                 res[band_or_resolution] = resolution;
                             }
                         }
@@ -1408,7 +1408,7 @@ export class DAAPlayer {
                             }
                         } else if (data.resolution) {
                             // resolution info
-                            const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, color: +data.resolution.color };
+                            const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, alert: data.resolution.alert };
                             res[band_or_resolution] = resolution;
                         }
                     }
