@@ -104,6 +104,7 @@ class ResolutionBug {
     id: string;
     compass: Compass;
     deg: number;
+    color: string;
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
@@ -117,6 +118,7 @@ class ResolutionBug {
         this.id = id;
         this.compass = daaCompass;
         this.deg = 0;
+        this.color = utils.bugColors["UNKNOWN"];
     }
     /**
      * @function <a name="ResolutionBug_setValue">setValue</a>
@@ -135,6 +137,19 @@ class ResolutionBug {
             this.hide();
         }
         return this;
+    }
+    /**
+     * @function <a name="ResolutionBug_setColor">setColor</a>
+     * @desc Sets the bug color.
+     * @param color (string) Bug color
+     * @memberof module:Compass
+     * @instance
+     * @inner
+     */
+    setColor(color: string): ResolutionBug {
+        this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
+        this.refresh();
+        return this;          
     }
     /**
      * @function <a name="ResolutionBug_getAngle">getAngle</a>
@@ -156,9 +171,8 @@ class ResolutionBug {
      */
     refresh(): ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `rotate(${this.deg}deg)` });
-        let alert = (this.compass) ? this.compass.getAlert(this.deg) : "NONE";
-        $(`.${this.id}-bg`).css({ "background-color": utils.bugColors[alert] });
-        $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${utils.bugColors[alert]}` });
+        $(`.${this.id}-bg`).css({ "background-color": this.color });
+        $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
         return this;
     }
     reveal (): void {
@@ -345,13 +359,15 @@ export class Compass {
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
-     * @param val {real | Object(val: number | string, units: string )} Bug position value. Default units is degrees.
+     * @param info {real | Object(val: number | string, units: string, color: number | string )} Bug position value. Default units is degrees.
      * @memberof module:Compass
      * @instance
      */
-    setBug(deg: number | { val: number | string, units: string }): void {
-        if (deg !== null && deg !== undefined) {
-            const d: number = (typeof deg === "number") ? deg : +deg.val;
+    setBug(info: number | { val: number | string, units: string, color: number | string }): void {
+        if (info !== null && info !== undefined) {
+            const d: number = (typeof info === "number") ? info : +info.val;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.color}`] : utils.bugColors["UNKNOWN"];
+            this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
         }
     }

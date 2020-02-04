@@ -103,6 +103,7 @@ class ResolutionBug {
     protected tickHeight: number = 0;
     protected airspeedStep: number = 1;
     protected useColors: boolean = false;
+    protected color: string = utils.bugColors["UNKNOWN"];
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
@@ -134,6 +135,19 @@ class ResolutionBug {
         }
     }
     /**
+     * @function <a name="ResolutionBug_setColor">setColor</a>
+     * @desc Sets the bug color.
+     * @param color (string) Bug color
+     * @memberof module:Compass
+     * @instance
+     * @inner
+     */
+    setColor(color: string): ResolutionBug {
+        this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
+        this.refresh();
+        return this;          
+    }
+    /**
      * @function <a name="ResolutionBug_getValue">getValue</a>
      * @desc Returns the value of the bug.
      * @return {real} Airspeed value
@@ -155,8 +169,7 @@ class ResolutionBug {
         let bugPosition = this.zero - this.val * this.tickHeight / this.airspeedStep;
         $(`#${this.id}`).css({ "transition-duration": "500ms", "transform": `translateY(${bugPosition}px)`});
         if (this.useColors) {
-            const alert = (this.tape) ? this.tape.getAlert(this.val) : "NONE";
-            $(`.${this.id}`).css({ "background-color": utils.bugColors[alert] });
+            $(`.${this.id}`).css({ "background-color": this.color });
         }
     }
     reveal (flag?: boolean): void {
@@ -521,7 +534,7 @@ export class AirspeedTape {
     }
     enableTapeSpinning (): void {
         this.tapeCanSpin = true;
-        this.spinTapeTo(this.currentAirspeed, "500ms");
+        this.spinTapeTo(this.currentAirspeed, "100ms");
         $(`#${this.id}-indicator-pointer`).css("display", "block");
         // move indicator box back to its place
         $(`#${this.id}-indicator-box`).animate({ "top": "281px" }, 500); // see the DOM element in daa-airspeed-templates.ts
@@ -538,9 +551,11 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string }): void {
+    setBug(info: number | { val: number | string, units: string, color: number | string }): void {
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "number") ? info : +info.val;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.color}`] : utils.bugColors["UNKNOWN"];
+            this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
         }
     }

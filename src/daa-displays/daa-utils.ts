@@ -23,12 +23,19 @@ export const bandColorsDanti = {
     NONE: { style: "solid", color: "transparent" }
 };
 export const bugColors = {
-    RECOVERY: "#07dc0a", // DASHED green
+    NONE: "white",
     FAR: "#ffc107", // DASHED YELLOW
     MID: "#ffc107", //"#ffbf00",
     NEAR: "red",
-    UNKNOWN: "gray",
-    NONE: "white"
+    RECOVERY: "#07dc0a", // DASHED green
+    UNKNOWN: "gray"
+    ,
+    "0": "white",  // NONE
+    "1": "#ffc107",// FAR
+    "2": "#ffc107",// MID
+    "3": "red",    // NEAR
+    "4": "#07dc0a",// RECOVERY
+    "-1": "gray"   // UNKNOWN
 };
 export const alertingColors = {
     NONE: { color: "transparent" },
@@ -95,10 +102,10 @@ export interface DAABandsData {
     "Heading Bands": Bands,
     "Horizontal Speed Bands": Bands,
     "Vertical Speed Bands": Bands,
-    "Altitude Resolution": { val: string, units: string },
-    "Heading Resolution": { val: string, units: string },
-    "Horizontal Speed Resolution": { val: string, units: string },
-    "Vertical Speed Resolution": { val: string, units: string }
+    "Altitude Resolution": { val: string, units: string, color: string },
+    "Heading Resolution": { val: string, units: string, color: string },
+    "Horizontal Speed Resolution": { val: string, units: string, color: string },
+    "Vertical Speed Resolution": { val: string, units: string, color: string }
 };
 
 
