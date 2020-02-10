@@ -230,8 +230,8 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
             });
         }
         if (alertsR !== alertsL) { // 0.1ms
-            splitView.getPlayer("left").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsR} ]`);
-            splitView.getPlayer("right").getPlot("alerts").revealMarker(step, `Time ${time}<br>Alerts [ ${alertsL} ]`);
+            splitView.getPlayer("left").getPlot("alerts").revealMarker({ step, tooltip: `Time ${time}<br>Alerts [ ${alertsR} ]` });
+            splitView.getPlayer("right").getPlot("alerts").revealMarker({ step, tooltip: `Time ${time}<br>Alerts [ ${alertsL} ]` });
         }
         // }
         // check bands
@@ -273,8 +273,8 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
                 plotL += `<br>${bandsL[k].band} [${bandsL[k].range.from}, ${bandsL[k].range.to}]`;
             }
             if (plotR !== plotL) { // 1.2ms
-                splitView.getPlayer("left").getPlot(plotID).revealMarker(step, `Time ${time}${plotR}`);
-                splitView.getPlayer("right").getPlot(plotID).revealMarker(step, `Time ${time}${plotL}`);
+                splitView.getPlayer("left").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}${plotR}` });
+                splitView.getPlayer("right").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}${plotL}` });
             }
             // }
         }

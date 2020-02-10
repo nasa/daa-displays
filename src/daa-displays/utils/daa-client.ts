@@ -59,9 +59,9 @@ export class DAAClient {
                     }
                 };
                 if (token && token.type) {
-                    const id = new Date().toISOString(); // TODO: replace with RFC4122 uuid
-                    token.id = token.id || id;
-                    token.time = { client: { sent: new Date().getTime() } };
+                    const time: string = new Date().toISOString(); // TODO: replace with RFC4122 uuid
+                    token.id = token.id || time;
+                    token.time = { client: { sent: time } };
                     if (token.data && token.data.command && typeof token.data.command === "string") {
                         // removing white space is useful to reduce the message size (e.g., to prevent stdin buffer overflow)
                         token.data.command = token.data.command.split(",").map((str: string) => {

@@ -89,6 +89,7 @@ require(["widgets/daa-displays/daa-playback"], function (PlaybackPlayer) {
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-playback-templates';
+import * as monitorTemplates from './templates/daa-monitor-templates';
 import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
@@ -135,7 +136,7 @@ export function safeSelector(str: string): string {
         if (str.endsWith(".daa")) {
             str = str.slice(0, -4);
         }
-        return str.replace(/\.|\//g, "-");
+        return str.replace(/\.|\/|\s/g, "-");
     }
     return str;
 }
@@ -172,6 +173,12 @@ export class DAAPlayer {
     };
     protected scenarioType: string = "daa"; // "daa" or "ic"
 
+    static readonly colorMap: { [color: string]: string } = {
+        "red": "crimson",
+        "green": "greenyellow",
+        "yellow": "gold"
+    };
+    
     protected _handlers: Handlers;
     protected _defines;
     protected _timer_active: boolean;
@@ -195,6 +202,7 @@ export class DAAPlayer {
 
     protected wellClearVersionSelector: string;
     protected wellClearConfigurationSelector: string;
+    protected monitorDomSelector: string;
     protected configInfo: ConfigFile;
 
     getWellClearVersionSelector(): string {
@@ -608,16 +616,16 @@ export class DAAPlayer {
                 const display: string = this._displays[i];
                 const width: number = $('.map-canvas').width() || 1072;
                 const height: number = $('.map-canvas').height() || 854;
-                const theHTML: string = Handlebars.compile(templates.loadingTemplate)({ width, height, id: `${this.id}-${display}-daa-loading` });
+                const left: number = 10;
+                const right: number = 10;
+                const theHTML: string = Handlebars.compile(templates.loadingTemplate)({ width, height, left, right, id: `${this.id}-${display}-daa-loading` });
                 $(`#${display}`).append(theHTML);
             }
         }
     }
     loadingComplete(): void {
         if (this._displays) {
-            for (const i in this._displays) {
-                $('.daa-loading').remove();
-            }
+            $('.daa-loading').remove();
         }
     }
 
@@ -1288,6 +1296,10 @@ export class DAAPlayer {
         return this.getTimeAt(this.simulationStep);
     }
 
+    getSimulationLength(): number {
+        return this._simulationLength;
+    }
+
     getTimeAt (step: number): string {
         if (!isNaN(step) && this._selectedScenario && this._scenarios[this._selectedScenario]) {
             if (step < this._scenarios[this._selectedScenario].length) {
@@ -1329,7 +1341,8 @@ export class DAAPlayer {
                         "Altitude Resolution": null,
                         "Heading Resolution": null,
                         "Horizontal Speed Resolution": null,
-                        "Vertical Speed Resolution": null
+                        "Vertical Speed Resolution": null,
+                        "Monitors": null
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
@@ -1358,9 +1371,12 @@ export class DAAPlayer {
                                 res[band_or_resolution] = resolution;
                             }
                         }
-                        if (this._bands && this._bands.Alerts && step < this._bands.Alerts.length) {
+                        if (this._bands.Alerts && step < this._bands.Alerts.length) {
                             // copy alerting info
                             res.Alerts = this._bands.Alerts[step].alerts;
+                        }
+                        if (this._bands.Monitors) {
+                            res.Monitors = this._bands.Monitors[this.simulationStep];
                         }
                     }
                     ans.push(res);
@@ -1379,7 +1395,8 @@ export class DAAPlayer {
             "Altitude Resolution": null,
             "Heading Resolution": null,
             "Horizontal Speed Resolution": null,
-            "Vertical Speed Resolution": null
+            "Vertical Speed Resolution": null,
+            "Monitors": null
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
@@ -1416,6 +1433,9 @@ export class DAAPlayer {
                         // copy alerting info
                         res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
                     }
+                }
+                if (this._bands.Monitors) {
+                    res.Monitors = this._bands.Monitors[this.simulationStep];
                 }
             }
         }
@@ -1531,14 +1551,26 @@ export class DAAPlayer {
     }
 
 
+    async activate(): Promise<void> {
+        const scenarios = await this.listScenarioFiles();
+        if (!this.activationControlsPresent && scenarios && scenarios.length) {
+            await this.selectScenarioFile(scenarios[0]);
+        }
+    }
+
+    setDisplays (displays: string[]): DAAPlayer {
+        this._displays = displays || [];
+        return this;
+    }
+
+
     //-- append functions ------------
 
-    appendNavbar(): DAAPlayer {
+    appendNavbar(): void {
         const theHTML: string = Handlebars.compile(templates.navbarTemplate)({
             id: this.id
         });
         $('body').append(theHTML);
-        return this;
     }
 
     async appendWellClearVersionSelector(wellClearVersionSelector?: string): Promise<void> {
@@ -1559,9 +1591,41 @@ export class DAAPlayer {
         await this.refreshConfigurationView();
     }
 
-    setDisplays (displays: string[]): DAAPlayer {
-        this._displays = displays || [];
-        return this;
+    appendMonitorPanel(monitorDomSelector?: string): void {
+        monitorDomSelector = monitorDomSelector || "daa-monitors";
+        this.monitorDomSelector = monitorDomSelector;
+        const theHTML: string = Handlebars.compile(monitorTemplates.monitorPanelTemplate)({
+            id: this.monitorDomSelector
+        });
+        $(`#${this.monitorDomSelector}`).append(theHTML);
+    }
+
+    appendMonitors(monitors: { name: string, color: string, legend: string }[]): void {
+        if (monitors) {
+            const theHTML: string = Handlebars.compile(monitorTemplates.monitorTemplate)({
+                id: this.monitorDomSelector,
+                monitors: monitors.map((monitor: { name: string, color: string }) => {
+                    monitor.color = monitor.color || "unknown";
+                    const id: string = safeSelector(monitor.name);
+                    const color: string = DAAPlayer.colorMap[monitor.color] || "grey";
+                    const text: string = monitor.color.slice(0, 1).toUpperCase();
+                    const textcolor: string = (monitor.color === "red") ? "white" : "black";
+                    return { name: monitor.name, color, id, textcolor, text }; 
+                })
+            });
+            $(`#${this.monitorDomSelector}`).append(theHTML);
+        }
+    }
+
+    removeMonitors(): void {
+        $(`#${this.monitorDomSelector}-list`).remove();
+    }
+
+    updateMonitors (): void {
+        this.removeMonitors();
+        if (this._bands && this._bands.Monitors) {
+            this.appendMonitors(this._bands.Monitors);
+        }
     }
 
     /**
@@ -1622,12 +1686,6 @@ export class DAAPlayer {
         $(`#${this.id}-refresh-daidalus-versions`).on("click", () => { this._handlers.daidalusVersionReloader(); });
     }
 
-    async activate(): Promise<void> {
-        const scenarios = await this.listScenarioFiles();
-        if (!this.activationControlsPresent && scenarios && scenarios.length) {
-            await this.selectScenarioFile(scenarios[0]);
-        }
-    }
 
     /**
      * @function <a name="simulationPlot">simulationPlot</a>
@@ -1668,6 +1726,41 @@ export class DAAPlayer {
         return this;
     }
 
+    async appendScenarioSelector(): Promise<void> {
+        try {
+            const scenarios: string[] = await this.listScenarioFiles();
+            const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
+                scenarios: scenarios.map((name: string, index: number) => {
+                    return {
+                        id: safeSelector(name),
+                        name: name, 
+                        selected: (this._selectedScenario) ? this._selectedScenario === name : index === 0
+                    };
+                }),
+                selectedScenario: safeSelector(this._selectedScenario),
+                id: this.id
+            });
+            $(`#${this.id}-scenarios-list`).remove();
+            $(`#${this.id}-scenarios`).append(theHTML);
+            // install handlers for click events on scenarios
+            if (scenarios) {
+                for (let i = 0; i < scenarios.length; i++) {
+                    // event handler
+                    $(`#${this.id}-scenario-${safeSelector(scenarios[i])}`).on("click", async () => {
+                        this._selectedScenario = scenarios[i];
+                        this.disableSimulationControls();
+                        this.revealActivationPanel();
+                        // await this.selectScenarioFile(scenarios[i]);
+                    });
+                }
+            }
+            $(`#${this.id}-refresh-scenarios`).on("click", () => {
+                this._handlers.scenarioReloader(scenarios);
+            });
+        } catch (error) {
+            console.error("[daa-player] Warning: could not append scenario selector", error);
+        }
+    }
 
     //-- refresh functions ------------
 
@@ -1822,42 +1915,6 @@ export class DAAPlayer {
             // this.loadingComplete();
         });
         return this;
-    }
-
-    async appendScenarioSelector(): Promise<void> {
-        try {
-            const scenarios: string[] = await this.listScenarioFiles();
-            const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
-                scenarios: scenarios.map((name: string, index: number) => {
-                    return {
-                        id: safeSelector(name),
-                        name: name, 
-                        selected: (this._selectedScenario) ? this._selectedScenario === name : index === 0
-                    };
-                }),
-                selectedScenario: safeSelector(this._selectedScenario),
-                id: this.id
-            });
-            $(`#${this.id}-scenarios-list`).remove();
-            $(`#${this.id}-scenarios`).append(theHTML);
-            // install handlers for click events on scenarios
-            if (scenarios) {
-                for (let i = 0; i < scenarios.length; i++) {
-                    // event handler
-                    $(`#${this.id}-scenario-${safeSelector(scenarios[i])}`).on("click", async () => {
-                        this._selectedScenario = scenarios[i];
-                        this.disableSimulationControls();
-                        this.revealActivationPanel();
-                        // await this.selectScenarioFile(scenarios[i]);
-                    });
-                }
-            }
-            $(`#${this.id}-refresh-scenarios`).on("click", () => {
-                this._handlers.scenarioReloader(scenarios);
-            });
-        } catch (error) {
-            console.error("[daa-player] Warning: could not append scenario selector", error);
-        }
     }
 
     /**

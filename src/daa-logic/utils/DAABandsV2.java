@@ -102,16 +102,16 @@ public class DAABandsV2 {
 		System.exit(0);
 	}
 
-	protected static String region2str(BandsRegion r) {
-		switch (r) {
-			case NONE: return "0";
-			case FAR: return "1";
-			case MID: return "2";
-			case NEAR: return "3";
-			case RECOVERY: return "4";
-			default: return "-1";
-		}
-	}
+	// protected static String region2str(BandsRegion r) {
+	// 	switch (r) {
+	// 		case NONE: return "0";
+	// 		case FAR: return "1";
+	// 		case MID: return "2";
+	// 		case NEAR: return "3";
+	// 		case RECOVERY: return "4";
+	// 		default: return "-1";
+	// 	}
+	// }
 
 	protected static void printArray(PrintWriter out, ArrayList<String> info, String label) {
 		out.println("\"" + label + "\": [");
@@ -125,6 +125,14 @@ public class DAABandsV2 {
 			}
 		}
 		out.println("]");
+	}
+
+	protected static void printMonitor (PrintWriter out, ArrayList<String> info, String legend, String color, String label) {
+		out.print("{ \"name\": \"" + label + "\",\n");
+		out.print("\"color\": \"" + color + "\",\n");
+		out.println("\"legend\": " + legend + ",\n");
+		DAABandsV2.printArray(out, info, "results");
+		out.println("} ");
 	}
 
 	Boolean loadDaaConfig () {
@@ -152,8 +160,12 @@ public class DAABandsV2 {
 				+   "\"Scenario\": \"" + this.scenario + "\",";  
 	}
 
-	protected String jsonBands (Daidalus daa, ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
-								ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray) {
+	protected String jsonBands (
+		Daidalus daa, DAAMonitorsV2 monitors,
+		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
+		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
+		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array 
+	) {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
@@ -219,7 +231,7 @@ public class DAABandsV2 {
 		String resTrk = "{ \"time\": " + time;
 		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		String alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units).toString();
+		BandsRegion alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units);
 		resTrk += ", \"resolution\": { \"val\": \"" + valueTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + alertTrk + "\" }"; // resolution can be number, NaN or infinity
 		resTrk += " }";
 		resTrkArray.add(resTrk);
@@ -227,7 +239,7 @@ public class DAABandsV2 {
 		String resGs = "{ \"time\": " + time;
 		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		double valueGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
-		String alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units).toString();
+		BandsRegion alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units);
 		resGs += ", \"resolution\": { \"val\": \"" + valueGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + alertGs + "\" }"; // resolution can be number, NaN or infinity
 		resGs += " }";
 		resGsArray.add(resGs);
@@ -235,7 +247,7 @@ public class DAABandsV2 {
 		String resVs = "{ \"time\": " + time;
 		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		double valueVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		String alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units).toString();
+		BandsRegion alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units);
 		resVs += ", \"resolution\": { \"val\": \"" + valueVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + alertVs + "\" }"; // resolution can be number, NaN or infinity
 		resVs += " }";
 		resVsArray.add(resVs);
@@ -243,10 +255,26 @@ public class DAABandsV2 {
 		String resAlt = "{ \"time\": " + time;
 		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
 		double valueAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		String alertAlt = daa.regionOfAltitude(valueAlt, alt_units).toString();
+		BandsRegion alertAlt = daa.regionOfAltitude(valueAlt, alt_units);
 		resAlt += ", \"resolution\": { \"val\": \"" + valueAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + alertAlt + "\" }"; // resolution can be number, NaN or infinity
 		resAlt += " }";
 		resAltArray.add(resAlt);
+
+		monitors.check();
+		String monitorM1 = "{ \"time\": " + time
+					+ ", " + monitors.m1()
+					+ " }";
+		monitorM1Array.add(monitorM1);
+
+		String monitorM2 = "{ \"time\": " + time
+					+ ", " + monitors.m2()
+					+ " }";
+		monitorM2Array.add(monitorM2);
+
+		String monitorM3 = "{ \"time\": " + time
+					+ ", " + monitors.m3()
+					+ " }";
+		monitorM3Array.add(monitorM3);
 
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
@@ -279,6 +307,11 @@ public class DAABandsV2 {
 		ArrayList<String> resVsArray = new ArrayList<String>();
 		ArrayList<String> resAltArray = new ArrayList<String>();
 
+		DAAMonitorsV2 monitors = new DAAMonitorsV2(daa);
+
+		ArrayList<String> monitorM1Array = new ArrayList<String>();
+		ArrayList<String> monitorM2Array = new ArrayList<String>();
+		ArrayList<String> monitorM3Array = new ArrayList<String>();
 
 		String jsonStats = null;
 
@@ -288,7 +321,14 @@ public class DAABandsV2 {
 			if (wrapper != null) {
 				wrapper.adjustAlertingTime();
 			}
-			jsonStats = this.jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray, resTrkArray, resGsArray, resVsArray, resAltArray);
+
+			jsonStats = this.jsonBands(
+				daa, monitors,
+				alertsArray, 
+				trkArray, gsArray, vsArray, altArray, 
+				resTrkArray, resGsArray, resVsArray, resAltArray, 
+				monitorM1Array, monitorM2Array, monitorM3Array
+			);
 		}
 
 		printWriter.println(jsonStats + ",");
@@ -310,6 +350,16 @@ public class DAABandsV2 {
 		DAABandsV2.printArray(printWriter, resVsArray, "Vertical Speed Resolution");
 		printWriter.println(",");
 		DAABandsV2.printArray(printWriter, resAltArray, "Altitude Resolution");
+		printWriter.println(",");
+
+		printWriter.println("\"Monitors\": [");
+		DAABandsV2.printMonitor(printWriter, monitorM1Array, monitors.getLegend(1), monitors.getColor(1), monitors.getLabel(1));
+		printWriter.println(",");
+		DAABandsV2.printMonitor(printWriter, monitorM2Array, monitors.getLegend(2), monitors.getColor(2), monitors.getLabel(2));
+		printWriter.println(",");
+		DAABandsV2.printMonitor(printWriter, monitorM3Array, monitors.getLegend(3), monitors.getColor(3), monitors.getLabel(3));
+		printWriter.println("]");
+
 		printWriter.println("}");
 
 		this.closePrintWriter();

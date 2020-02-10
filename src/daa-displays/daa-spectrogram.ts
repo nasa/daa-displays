@@ -455,11 +455,16 @@ export class DAASpectrogram {
         $(`#${this.id}-cursor`).animate({ "left": 0 }, 500);
         return this;
     }
-    revealMarker (step: number, tooltip?: string): DAASpectrogram {
-        $(`#${this.id}-monitor_${step}`).css("display", "block");
-        $(`#${this.id}-monitor_${step}`).attr("title", `<div>The other run indicates<br>${tooltip}</div>`)
-        // @ts-ignore -- method tooltip is added by bootstrap
-        $(`#${this.id}-monitor_${step}`).tooltip();
+    revealMarker (desc: { step: number, tooltip?: string, color?: string }): DAASpectrogram {
+        if (desc) {
+            $(`#${this.id}-monitor_${desc.step}`).css("display", "block");
+            if (desc.color) {
+                $(`#${this.id}-monitor_${desc.step} .fa`).css("color", desc.color);
+            }
+            $(`#${this.id}-monitor_${desc.step}`).attr("title", `<div>The other run indicates<br>${desc.tooltip}</div>`)
+            // @ts-ignore -- method tooltip is added by bootstrap
+            $(`#${this.id}-monitor_${desc.step}`).tooltip();
+        }
         return this;
     }
     hideMarker (i: number): DAASpectrogram {

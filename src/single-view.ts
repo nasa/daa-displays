@@ -40,6 +40,8 @@ import { LLAData, ConfigData } from './daa-displays/utils/daa-server';
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 
+const player: DAAPlayer = new DAAPlayer();
+
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
@@ -74,7 +76,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     });
     data.map.setTraffic(traffic);
-    plot({ ownship: { gs, vs, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
+    const step: number = player.getCurrentSimulationStep();
+    const time: string = player.getCurrentSimulationTime();
+    plot({ ownship: { gs, vs, alt, hd }, bands, step, time });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -113,6 +117,17 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
     }
 }
 
+function plotMonitors (desc: { monitors: utils.DAABandsData[] }) {
+    const len: number = player.getSimulationLength();
+    for (let step = 0; step < len; step++) {
+        const time: string = player.getTimeAt (step);
+        for (let i = 0; i < daaPlots.length; i++) {
+            const plotID: string = daaPlots[i].id;
+            const plotName: string = daaPlots[i].name;
+            player.getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>MONITOR` });
+        }
+    }
+}
 
 // single player
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
@@ -126,7 +141,7 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left:
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { parent: "daa-disp" });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
-const player: DAAPlayer = new DAAPlayer();
+
 player.define("step", async () => {
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
@@ -141,6 +156,7 @@ player.define("init", async () => {
         scenario: player.getSelectedScenario()
     });
     viewOptions.applyCurrentViewOptions();
+    player.updateMonitors();
 });
 async function developerMode (): Promise<void> {
     const configData: ConfigData = await player.loadSelectedConfiguration();
@@ -170,6 +186,7 @@ player.define("plot", () => {
                 plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
             }, step);
         }
+        // plotMonitors({ monitors: bandsData });
     }
 });
 async function createPlayer() {
@@ -221,6 +238,7 @@ async function createPlayer() {
     await player.appendScenarioSelector();
     await player.appendWellClearVersionSelector();
     await player.appendWellClearConfigurationSelector();
+    player.appendMonitorPanel();
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

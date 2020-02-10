@@ -118,6 +118,13 @@ export declare interface AlertElement {
     alerts: { ac: string; alert: string }[];
 }
 
+export declare interface MonitorElement {
+    name: string;
+    legend: string;
+    color: string; // this is the summary
+    results: { time: number, color: string, details: any }[]
+}
+
 export declare interface DaidalusBandsDescriptor {
     Info: {
         version: string, // well clear version
@@ -129,6 +136,7 @@ export declare interface DaidalusBandsDescriptor {
     "Horizontal Speed Bands": BandElement[];
     "Vertical Speed Bands": BandElement[];
     "Altitude Bands": BandElement[];
+    Monitors: MonitorElement[];
 }
 
 export declare interface DAALosSector {
