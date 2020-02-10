@@ -50,7 +50,7 @@ define compile-cpp-template
 compile-cpp-$(1):
 	@echo Compiling WellClear version $(1) in C++
 	-@cd WellClear-$(1)/DAIDALUS/C++/ && make lib && mv lib/DAIDALUS2e.a lib/DAIDALUS$(1).a ## FIXME: the original makefile produces DAIDALUS2e.a, but according to the conventions used here we need a DAIDALUS2.0.e.a
-	-@cd utils && $(CPP) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/DAIDALUS$(1).a $(if $(call version1, WellClear-$(1)) , DAABands.cpp, DAABandsV2.cpp) -o ../WellClear-$(1).exe
+	-@cd utils && $(CPP) $(if $(call version1, WellClear-$(1)) , DAABands.cpp, DAABandsV2.cpp) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/DAIDALUS$(1).a -o ../WellClear-$(1).exe
 endef
 compile-cpp-all = $(foreach ver,$(CPP_VERSIONS),$(eval $(call compile-cpp-template,$(ver))))
 
