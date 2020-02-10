@@ -1,6 +1,6 @@
-# WellClear versions to be compiled
-VERSIONS = 1.0.1 1.0.2 2.0.e
-VERSIONS_WITH_WRAPPER = 2.0.e
+# WellClear JAVA_versions to be compiled
+JAVA_VERSIONS = 1.0.1 1.0.2 2.0.e
+CPP_VERSIONS = 2.0.e # this should always be a subset of the JAVA_VERSION
 
 # definitions necessary for javac
 SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java src/gov/nasa/larcfm/ACCoRD/*.java)
@@ -24,7 +24,7 @@ version1 = $(shell echo $(1) | grep "WellClear-1.")
 github = curl --output /dev/null --silent --head --fail "https://codeload.github.com/nasa/WellClear/zip/v$(1)"
 
 # download templates
-DOWNLOAD_TARGETS = $(foreach ver,$(VERSIONS), download-$(ver))
+DOWNLOAD_TARGETS = $(foreach ver,$(JAVA_VERSIONS), download-$(ver))
 define download-template
 download-$(1):
 	@echo "\n\033[0;32m ** Downloading WellClear $(1) from GitHub **\033[0m" 
@@ -32,39 +32,30 @@ download-$(1):
 	-@unzip -qn WellClear-$(1).zip
 	-@rm WellClear-$(1).zip
 endef
-download-all = $(foreach ver,$(VERSIONS),$(eval $(call download-template,$(ver))))
+download-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call download-template,$(ver))))
 
 # compilation templates
-COMPILE_TARGETS = $(foreach ver,$(VERSIONS), compile-$(ver))
-define compile-template
-compile-$(1):
+COMPILE_JAVA_TARGETS = $(foreach ver,$(JAVA_VERSIONS), compile-java-$(ver))
+define compile-java-template
+compile-java-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
 	@echo Compiling WellClear version $(1) in Java
 	-@rm WellClear-$(1).jar
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java DAAMonitorsV2.java) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
+endef
+compile-java-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call compile-java-template,$(ver))))
 
+COMPILE_CPP_TARGETS = $(foreach ver,$(CPP_VERSIONS), compile-cpp-$(ver))
+define compile-cpp-template
+compile-cpp-$(1):
 	@echo Compiling WellClear version $(1) in C++
 	-@cd WellClear-$(1)/DAIDALUS/C++/ && make lib && mv lib/DAIDALUS2e.a lib/DAIDALUS$(1).a ## FIXME: the original makefile produces DAIDALUS2e.a, but according to the conventions used here we need a DAIDALUS2.0.e.a
 	-@cd utils && $(CPP) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/DAIDALUS$(1).a $(if $(call version1, WellClear-$(1)) , DAABands.cpp, DAABandsV2.cpp) -o ../WellClear-$(1).exe
-
-	@echo "\n\033[0;32m ** Building DAALoSRegion-${1} **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)) , DAALoSRegion.java, DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java ) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../LoSRegion-${1}.jar $(if $(call version1, WellClear-$(1)) , DAALoSRegion, DAALoSRegionV2 ) *.class && cd ../WellClear-${1}/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl LoSRegion-$(1).jar && unzip -c LoSRegion-$(1).jar META-INF/MANIFEST.MF
 endef
-compile-all = $(foreach ver,$(VERSIONS),$(eval $(call compile-template,$(ver))))
-
-
-COMPILE_WRAPPERS = $(foreach ver,$(VERSIONS_WITH_WRAPPER), compile-wrapper$(ver))
-define compile-wrapper
-compile-wrapper$(1):
-	@echo "\n\033[0;32m ** Building WellClear-WR-$(1).jar **\033[0m"
-	@echo Compiling for WellClear version $(1) with Wrapper
-	-@rm WellClear-WR-$(1).jar
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src DAABandsV2.java DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2Wrapper.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-WR-$(1).jar DAABandsV2Wrapper *.class *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-WR-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-WR-$(1).jar && unzip -c WellClear-WR-$(1).jar META-INF/MANIFEST.MF
-endef
-compile-all-wrappers = $(foreach ver,$(VERSIONS_WITH_WRAPPER),$(eval $(call compile-wrapper,$(ver))))
+compile-cpp-all = $(foreach ver,$(CPP_VERSIONS),$(eval $(call compile-cpp-template,$(ver))))
 
 # clean templates
-CLEAN_TARGETS = $(foreach ver,$(VERSIONS), clean-$(ver))
+CLEAN_TARGETS = $(foreach ver,$(JAVA_VERSIONS), clean-$(ver))
 define clean-template
 clean-$(1):
 	@echo "\n\033[0;33m ** Removing .class files in WellClear-$(1) **\033[0m"
@@ -73,7 +64,7 @@ clean-$(1):
 	-cd WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO && rm *.class
 	-cd WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util && rm *.class
 endef
-clean-all = $(foreach ver,$(VERSIONS),$(eval $(call clean-template,$(ver))))
+clean-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
 all: download compile daa2json daa2xyz daa2pvs daa2pvsv2 #wrapper #los1.0.1 los1.0.2 los2.0.e 
@@ -88,7 +79,7 @@ download-wellclear-2.0.e:
 
 download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e
 
-compile: $(COMPILE_TARGETS) $(COMPILE_WRAPPERS)
+compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CPP_TARGETS)
 
 clean: clean-utils clean-jar $(CLEAN_TARGETS)
 
@@ -101,7 +92,7 @@ clean-jar:
 	@-rm *.jar
 
 remove-downloads:
-	@echo "\n\033[0;33m ** Removing downloaded versions of WellClear **\033[0m"
+	@echo "\n\033[0;33m ** Removing downloaded JAVA_versions of WellClear **\033[0m"
 	@-rm -r WellClear-*
 	@-rm WellClear-*.zip
 
@@ -165,6 +156,6 @@ compile-jar:
 
 # these final commands expand the templates
 $(call download-all)
-$(call compile-all)
-$(call compile-all-wrappers)
+$(call compile-java-all)
+$(call compile-cpp-all)
 $(call clean-all)
