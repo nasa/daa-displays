@@ -15,8 +15,8 @@ daa-displays-1.0.5
 ## Requirements
 The following software is necessary to compile and execute DAA-Displays
 - NodeJS (https://nodejs.org/en/download)
-- Java
-- C++
+- Java compiler
+- C++ compiler
 
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
