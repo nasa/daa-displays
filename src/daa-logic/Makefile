@@ -148,7 +148,7 @@ ver?=2.0.x
 compile-jar:
 	@echo "\n\033[0;32m ** Building WellClear-$(ver).jar **\033[0m"
 	@echo Compiling with library $(lib).jar
-	cd utils && $(JAVAC) -cp ../$(lib).jar DAABandsV2.java DaidalusWrapperInterface.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class
+	cd utils && $(JAVAC) -cp ../$(lib).jar DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class
 	cd utils && unzip -qn ../$(lib).jar -d temp
 	cd utils/temp && $(JAR) uf ../../WellClear-$(ver).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp && cd ../ 
 	unzip -vl WellClear-$(ver).jar
