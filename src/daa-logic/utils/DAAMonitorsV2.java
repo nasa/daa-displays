@@ -312,7 +312,8 @@ public class DAAMonitorsV2 {
     protected int checkM3 (BandsRegion currentRegion) {
         for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
             int alert = daa.alertLevel(ac);
-            if (alert > 0) {
+            int threshold = daa.getCorrectiveRegion().orderOfConflictRegion();
+            if (alert > threshold) {
                 if (currentRegion == BandsRegion.UNKNOWN) {
                     return RED;
                 } else {
