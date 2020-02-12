@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { LLAData, ConfigData } from './daa-displays/utils/daa-server';
+import { LLAData, ConfigData, MonitorElement, MonitorData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
@@ -117,14 +117,24 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
     }
 }
 
-function plotMonitors (desc: { monitors: utils.DAABandsData[] }) {
-    const len: number = player.getSimulationLength();
-    for (let step = 0; step < len; step++) {
-        const time: string = player.getTimeAt (step);
-        for (let i = 0; i < daaPlots.length; i++) {
-            const plotID: string = daaPlots[i].id;
-            const plotName: string = daaPlots[i].name;
-            player.getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>MONITOR` });
+function plotMonitor (desc: { data: MonitorElement, monitorID: number }) {
+    if (desc && desc.data && desc.data.results && desc.data.results.length) {
+        const results: MonitorData[] = desc.data.results;
+        const len: number = player.getSimulationLength();
+        for (let step = 0; step < len; step++) {
+            const time: string = player.getTimeAt (step);
+            for (let p = 0; p < daaPlots.length; p++) {
+                if (results[step] && step < results.length) {
+                    const key: string = daaPlots[p].name.replace(" Bands", "");
+                    const color: string = results[step].details[`${key}`];
+                    const plotID: string = daaPlots[p].id;
+                    player.getPlot(plotID).deleteMarker(step);
+                    if (color !== "green") {
+                        const legend: string = desc.data.legend[color];
+                        player.getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>${legend}`, color, header: `Monitor ${desc.monitorID}` });
+                    }
+                }
+            }
         }
     }
 }
@@ -171,7 +181,7 @@ async function developerMode (): Promise<void> {
     altitudeTape.revealUnits();
     altitudeTape.disableTapeSpinning();
 }
-//TODO: implement a function plotAll in spectrogram
+//fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {
     const bandsData: utils.DAABandsData[] = player.getBandsData();
     const flightData: LLAData[] = player.getFlightData();
@@ -183,10 +193,14 @@ player.define("plot", () => {
                 const gs: number = AirspeedTape.v2gs(lla.ownship.v);
                 const vs: number = +lla.ownship.v.z / 100;
                 const alt: number = +lla.ownship.s.alt;
-                plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
+                plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });   
             }, step);
         }
-        // plotMonitors({ monitors: bandsData });
+        // const monitorID: number = 2;
+        // plotMonitor({
+        //     data: bandsData[0].Monitors[monitorID],
+        //     monitorID
+        // });
     }
 });
 async function createPlayer() {
@@ -238,7 +252,21 @@ async function createPlayer() {
     await player.appendScenarioSelector();
     await player.appendWellClearVersionSelector();
     await player.appendWellClearConfigurationSelector();
-    player.appendMonitorPanel();
+    await player.appendMonitorPanel();
+    // handlers can be defined only after creating the monitor panel
+    for (let i = 0; i < 3; i++) {
+        const monitorID: number = i + 1;
+        player.on(`click.monitor-${monitorID}`, () => {
+            const bandsData: utils.DAABandsData[] = player.getBandsData();
+            // const flightData: LLAData[] = player.getFlightData();
+            if (bandsData && bandsData.length) {
+                plotMonitor({
+                    data: bandsData[0].Monitors[i],
+                    monitorID
+                });
+            }
+        });
+    }
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

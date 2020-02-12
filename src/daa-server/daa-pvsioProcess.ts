@@ -195,7 +195,10 @@ export class PVSioProcess {
 			console.log("[daa-pvsio-process] pvsio well-clear version " + match[1]);
 			return match[1];
 		}
-		return null;
+		return "";
+	}
+	async getMonitorList (wellClearFolder: string, daaLogic: string): Promise<string> {
+		return "[]";
 	}
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
 		const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);

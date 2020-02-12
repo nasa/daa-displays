@@ -104,5 +104,25 @@ export class CppProcess {
 			});
 		});
 	}
+	async getMonitorList (folder: string, daaLogic: string): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const cmds: string[] = [
+				`cd ${folder}`,
+				`./${daaLogic} --list-monitors`
+			];
+			const cmd = cmds.join(" && ");
+			console.info("Executing " + cmd);
+			exec(cmd, (error, stdout, stderr) => {
+				if (error) {
+					console.error(`exec error: ${error}`);
+					return;
+				} else if (stderr) {
+					console.error(`stderr: ${stderr}`);  
+				}
+				console.info(`stdout: ${stdout}`);
+				resolve(stdout.trim());
+			});
+		});
+	}
 	async activate () { }
 }

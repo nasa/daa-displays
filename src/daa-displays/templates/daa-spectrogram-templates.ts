@@ -8,15 +8,15 @@ export const spectrogramTemplate: string = `
         {{#if markers}}<div class="spectrogram-x-axis" style="position:absolute;">
             <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.start.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.start.label}}</button>
             <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.mid.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.mid.label}}</button>
-            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; left:{{markers.end.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.end.label}} [sec]</button>
+            <button id="{{id}}-x-min" data-toggle="modal-min" class="btn btn-sm" style="position:absolute; top:{{height}}px; margin-top:-1px; margin-left:-0.4px; left:{{markers.end.left}}px; white-space:nowrap; border-radius:0px; border-left: #2c3541de 1px solid;">{{markers.end.label}} [sec]</button>
         </div>{{/if}}
         <div id="{{id}}-overlay-monitor" class="spectrogram-overlay-monitor" style="position:absolute; display:block; height:6px; top:{{markers.top}}px; width:{{width}}px; background:black;">
             {{#each grid}}
-            <div id="{{../id}}-monitor_{{@index}}"
-                 style="display:none; opacity:1; text-align:center; left:{{left}}px; top:-9px; width:{{width}}px; position:absolute;"
+            <div id="{{../id}}-monitor-{{@index}}" class="spectrogram-monitor-element"
+                 style="display:none; opacity:1; text-align:center; left:{{left}}px; top:-9px; width:{{width}}px; position:absolute; cursor:pointer;"
                  data-toggle="tooltip" data-placement="bottom" data-html="true" boundary="window"
                  title="<div>Syntactic difference at step {{@index}}</div>">
-                <i class="fa fa-caret-up" style="color:#ffc107;"></i>
+                <i class="fa fa-caret-up spectrogram-monitor-marker" style="color:#ffc107; margin-left:-3px; margin-top:4px;"></i>
             </div>
             {{/each}}
         </div>
@@ -39,7 +39,7 @@ export const spectrogramBandTemplate: string = `
         {{/each}}
     {{/each}}
     {{#if marker}}
-        <div marker="{marker.value}} ({{marker.units}})" style="top:{{marker.top}}px; height:{{marker.height}}px; width:{{marker.width}}px; background-color:{{marker.color}}; position:absolute;"></div>
+        <div marker="{{marker.value}} ({{marker.units}})" style="top:{{marker.top}}px; height:{{marker.height}}px; width:{{marker.width}}px; background-color:{{marker.color}}; position:absolute;"></div>
     {{/if}}
     {{#if resolution}}
         <div resolution="{resolution.value}} ({{resolution.units}})" style="top:{{resolution.top}}px; height:{{resolution.height}}px; width:{{resolution.width}}px; background-color:{{resolution.color}}; position:absolute;"></div>

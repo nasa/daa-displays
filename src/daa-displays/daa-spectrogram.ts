@@ -413,7 +413,7 @@ export class DAASpectrogram {
                     top: this.top,
                     left: leftMargin,
                     width: barWidth,
-                    height: this.height + 30, // extend click-and-point area to the timeline
+                    height: this.height + 25, // extend click-and-point area to the timeline, but exclude the bottom line because markers will be rendered there
                     marker: (isFinite(data.marker))? { // marker is used to represent the ownship state
                         value: data.marker,
                         top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
@@ -455,20 +455,36 @@ export class DAASpectrogram {
         $(`#${this.id}-cursor`).animate({ "left": 0 }, 500);
         return this;
     }
-    revealMarker (desc: { step: number, tooltip?: string, color?: string }): DAASpectrogram {
+    revealMarker (desc: { step: number, tooltip?: string, color?: string, header?: string }): DAASpectrogram {
         if (desc) {
-            $(`#${this.id}-monitor_${desc.step}`).css("display", "block");
+            const selector: string = `#${this.id}-monitor-${desc.step}`;
+            $(selector).css("display", "block");
             if (desc.color) {
-                $(`#${this.id}-monitor_${desc.step} .fa`).css("color", desc.color);
+                $(`${selector} .fa`).css("color", desc.color);
             }
-            $(`#${this.id}-monitor_${desc.step}`).attr("title", `<div>The other run indicates<br>${desc.tooltip}</div>`)
+            if (desc.header) {
+                $(selector).attr("title", `<div>${desc.header}<br>${desc.tooltip}</div>`);
+            } else {
+                $(selector).attr("title", `<div>${desc.tooltip}</div>`);
+            }
+            // install gotohandler
+            $(selector).on("click", () => {
+                this.player.gotoControl(desc.step, { updateInputs: true });
+            });
             // @ts-ignore -- method tooltip is added by bootstrap
-            $(`#${this.id}-monitor_${desc.step}`).tooltip();
+            $(selector).tooltip();
         }
         return this;
     }
     hideMarker (i: number): DAASpectrogram {
-        $(`#${this.id}-monitor_${i}`).css("display", "none");
+        $(`#${this.id}-monitor-${i}`).css("display", "none");
+        return this;
+    }
+    deleteMarker (i: number): DAASpectrogram {
+        this.hideMarker(i);
+        // @ts-ignore -- method tooltip is added by bootstrap
+        $(`#${this.id}-monitor-${i}`).tooltip("dispose"); // clear tooltip
+        $(`#${this.id}-monitor-${i}`).attr("title", null); // clear title
         return this;
     }
 }

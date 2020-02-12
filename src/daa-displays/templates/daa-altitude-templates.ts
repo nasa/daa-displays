@@ -19,7 +19,7 @@ export const altitudeTemplate = `
             <div id="{{id}}-bug" style="position:absolute; left:8px; opacity:0.9; margin-top:98px;">
                 <div style="position:absolute;">
                     <!-- back -->
-                    <div class="{{id}}-bug" style="width:9px; margin-left:9px; height:12px; border:1px solid white; background-color:black;"></div>
+                    <div class="{{id}}-bug" style="width:64px; margin-left:9px; height:12px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->
                     <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
                 </div>

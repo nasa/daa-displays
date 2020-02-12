@@ -14,7 +14,7 @@ export const airspeedTemplate = `
             <div id="{{id}}-bug" style="position:absolute; left:10px; opacity:0.9; margin-top:17px;">
                 <div style="position:absolute;">
                     <!-- back -->
-                    <div class="{{id}}-bug" style="width:14px; margin-left:52px; height:12px; border:1px solid white; background-color:black;"></div>
+                    <div class="{{id}}-bug" style="width:64px; margin-left:2px; height:12px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->
                     <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:62px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(-45deg);"></div>
                 </div>

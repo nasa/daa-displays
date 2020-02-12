@@ -99,7 +99,22 @@ public class DAABandsV2 {
 		System.out.println("  --version\n\tPrint WellClear version");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
+		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.exit(0);
+	}
+
+	/**
+	 * Returns the list of monitors in json format
+	 */
+	String printMonitorList() {
+		DAAMonitorsV2 monitors = new DAAMonitorsV2(null);
+		int n = monitors.getSize();
+		String res = "";
+		for (int i = 0; i < n; i++) {
+			res += "\"" + monitors.getLabel(i + 1) + "\"";
+			if (i < n - 1) { res += ", "; }
+		}
+		return "[ " + res + " ]";
 	}
 
 	// protected static String region2str(BandsRegion r) {
@@ -127,12 +142,26 @@ public class DAABandsV2 {
 		out.println("]");
 	}
 
-	protected static void printMonitor (PrintWriter out, ArrayList<String> info, String legend, String color, String label) {
-		out.print("{ \"name\": \"" + label + "\",\n");
-		out.print("\"color\": \"" + color + "\",\n");
-		out.println("\"legend\": " + legend + ",\n");
-		DAABandsV2.printArray(out, info, "results");
-		out.println("} ");
+	protected static void printMonitors (PrintWriter out, DAAMonitorsV2 monitors, ArrayList<ArrayList<String>> info) {
+		out.println("[ ");
+		int len = monitors.getSize();
+		for (int i = 0; i < len; i++) {
+			int monitorID = i + 1;
+			String legend = monitors.getLegend(monitorID);
+			String color = monitors.getColor(monitorID);
+			String label = monitors.getLabel(monitorID);
+			out.print("{ \"id\": \"" + (monitorID) + "\",\n");
+			out.print("\"name\": \"" + label + "\",\n");
+			out.print("\"color\": \"" + color + "\",\n");
+			out.println("\"legend\": " + legend + ",\n");
+			DAABandsV2.printArray(out, info.get(i), "results");
+			if (i < len - 1) {
+				out.println("}, ");
+			} else {
+				out.println("} ");
+			}
+		}
+		out.println(" ]");
 	}
 
 	Boolean loadDaaConfig () {
@@ -271,6 +300,7 @@ public class DAABandsV2 {
 					+ " }";
 		monitorM2Array.add(monitorM2);
 
+		System.out.println("time: " + time);
 		String monitorM3 = "{ \"time\": " + time
 					+ ", " + monitors.m3()
 					+ " }";
@@ -352,13 +382,12 @@ public class DAABandsV2 {
 		DAABandsV2.printArray(printWriter, resAltArray, "Altitude Resolution");
 		printWriter.println(",");
 
-		printWriter.println("\"Monitors\": [");
-		DAABandsV2.printMonitor(printWriter, monitorM1Array, monitors.getLegend(1), monitors.getColor(1), monitors.getLabel(1));
-		printWriter.println(",");
-		DAABandsV2.printMonitor(printWriter, monitorM2Array, monitors.getLegend(2), monitors.getColor(2), monitors.getLabel(2));
-		printWriter.println(",");
-		DAABandsV2.printMonitor(printWriter, monitorM3Array, monitors.getLegend(3), monitors.getColor(3), monitors.getLabel(3));
-		printWriter.println("]");
+		printWriter.println("\"Monitors\": ");
+		ArrayList<ArrayList<String>> info = new ArrayList();
+		info.add(monitorM1Array);
+		info.add(monitorM2Array);
+		info.add(monitorM3Array);
+		DAABandsV2.printMonitors(printWriter, monitors, info);
 
 		printWriter.println("}");
 
@@ -393,6 +422,10 @@ public class DAABandsV2 {
 		for (; a < args.length && args[a].startsWith("-"); a++) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
 				printHelpMsg();
+				System.exit(0);
+			} else if (args[a].startsWith("--list-monitors") || args[a].startsWith("-list-monitors")) {
+				System.out.println(printMonitorList());
+				System.exit(0);
 			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
 				daaConfig = args[++a];
 			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {

@@ -118,11 +118,24 @@ export declare interface AlertElement {
     alerts: { ac: string; alert: string }[];
 }
 
+export declare interface MonitorData {
+    time: number;
+    color: string; // this is the result for a specific band
+    details: { [key: string]: string }; // key is one of { Heading, Vertical Speed, Horizontal Speed, Altitude }
+}
+
+// export declare interface MonitorResult extends MonitorData {
+//     id: number;
+//     name: string;
+//     legend: string;
+// }
+
 export declare interface MonitorElement {
+    id: number;
     name: string;
-    legend: string;
-    color: string; // this is the summary
-    results: { time: number, color: string, details: any }[]
+    legend: { [color: string]: string };
+    color: string; // this color is the max of all colors in results
+    results: MonitorData[]
 }
 
 export declare interface DaidalusBandsDescriptor {

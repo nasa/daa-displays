@@ -49,6 +49,25 @@ import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class DAAMonitorsV2 {
 
+    protected static int bandsRegionToInt (BandsRegion b) {
+        if (b == BandsRegion.NONE) {
+            return 0;
+        }
+        if (b == BandsRegion.FAR) {
+            return 1;
+        }
+        if (b == BandsRegion.MID) {
+            return 2;
+        }
+        if (b == BandsRegion.NEAR) {
+            return 3;
+        }
+        if (b == BandsRegion.RECOVERY) {
+            return 4;
+        }
+        return -1;
+    }
+
     protected static final int GREEN = 0;
     protected static final int YELLOW = 1;
     protected static final int RED = 2;
@@ -84,6 +103,10 @@ public class DAAMonitorsV2 {
     // monitors color
     final int N_MONITORS = 3;
     int monitorColor[] = new int[]{ -1, -1, -1 };
+
+    int getSize() {
+        return N_MONITORS;
+    }
 
     
     DAAMonitorsV2 (Daidalus daa) {
@@ -123,17 +146,20 @@ public class DAAMonitorsV2 {
 
     protected void computeCurrentRegions () {
         double heading = daa.getOwnshipState().horizontalDirection();
-        System.out.println("heading: " + heading);
         currentRegionTrk = daa.regionOfHorizontalDirection(heading);
+        System.out.println("heading: " + heading + " region: " + currentRegionTrk);
 
         double hspeed = daa.getOwnshipState().horizontalSpeed();
         currentRegionGs = daa.regionOfHorizontalSpeed(hspeed);
+        System.out.println("hspeed: " + hspeed + " region: " + currentRegionGs);
 
         double vspeed = daa.getOwnshipState().verticalSpeed();
         currentRegionVs = daa.regionOfVerticalSpeed(vspeed);
+        System.out.println("vspeed: " + vspeed + " region: " + currentRegionVs);
 
         double alt = daa.getOwnshipState().altitude();
         currentRegionAlt = daa.regionOfAltitude(alt);
+        System.out.println("alt: " + alt + " region: " + currentRegionAlt);
     }
 
     static String color2string (int color) {
@@ -153,7 +179,7 @@ public class DAAMonitorsV2 {
         return DAAMonitorsV2.color2string(-1);
     }
     String getLegend (int monitorID) {
-        if (monitorID <= N_MONITORS) {
+        if (monitorID <= N_MONITORS && monitorID > 0) {
             if (monitorID == 1) { return this.legendM1(); }
             if (monitorID == 2) { return this.legendM2(); }
             if (monitorID == 3) { return this.legendM3(); }
@@ -161,7 +187,7 @@ public class DAAMonitorsV2 {
         return "\"unknown\"";
     }
     String getLabel (int monitorID) {
-        if (monitorID <= N_MONITORS) {
+        if (monitorID <= N_MONITORS && monitorID > 0) {
             if (monitorID == 1) { return this.labelM1(); }
             if (monitorID == 2) { return this.labelM2(); }
             if (monitorID == 3) { return this.labelM3(); }
@@ -214,10 +240,10 @@ public class DAAMonitorsV2 {
         return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading Resolution\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hr_) + "\" }"
-            + ", \"Horizontal Speed Resolution\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hsr_) + "\" }"
-            + ", \"Vertical Speed Resolution\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(vsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(vsr_) + "\" }"
-            + ", \"Altitude Resolution\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(ar) + "\", \"other\": \"" + DAAMonitorsV2.color2string(ar_) + "\" }"
+            + " \"Heading\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hr_) + "\" }"
+            + ", \"Horizontal Speed\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hsr_) + "\" }"
+            + ", \"Vertical Speed\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(vsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(vsr_) + "\" }"
+            + ", \"Altitude\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(ar) + "\", \"other\": \"" + DAAMonitorsV2.color2string(ar_) + "\" }"
             + " }";
     }
 
@@ -245,13 +271,13 @@ public class DAAMonitorsV2 {
     }
     protected String legendM2 () {
         String green_desc = "Consistent resolutions.";
-        String yellow_desc = "Abnormal condition: a resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
+        String yellow_desc = "Abnormal condition: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
         return "{ " 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
                 + " }";
     }
     protected String labelM2 () {
-        return "M2: A resolution is NaN ⇒ All resolutions are NaN";
+        return "M2: One resolution is NaN ⇒ All resolutions are NaN";
     }
     String m2 () {
         int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
@@ -270,10 +296,10 @@ public class DAAMonitorsV2 {
         return "\"color\": " + "\"" + this.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading Resolution\": " + "{ \"preferred\": \"" + this.color2string(hr) + "\", \"other\": \"" + this.color2string(hr_) + "\" }"
-            + ", \"Horizontal Speed Resolution\": " + "{ \"preferred\": \"" + this.color2string(hsr) + "\", \"other\": \"" + this.color2string(hsr_) + "\" }"
-            + ", \"Vertical Speed Resolution\": " + "{ \"preferred\": \"" + this.color2string(vsr) + "\", \"other\": \"" + this.color2string(vsr_) + "\" }"
-            + ", \"Altitude Resolution\": " + "{ \"preferred\": \"" + this.color2string(ar) + "\", \"other\": \"" + this.color2string(ar_) + "\" }"
+            + " \"Heading\": " + "\"" + this.color2string(Math.max(hr, hr_)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + this.color2string(Math.max(hsr, hsr_)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + this.color2string(Math.max(vsr, vsr_)) + "\""
+            + ", \"Altitude\": " + "\"" + this.color2string(Math.max(ar, ar_)) + "\""
             + " }";
     }
 
@@ -289,8 +315,12 @@ public class DAAMonitorsV2 {
             if (alert > 0) {
                 if (currentRegion == BandsRegion.UNKNOWN) {
                     return RED;
-                } else if (currentRegion.orderOfConflictRegion() < alert) {
-                    return YELLOW;
+                } else {
+                    int level = DAAMonitorsV2.bandsRegionToInt(currentRegion);
+                    if (level < alert) {
+                        System.out.println("current region: " + level + " " + currentRegion + " alert: " + alert);
+                        return YELLOW;
+                    }
                 }
             }
         }
@@ -319,10 +349,10 @@ public class DAAMonitorsV2 {
         return "\"color\": " + "\"" + this.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading Bands\": " + "\"" + this.color2string(hb) + "\""
-            + ", \"Horizontal Speed Bands\": " + "\"" + this.color2string(hsb) + "\""
-            + ", \"Vertical Speed Bands\": " + "\"" + this.color2string(vsb) + "\""
-            + ", \"Altitude Bands\": " + "\"" + this.color2string(ab) + "\""
+            + " \"Heading\": " + "\"" + this.color2string(hb) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + this.color2string(hsb) + "\""
+            + ", \"Vertical Speed\": " + "\"" + this.color2string(vsb) + "\""
+            + ", \"Altitude\": " + "\"" + this.color2string(ab) + "\""
             + " }";
     }
 

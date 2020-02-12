@@ -1,4 +1,4 @@
-import { MonitorElement } from "src/daa-server/utils/daa-server";
+import { MonitorElement, MonitorData } from "src/daa-server/utils/daa-server";
 
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
@@ -98,6 +98,9 @@ export const BAND_NAMES: string[] = [
 
 //import { AlertElement, BandElement } from '../daa-server/utils/daa-server';
 
+// export type DAAMonitors = MonitorElement[];
+
+// TODO: replace DAABandsData with DaidalusBandsDescriptor
 export interface DAABandsData {
     "Alerts": Alert[],
     "Altitude Bands": Bands, // FIXME: use BandElement and get rid of Bands
@@ -108,9 +111,8 @@ export interface DAABandsData {
     "Heading Resolution": { val: string, units: string, alert: string },
     "Horizontal Speed Resolution": { val: string, units: string, alert: string },
     "Vertical Speed Resolution": { val: string, units: string, alert: string },
-    "Monitors": MonitorElement
+    Monitors: MonitorElement[]
 };
-
 
 // y axis identifies the direction of the aircraft
 export function v2rad(v3: Vector3D): number {

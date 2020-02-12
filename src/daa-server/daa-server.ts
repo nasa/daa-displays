@@ -390,6 +390,42 @@ class DAAServer {
                     }
                     break;
                 }
+                case 'list-monitors': {
+                    const data: ExecMsg = <ExecMsg> content.data;
+                    const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
+                                            : data.daaLogic.endsWith(".exe") ? "cpp" 
+                                            : data.daaLogic.endsWith(".pvsio") ? "pvsio"
+                                            : null;
+                    if (impl) {
+                        const wellClearFolder: string = path.join(__dirname, "../daa-logic");
+                        switch (impl) {
+                            case "java": {
+                                await this.activateJavaProcess();
+                                break;
+                            }
+                            case "cpp": {
+                                await this.activateCppProcess();
+                                break;
+                            }
+                            case "pvsio": {
+                                await this.activateJavaProcess(); // this will be used to run utility functions converting daa configurations in pvs format
+                                await this.activatePVSioProcess();
+                                break;
+                            }
+                            default: {
+                                console.error("Error: unsupported implementation type :/ ", impl);
+                            }
+                        }
+                        const monitorList: string = 
+                                (impl === "java") ? await this.javaProcess.getMonitorList(wellClearFolder, data.daaLogic)
+                                    : (impl === "cpp") ? await this.cppProcess.getMonitorList(wellClearFolder, data.daaLogic)
+                                    : (impl === "pvsio") ? await this.pvsioProcess.getMonitorList(wellClearFolder, data.daaLogic)
+                                    : null;
+                        content.data = monitorList;
+                        this.trySend(wsocket, content, "daa monitors");
+                    }
+                    break;
+                }
                 case 'list-daa-files': {
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let daaFiles: string[] = null;

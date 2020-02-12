@@ -150,6 +150,7 @@ export class DAAPlayer {
     step: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
     render: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: rendering function has not been defined :/"); };
     plot: (args?: any) => Promise<void> = async function () { console.error("[daa-player] Warning: plot function has not been defined :/"); };
+    monitorEventHandlers: { [key: string]: () => void } = {};
     protected ms: number;
     protected precision: number;
     protected _displays: string[];
@@ -200,10 +201,11 @@ export class DAAPlayer {
     protected _wellClearConfigurations: string[];
     protected ws: DAAClient;
 
-    protected wellClearVersionSelector: string;
-    protected wellClearConfigurationSelector: string;
-    protected monitorDomSelector: string;
+    protected wellClearVersionSelector: string = "sidebar-daidalus-version";
+    protected wellClearConfigurationSelector: string = "sidebar-daidalus-configuration";
+    protected monitorDomSelector: string = "daa-monitors";
     protected configInfo: ConfigFile;
+    protected daaMonitors: { id: number, name: string, color: string }[] = [];
 
     getWellClearVersionSelector(): string {
         return this.wellClearVersionSelector;
@@ -726,6 +728,34 @@ export class DAAPlayer {
     }
 
     /**
+     * Returns the list of available monitors
+     */
+    async listMonitors (data: {
+        alertingLogic: string,
+        alertingConfig?: string,
+        scenario?: string
+    }): Promise<string[]> {
+        await this.connectToServer();
+        const msg: ExecMsg = {
+            daaLogic: data.alertingLogic ||  "WellClear-2.0.e.jar",
+            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
+            scenarioName: data.scenario || "H1.daa"
+        }
+        const res: WebSocketMessage<string> = await this.ws.send({
+            type: `list-monitors`,
+            data: msg
+        });
+        if (res && res.data) {
+            const monitorList: string[] = JSON.parse(res.data) || [];
+            console.log(`${monitorList.length} monitors available`, monitorList);
+            return monitorList;
+        } else {
+            console.error(`Error while fetching the list of monitors ${res}`);
+        }
+        return null;
+    }
+
+    /**
      * @function <a name="getCurrentSimulationStep">getCurrentSimulationStep</a>
      * @descrition Returns the current simulation step
      * @memberof module:DAAPlaybackPlayer
@@ -824,12 +854,42 @@ export class DAAPlayer {
             }
         } else if (fname === "plot") {
             this.plot = async () => {
-                await fbody();
+                fbody();
             }
         } else {
             this[fname] = fbody;
         }
         return this;
+    }
+    /**
+     * @function <a name="on">on</a>
+     * @description Utility function for defining handlers of player widgets, such as buttons and checkboxes. Events currently supported include:
+     *              <li>"click.plot-monitor": defines the function executed when selecting a monitor from the monitor panel</li>
+     * @param ename {String} Event name
+     * @param ebody {Function (any) => void} Event handler
+     * @memberof module:DAAPlaybackPlayer
+     * @instance
+     */
+    on (ename: string, ebody: () => void): void {
+        if (ename.startsWith("click.monitor-")) {
+            const id: string = ename.replace("click.monitor-", "");
+            if (id) {
+                this.monitorEventHandlers[id] = () => {
+                    // const len: number = Object.keys(this.daaMonitors).length;
+                    const selector: string = `${this.id}-monitor-${id}-checkbox`;
+                    $(`#${selector}`).on("change", () => {
+                        if ($(`#${selector}`).is(":checked")) {
+                            $(`.spectrogram-monitor-marker`).css("display", "block");
+                            ebody();
+                        } else {
+                            //@ts-ignore
+                            $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
+                            $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
+                        }
+                    });
+                }
+            }
+        }
     }
     /**
      * @function <a name="gotoControl">gotoControl</a>
@@ -1042,7 +1102,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
-            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
+            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.daa"
         }
         console.log(`Computing conflict regions using java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
@@ -1093,7 +1153,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
-            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
+            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.ic"
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
@@ -1342,7 +1402,7 @@ export class DAAPlayer {
                         "Heading Resolution": null,
                         "Horizontal Speed Resolution": null,
                         "Vertical Speed Resolution": null,
-                        "Monitors": null
+                        "Monitors": []
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
@@ -1376,7 +1436,8 @@ export class DAAPlayer {
                             res.Alerts = this._bands.Alerts[step].alerts;
                         }
                         if (this._bands.Monitors) {
-                            res.Monitors = this._bands.Monitors[this.simulationStep];
+                            // copy monitors
+                            res.Monitors = this._bands.Monitors;
                         }
                     }
                     ans.push(res);
@@ -1385,6 +1446,7 @@ export class DAAPlayer {
         }
         return ans;
     }
+    // TODO: replace DAABandsData with DaidalusBandsDescriptor
     getCurrentBands (): utils.DAABandsData {
         const res: utils.DAABandsData = {
             "Alerts": [],
@@ -1396,7 +1458,7 @@ export class DAAPlayer {
             "Heading Resolution": null,
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
-            "Monitors": null
+            "Monitors": []
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
@@ -1435,7 +1497,8 @@ export class DAAPlayer {
                     }
                 }
                 if (this._bands.Monitors) {
-                    res.Monitors = this._bands.Monitors[this.simulationStep];
+                    // copy monitors
+                    res.Monitors = this._bands.Monitors;
                 }
             }
         }
@@ -1591,29 +1654,48 @@ export class DAAPlayer {
         await this.refreshConfigurationView();
     }
 
-    appendMonitorPanel(monitorDomSelector?: string): void {
+    async appendMonitorPanel(monitorDomSelector?: string): Promise<void> {
         monitorDomSelector = monitorDomSelector || "daa-monitors";
         this.monitorDomSelector = monitorDomSelector;
         const theHTML: string = Handlebars.compile(monitorTemplates.monitorPanelTemplate)({
             id: this.monitorDomSelector
         });
         $(`#${this.monitorDomSelector}`).append(theHTML);
+
+        // list monitors supported by the wellclear version selected in the list (which is by default the first one in the list)
+        const monitorList: string[] = await this.listMonitors({ alertingLogic: this._wellClearVersions[0]});
+        if (monitorList && monitorList.length > 0) {
+            for (let i = 0; i < monitorList.length; i++) {
+                const monitorID: number = i + 1;
+                this.daaMonitors.push({ id: monitorID, name: monitorList[i], color: "grey" });
+            }
+            this.appendMonitors(this.daaMonitors);
+        }
     }
 
-    appendMonitors(monitors: { name: string, color: string, legend: string }[]): void {
+    protected appendMonitors(monitors: { id: number, name: string, color: string }[], opt?: { installHandlers?: boolean }): void {
         if (monitors) {
+            opt = opt || {};
             const theHTML: string = Handlebars.compile(monitorTemplates.monitorTemplate)({
                 id: this.monitorDomSelector,
-                monitors: monitors.map((monitor: { name: string, color: string }) => {
+                monitors: monitors.map((monitor: { id: number, name: string, color: string }) => {
                     monitor.color = monitor.color || "unknown";
-                    const id: string = safeSelector(monitor.name);
+                    const id: string = `${this.id}-monitor-${monitor.id}`;
                     const color: string = DAAPlayer.colorMap[monitor.color] || "grey";
                     const text: string = monitor.color.slice(0, 1).toUpperCase();
                     const textcolor: string = (monitor.color === "red") ? "white" : "black";
-                    return { name: monitor.name, color, id, textcolor, text }; 
+                    const checkbox: boolean = (monitor.color === "red" || monitor.color === "yellow");
+                    return { name: monitor.name, color, id, textcolor, text, checkbox };
                 })
             });
             $(`#${this.monitorDomSelector}`).append(theHTML);
+            if (opt.installHandlers) {
+                // install monitor handlers
+                const keys: string[] = Object.keys(this.monitorEventHandlers);
+                for (let i = 0; i < keys.length; i++) {
+                    this.monitorEventHandlers[keys[i]]();
+                }
+            }
         }
     }
 
@@ -1624,7 +1706,7 @@ export class DAAPlayer {
     updateMonitors (): void {
         this.removeMonitors();
         if (this._bands && this._bands.Monitors) {
-            this.appendMonitors(this._bands.Monitors);
+            this.appendMonitors(this._bands.Monitors, { installHandlers: true });
         }
     }
 
