@@ -16,7 +16,7 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute;top:24px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:8px; opacity:0.9; margin-top:98px;">
+            <div id="{{id}}-bug" style="position:absolute; left:8px; opacity:0.7; margin-top:98px;">
                 <div style="position:absolute;">
                     <!-- back -->
                     <div class="{{id}}-bug" style="width:64px; margin-left:9px; height:12px; border:1px solid white; background-color:black;"></div>

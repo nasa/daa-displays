@@ -391,18 +391,20 @@ export class DAASpectrogram {
                 tooltipData = tooltipData.sort((a, b) => { // profiler: 2.1ms
                     return (a.range.from < b.range.from) ? -1 : 1;
                 });
-                let tooltip: string = (isFinite(data.marker)) ? 
+                let tooltip: string = (data.marker !== null && isFinite(data.marker)) ? 
                                         (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
                                             : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
-                tooltip += (data.resolution !== null && data.resolution !== undefined && isFinite(+data.resolution)) ? 
-                                (data.units) ? `<br>Resolution: ${Math.floor(data.resolution * 100) / 100} ${data.units}` 
-                                    : `<br>Resolution: ${Math.floor(data.resolution * 100) / 100}` : `<br>Resolution: ${data.resolution}`;
+                tooltip += (data.resolution !== null && data.resolution !== undefined) ? 
+                                (isFinite(data.resolution) ? 
+                                    (data.units) ? `<br>Resolution: ${Math.floor(data.resolution * 100) / 100} ${data.units}` 
+                                        : `<br>Resolution: ${Math.floor(data.resolution * 100) / 100}` : `<br>Resolution: ${data.resolution}`)
+                                        : `<br>Resolution: N\A`;
                 for (let i = 0; i < tooltipData.length; i++) {
                     tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
                 }
                 
                 const lineHeight: number = 4;
-                const theHTML = Handlebars.compile(templates.spectrogramBandTemplate)({ 
+                const theHTML: string = Handlebars.compile(templates.spectrogramBandTemplate)({ 
                     id: this.id,
                     stepID: stepID,
                     zIndex: 2,
@@ -414,7 +416,7 @@ export class DAASpectrogram {
                     left: leftMargin,
                     width: barWidth,
                     height: this.height + 25, // extend click-and-point area to the timeline, but exclude the bottom line because markers will be rendered there
-                    marker: (isFinite(data.marker))? { // marker is used to represent the ownship state
+                    marker: (data.marker !== null && isFinite(data.marker))? { // marker is used to represent the ownship state
                         value: data.marker,
                         top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,
@@ -422,7 +424,7 @@ export class DAASpectrogram {
                         color: "white",
                         units: data.units
                     } : null,
-                    resolution: (isFinite(data.resolution))? {
+                    resolution: (data.resolution !== null && isFinite(data.resolution))? {
                         value: data.resolution,
                         top: (this.range.to - data.resolution) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,
