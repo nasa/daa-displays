@@ -335,10 +335,14 @@ export class Compass {
                         (opt && opt.units === "deg") ? 
                             utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
                             : utils.rad2deg(Math.atan2(+data.x, +data.y));
-        const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
+        let angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
+        angle = (angle < 0) ? 360 - (angle % 360) : angle;
         const pos_angle: number = Math.abs((angle % 360 + 360) % 360); // clockwise rotation
         const neg_angle: number = Math.abs((angle % 360 - 360) % 360); // counter-clockwise rotation
-        this.currentCompassAngle = (pos_angle < neg_angle) ? pos_angle : -neg_angle; // choose the least variation from the current angle
+        this.currentCompassAngle = 
+            (Math.abs(this.currentCompassAngle - pos_angle) < Math.abs(neg_angle - this.currentCompassAngle))
+                ? pos_angle 
+                : -neg_angle; // choose the least variation from the current angle
         _update_compass(this);
         return this;
     }
