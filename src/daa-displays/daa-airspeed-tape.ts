@@ -557,6 +557,8 @@ export class AirspeedTape {
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
+        } else {
+            this.resolutionBug.hide();
         }
     }
     /**
