@@ -104,7 +104,12 @@ public:
 		std::cout << "  --version\n\tPrint WellClear version" << std::endl;
 		std::cout << "  --config <file.conf>\n\tLoad configuration <file.conf>" << std::endl;
 		std::cout << "  --output <file.json>\n\tOutput file <file.json>" << std::endl;
+		std::cout << "  --list-monitors\nReturns the list of available monitors, in JSON format" << std::endl;
 		exit(0);
+	}
+
+	std::string printMonitorList() {
+		return "TODO";
 	}
 
 	std::string region2str(const larcfm::BandsRegion::Region& r) const {
@@ -118,11 +123,11 @@ public:
 		}
 	}
 
-	void printBands(std::ofstream& out, std::vector<std::string>* bands, const std::string& label) {
+	void printArray(std::ofstream& out, std::vector<std::string>* info, const std::string& label) {
 		out << "\"" << label << "\": [" << std::endl;
-		for (int i = 0; i < (*bands).size(); i++) {
-			out << (*bands)[i];
-			if (i < (*bands).size() - 1) {
+		for (int i = 0; i < (*info).size(); i++) {
+			out << (*info)[i];
+			if (i < (*info).size() - 1) {
 				out << "," << std::endl;
 			} else {
 				out << "" << std::endl;
@@ -130,6 +135,19 @@ public:
 		}
 		out << "]" << std::endl;
 	}
+
+	// void printMonitors(std::ofstream& out, std::vector<std::string>* info, const std::string& label) {
+	// 	out << "\"" << label << "\": [" << std::endl;
+	// 	for (int i = 0; i < (*info).size(); i++) {
+	// 		out << (*info)[i];
+	// 		if (i < (*info).size() - 1) {
+	// 			out << "," << std::endl;
+	// 		} else {
+	// 			out << "" << std::endl;
+	// 		}
+	// 	}
+	// 	out << "]" << std::endl;
+	// }
 
 	bool loadDaaConfig () {
 		if (daa_config.empty() == false) {
@@ -152,11 +170,17 @@ public:
 		return ans;
 	}
 
-	std::string jsonBands (larcfm::Daidalus& daa, std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray) {
+	std::string jsonBands (
+		larcfm::Daidalus& daa, 
+		std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray,
+		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray
+	) {
 		std::string hs_units = daa.getUnitsOf("step_hs");
 		std::string vs_units = daa.getUnitsOf("step_vs");
 		std::string alt_units = daa.getUnitsOf("step_alt");
+		std::string trk_units = daa.getUnitsOf("step_hdir");
 
+		// traffic alerts
 		std::string time = larcfm::FmPrecision(daa.getCurrentTime());
 		std::string alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 		std::string tmp = "";
@@ -172,11 +196,12 @@ public:
 		alerts += " ]}";
 		alertsArray->push_back(alerts);
 
+		// bands
 		std::string trk = "{ \"time\": " + time;
 		trk += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, "deg").toString();
-			trk += ", \"units\": \"deg\"";
+			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units).toString();
+			trk += ", \"units\": \"" + trk_units + "\"";
 			trk += ", \"alert\": \"" + larcfm::BandsRegion::to_string(daa.horizontalDirectionRegionAt(i));
 			trk += "\" }";
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
@@ -220,6 +245,39 @@ public:
 		alt += " ]}";
 		altArray->push_back(alt);
 
+		// resolutions
+		std::string resTrk = "{ \"time\": " + time;
+		bool preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
+		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
+		larcfm::BandsRegion::Region alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units);
+		resTrk += ", \"resolution\": { \"val\": \"" + std::to_string(valueTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertTrk) + "\" }"; // resolution can be number, NaN or infinity
+		resTrk += " }";
+		resTrkArray->push_back(resTrk);
+
+		std::string resGs = "{ \"time\": " + time;
+		bool preferredGs = daa.preferredHorizontalSpeedUpOrDown();
+		double valueGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
+		larcfm::BandsRegion::Region alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units);
+		resGs += ", \"resolution\": { \"val\": \"" + std::to_string(valueGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertGs) + "\" }"; // resolution can be number, NaN or infinity
+		resGs += " }";
+		resGsArray->push_back(resGs);
+
+		std::string resVs = "{ \"time\": " + time;
+		bool preferredVs = daa.preferredVerticalSpeedUpOrDown();
+		double valueVs = daa.verticalSpeedResolution(preferredVs, vs_units);
+		larcfm::BandsRegion::Region alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units);
+		resVs += ", \"resolution\": { \"val\": \"" + std::to_string(valueVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertVs) + "\" }"; // resolution can be number, NaN or infinity
+		resVs += " }";
+		resVsArray->push_back(resVs);
+
+		std::string resAlt = "{ \"time\": " + time;
+		bool preferredAlt = daa.preferredAltitudeUpOrDown();
+		double valueAlt = daa.altitudeResolution(preferredAlt, alt_units);
+		larcfm::BandsRegion::Region alertAlt = daa.regionOfAltitude(valueAlt, alt_units);
+		resAlt += ", \"resolution\": { \"val\": \"" + std::to_string(valueAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertAlt) + "\" }"; // resolution can be number, NaN or infinity
+		resAlt += " }";
+		resAltArray->push_back(resAlt);
+
 		std::string stats = "\"hs\": { \"min\": " + std::to_string(daa.getMinHorizontalSpeed(hs_units))
 					+ ", \"max\": " + std::to_string(daa.getMaxHorizontalSpeed(hs_units))
 					+ ", \"units\": \"" + hs_units + "\" },\n"
@@ -249,6 +307,11 @@ public:
 		std::vector<std::string>* altArray = new std::vector<std::string>();
 		std::vector<std::string>* alertsArray = new std::vector<std::string>();
 
+		std::vector<std::string>* resTrkArray = new std::vector<std::string>();
+		std::vector<std::string>* resGsArray = new std::vector<std::string>();
+		std::vector<std::string>* resVsArray = new std::vector<std::string>();
+		std::vector<std::string>* resAltArray = new std::vector<std::string>();
+
 		std::string jsonStats = "";
 
 		/* Processing the input file time step by time step and writing output file */
@@ -257,20 +320,33 @@ public:
 			if (wrapper != NULL) {
 				wrapper->adjustAlertingTime();
 			}
-			jsonStats = jsonBands(daa, alertsArray, trkArray, gsArray, vsArray, altArray);
+			jsonStats = jsonBands(
+				daa, 
+				alertsArray, 
+				trkArray, gsArray, vsArray, altArray,
+				resTrkArray, resGsArray, resVsArray, resAltArray
+			);
 		}
 
 		*printWriter << jsonStats + "," << std::endl;
 
-		printBands(*printWriter, alertsArray, "Alerts");
+		printArray(*printWriter, alertsArray, "Alerts");
 		*printWriter << ",\n";
-		printBands(*printWriter, trkArray, "Heading Bands");
+		printArray(*printWriter, trkArray, "Heading Bands");
 		*printWriter << ",\n";
-		printBands(*printWriter, gsArray, "Horizontal Speed Bands");
+		printArray(*printWriter, gsArray, "Horizontal Speed Bands");
 		*printWriter << ",\n";
-		printBands(*printWriter, vsArray, "Vertical Speed Bands");
+		printArray(*printWriter, vsArray, "Vertical Speed Bands");
 		*printWriter << ",\n";
-		printBands(*printWriter, altArray, "Altitude Bands");
+		printArray(*printWriter, altArray, "Altitude Bands");
+		*printWriter << ",\n";
+		printArray(*printWriter, resTrkArray, "Heading Resolution");
+		*printWriter << ",\n";
+		printArray(*printWriter, resGsArray, "Horizontal Speed Resolution");
+		*printWriter << ",\n";
+		printArray(*printWriter, resVsArray, "Vertical Speed Resolution");
+		*printWriter << ",\n";
+		printArray(*printWriter, resAltArray, "Altitude Resolution");
 		*printWriter << "}\n";
 
 		closePrintWriter();
@@ -311,6 +387,10 @@ public:
 			if (std::strcmp(args[a], "--help") == 0 || std::strcmp(args[a], "-help") == 0 || std::strcmp(args[a], "-h") == 0) {
 				std::cout << "DAABandsV2 help" << std::endl;
 				printHelpMsg();
+				exit(0);
+			} else if (larcfm::startsWith(args[a], "--list-monitors") || larcfm::startsWith(args[a], "-list-monitors")) {
+				std::cout << printMonitorList() << std::endl;
+				exit(0);
 			} else if (larcfm::startsWith(args[a], "--conf") || larcfm::startsWith(args[a], "-conf") || std::strcmp(args[a], "-c") == 0) {
 				daa_config = args[++a];
 			} else if (larcfm::startsWith(args[a], "--out") || larcfm::startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0) {
