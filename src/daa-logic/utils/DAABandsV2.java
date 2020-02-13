@@ -184,8 +184,8 @@ public class DAABandsV2 {
 	}
 	
 	protected String jsonHeader () {
-		return "\"Info\":\n"
-				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfig() + "\" },"
+		return "\"Info\": "
+				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfig() + "\" },\n"
 				+   "\"Scenario\": \"" + this.scenario + "\",";  
 	}
 
@@ -200,6 +200,7 @@ public class DAABandsV2 {
 		String alt_units = daa.getUnitsOf("step_alt");
 		String trk_units = daa.getUnitsOf("step_hdir");
 
+		// traffic alerts
 		String time = f.FmPrecision(daa.getCurrentTime());
 		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 		String tmp = "";
@@ -213,6 +214,7 @@ public class DAABandsV2 {
 		alerts += " ]}";
 		alertsArray.add(alerts);
 
+		// bands
 		String trk = "{ \"time\": " + time;
 		trk += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
@@ -257,6 +259,7 @@ public class DAABandsV2 {
 		alt += " ]}";
 		altArray.add(alt);
 
+		// resolutions
 		String resTrk = "{ \"time\": " + time;
 		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
@@ -289,6 +292,7 @@ public class DAABandsV2 {
 		resAlt += " }";
 		resAltArray.add(resAlt);
 
+		// monitors
 		monitors.check();
 		String monitorM1 = "{ \"time\": " + time
 					+ ", " + monitors.m1()
