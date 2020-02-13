@@ -152,7 +152,12 @@ compile-jar:
 	cd utils && unzip -qn ../$(lib).jar -d temp
 	cd utils/temp && $(JAR) uf ../../WellClear-$(ver).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp && cd ../ 
 	unzip -vl WellClear-$(ver).jar
-	unzip -c WellClear-$(ver).jar META-INF/MANIFEST.MF	
+	unzip -c WellClear-$(ver).jar META-INF/MANIFEST.MF
+
+compile-cpp:
+	@echo "\n\033[0;32m ** Building WellClear-$(ver).exe **\033[0m"
+	@echo Compiling WellClear version $(ver) in C++
+	-@cd utils && $(CPP) DAABandsV2.cpp -std=c++11 -I../WellClear-$(ver)/DAIDALUS/C++/include ../WellClear-$(ver)/DAIDALUS/C++/lib/$(myarch)/DAIDALUS2.a -o ../WellClear-$(ver).exe
 
 # these final commands expand the templates
 $(call download-all)
