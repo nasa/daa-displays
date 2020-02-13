@@ -51,6 +51,322 @@ class DaidalusWrapperInterface {
 	    virtual void adjustAlertingTime();
 };
 
+class DAAMonitorsV2 {
+
+protected:
+
+	larcfm::Daidalus* daa;
+
+	static const int N_MONITORS = 3;
+	int monitorColor[N_MONITORS] = { -1, -1, -1 };
+
+	// preferred resolutions
+    double resolutionTrk;
+    larcfm::BandsRegion::Region regionTrk;
+    double resolutionGs;
+    larcfm::BandsRegion::Region regionGs;
+    double resolutionVs;
+    larcfm::BandsRegion::Region regionVs;
+    double resolutionAlt;
+    larcfm::BandsRegion::Region regionAlt;
+
+    // other resolutions
+    double resolutionTrk_;
+    larcfm::BandsRegion::Region regionTrk_;
+    double resolutionGs_;
+    larcfm::BandsRegion::Region regionGs_;
+    double resolutionVs_;
+    larcfm::BandsRegion::Region regionVs_;
+    double resolutionAlt_;
+    larcfm::BandsRegion::Region regionAlt_;
+
+    // current regions
+    larcfm::BandsRegion::Region currentRegionTrk;
+    larcfm::BandsRegion::Region currentRegionGs;
+    larcfm::BandsRegion::Region currentRegionVs;
+    larcfm::BandsRegion::Region currentRegionAlt;
+
+    static int bandsRegionToInt (larcfm::BandsRegion::Region b) {
+        if (b == larcfm::BandsRegion::NONE) {
+            return 0;
+        }
+        if (b == larcfm::BandsRegion::FAR) {
+            return 1;
+        }
+        if (b == larcfm::BandsRegion::MID) {
+            return 2;
+        }
+        if (b == larcfm::BandsRegion::NEAR) {
+            return 3;
+        }
+        if (b == larcfm::BandsRegion::RECOVERY) {
+            return 4;
+        }
+        return -1;
+    }
+
+    void computeResolutions () {
+        bool preferredTrk = daa->preferredHorizontalDirectionRightOrLeft();
+		resolutionTrk = daa->horizontalDirectionResolution(preferredTrk);
+		regionTrk = daa->regionOfHorizontalDirection(resolutionTrk);
+		resolutionTrk_ = daa->horizontalDirectionResolution(!preferredTrk);
+		regionTrk_ = daa->regionOfHorizontalDirection(resolutionTrk_);
+
+		bool preferredGs = daa->preferredHorizontalSpeedUpOrDown();
+		resolutionGs = daa->horizontalSpeedResolution(preferredGs);
+		regionGs = daa->regionOfHorizontalSpeed(resolutionGs);
+		resolutionGs_ = daa->horizontalSpeedResolution(!preferredGs);
+		regionGs_ = daa->regionOfHorizontalSpeed(resolutionGs_);
+
+        bool preferredVs = daa->preferredVerticalSpeedUpOrDown();
+		resolutionVs = daa->verticalSpeedResolution(preferredVs);
+		regionVs = daa->regionOfVerticalSpeed(resolutionVs);
+		resolutionVs_ = daa->verticalSpeedResolution(!preferredVs);
+		regionVs_ = daa->regionOfVerticalSpeed(resolutionVs_);
+
+        bool preferredAlt = daa->preferredAltitudeUpOrDown();
+		resolutionAlt = daa->altitudeResolution(preferredAlt);
+		regionAlt = daa->regionOfAltitude(resolutionAlt);
+        resolutionAlt_ = daa->altitudeResolution(!preferredAlt);
+		regionAlt_ = daa->regionOfAltitude(resolutionAlt_);
+    }
+
+    void computeCurrentRegions () {
+        double heading = daa->getOwnshipState().horizontalDirection();
+        currentRegionTrk = daa->regionOfHorizontalDirection(heading);
+        std::cout << "heading: " << heading << " region: " << currentRegionTrk << std::endl;
+
+        double hspeed = daa->getOwnshipState().horizontalSpeed();
+        currentRegionGs = daa->regionOfHorizontalSpeed(hspeed);
+        std::cout << "hspeed: " << hspeed << " region: " << currentRegionGs << std::endl;
+
+        double vspeed = daa->getOwnshipState().verticalSpeed();
+        currentRegionVs = daa->regionOfVerticalSpeed(vspeed);
+        std::cout << "vspeed: " << vspeed << " region: " << currentRegionVs << std::endl;
+
+        double alt = daa->getOwnshipState().altitude();
+        currentRegionAlt = daa->regionOfAltitude(alt);
+        std::cout << "alt: " << alt << " region: " << currentRegionAlt << std::endl;
+    }
+
+    /**
+     * Monitor 1: valid finite resolutions
+     * - Resolution is finite and region is not NONE nor RECOVERY (yellow monitor).
+     * - Resolution is finite and region is UNKNOWN (red monitor).
+     */
+    int checkM1 (double resolution, larcfm::BandsRegion::Region region) const {
+        if (std::isfinite(resolution)) {
+            if (region == larcfm::BandsRegion::UNKNOWN) {
+                return RED;
+            } else if (region != larcfm::BandsRegion::NONE && region != larcfm::BandsRegion::RECOVERY) {
+                return YELLOW;
+            }
+        }
+        return GREEN;
+    }
+	std::string labelM1 () const {
+        return "M1: Finite resolution ⇒ Region is NONE or RECOVERY";
+    }
+	std::string legendM1 () const {
+        std::string green_desc = "Valid finite resolution.";
+        std::string yellow_desc = "Abnormal condition: resolution is finite and region is not NONE nor RECOVERY.";
+        std::string red_desc = "Abnormal condition: resolution is finite and region is UNKNOWN.";
+        return std::string("{ ") 
+                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
+                + " }";
+    }
+
+    /**
+     * Monitor 2: consistent resolutions
+     * - If region is not RECOVERY and any resolution is NaN and other resolutions are not NaN (yellow monitor).
+     */
+    int checkM2_preferred (double resolution, larcfm::BandsRegion::Region region) const {
+		std::cout << resolution << std::endl;
+        if (region != larcfm::BandsRegion::RECOVERY) {
+            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk) || !std::isnan(resolutionGs) || !std::isnan(resolutionVs) || !std::isnan(resolutionAlt);
+            if (std::isnan(resolution) && exists_resolution_not_NaN) {
+                return YELLOW;
+            }
+        }
+        return GREEN;
+    }
+    int checkM2_other (double resolution_, larcfm::BandsRegion::Region region) const {
+		std::cout << resolution_ << std::endl;
+        if (region != larcfm::BandsRegion::RECOVERY) {
+            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk_) || !std::isnan(resolutionGs_) || !std::isnan(resolutionVs_) || !std::isnan(resolutionAlt_);
+            if (std::isnan(resolution_) && exists_resolution_not_NaN) {
+                return YELLOW;
+            }
+        }
+        return GREEN;
+    }
+	std::string labelM2 () const {
+        return "M2: One resolution is NaN ⇒ All resolutions are NaN";
+    }
+	std::string legendM2 () const {
+        std::string green_desc = "Consistent resolutions.";
+        std::string yellow_desc = "Abnormal condition: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
+        return std::string("{ ") 
+                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
+                + " }";
+    }
+
+    /**
+     * Monitor 3: Valid non-zero alerts
+     * - Traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert (yellow monitor)
+     * - Traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN (red monitor)
+     *   Color order is NONE < FAR < MID < NEAR < RECOVERY. 
+     */
+    int checkM3 (larcfm::BandsRegion::Region currentRegion) const {
+        for (int ac = 1; ac <= daa->lastTrafficIndex(); ac++) {
+            int alert = daa->alertLevel(ac);
+            int threshold = larcfm::BandsRegion::orderOfConflictRegion(daa->getCorrectiveRegion());
+            if (alert > threshold) {
+                if (currentRegion == larcfm::BandsRegion::UNKNOWN) {
+                    return RED;
+                } else {
+                    int level = bandsRegionToInt(currentRegion);
+                    if (level < alert) {
+                        std::cout << "current region: " << level << " " << currentRegion << " alert: " << alert << std::endl;
+                        return YELLOW;
+                    }
+                }
+            }
+        }
+        return GREEN;
+    }
+	std::string labelM3 () const {
+        return "M3: Band(current value) ≥ Alert(traffic)";
+    }
+	std::string legendM3 () const {
+        std::string green_desc = "Valid non-zero alerts.";
+        std::string yellow_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
+        std::string red_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
+        return std::string("{ ") 
+                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
+                + " }";
+    }
+
+	static std::string color2string (int color) {
+        switch (color) {
+            case GREEN: return "green";
+            case YELLOW: return "yellow";
+            case RED: return "red";
+            default: return "grey";
+        }
+    }
+
+public:
+	DAAMonitorsV2 (larcfm::Daidalus* daa = NULL) : daa(daa) { }
+
+    static const int GREEN = 0;
+    static const int YELLOW = 1;
+    static const int RED = 2;
+
+	int getSize () const {
+		return N_MONITORS;
+	}
+
+	void check () {
+        computeResolutions();
+        computeCurrentRegions();
+	}
+
+	std::string getLabel (int monitorID) const {
+		if (monitorID <= N_MONITORS && monitorID > 0) {
+            if (monitorID == 1) { return labelM1(); }
+            if (monitorID == 2) { return labelM2(); }
+            if (monitorID == 3) { return labelM3(); }
+        }
+        return "\"unknown\"";
+	}
+
+	std::string getColor (int monitorID) const { // monitor ID starts from 1
+        int index = monitorID - 1;
+        if (index < N_MONITORS) {
+            return color2string(monitorColor[index]);
+        }
+        return color2string(-1);
+    }
+
+	std::string getLegend (int monitorID) const {
+        if (monitorID <= N_MONITORS && monitorID > 0) {
+            if (monitorID == 1) { return legendM1(); }
+            if (monitorID == 2) { return legendM2(); }
+            if (monitorID == 3) { return legendM3(); }
+        }
+        return "\"unknown\"";
+    }
+
+	std::string m1 () {
+        int hr = checkM1(resolutionTrk, regionTrk);
+        int hsr = checkM1(resolutionGs, regionGs);
+        int vsr = checkM1(resolutionVs, regionVs);
+        int ar = checkM1(resolutionAlt, regionAlt);
+
+        int hr_ = checkM1(resolutionTrk_, regionTrk_);
+        int hsr_ = checkM1(resolutionGs_, regionGs_);
+        int vsr_ = checkM1(resolutionVs_, regionVs_);
+        int ar_ = checkM1(resolutionAlt_, regionAlt_);
+
+        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_, std::max(hsr_, std::max(vsr_, ar_)))))));
+        if (monitorColor[0] < max_color) { monitorColor[0] = max_color; }
+
+        return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
+            + ", \"details\":" 
+            + " {"
+            + " \"Heading\": " + "{ \"preferred\": \"" + color2string(hr) + "\", \"other\": \"" + color2string(hr_) + "\" }"
+            + ", \"Horizontal Speed\": " + "{ \"preferred\": \"" + color2string(hsr) + "\", \"other\": \"" + color2string(hsr_) + "\" }"
+            + ", \"Vertical Speed\": " + "{ \"preferred\": \"" + color2string(vsr) + "\", \"other\": \"" + color2string(vsr_) + "\" }"
+            + ", \"Altitude\": " + "{ \"preferred\": \"" + color2string(ar) + "\", \"other\": \"" + color2string(ar_) + "\" }"
+            + " }";
+    }
+
+    std::string m2 () {
+        int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
+        int hsr = checkM2_preferred(resolutionGs, currentRegionGs);
+        int vsr = checkM2_preferred(resolutionVs, currentRegionVs);
+        int ar = checkM2_preferred(resolutionAlt, currentRegionAlt);
+
+        int hr_ = checkM2_other(resolutionTrk_, currentRegionTrk);
+        int hsr_ = checkM2_other(resolutionGs_, currentRegionGs);
+        int vsr_ = checkM2_other(resolutionVs_, currentRegionVs);
+        int ar_ = checkM2_other(resolutionAlt_, currentRegionAlt);
+
+        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_, std::max(hsr_, std::max(vsr_, ar_)))))));
+        if (monitorColor[1] < max_color) { monitorColor[1] = max_color; }
+
+        return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
+            + ", \"details\":" 
+            + " {"
+            + " \"Heading\": " + "\"" + color2string(std::max(hr, hr_)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + color2string(std::max(hsr, hsr_)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + color2string(std::max(vsr, vsr_)) + "\""
+            + ", \"Altitude\": " + "\"" + color2string(std::max(ar, ar_)) + "\""
+            + " }";
+    }
+
+	std::string m3 () {
+        int hb = checkM3(currentRegionTrk);
+        int hsb = checkM3(currentRegionGs);
+        int vsb = checkM3(currentRegionVs);
+        int ab = checkM3(currentRegionAlt);
+
+        int max_color = std::max(hb, std::max(hsb, std::max(vsb, ab)));
+        if (monitorColor[2] < max_color) { monitorColor[2] = max_color; }
+
+        return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
+            + ", \"details\":" 
+            + " {"
+            + " \"Heading\": " + "\"" + color2string(hb) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + color2string(hsb) + "\""
+            + ", \"Vertical Speed\": " + "\"" + color2string(vsb) + "\""
+            + ", \"Altitude\": " + "\"" + color2string(ab) + "\""
+            + " }";
+    }
+
+};
+
 class DAABandsV2 {
 
 protected:
@@ -109,10 +425,17 @@ public:
 	}
 
 	std::string printMonitorList() {
-		return "TODO";
+		DAAMonitorsV2 monitors;
+		int n = monitors.getSize();
+		std::string res = "";
+		for (int i = 0; i < n; i++) {
+			res += "\"" + monitors.getLabel(i + 1) + "\"";
+			if (i < n - 1) { res += ", "; }
+		}
+		return "[ " + res + " ]";
 	}
 
-	std::string region2str(const larcfm::BandsRegion::Region& r) const {
+	std::string region2str (const larcfm::BandsRegion::Region& r) const {
 		switch (r) {
 			case larcfm::BandsRegion::Region::NONE: return "0";
 			case larcfm::BandsRegion::Region::FAR: return "1";
@@ -123,7 +446,7 @@ public:
 		}
 	}
 
-	void printArray(std::ofstream& out, std::vector<std::string>* info, const std::string& label) {
+	void printArray (std::ofstream& out, std::vector<std::string>* info, const std::string& label) {
 		out << "\"" << label << "\": [" << std::endl;
 		for (int i = 0; i < (*info).size(); i++) {
 			out << (*info)[i];
@@ -136,18 +459,27 @@ public:
 		out << "]" << std::endl;
 	}
 
-	// void printMonitors(std::ofstream& out, std::vector<std::string>* info, const std::string& label) {
-	// 	out << "\"" << label << "\": [" << std::endl;
-	// 	for (int i = 0; i < (*info).size(); i++) {
-	// 		out << (*info)[i];
-	// 		if (i < (*info).size() - 1) {
-	// 			out << "," << std::endl;
-	// 		} else {
-	// 			out << "" << std::endl;
-	// 		}
-	// 	}
-	// 	out << "]" << std::endl;
-	// }
+	void printMonitors (std::ofstream& out, const DAAMonitorsV2& monitors, std::vector<std::vector<std::string>*>* info) {
+		out << " [" << std::endl;
+		int len = monitors.getSize();
+		for (int i = 0; i < len; i++) {
+			int monitorID = i + 1;
+			std::string legend = monitors.getLegend(monitorID);
+			std::string color = monitors.getColor(monitorID);
+			std::string label = monitors.getLabel(monitorID);
+			out << "{ \"id\": \"" << monitorID << "\",\n";
+			out << "\"name\": \"" << label << "\",\n";
+			out << "\"color\": \"" << color << "\",\n";
+			out << "\"legend\": " << legend << ",\n";
+			printArray(out, (*info)[i], "results");
+			if (i < len - 1) {
+				out << "}, " << std::endl;
+			} else {
+				out << "} " << std::endl;
+			}
+		}
+		out << "]" << std::endl;
+	}
 
 	bool loadDaaConfig () {
 		if (daa_config.empty() == false) {
@@ -171,9 +503,10 @@ public:
 	}
 
 	std::string jsonBands (
-		larcfm::Daidalus& daa, 
+		larcfm::Daidalus& daa, DAAMonitorsV2& monitors,
 		std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray,
-		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray
+		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray,
+		std::vector<std::string>* monitorM1Array, std::vector<std::string>* monitorM2Array, std::vector<std::string>* monitorM3Array
 	) {
 		std::string hs_units = daa.getUnitsOf("step_hs");
 		std::string vs_units = daa.getUnitsOf("step_vs");
@@ -278,6 +611,24 @@ public:
 		resAlt += " }";
 		resAltArray->push_back(resAlt);
 
+		// monitors
+		monitors.check();
+		std::string monitorM1 = "{ \"time\": " + time
+					+ ", " + monitors.m1()
+					+ " }";
+		monitorM1Array->push_back(monitorM1);
+
+		std::string monitorM2 = "{ \"time\": " + time
+					+ ", " + monitors.m2()
+					+ " }";
+		monitorM2Array->push_back(monitorM2);
+
+		std::string monitorM3 = "{ \"time\": " + time
+					+ ", " + monitors.m3()
+					+ " }";
+		monitorM3Array->push_back(monitorM3);
+
+		// config
 		std::string stats = "\"hs\": { \"min\": " + std::to_string(daa.getMinHorizontalSpeed(hs_units))
 					+ ", \"max\": " + std::to_string(daa.getMaxHorizontalSpeed(hs_units))
 					+ ", \"units\": \"" + hs_units + "\" },\n"
@@ -312,6 +663,12 @@ public:
 		std::vector<std::string>* resVsArray = new std::vector<std::string>();
 		std::vector<std::string>* resAltArray = new std::vector<std::string>();
 
+		DAAMonitorsV2 monitors(&daa);
+
+		std::vector<std::string>* monitorM1Array = new std::vector<std::string>();
+		std::vector<std::string>* monitorM2Array = new std::vector<std::string>();
+		std::vector<std::string>* monitorM3Array = new std::vector<std::string>();
+
 		std::string jsonStats = "";
 
 		/* Processing the input file time step by time step and writing output file */
@@ -321,10 +678,11 @@ public:
 				wrapper->adjustAlertingTime();
 			}
 			jsonStats = jsonBands(
-				daa, 
+				daa, monitors,
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray,
-				resTrkArray, resGsArray, resVsArray, resAltArray
+				resTrkArray, resGsArray, resVsArray, resAltArray,
+				monitorM1Array, monitorM2Array, monitorM3Array
 			);
 		}
 
@@ -347,7 +705,27 @@ public:
 		printArray(*printWriter, resVsArray, "Vertical Speed Resolution");
 		*printWriter << ",\n";
 		printArray(*printWriter, resAltArray, "Altitude Resolution");
+		*printWriter << ",\n";
+
+		*printWriter << "\"Monitors\":\n";
+		std::vector<std::vector<std::string>*>* info = new std::vector<std::vector<std::string>*>();
+		info->push_back(monitorM1Array);
+		info->push_back(monitorM2Array);
+		info->push_back(monitorM3Array);
+		printMonitors(*printWriter, monitors, info);
+
 		*printWriter << "}\n";
+
+		delete trkArray;
+		delete vsArray;
+		delete gsArray;
+		delete altArray;
+		delete resTrkArray;
+		delete resVsArray;
+		delete resGsArray;
+		delete resAltArray;
+		delete alertsArray;
+		delete info;
 
 		closePrintWriter();
 	}

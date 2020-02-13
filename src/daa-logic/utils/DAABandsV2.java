@@ -150,7 +150,7 @@ public class DAABandsV2 {
 			String legend = monitors.getLegend(monitorID);
 			String color = monitors.getColor(monitorID);
 			String label = monitors.getLabel(monitorID);
-			out.print("{ \"id\": \"" + (monitorID) + "\",\n");
+			out.print("{ \"id\": \"" + monitorID + "\",\n");
 			out.print("\"name\": \"" + label + "\",\n");
 			out.print("\"color\": \"" + color + "\",\n");
 			out.println("\"legend\": " + legend + ",\n");
@@ -304,12 +304,12 @@ public class DAABandsV2 {
 					+ " }";
 		monitorM2Array.add(monitorM2);
 
-		System.out.println("time: " + time);
 		String monitorM3 = "{ \"time\": " + time
 					+ ", " + monitors.m3()
 					+ " }";
 		monitorM3Array.add(monitorM3);
 
+		// config
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
 					+ ", \"units\": \"" + hs_units + "\" },\n"

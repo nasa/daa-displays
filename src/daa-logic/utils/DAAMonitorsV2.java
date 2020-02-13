@@ -68,9 +68,9 @@ public class DAAMonitorsV2 {
         return -1;
     }
 
-    protected static final int GREEN = 0;
-    protected static final int YELLOW = 1;
-    protected static final int RED = 2;
+    public static final int GREEN = 0;
+    public static final int YELLOW = 1;
+    public static final int RED = 2;
 
     protected Daidalus daa;
 
@@ -85,24 +85,24 @@ public class DAAMonitorsV2 {
     protected BandsRegion regionAlt;
 
     // other resolutions
-    double resolutionTrk_;
-    BandsRegion regionTrk_;
-    double resolutionGs_;
-    BandsRegion regionGs_;
-    double resolutionVs_;
-    BandsRegion regionVs_;
-    double resolutionAlt_;
-    BandsRegion regionAlt_;
+    protected double resolutionTrk_;
+    protected BandsRegion regionTrk_;
+    protected double resolutionGs_;
+    protected BandsRegion regionGs_;
+    protected double resolutionVs_;
+    protected BandsRegion regionVs_;
+    protected double resolutionAlt_;
+    protected BandsRegion regionAlt_;
 
     // current regions
-    BandsRegion currentRegionTrk;
-    BandsRegion currentRegionGs;
-    BandsRegion currentRegionVs;
-    BandsRegion currentRegionAlt;
+    protected BandsRegion currentRegionTrk;
+    protected BandsRegion currentRegionGs;
+    protected BandsRegion currentRegionVs;
+    protected BandsRegion currentRegionAlt;
 
     // monitors color
-    final int N_MONITORS = 3;
-    int monitorColor[] = new int[]{ -1, -1, -1 };
+    protected final int N_MONITORS = 3;
+    protected int monitorColor[] = new int[]{ -1, -1, -1 };
 
     int getSize() {
         return N_MONITORS;
@@ -147,22 +147,22 @@ public class DAAMonitorsV2 {
     protected void computeCurrentRegions () {
         double heading = daa.getOwnshipState().horizontalDirection();
         currentRegionTrk = daa.regionOfHorizontalDirection(heading);
-        System.out.println("heading: " + heading + " region: " + currentRegionTrk);
+        // System.out.println("heading: " + heading + " region: " + currentRegionTrk);
 
         double hspeed = daa.getOwnshipState().horizontalSpeed();
         currentRegionGs = daa.regionOfHorizontalSpeed(hspeed);
-        System.out.println("hspeed: " + hspeed + " region: " + currentRegionGs);
+        // System.out.println("hspeed: " + hspeed + " region: " + currentRegionGs);
 
         double vspeed = daa.getOwnshipState().verticalSpeed();
         currentRegionVs = daa.regionOfVerticalSpeed(vspeed);
-        System.out.println("vspeed: " + vspeed + " region: " + currentRegionVs);
+        // System.out.println("vspeed: " + vspeed + " region: " + currentRegionVs);
 
         double alt = daa.getOwnshipState().altitude();
         currentRegionAlt = daa.regionOfAltitude(alt);
-        System.out.println("alt: " + alt + " region: " + currentRegionAlt);
+        // System.out.println("alt: " + alt + " region: " + currentRegionAlt);
     }
 
-    static String color2string (int color) {
+    protected static String color2string (int color) {
         switch (color) {
             case GREEN: return "green";
             case YELLOW: return "yellow";
@@ -319,7 +319,7 @@ public class DAAMonitorsV2 {
                 } else {
                     int level = DAAMonitorsV2.bandsRegionToInt(currentRegion);
                     if (level < alert) {
-                        System.out.println("current region: " + level + " " + currentRegion + " alert: " + alert);
+                        // System.out.println("current region: " + level + " " + currentRegion + " alert: " + alert);
                         return YELLOW;
                     }
                 }
