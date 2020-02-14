@@ -46,7 +46,7 @@ function render (data: { map: InteractiveMap }) {
     data.map.setOwnshipVelocity(flightData.ownship.v);
     const hd: number = Compass.v2deg(flightData.ownship.v);
     const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
+    const vs: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
     // console.log(`Flight data`, flightData);
     const bands: utils.DAABandsData = player.getCurrentBands();
@@ -66,7 +66,7 @@ function render (data: { map: InteractiveMap }) {
         }
     });
     data.map.setTraffic(traffic);
-    plot({ ownship: { gs, vs, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
+    plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [

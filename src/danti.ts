@@ -48,7 +48,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const hd: number = Compass.v2deg(flightData.ownship.v);
     const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
     data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-    const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
+    const vs: number = +flightData.ownship.v.z;
     data.verticalSpeedTape.setVerticalSpeed(vs);
     const alt: number = +flightData.ownship.s.alt;
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
@@ -70,7 +70,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     });
     data.map.setTraffic(traffic);
-    plot({ ownship: { gs, vs, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
+    plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [

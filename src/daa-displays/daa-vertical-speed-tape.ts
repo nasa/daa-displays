@@ -91,18 +91,152 @@ require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpee
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-vertical-speed-templates';
 
+// internal class, renders a resolution bug over the tape
+class ResolutionBug {
+    protected id: string;
+    protected val: number = 0;
+    protected zero: number = 0;
+    protected tickHeight: number = 0;
+    protected airspeedStep: number = 1;
+    protected useColors: boolean = false;
+    protected color: string = utils.bugColors["UNKNOWN"];
+    protected tape: VerticalSpeedTape;
+
+    /**
+     * @function <a name="ResolutionBug">ResolutionBug</a>
+     * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
+     * @param id {String} Unique bug identifier.
+     * @param daaCompass {Object} DAA widget over which the resolution bug should be rendered.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    constructor (id: string, tape: VerticalSpeedTape) {
+        this.id = id;
+        this.tape = tape;
+    }
+    /**
+     * @function <a name="ResolutionBug_setValue">setValue</a>
+     * @desc Sets the bug position to a given value.
+     * @param val (real) Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setValue(val: number): void {
+        this.val = val;
+        if (isFinite(val)) {
+            this.reveal();
+            this.refresh();            
+        } else {
+            this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_setColor">setColor</a>
+     * @desc Sets the bug color.
+     * @param color (string) Bug color
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setColor(color: string): ResolutionBug {
+        this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
+        this.refresh();
+        return this;          
+    }
+    /**
+     * @function <a name="ResolutionBug_getValue">getValue</a>
+     * @desc Returns the value of the bug.
+     * @return {real} Airspeed value
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    getValue(): number {
+        return this.val;
+    }
+    /**
+     * @function <a name="ResolutionBug_refresh">refresh</a>
+     * @desc Triggers re-rendering of the resolution bug.
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    refresh(): void {
+        let bug_position = this.zero;
+        const verticalSpeedStep: number = this.tape.getVerticalSpeedStep();
+        const tape_size: number[] = this.tape.getTapeSize();
+        let range1 = verticalSpeedStep * 2;
+        let range2 = range1 * 2;
+        let max = range2 * 3;
+        if (this.val >= 0) {
+            if (this.val <= range1) {
+                bug_position = this.zero - (this.val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+            } else if (this.val <= range2) {
+                bug_position = 118 - ((this.val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
+            } else {
+                bug_position = 55 - ((this.val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
+            }
+        } else {
+            if (this.val >= -range1) {
+                bug_position = this.zero - (this.val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+            } else if (this.val >= -range2) {
+                bug_position = 176 - ((this.val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
+            } else {
+                bug_position = 318 - ((this.val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
+            }
+        }
+        $(`#${this.id}`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
+        if (this.useColors) {
+            $(`.${this.id}`).css({ "background-color": this.color });
+        }
+    }
+    reveal (flag?: boolean): void {
+        if (flag === false) {
+            this.hide();
+        } else {
+            $(`#${this.id}`).css({ "display": "block"});
+        }
+    }
+    hide (): void {
+        $(`#${this.id}`).css({ "display": "none"});
+    }
+    setZero (zero: number): void {
+        this.zero = zero;
+    }
+    setTickHeight (tickHeight: number): void {
+        this.tickHeight = tickHeight;
+    }
+    setAirspeedStep (airspeedStep: number): void {
+        if (airspeedStep) {
+            // airspeed step should always be != 0
+            this.airspeedStep = airspeedStep;
+        }
+    }
+    setUseColors (flag: boolean): void {
+        this.useColors = flag;
+    }
+}
+
+
 export class VerticalSpeedTape {
-    private id: string;
-    top: number;
-    left: number;
-    verticalSpeedStep: number;
-    tape_size: number[];
-    tickHeight: { r1: number, r2: number, r3: number };
-    tapeLength: number;
-    currentVerticalSpeed: number;
-    zero: number;
-    bands: utils.Bands;
-    div: HTMLElement;
+    protected id: string;
+    protected top: number;
+    protected left: number;
+    protected verticalSpeedStep: number;
+    protected range: { from: number, to: number } = { from: -24, to: 24 }; // x100fpm
+    protected tape_size: number[];
+    protected tickHeight: { r1: number, r2: number, r3: number };
+    protected tapeLength: number;
+    protected currentVerticalSpeed: number = 0;
+    protected zero: number;
+    protected bands: utils.Bands;
+    protected div: HTMLElement;
+    protected tapeUnits: string = VerticalSpeedTape.defaultTapeUnits;
+
+    static readonly defaultTapeUnits: string = "fpm x100";
+    protected resolutionBug: ResolutionBug;
 
     readonly units = {
         mpm: "mpm",
@@ -149,14 +283,10 @@ export class VerticalSpeedTape {
             r2: this.tape_size[1] / 2, // px
             r3: this.tape_size[2] / 2  // px
         };
-        // FIXME!
         this.tapeLength = 40 * 24; //this.tickHeight * 24; // 12 positive ticks + 12 negative ticks
 
         // create structure for storing resolution bands
         this.bands = { NONE: [], FAR: [], MID: [], NEAR: [], RECOVERY: [], UNKNOWN: [] };
-
-        // initialise vertical speed
-        this.currentVerticalSpeed = 0; // feet
 
         // create DOM elements
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
@@ -166,11 +296,19 @@ export class VerticalSpeedTape {
             top: this.top
         });
         $(this.div).html(theHTML);
+        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this); // resolution bug
+        // this.resolutionBug.setTickHeight(this.tickHeight);
+        this.resolutionBug.setUseColors(true);
+
         this.create_vspeed_ticks();
         this.setVerticalSpeed(this.currentVerticalSpeed);
+
+        // set position of resolution bug
+        this.resolutionBug.setValue(0);
+        this.resolutionBug.hide();
     }
     // utility function for creating altitude tick marks
-    private create_vspeed_ticks() {
+    protected create_vspeed_ticks(): void {
         const normalVS = (val: number) => {
             if (Math.trunc(val) === val) {
                 // integer number
@@ -181,9 +319,11 @@ export class VerticalSpeedTape {
         $(".vspeedP1").text(normalVS(this.verticalSpeedStep * 2));
         $(".vspeedP2").text(normalVS(this.verticalSpeedStep * 4));
         $(".vspeedP3").text(normalVS(this.verticalSpeedStep * 12));
+        // update bug position
+        this.resolutionBug.setZero(this.zero);
     }
     // utility function for drawing resolution bands
-    private draw_bands() {
+    protected draw_bands(): void {
         let theHTML = "";
         let ranges = [
             { from: this.verticalSpeedStep * 4, to: this.verticalSpeedStep * 12, zero: 60, tickHeight: this.tape_size[2] / 2, tapeLength: this.tape_size[2], step: this.verticalSpeedStep },
@@ -243,7 +383,7 @@ export class VerticalSpeedTape {
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for updating the bug position based on the current vertical speed value
-    private update_bug() {
+    protected update_bug(): void {
         let bug_position = this.zero;
         let range1 = this.verticalSpeedStep * 2;
         let range2 = range1 * 2;
@@ -266,9 +406,33 @@ export class VerticalSpeedTape {
                 bug_position = 318 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
             }
         }
-        $(`#${this.id}-bug`).css({ "transition-duration": "500ms", top: `${bug_position}px` });
+        $(`#${this.id}-bug`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
     }
 
+    getVerticalSpeedStep (): number {
+        return this.verticalSpeedStep;
+    }
+    getTapeSize (): number[] {
+        return this.tape_size;
+    }
+    getCurrentValue (): number {
+        return this.currentVerticalSpeed;
+    }
+
+    setUnits (units: string): void {
+        this.tapeUnits = (units.includes("x100") || units.includes("100x")) ? units : (units + " x100"); // vspeed units should always be x100
+        // update display
+        $(`.vspeed-units`).val(this.tapeUnits);
+    }
+    defaultUnits (): void {
+        this.tapeUnits = VerticalSpeedTape.defaultTapeUnits;
+    }
+    revealUnits (): void {
+        $(".vspeed-units").css("display", "block");
+    }
+    hideUnits (): void {
+        $(".vspeed-units").css("display", "none");
+    }
 
     /**
      * @function <a name="setBands">setBands</a>
@@ -293,7 +457,7 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }) {
+    setBands(bands: utils.Bands, opt?: { units?: string }): void {
         opt = opt || {};
         const normaliseVerticalSpeedBand = (b: utils.FromTo[]) => {
             if (b && b.length > 0) {
@@ -318,26 +482,40 @@ export class VerticalSpeedTape {
         this.bands.UNKNOWN = normaliseVerticalSpeedBand(bands.UNKNOWN);
         // console.log(this.id + "-vspeed-bands", this.bands);
         this.draw_bands();
-        return this;
     }
     /**
      * @function <a name="setVerticalSpeed">setVerticalSpeed</a>
-     * @description Sets the altiude indicator to a given altitude value.
+     * @description Sets the vertical speed indicator to a given vertical speed value.
      * @param val {real} Vertical speed value. Default units is 100 feet per minute.
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setVerticalSpeed(val) {
+    setVerticalSpeed (val: number): void {
         // val = limit(-6, 6, "vspeed")(val);
         // set vertical speed bug
-        val = parseFloat(val);
         if (!isNaN(val)) {
-            this.currentVerticalSpeed = val;
+            this.currentVerticalSpeed = val / 100; // tape scale is 100xunits
             this.update_bug();
         } else {
             console.error("Warning, trying to set vertical speed with invalid value", val);
         }
-        return this;
+    }
+    /**
+     * @function <a name="setBug">setBug</a>
+     * @description Sets the position of the resolution bug.
+     * @param val {real} Vertical speed value. Default units is 100 feet per minute.
+     * @memberof module:VerticalSpeedTape
+     * @instance
+     */
+    setBug(info: number | { val: number | string, units: string, alert: string }): void {
+        if (info !== null && info !== undefined) {
+            const d: number = (typeof info === "number") ? info : +info.val;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
+            this.resolutionBug.setColor(c);
+            this.resolutionBug.setValue(d / 100); // tape scale is 100xunits
+        } else {
+            this.resolutionBug.hide();
+        }
     }
     /**
      * @function <a name="setStep">setStep</a>
@@ -346,16 +524,16 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setStep(val) {
-        if (isNaN(parseFloat(val))) {
+    setStep(val: number): void {
+        if (isNaN(val)) {
             console.error("Warning: trying to set an invalid altitude step", val);
-            return this;
+            return;
         }
-        this.verticalSpeedStep = parseFloat(val);
+        this.verticalSpeedStep = val;
         this.create_vspeed_ticks();
         this.update_bug();
         this.draw_bands();
-        return this.setVerticalSpeed(this.currentVerticalSpeed);
+        this.setVerticalSpeed(this.currentVerticalSpeed);
         // return this.setVerticalSpeed(this.currentVerticalSpeed, { transitionDuration: "0ms" }); -- FIXED!
     }
     /**
@@ -365,7 +543,30 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    getStep() {
+    getStep(): number {
         return this.verticalSpeedStep;
+    }
+    /**
+     * @function <a name="setRange">setRange</a>
+     * @description Sets the range of the tape display.
+     * @memberof module:VerticalSpeedTape
+     * @instance
+     */
+    setRange (range: { from: number | string, to: number | string, units: string }): VerticalSpeedTape {
+        if (range && isFinite(+range.from) && isFinite(+range.to) && +range.from < +range.to) {
+            this.range = {
+                from: +range.from,
+                to: +range.to
+            };
+            if (range.units && !(range.units.includes("x100") || range.units.includes("100x"))) {
+                this.range.from /= 100;
+                this.range.to /= 100;
+            }
+            const step: number = (this.range.to - this.range.from) / 24; // 24 is the standard range with step 1
+            this.setStep(step);
+        } else {
+            console.error("[daa-airspeed-tape] Warning: could not autoscale airspeed tape", range);
+        }
+        return this;
     }
 }

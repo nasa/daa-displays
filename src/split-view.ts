@@ -177,9 +177,9 @@ splitView.getPlayer("right").define("plot", () => {
                 const lla: LLAData = flightData[step];
                 const hd: number = Compass.v2deg(lla.ownship.v);
                 const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z / 100;
+                const vs: number = +lla.ownship.v.z;
                 const alt: number = +lla.ownship.s.alt;
-                plot("right", { ownship: { hd, gs, vs, alt }, bands: bandsRight[step], step, time });
+                plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight[step], step, time });
                 diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
             }, 8 * step);
         }
@@ -195,9 +195,9 @@ splitView.getPlayer("left").define("plot", () => {
                 const lla: LLAData = flightData[step];
                 const hd: number = Compass.v2deg(lla.ownship.v);
                 const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z / 100;
+                const vs: number = +lla.ownship.v.z;
                 const alt: number = +lla.ownship.s.alt;
-                plot("left", { ownship: { hd, gs, vs, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
+                plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
             }, 8 * step);
         }
     }

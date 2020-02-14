@@ -50,7 +50,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const hd: number = Compass.v2deg(flightData.ownship.v);
     const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
     data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-    const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
+    const vs: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
     data.verticalSpeedTape.setVerticalSpeed(vs);
     const alt: number = +flightData.ownship.s.alt;
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
@@ -65,6 +65,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.compass.setBug(bands["Heading Resolution"]);
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         data.altitudeTape.setBug(bands["Altitude Resolution"]);
+        data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -78,7 +79,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     data.map.setTraffic(traffic);
     const step: number = player.getCurrentSimulationStep();
     const time: string = player.getCurrentSimulationTime();
-    plot({ ownship: { gs, vs, alt, hd }, bands, step, time });
+    plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step, time });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -177,9 +178,13 @@ async function developerMode (): Promise<void> {
     airspeedTape.disableTapeSpinning();
 
     altitudeTape.setUnits(configData.altitude.units);
-    altitudeTape.setRange(configData["altitude"]);
+    altitudeTape.setRange(configData.altitude);
     altitudeTape.revealUnits();
     altitudeTape.disableTapeSpinning();
+
+    verticalSpeedTape.setUnits(configData["vertical-speed"].units);
+    verticalSpeedTape.setRange(configData["vertical-speed"]);
+    verticalSpeedTape.revealUnits();
 }
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {

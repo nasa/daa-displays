@@ -3,7 +3,7 @@ export const compassTemplate = '<div id="{{id}}-inner" style="position:absolute;
 +    '<div style="display:none; position:absolute; width:634px; height:634px; border-radius:400px; border: 79px solid #333333; position:absolute;opacity:0.6;"></div>    '
 +    '<!-- compass -->'
 +    '<div id="{{id}}-circle" style="position:absolute; width:634px; height:634px; transform-origin:center; transform:rotate(0deg);">'
-+        '<object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="width:635px;position:absolute;"></object>'
++        '<object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="width:635px;position:absolute;opacity:0.8;"></object>'
 +        '<!-- compass ticks -->'
 +        '<!-- <div id="{{id}}-ticks" style="position:absolute; width:634px; height:634px; font-weight:bolder; color:white; text-align:center;">'
 +            '<div style="position:absolute; width:634px; height:634px; transform:rotate(0deg);"></div>'

@@ -16,26 +16,26 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute;top:24px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:8px; opacity:0.7; margin-top:98px;">
+            <div id="{{id}}-bug" style="position:absolute; left:19px; opacity:0.7; margin-top:98px;">
                 <div style="position:absolute;">
                     <!-- back -->
-                    <div class="{{id}}-bug" style="width:64px; margin-left:9px; height:12px; border:1px solid white; background-color:black;"></div>
+                    <div class="{{id}}-bug" style="width:64px; margin-left:9px; margin-top:1px; height:11px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->
                     <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; left:24px; opacity:0.9; margin-top:98px;">
+            <div id="{{id}}-resolution-bug" style="position:absolute; left:-2px; opacity:0.9; margin-top:99px;">
                 <div style="position:absolute;">
                     <!-- back -->
-                    <div class="{{id}}-resolution-bug" style="width:58px; margin-left:10px; height:12px; border:1px solid white; background-color:white;"></div>
+                    <div class="{{id}}-resolution-bug" style="width:10px; margin-left:10px; height:11px; border:1px solid white; background-color:white;"></div>
                     <!-- pointer -->
-                    <div class="{{id}}-resolution-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:6px; border-bottom:2px solid white; border-right:2px solid white; background-color:white; transform:rotate(135deg);"></div>
+                    <div style="width:8px; height:8px; margin-top:-10px; margin-left:12px; border-bottom:2px solid white; border-right:2px solid white; background-color:transparent; transform:rotate(135deg);"></div>
                 </div>
             </div>
         </div>
     </div>
     <div id="{{id}}-indicator" style="position:absolute;">
-        <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:98px; height: 86px; top:281px; left:34px;">
+        <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:99px; height: 86px; top:281px; left:34px;">
             <div id="{{id}}-indicator-first-still-digit" class="green-stripes" style="z-index:1; position:absolute; top:28px; left:2px; width:18%; height:28px; color:white; font-size:34px; text-align: center; line-height:85px; font-family:serif;">
                 &nbsp;
             </div>

@@ -138,7 +138,7 @@ class ResolutionBug {
      * @function <a name="ResolutionBug_setColor">setColor</a>
      * @desc Sets the bug color.
      * @param color (string) Bug color
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -699,9 +699,6 @@ export class AirspeedTape {
             };
             const step: number = (this.range.to - this.range.from) / 8; // the displays can show 6 labelled ticks at the same time -- we want to have all labels visible when the tape is half way through the range
             this.setStep(step);
-            // // updated resolution bug info
-            // this.resolutionBug.setRange(this.range.to - this.range.from);
-            // this.resolutionBug.setStep(step);
         } else {
             console.error("[daa-airspeed-tape] Warning: could not autoscale airspeed tape", range);
         }
