@@ -72,7 +72,7 @@ endef
 clean-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download compile daa2json daa2xyz daa2pvs daa2pvsv2 #wrapper #los1.0.1 los1.0.2 los2.0.e 
+all: download compile daa2json daa2xyz daa2pvs daa2pvsv2 #wrapper #los-1.0.1 los-1.0.2 los-2.0.e 
 
 download-wellclear-2.0.e:
 	@echo "\n\033[0;32m ** Downloading WellClear 2.0.e from LaRC **\033[0m"
@@ -102,23 +102,15 @@ remove-downloads:
 	@-rm -r WellClear-*
 	@-rm WellClear-*.zip
 
-los1.0.1:
-	@echo "\n\033[0;32m ** Building DAALoSRegion **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-1.0.1/DAIDALUS/Java/lib/DAIDALUS.jar DAALoSRegion.java && $(JAR) cfe ../LoSRegion-1.0.1.jar DAALoSRegion *.class
-	-@cd WellClear-1.0.1/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-1.0.1.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-##	unzip -vl LoSRegion-1.0.1.jar
+define los-template
+los-$(1):
+	@echo "\n\033[0;32m ** Building DAALoSRegion for WellClear-$(1) **\033[0m"
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAALoSRegion.java,DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java DAAMonitorsV2.java) && $(JAR) cfe ../LoSRegion-$(1).jar $(if $(call version1,WellClear-$(1)),DAALoSRegion,DAALoSRegionV2) *.class
+	-@cd WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
+##	unzip -vl LoSRegion-$(1).jar
+endef
 
-los1.0.2:
-	@echo "\n\033[0;32m ** Building DAALoSRegion **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-1.0.2/DAIDALUS/Java/lib/DAIDALUS.jar DAALoSRegion.java && $(JAR) cfe ../LoSRegion-1.0.2.jar DAALoSRegion *.class
-	-@cd WellClear-1.0.2/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-1.0.2.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-##	unzip -vl LoSRegion-1.0.2.jar
-
-los2.0.e:
-	@echo "\n\033[0;32m ** Building DAALoSRegionV2 **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java DAAMonitorsV2.java && $(JAR) cfe ../LoSRegion-2.0.e.jar DAALoSRegionV2 *.class
-	-@cd WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-##	unzip -vl LoSRegion-2.0.e.jar
+los-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call los-template,$(ver))))
 
 daa2xyz:
 	@echo "\n\033[0;32m ** Building DAA2XYZ for Daidalus 2.x **\033[0m"
@@ -174,3 +166,4 @@ $(call download-all)
 $(call compile-java-all)
 $(call compile-cpp-all)
 $(call clean-all)
+$(call los-all)
