@@ -2,18 +2,12 @@
 JAVA_VERSIONS = 1.0.1 1.0.2 2.0.e
 CPP_VERSIONS = 2.0.e # this should always be a subset of the JAVA_VERSION
 
-# definitions necessary for javac
-SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java src/gov/nasa/larcfm/ACCoRD/*.java)
-OBJS  = $(SRCS:.java=.class)
 JAVAC = javac
 JAR   = jar
 CPP   = c++
-SRC0   = $(wildcard src/*.cpp)
-SRC1   = $(SRC0:src/DaidalusExample.cpp=)
-SRC2   = $(SRC1:src/DaidalusAlerting.cpp=)
-SRC3   = $(SRC2:src/DaidalusBatch.cpp=)
-SRCS   = $(SRC3)
-OBJS   = $(SRCS:.cpp=.o)
+
+# Lite installation (don't downlad if directories exist, don't make DAIDALUS libraries if they exist)
+lite =
 
 # $(call file-exists, file-name)
 #   Return non-null if a file exists.
@@ -28,7 +22,7 @@ DOWNLOAD_TARGETS = $(foreach ver,$(JAVA_VERSIONS), download-$(ver))
 define download-template
 download-$(1):
 	@echo "\n\033[0;32m ** Downloading WellClear $(1) from GitHub **\033[0m"
-	-@test -d WellClear-$(1) || (\
+	-@test -d "WellClear-$(1)/DAIDALUS" -a -n "$(lite)" || (\
 	curl https://codeload.github.com/nasa/WellClear/zip/v$(1) > WellClear-$(1).zip &&\
 	unzip -qn WellClear-$(1).zip &&\
 	rm WellClear-$(1).zip)
@@ -40,11 +34,11 @@ COMPILE_JAVA_TARGETS = $(foreach ver,$(JAVA_VERSIONS), compile-java-$(ver))
 define compile-java-template
 compile-java-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
-	@echo Compiling WellClear version $(1) in Java
-	-@test ! -f WellClear-$(1).jar || rm WellClear-$(1).jar
-	-@cd WellClear-$(1)/DAIDALUS/Java/ && make lib 
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAABands.java,DAABandsV2.java DaidalusWrapperInterface.java DAAMonitorsV2.java) && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1,WellClear-$(1)),DAABands,DAABandsV2) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-## && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
+	@test ! -f "WellClear-$(1)/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-$(1)/DAIDALUS/Java && make lib)
+	@if [ -e WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) ]; then \
+	  cd utils; $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java) && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1,WellClear-$(1)),DAABands,DAABandsV2) *.class && unzip -qn ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) -d temp; \
+	  cd temp; $(JAR) uf ../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
+	else echo "*** Directory WellClear-$(1)/DAIDALUS/Java not found"; fi
 endef
 compile-java-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call compile-java-template,$(ver))))
 
@@ -52,10 +46,10 @@ COMPILE_CPP_TARGETS = $(foreach ver,$(CPP_VERSIONS),compile-cpp-$(ver))
 define compile-cpp-template
 compile-cpp-$(1): 
 	@echo "\n\033[0;32m ** Building WellClear-$(1).exe **\033[0m"
-	@echo Compiling WellClear version $(1) in C++
-	@test ! -f  WellClear-$(1).exe || rm WellClear-$(1).exe
-	-@cd WellClear-$(1)/DAIDALUS/C++/ && make lib 
-	cd utils && $(CPP) $(if $(call version1,WellClear-$(1)),DAABands.cpp,DAABandsV2.cpp) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.a,DAIDALUS2.a) -o ../WellClear-$(1).exe
+	@test ! -f "WellClear-$(1)/DAIDALUS/C++/Makefile" -o -n "$(lite)" || (cd WellClear-$(1)/DAIDALUS/C++ && make lib)
+	@if [ -e WellClear-$(1)/DAIDALUS/C++/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.a,DAIDALUS2.a) ]; then \
+	  cd utils; $(CPP)  $(if $(call version1,WellClear-$(1)),DAABands.cpp,DAABandsV2.cpp) -std=c++11 -I../WellClear-$(1)/DAIDALUS/C++/include ../WellClear-$(1)/DAIDALUS/C++/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.a,DAIDALUS2.a) -o ../WellClear-$(1).exe; \
+	else echo "*** Directory WellClear-$(1)/DAIDALUS/C++ not found"; fi	
 endef
 compile-cpp-all = $(foreach ver,$(CPP_VERSIONS),$(eval $(call compile-cpp-template,$(ver))))
 
@@ -145,7 +139,7 @@ wrapper:
 ver?=2.0.x
 compile-jar:
 	@echo "\n\033[0;32m ** Building WellClear-$(ver).jar **\033[0m"
-	@test ! -f "WellClear-$(ver)/DAIDALUS/Java/Makefile" || (cd WellClear-$(ver)/DAIDALUS/Java && make lib)
+	@test ! -f "WellClear-$(ver)/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-$(ver)/DAIDALUS/Java && make lib)
 	@if [ -e "WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar" ]; then \
 	  cd utils; $(JAVAC) -cp ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class && unzip -qn ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar -d temp; \
 	  cd temp; $(JAR) uf ../../WellClear-$(ver).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
@@ -156,7 +150,7 @@ compile-jar:
 
 compile-cpp:
 	@echo "\n\033[0;32m ** Building WellClear-$(ver).exe **\033[0m"
-	@test ! -f "WellClear-$(ver)/DAIDALUS/C++/Makefile" || (cd WellClear-$(ver)/DAIDALUS/C++ && make lib)
+	@test ! -f "WellClear-$(ver)/DAIDALUS/C++/Makefile" -o -n "$(lite)" || (cd WellClear-$(ver)/DAIDALUS/C++ && make lib)
 	@if [ -e "WellClear-$(ver)/DAIDALUS/C++/lib/DAIDALUS2.a" ]; then \
 	  cd utils; $(CPP) DAABandsV2.cpp -std=c++11 -I../WellClear-$(ver)/DAIDALUS/C++/include ../WellClear-$(ver)/DAIDALUS/C++/lib/DAIDALUS2.a -o ../WellClear-$(ver).exe; \
 	else echo "*** Directory WellClear-$(ver)/DAIDALUS/C++ not found"; fi	
