@@ -42,7 +42,8 @@ compile-java-$(1):
 	@echo "\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
 	@echo Compiling WellClear version $(1) in Java
 	-@test ! -f WellClear-$(1).jar || rm WellClear-$(1).jar
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/src $(if $(call version1, WellClear-$(1)), DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java DAAMonitorsV2.java) ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(1)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
+	-@cd WellClear-$(1)/DAIDALUS/Java/ && make lib 
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1, WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1, WellClear-$(1)), DAABands.java, DAABandsV2.java DaidalusWrapperInterface.java DAAMonitorsV2.java) && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1, WellClear-$(1)) , DAABands, DAABandsV2 ) *.class && cd ../WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../../../../ && unzip -vl WellClear-$(1).jar && unzip -c WellClear-$(1).jar META-INF/MANIFEST.MF
 endef
 compile-java-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call compile-java-template,$(ver))))
 
