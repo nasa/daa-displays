@@ -240,10 +240,10 @@ public class DAAMonitorsV2 {
         return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + this.color2string(Math.max(hr, hr_)) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + this.color2string(Math.max(hsr, hsr_)) + "\""
-            + ", \"Vertical Speed\": " + "\"" + this.color2string(Math.max(vsr, vsr_)) + "\""
-            + ", \"Altitude\": " + "\"" + this.color2string(Math.max(ar, ar_)) + "\""
+            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_)) + "\""
+            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_)) + "\""
             + " }";
     }
 
@@ -283,23 +283,23 @@ public class DAAMonitorsV2 {
         int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
         int hsr = checkM2_preferred(resolutionGs, currentRegionGs);
         int vsr = checkM2_preferred(resolutionVs, currentRegionVs);
-        int ar = checkM2_preferred(resolutionAlt, currentRegionAlt);
+        int ar = GREEN; //checkM2_preferred(resolutionAlt, currentRegionAlt); M2 does not apply to altitude
 
         int hr_ = checkM2_other(resolutionTrk_, currentRegionTrk);
         int hsr_ = checkM2_other(resolutionGs_, currentRegionGs);
         int vsr_ = checkM2_other(resolutionVs_, currentRegionVs);
-        int ar_ = checkM2_other(resolutionAlt_, currentRegionAlt);
+        int ar_ = GREEN; //checkM2_other(resolutionAlt_, currentRegionAlt); M2 does not apply to altitude
 
         int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_, Math.max(hsr_, Math.max(vsr_, ar_)))))));
         if (monitorColor[1] < max_color) { monitorColor[1] = max_color; }
 
-        return "\"color\": " + "\"" + this.color2string(max_color) + "\""
+        return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + this.color2string(Math.max(hr, hr_)) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + this.color2string(Math.max(hsr, hsr_)) + "\""
-            + ", \"Vertical Speed\": " + "\"" + this.color2string(Math.max(vsr, vsr_)) + "\""
-            + ", \"Altitude\": " + "\"" + this.color2string(Math.max(ar, ar_)) + "\""
+            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_)) + "\""
+            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_)) + "\""
             + " }";
     }
 
@@ -342,18 +342,18 @@ public class DAAMonitorsV2 {
         int hb = checkM3(currentRegionTrk);
         int hsb = checkM3(currentRegionGs);
         int vsb = checkM3(currentRegionVs);
-        int ab = checkM3(currentRegionAlt);
+        int ab = GREEN;//checkM3(currentRegionAlt); // M2 does not apply to altitude
 
         int max_color = Math.max(hb, Math.max(hsb, Math.max(vsb, ab)));
         if (monitorColor[2] < max_color) { monitorColor[2] = max_color; }
 
-        return "\"color\": " + "\"" + this.color2string(max_color) + "\""
+        return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + this.color2string(hb) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + this.color2string(hsb) + "\""
-            + ", \"Vertical Speed\": " + "\"" + this.color2string(vsb) + "\""
-            + ", \"Altitude\": " + "\"" + this.color2string(ab) + "\""
+            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(hb) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(hsb) + "\""
+            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(vsb) + "\""
+            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(ab) + "\""
             + " }";
     }
 

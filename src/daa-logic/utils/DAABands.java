@@ -81,7 +81,7 @@ public class DAABands {
 		}
 	}
     
-    private static void printBands(PrintWriter out, ArrayList bands, String label) {
+    private static void printBands(PrintWriter out, ArrayList<String> bands, String label) {
 		if (bands != null) {
 			out.println("\"" + label + "\": [");
 			for (int i = 0; i < bands.size(); i++) {
@@ -168,11 +168,11 @@ public class DAABands {
 		String str_gso = "";
 		String str_vso = "";
 		String str_alto = "";
-		ArrayList trkArray = new ArrayList();
-		ArrayList gsArray = new ArrayList();
-		ArrayList vsArray = new ArrayList();
-		ArrayList altArray = new ArrayList();
-		ArrayList alertsArray = new ArrayList();
+		ArrayList<String> trkArray = new ArrayList<String>();
+		ArrayList<String> gsArray = new ArrayList<String>();
+		ArrayList<String> vsArray = new ArrayList<String>();
+		ArrayList<String> altArray = new ArrayList<String>();
+		ArrayList<String> alertsArray = new ArrayList<String>();
 
 
 		/* Processing the input file time step by time step and writing output file */
