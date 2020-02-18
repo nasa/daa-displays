@@ -336,7 +336,7 @@ export class Compass {
                             utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
                             : utils.rad2deg(Math.atan2(+data.x, +data.y));
         let angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
-        angle = (angle < 0) ? 360 - (angle % 360) : angle;
+        angle = (angle < 0) ? 360 + (angle % 360) : angle; // this is to make sure the angle is in the range [0..360]
         const pos_angle: number = Math.abs((angle % 360 + 360) % 360); // clockwise rotation
         const neg_angle: number = Math.abs((angle % 360 - 360) % 360); // counter-clockwise rotation
         this.currentCompassAngle = 
