@@ -240,10 +240,10 @@ public class DAAMonitorsV2 {
         return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hr_) + "\" }"
-            + ", \"Horizontal Speed\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(hsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(hsr_) + "\" }"
-            + ", \"Vertical Speed\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(vsr) + "\", \"other\": \"" + DAAMonitorsV2.color2string(vsr_) + "\" }"
-            + ", \"Altitude\": " + "{ \"preferred\": \"" + DAAMonitorsV2.color2string(ar) + "\", \"other\": \"" + DAAMonitorsV2.color2string(ar_) + "\" }"
+            + " \"Heading\": " + "\"" + this.color2string(Math.max(hr, hr_)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + this.color2string(Math.max(hsr, hsr_)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + this.color2string(Math.max(vsr, vsr_)) + "\""
+            + ", \"Altitude\": " + "\"" + this.color2string(Math.max(ar, ar_)) + "\""
             + " }";
     }
 
