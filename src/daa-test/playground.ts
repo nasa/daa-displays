@@ -6,10 +6,11 @@ import { HScale } from '../daa-displays/daa-hscale';
 import { VirtualHorizon } from '../daa-displays/daa-virtual-horizon';
 import { ViewOptions } from '../daa-displays/daa-view-options';
 
-import { InteractiveMap } from '../daa-displays/daa-interactive-map';
+import { InteractiveMap, DAA_AircraftDescriptor } from '../daa-displays/daa-interactive-map';
 import * as utils from '../daa-displays/daa-utils';
 import { cities } from '../daa-displays/daa-map-components/daa-airspace';
 
+const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ];
 
 // example traffic data
 let ownship = {
@@ -26,12 +27,12 @@ let ownship = {
         }
     };
 
-let others = [
+let others: DAA_AircraftDescriptor[] = [
     {
-        "id": "AC1",
+        "callSign": "AC1",
         "s": {
-        "lat": 28.547052,
-        "lon": -80.715877,
+        "lat": cities.hampton.lat,
+        "lon": cities.hampton.lon,
         "alt": 4000.018859
         },
         "v": {
@@ -42,7 +43,7 @@ let others = [
         "symbol": "daa-traffic-monitor"
     },
     {
-        "id": "AC2",
+        "callSign": "AC2",
         "s": {
         "lat": 28.520167,
         "lon": -80.61631,
@@ -56,7 +57,7 @@ let others = [
         "symbol": "daa-traffic-avoid"
     },
     {
-        "id": "AC3",
+        "callSign": "AC3",
         "s": {
         "lat": 28.5166,
         "lon": -80.70284,
@@ -84,6 +85,7 @@ const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { pare
 // add geofence to the map
 map.addGeoFence("g1", geofence_perimeter, geofence_floor);
 map.showGeoFence(true);
+map.setTraffic(others);
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector

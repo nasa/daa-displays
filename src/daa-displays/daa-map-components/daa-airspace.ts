@@ -605,6 +605,10 @@ export class DAA_Airspace {
      */
     setTraffic (traffic: { s: utils.LatLonAlt | serverInterface.LatLonAlt, v: utils.Vector3D | serverInterface.Vector3D, symbol: string, callSign: string }[]): DAA_Airspace {
         const len: number = (traffic) ? traffic.length : 0;
+        if (len === undefined) {
+            console.error("[daa-displays] Warning: traffic information should be an array of traffic descriptors.");
+            return this;
+        }
         if (len !== this._traffic.length) {
             // remove excess renderables, reuse the rest
             for (let i = len; i < this._traffic.length; i++) {
