@@ -66,6 +66,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.compass.setBug(bands["Heading Resolution"]);
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         data.altitudeTape.setBug(bands["Altitude Resolution"]);
+        data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;

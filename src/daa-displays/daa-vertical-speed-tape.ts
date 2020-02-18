@@ -190,6 +190,11 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
+            if (this.color === "white") {
+                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid black", "border-right": "2px solid black" });
+            } else {
+                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid white", "border-right": "2px solid white" });
+            }
         }
     }
     reveal (flag?: boolean): void {
@@ -334,7 +339,7 @@ export class VerticalSpeedTape {
             { from: -this.verticalSpeedStep * 12, to: -this.verticalSpeedStep * 4, zero: 324, tickHeight: this.tape_size[2] / 2, tapeLength: this.tape_size[2], step: this.verticalSpeedStep }
         ];
         const moduloRange = (seg: utils.FromTo, range: { from: number, to: number }) => {
-            const scaled: utils.FromTo = { from: seg.from / 1000, to: seg.to / 1000, units: seg.units };
+            const scaled: utils.FromTo = { from: seg.from, to: seg.to, units: seg.units };
             if (scaled.to > range.from && scaled.from <= range.to) {
                     // (scaled.from >= range.from && scaled.from <= range.to
                     //     || scaled.from <= range.from && scaled.to >= range.to)) {
@@ -453,7 +458,7 @@ export class VerticalSpeedTape {
      * @param opt {Object} Options:
      *             <li>units (String): "x100mpm" or "mpm 100x", indicates that resolution bands are given in 100 meters per minute.<br>
      *                                 "mpm",  indicates that resolution bands are given in meters per minute.<br>
-     *                                 The widget will automatically convert the bands to 100 feet per minute.</li>
+     *                                 The widget will automatically convert the bands to 100 feet per minute. Default units is fpm.</li>
      * @memberof module:VerticalSpeedTape
      * @instance
      */
@@ -462,12 +467,15 @@ export class VerticalSpeedTape {
         const normaliseVerticalSpeedBand = (b: utils.FromTo[]) => {
             if (b && b.length > 0) {
                 return b.map((range) => {
-                    if (opt.units === "x100mpm" || opt.units === "mpm 100x") {
+                    const units: string = opt.units || range.units || "fpm";
+                    if (units === "x100mpm" || units === "mpm 100x") {
                         // if bands are given in 100x metres per minute, we need to convert in 100x feet per minute
-                        return { from: utils.meters2feet(range.from), to: utils.meters2feet(range.to), units: range.units };
-                    } else if (opt.units === "mpm") {
+                        return { from: utils.meters2feet(range.from), to: utils.meters2feet(range.to), units };
+                    } else if (units === "mpm") {
                         // if bands are given in metres per minute, we need to convert in 100x feet per minute
-                        return { from: utils.meters2feet(range.from) / 100, to: utils.meters2feet(range.to) / 100, units: range.units };
+                        return { from: utils.meters2feet(range.from) / 100, to: utils.meters2feet(range.to) / 100, units };
+                    } else if (units === "fpm") {
+                        return { from: range.from / 100, to: range.to / 100, units };
                     }
                     return { from: range.from, to: range.to, units: range.units };
                 });

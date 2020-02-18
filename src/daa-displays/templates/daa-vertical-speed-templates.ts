@@ -29,7 +29,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
         <div id="{{id}}-bands" style="position:absolute;top:24px;left:2px; opacity:0.8;">
         </div>
-        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7;">
+        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7; margin-top:1px;">
             <div style="position:absolute;">
                 <!-- back -->
                 <div class="{{id}}-bug-bl" style="width:12px; height:11px; border:1px solid white; background-color:black; margin-left:4px;"></div>
@@ -37,12 +37,12 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
                 <div class="{{id}}-bug-bg" style="width:8px; height:8px; margin-top:-9.5px; border-bottom:2px solid white;border-right:2px solid white;background-color:black; transform:rotate(135deg);"></div>
             </div>
         </div>
-        <div id="{{id}}-resolution-bug" style="position:absolute; left:20px; opacity:0.9;">
+        <div id="{{id}}-resolution-bug" style="position:absolute; left:18px; opacity:0.9; margin-top:1px;">
             <div style="position:absolute;">
                 <!-- back -->
-                <div class="{{id}}-resolution-bug-bl" style="width:8px; height:11px; border:1px solid white; background-color:grey; margin-left:4px;"></div>
+                <div class="{{id}}-resolution-bug" style="width:10px; height:11px; border:1px solid white; background-color:grey; margin-left:4px;"></div>
                 <!-- pointer -->
-                <div style="width:8px; height:8px; margin-left:2px; margin-top:-10px; border-bottom:2px solid white;border-right:2px solid white;background-color:transparent; transform:rotate(-45deg);"></div>
+                <div class="{{id}}-resolution-bug-pointer" style="width:8px; height:8px; margin-left:4px; margin-top:-10px; border-bottom:2px solid white;border-right:2px solid white;background-color:transparent; transform:rotate(-45deg);"></div>
             </div>
         </div>
     </div>`;

@@ -169,6 +169,11 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
+            if (this.color === "white") {
+                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid black", "border-right": "2px solid black" });
+            } else {
+                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid white", "border-right": "2px solid white" });
+            }
         }
     }
     reveal (flag?: boolean): void {
