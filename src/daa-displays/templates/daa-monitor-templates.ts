@@ -10,7 +10,7 @@ export const monitorTemplate = `<div class="container" id="{{id}}-list" style="c
     <div class="input-group mb-3">
         <div class="input-group-prepend col-1">
             {{#if checkbox}}<div class="input-group-text" style="background-color:transparent; border: 1px solid transparent;">
-                <input type="radio" name="{{../id}}-group" id="{{id}}-checkbox">
+                <input type="radio" name="{{../id}}-group" id="{{id}}-checkbox" class="{{../id}}-checkbox">
             </div>{{/if}}
         </div>
         <div class="col-1">

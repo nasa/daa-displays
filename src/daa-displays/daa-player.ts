@@ -815,6 +815,7 @@ export class DAAPlayer {
                     console.error(`unable to initialize scenario ${scenario}`);
                 } finally {
                     this.refreshSimulationPlots();
+                    this.refreshMonitors();
                     this.enableSelection();
                     if (!opt.hideLoadingAnimation) {
                         this.loadingComplete();
@@ -1890,6 +1891,9 @@ export class DAAPlayer {
         $(`#${this.id}-speed-input`).on("input", () => { this._handlers.speed(); });
         // this._handlers.installConfigurationReloader();
         // this._handlers.installDaidalusVersionReloader();
+    }
+    refreshMonitors(): void {
+        $(`.${this.monitorDomSelector}-checkbox`).prop("checked", false);
     }
     /**
      * @function <a name="refreshSimulationPlots">refreshSimulationPlots</a>
