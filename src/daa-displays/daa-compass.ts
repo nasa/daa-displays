@@ -366,6 +366,11 @@ export class Compass {
             $(`#${this.id}-top-indicator-box`).css({ "border": `2px solid ${color}` });
         }
     }
+    resetIndicatorColor (): void {
+        const color: string = utils.bugColors["NONE"];
+        $(`#${this.id}-top-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+        $(`#${this.id}-top-indicator-box`).css({ "border": `2px solid ${color}` });
+    }
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
@@ -384,6 +389,7 @@ export class Compass {
             }
         } else {
             this.resolutionBug.hide();
+            this.resetIndicatorColor();
         }
     }
     /**

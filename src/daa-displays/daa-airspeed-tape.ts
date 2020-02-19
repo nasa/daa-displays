@@ -140,11 +140,14 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setColor(color: string): ResolutionBug {
+    setColor(color: string): void {
         this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
         this.useColors = true;
+        this.refresh();    
+    }
+    resetColor(): void {
+        this.color = utils.bugColors["NONE"];
         this.refresh();
-        return this;          
     }
     /**
      * @function <a name="ResolutionBug_getValue">getValue</a>
@@ -563,6 +566,7 @@ export class AirspeedTape {
             }
         } else {
             this.resolutionBug.hide();
+            this.speedBug.resetColor();
         }
     }
     /**

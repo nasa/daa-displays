@@ -141,11 +141,14 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    setColor(color: string): SpeedBug {
+    setColor(color: string): void {
         this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
         this.useColors = true;
+        this.refresh();       
+    }
+    resetColor(): void {
+        this.color = utils.bugColors["NONE"];
         this.refresh();
-        return this;          
     }
     /**
      * @function <a name="ResolutionBug_getValue">getValue</a>
@@ -531,6 +534,7 @@ export class VerticalSpeedTape {
             }
         } else {
             this.resolutionBug.hide();
+            this.speedBug.resetColor();
         }
     }
     /**
