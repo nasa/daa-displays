@@ -253,7 +253,7 @@ public class DAAMonitorsV2 {
      */
     protected int checkM2_preferred (double resolution, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs) || !Double.isNaN(resolutionAlt);
+            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs);// || !Double.isNaN(resolutionAlt);
             if (Double.isNaN(resolution) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -262,7 +262,7 @@ public class DAAMonitorsV2 {
     }
     protected int checkM2_other (double resolution_, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_) || !Double.isNaN(resolutionGs_) || !Double.isNaN(resolutionVs_) || !Double.isNaN(resolutionAlt_);
+            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_) || !Double.isNaN(resolutionGs_) || !Double.isNaN(resolutionVs_);// || !Double.isNaN(resolutionAlt_);
             if (Double.isNaN(resolution_) && exists_resolution_not_NaN) {
                 return YELLOW;
             }

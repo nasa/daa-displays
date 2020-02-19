@@ -387,7 +387,7 @@ public class DAABandsV2 {
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");
-		ArrayList<ArrayList<String>> info = new ArrayList();
+		ArrayList<ArrayList<String>> info = new ArrayList<ArrayList<String>>();
 		info.add(monitorM1Array);
 		info.add(monitorM2Array);
 		info.add(monitorM3Array);
