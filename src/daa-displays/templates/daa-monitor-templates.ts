@@ -1,6 +1,6 @@
 export const monitorPanelTemplate = `
 <div style="color: white; margin-top:6px; margin-left:16px; text-align: center;">
-    <b>Monitors</b>
+    <b>Properties</b>
 </div>
 </div>`;
 

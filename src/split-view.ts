@@ -93,10 +93,10 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
-        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"]) ? +desc.bands["Heading Resolution"]["val"]
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"]) ? +desc.bands["Horizontal Speed Resolution"]["val"]
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"]) ? +desc.bands["Vertical Speed Resolution"]["val"]
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"]) ? +desc.bands["Altitude Resolution"]["val"]
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
                                 : null;
         splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
@@ -118,7 +118,7 @@ const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { 
 // map view options
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { parent: "daa-disp-left", compass: compass_left, map: map_left });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
-const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 600 }, { parent: "daa-disp-left" });
+const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 833 }, { parent: "daa-disp-left" });
 const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
 
 const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left: 6}, { parent: "daa-disp-right" });
@@ -129,7 +129,7 @@ const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, 
 // map view options
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { parent: "daa-disp-right", compass: compass_right, map: map_right });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
-const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 600 }, { parent: "daa-disp-right" });
+const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 833 }, { parent: "daa-disp-right" });
 const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", {top: 210, left: 600 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
@@ -447,6 +447,6 @@ async function createPlayer() {
         parent: "activation-controls",
         width: 1072
     });
-    await splitView.activate();
+    await splitView.activate({ developerMode: true });
 }
 createPlayer();

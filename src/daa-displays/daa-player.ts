@@ -207,6 +207,11 @@ export class DAAPlayer {
     protected configInfo: ConfigFile;
     protected daaMonitors: { id: number, name: string, color: string }[] = [];
 
+    protected developerControls: {
+        normalMode?: () => Promise<void> | void,
+        developerMode?: () => Promise<void> | void
+    } = {};
+
     getWellClearVersionSelector(): string {
         return this.wellClearVersionSelector;
     }
@@ -562,19 +567,30 @@ export class DAAPlayer {
         });
         utils.createDiv(`${this.id}-developers-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-developers-controls`).html(theHTML);
+        this.developerControls = desc;
         // install handlers
         const _this: DAAPlayer = this;
         $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
             const isChecked = $(`#${_this.id}-developer-mode-checkbox`).prop("checked");
-            if (isChecked && desc.developerMode) {
-                desc.developerMode();
+            if (isChecked && _this.developerControls.developerMode) {
+                _this.developerControls.developerMode();
             } else {
-                if (desc.normalMode) {
-                    desc.normalMode();
+                if (_this.developerControls.normalMode) {
+                    _this.developerControls.normalMode();
                 }
             }
         });
         return this;
+    }
+
+    clickDeveloperMode (): void {
+        $(`#${this.id}-developer-mode-checkbox`).prop("checked", true);
+        this.developerControls.developerMode();
+    }
+
+    clickNormalMode (): void {
+        $(`#${this.id}-developer-mode-checkbox`).prop("checked", false);
+        this.developerControls.normalMode();
     }
 
     /**
@@ -1428,8 +1444,7 @@ export class DAAPlayer {
                                 }
                             } else if (data.resolution) {
                                 // resolution info
-                                const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, alert: data.resolution.alert };
-                                res[band_or_resolution] = resolution;
+                                res[band_or_resolution] = data;
                             }
                         }
                         if (this._bands.Alerts && step < this._bands.Alerts.length) {
@@ -1488,8 +1503,7 @@ export class DAAPlayer {
                             }
                         } else if (data.resolution) {
                             // resolution info
-                            const resolution: DaidalusResolution = { val: +data.resolution.val, units: data.resolution.units, alert: data.resolution.alert };
-                            res[band_or_resolution] = resolution;
+                            res[band_or_resolution] = data;
                         }
                     }
                     if (this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
@@ -1615,10 +1629,14 @@ export class DAAPlayer {
     }
 
 
-    async activate(): Promise<void> {
+    async activate(opt?: { developerMode?: boolean }): Promise<void> {
+        opt = opt || {};
         const scenarios = await this.listScenarioFiles();
         if (!this.activationControlsPresent && scenarios && scenarios.length) {
             await this.selectScenarioFile(scenarios[0]);
+        }
+        if (opt.developerMode) {
+            this.clickDeveloperMode();
         }
     }
 

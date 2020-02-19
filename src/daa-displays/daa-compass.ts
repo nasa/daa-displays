@@ -360,6 +360,12 @@ export class Compass {
         const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
         return (angle % 360 + 360) % 360;
     }
+    setIndicatorColor (color: string): void {
+        if (color) {
+            $(`#${this.id}-top-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+            $(`#${this.id}-top-indicator-box`).css({ "border": `2px solid ${color}` });
+        }
+    }
     /**
      * @function <a name="setBug">setBug</a>
      * @description Sets the bug position.
@@ -367,12 +373,15 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string, alert: string }): void {
+    setBug(info: number | server.ResolutionElement): void {
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "number") ? info : +info.val;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
+            const d: number = (typeof info === "object") ? +info.resolution.val : info;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
+            if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
+            }
         } else {
             this.resolutionBug.hide();
         }

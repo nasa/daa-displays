@@ -214,8 +214,8 @@ public class DAAMonitorsV2 {
     }
     protected String legendM1 () {
         String green_desc = "Valid finite resolution.";
-        String yellow_desc = "Abnormal condition: resolution is finite and region is not NONE nor RECOVERY.";
-        String red_desc = "Abnormal condition: resolution is finite and region is UNKNOWN.";
+        String yellow_desc = "Property failure: resolution is finite and region is not NONE nor RECOVERY.";
+        String red_desc = "Property failure: resolution is finite and region is UNKNOWN.";
         return "{ " 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
                 + " }";
@@ -271,7 +271,7 @@ public class DAAMonitorsV2 {
     }
     protected String legendM2 () {
         String green_desc = "Consistent resolutions.";
-        String yellow_desc = "Abnormal condition: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
+        String yellow_desc = "Property failure: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
         return "{ " 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
                 + " }";
@@ -329,8 +329,8 @@ public class DAAMonitorsV2 {
     }
     protected String legendM3 () {
         String green_desc = "Valid non-zero alerts.";
-        String yellow_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
-        String red_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
+        String yellow_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
+        String red_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
         return "{ " 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
                 + " }";

@@ -90,9 +90,10 @@ require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpee
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-vertical-speed-templates';
+import { ResolutionElement } from 'src/daa-server/utils/daa-server';
 
 // internal class, renders a resolution bug over the tape
-class ResolutionBug {
+class SpeedBug {
     protected id: string;
     protected val: number = 0;
     protected zero: number = 0;
@@ -140,8 +141,9 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setColor(color: string): ResolutionBug {
+    setColor(color: string): SpeedBug {
         this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
+        this.useColors = true;
         this.refresh();
         return this;          
     }
@@ -190,11 +192,8 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
-            if (this.color === "white") {
-                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid black", "border-right": "2px solid black" });
-            } else {
-                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid white", "border-right": "2px solid white" });
-            }
+            $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
+            $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
     }
     reveal (flag?: boolean): void {
@@ -241,7 +240,8 @@ export class VerticalSpeedTape {
     protected tapeUnits: string = VerticalSpeedTape.defaultTapeUnits;
 
     static readonly defaultTapeUnits: string = "fpm x100";
-    protected resolutionBug: ResolutionBug;
+    protected resolutionBug: SpeedBug;
+    protected speedBug: SpeedBug;
 
     readonly units = {
         mpm: "mpm",
@@ -301,9 +301,11 @@ export class VerticalSpeedTape {
             top: this.top
         });
         $(this.div).html(theHTML);
-        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this); // resolution bug
+        this.resolutionBug = new SpeedBug(this.id + "-resolution-bug", this); // resolution bug
         // this.resolutionBug.setTickHeight(this.tickHeight);
         this.resolutionBug.setUseColors(true);
+        this.speedBug = new SpeedBug(this.id + "-bug", this); // speed bug
+        this.speedBug.setUseColors(false);
 
         this.create_vspeed_ticks();
         this.setVerticalSpeed(this.currentVerticalSpeed);
@@ -311,6 +313,8 @@ export class VerticalSpeedTape {
         // set position of resolution bug
         this.resolutionBug.setValue(0);
         this.resolutionBug.hide();
+
+        this.speedBug.setValue(0);
     }
     // utility function for creating altitude tick marks
     protected create_vspeed_ticks(): void {
@@ -326,6 +330,7 @@ export class VerticalSpeedTape {
         $(".vspeedP3").text(normalVS(this.verticalSpeedStep * 12));
         // update bug position
         this.resolutionBug.setZero(this.zero);
+        this.speedBug.setZero(this.zero);
     }
     // utility function for drawing resolution bands
     protected draw_bands(): void {
@@ -388,31 +393,31 @@ export class VerticalSpeedTape {
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for updating the bug position based on the current vertical speed value
-    protected update_bug(): void {
-        let bug_position = this.zero;
-        let range1 = this.verticalSpeedStep * 2;
-        let range2 = range1 * 2;
-        let max = range2 * 3;
-        let val = utils.limit(-max,max)(this.currentVerticalSpeed);
-        if (val >= 0) {
-            if (val <= range1) {
-                bug_position = this.zero - (val / this.verticalSpeedStep) * (this.tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
-            } else if (val <= range2) {
-                bug_position = 118 - ((val - this.verticalSpeedStep * 2) / this.verticalSpeedStep) * (this.tape_size[1] / 2);
-            } else {
-                bug_position = 55 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
-            }
-        } else {
-            if (val >= -range1) {
-                bug_position = this.zero - (val / this.verticalSpeedStep) * (this.tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
-            } else if (val >= -range2) {
-                bug_position = 176 - ((val - this.verticalSpeedStep * 2) / this.verticalSpeedStep) * (this.tape_size[1] / 2);
-            } else {
-                bug_position = 318 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
-            }
-        }
-        $(`#${this.id}-bug`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
-    }
+    // protected update_bug(): void {
+    //     let bug_position = this.zero;
+    //     let range1 = this.verticalSpeedStep * 2;
+    //     let range2 = range1 * 2;
+    //     let max = range2 * 3;
+    //     let val = utils.limit(-max,max)(this.currentVerticalSpeed);
+    //     if (val >= 0) {
+    //         if (val <= range1) {
+    //             bug_position = this.zero - (val / this.verticalSpeedStep) * (this.tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+    //         } else if (val <= range2) {
+    //             bug_position = 118 - ((val - this.verticalSpeedStep * 2) / this.verticalSpeedStep) * (this.tape_size[1] / 2);
+    //         } else {
+    //             bug_position = 55 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
+    //         }
+    //     } else {
+    //         if (val >= -range1) {
+    //             bug_position = this.zero - (val / this.verticalSpeedStep) * (this.tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+    //         } else if (val >= -range2) {
+    //             bug_position = 176 - ((val - this.verticalSpeedStep * 2) / this.verticalSpeedStep) * (this.tape_size[1] / 2);
+    //         } else {
+    //             bug_position = 318 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
+    //         }
+    //     }
+    //     $(`#${this.id}-bug`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
+    // }
 
     getVerticalSpeedStep (): number {
         return this.verticalSpeedStep;
@@ -503,7 +508,7 @@ export class VerticalSpeedTape {
         // set vertical speed bug
         if (!isNaN(val)) {
             this.currentVerticalSpeed = val / 100; // tape scale is 100xunits
-            this.update_bug();
+            this.speedBug.setValue(this.currentVerticalSpeed);
         } else {
             console.error("Warning, trying to set vertical speed with invalid value", val);
         }
@@ -515,12 +520,15 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string, alert: string }): void {
+    setBug(info: number | ResolutionElement): void {
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "number") ? info : +info.val;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
+            const d: number = (typeof info === "object") ? +info.resolution.val : info;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d / 100); // tape scale is 100xunits
+            if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
+            }
         } else {
             this.resolutionBug.hide();
         }
@@ -539,7 +547,7 @@ export class VerticalSpeedTape {
         }
         this.verticalSpeedStep = val;
         this.create_vspeed_ticks();
-        this.update_bug();
+        this.speedBug.setValue(this.currentVerticalSpeed);
         this.draw_bands();
         this.setVerticalSpeed(this.currentVerticalSpeed);
         // return this.setVerticalSpeed(this.currentVerticalSpeed, { transitionDuration: "0ms" }); -- FIXED!

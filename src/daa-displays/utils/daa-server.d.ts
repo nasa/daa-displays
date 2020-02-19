@@ -138,17 +138,26 @@ export declare interface MonitorElement {
     results: MonitorData[]
 }
 
+export declare interface ResolutionElement {
+    resolution: { val: string, units: string, alert: string },
+    ownship: { val: string, units: string, alert: string }
+}
+
 export declare interface DaidalusBandsDescriptor {
     Info: {
         version: string, // well clear version
         configuration: string // daidalus configuration file used to produce bands data
     },
     Scenario: string,
-    Alerts: AlertElement[]; // alerts over time
-    "Heading Bands": BandElement[]; // bands over time
-    "Horizontal Speed Bands": BandElement[];
-    "Vertical Speed Bands": BandElement[];
-    "Altitude Bands": BandElement[];
+    Alerts: AlertElement[], // alerts over time
+    "Heading Bands": BandElement[], // bands over time
+    "Horizontal Speed Bands": BandElement[],
+    "Vertical Speed Bands": BandElement[],
+    "Altitude Bands": BandElement[],
+    "Altitude Resolution": ResolutionElement[],
+    "Heading Resolution": ResolutionElement[],
+    "Horizontal Speed Resolution": ResolutionElement[],
+    "Vertical Speed Resolution": ResolutionElement[],
     Monitors: MonitorElement[];
 }
 

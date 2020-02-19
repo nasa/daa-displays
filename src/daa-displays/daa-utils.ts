@@ -1,4 +1,4 @@
-import { MonitorElement, MonitorData } from "src/daa-server/utils/daa-server";
+import { MonitorElement, MonitorData, ResolutionElement } from "src/daa-server/utils/daa-server";
 
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
@@ -107,10 +107,10 @@ export interface DAABandsData {
     "Heading Bands": Bands,
     "Horizontal Speed Bands": Bands,
     "Vertical Speed Bands": Bands,
-    "Altitude Resolution": { val: string, units: string, alert: string },
-    "Heading Resolution": { val: string, units: string, alert: string },
-    "Horizontal Speed Resolution": { val: string, units: string, alert: string },
-    "Vertical Speed Resolution": { val: string, units: string, alert: string },
+    "Altitude Resolution": ResolutionElement,
+    "Heading Resolution": ResolutionElement,
+    "Horizontal Speed Resolution": ResolutionElement,
+    "Vertical Speed Resolution": ResolutionElement,
     Monitors: MonitorElement[]
 };
 

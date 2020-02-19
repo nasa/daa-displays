@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
+import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.f;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
@@ -215,82 +216,99 @@ public class DAABandsV2 {
 		alertsArray.add(alerts);
 
 		// bands
-		String trk = "{ \"time\": " + time;
-		trk += ", \"bands\": [ ";
+		String trkBands = "{ \"time\": " + time;
+		trkBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units);
-			trk += ", \"units\": \"" +  trk_units + "\"";
-			trk += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
-			if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
+			trkBands += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units);
+			trkBands += ", \"units\": \"" +  trk_units + "\"";
+			trkBands += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
+			if (i < daa.horizontalDirectionBandsLength() - 1) { trkBands += ", "; }
 		}
-		trk += " ]}";
-		trkArray.add(trk);
+		trkBands += " ]}";
+		trkArray.add(trkBands);
 
-		String gs = "{ \"time\": " + time;
-		gs += ", \"bands\": [ ";
+		String gsBands = "{ \"time\": " + time;
+		gsBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
-			gs += "{ \"range\": " + daa.horizontalSpeedIntervalAt(i, hs_units);
-			gs += ", \"units\": \"" + hs_units + "\"";
-			gs += ", \"alert\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
-			if (i < daa.horizontalSpeedBandsLength() - 1) { gs += ", "; }
+			gsBands += "{ \"range\": " + daa.horizontalSpeedIntervalAt(i, hs_units);
+			gsBands += ", \"units\": \"" + hs_units + "\"";
+			gsBands += ", \"alert\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
+			if (i < daa.horizontalSpeedBandsLength() - 1) { gsBands += ", "; }
 		}
-		gs += " ]}";
-		gsArray.add(gs);
+		gsBands += " ]}";
+		gsArray.add(gsBands);
 
-		String vs = "{ \"time\": " + time;
-		vs += ", \"bands\": [ ";
+		String vsBands = "{ \"time\": " + time;
+		vsBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
-			vs += "{ \"range\": " + daa.verticalSpeedIntervalAt(i, vs_units);
-			vs += ", \"units\": \"" + vs_units + "\"";
-			vs += ", \"alert\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
-			if (i < daa.verticalSpeedBandsLength() - 1) { vs += ", "; }
+			vsBands += "{ \"range\": " + daa.verticalSpeedIntervalAt(i, vs_units);
+			vsBands += ", \"units\": \"" + vs_units + "\"";
+			vsBands += ", \"alert\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
+			if (i < daa.verticalSpeedBandsLength() - 1) { vsBands += ", "; }
 		}
-		vs += " ]}";
-		vsArray.add(vs);
+		vsBands += " ]}";
+		vsArray.add(vsBands);
 		
-		String alt = "{ \"time\": " + time;
-		alt += ", \"bands\": [ ";
+		String altBands = "{ \"time\": " + time;
+		altBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.altitudeBandsLength(); i++) {
-			alt += "{ \"range\": " + daa.altitudeIntervalAt(i, alt_units);
-			alt += ", \"units\": \"" + alt_units + "\"";
-			alt += ", \"alert\": \"" + daa.altitudeRegionAt(i) + "\" }";
-			if (i < daa.altitudeBandsLength() - 1) { alt += ", "; }
+			altBands += "{ \"range\": " + daa.altitudeIntervalAt(i, alt_units);
+			altBands += ", \"units\": \"" + alt_units + "\"";
+			altBands += ", \"alert\": \"" + daa.altitudeRegionAt(i) + "\" }";
+			if (i < daa.altitudeBandsLength() - 1) { altBands += ", "; }
 		}
-		alt += " ]}";
-		altArray.add(alt);
+		altBands += " ]}";
+		altArray.add(altBands);
 
 		// resolutions
-		String resTrk = "{ \"time\": " + time;
+		String trkResolution = "{ \"time\": " + time;
 		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		BandsRegion alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units);
-		resTrk += ", \"resolution\": { \"val\": \"" + valueTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + alertTrk + "\" }"; // resolution can be number, NaN or infinity
-		resTrk += " }";
-		resTrkArray.add(resTrk);
+		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
+		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
+		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal); // we want to use internal units here, to minimize round-off errors
+		TrafficState ownship = daa.getOwnshipState();
+		double currentTrk = ownship.horizontalDirection(trk_units);
+		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
+		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + currentTrkRegion + "\" }";
+		trkResolution += " }";
+		resTrkArray.add(trkResolution);
 
-		String resGs = "{ \"time\": " + time;
+		String gsResolution = "{ \"time\": " + time;
 		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
-		double valueGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
-		BandsRegion alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units);
-		resGs += ", \"resolution\": { \"val\": \"" + valueGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + alertGs + "\" }"; // resolution can be number, NaN or infinity
-		resGs += " }";
-		resGsArray.add(resGs);
+		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
+		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
+		BandsRegion resGsRegion = daa.regionOfHorizontalSpeed(resGsInternal); // we want to use internal units here, to minimize round-off errors
+		double currentGs = ownship.horizontalSpeed(hs_units);
+		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); // we want to use internal units here, to minimize round-off errors
+		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"ownship\": { \"val\": \"" + currentGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + currentGsRegion + "\" }"; 
+		gsResolution += " }";
+		resGsArray.add(gsResolution);
 
-		String resVs = "{ \"time\": " + time;
+		String vsResolution = "{ \"time\": " + time;
 		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
-		double valueVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		BandsRegion alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units);
-		resVs += ", \"resolution\": { \"val\": \"" + valueVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + alertVs + "\" }"; // resolution can be number, NaN or infinity
-		resVs += " }";
-		resVsArray.add(resVs);
+		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
+		double resVsInternal = daa.verticalSpeedResolution(preferredVs);
+		BandsRegion resVsRegion = daa.regionOfVerticalSpeed(resVsInternal); // we want to use internal units here, to minimize round-off errors
+		double currentVs = ownship.verticalSpeed(vs_units);
+		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); // we want to use internal units here, to minimize round-off errors
+		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"ownship\": { \"val\": \"" + currentVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + currentVsRegion + "\" }"; 
+		vsResolution += " }";
+		resVsArray.add(vsResolution);
 
-		String resAlt = "{ \"time\": " + time;
+		String altResolution = "{ \"time\": " + time;
 		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
-		double valueAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		BandsRegion alertAlt = daa.regionOfAltitude(valueAlt, alt_units);
-		resAlt += ", \"resolution\": { \"val\": \"" + valueAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + alertAlt + "\" }"; // resolution can be number, NaN or infinity
-		resAlt += " }";
-		resAltArray.add(resAlt);
+		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
+		double resAltInternal = daa.altitudeResolution(preferredAlt); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resAltRegion = daa.regionOfAltitude(resAlt, alt_units);
+		double currentAlt = ownship.altitude(alt_units);
+		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); // we want to use internal units here, to minimize round-off errors
+		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"ownship\": { \"val\": \"" + currentAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + currentAltRegion + "\" }";
+		altResolution += " }";
+		resAltArray.add(altResolution);
 
 		// monitors
 		monitors.check();
@@ -313,10 +331,10 @@ public class DAABandsV2 {
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
 					+ ", \"units\": \"" + hs_units + "\" },\n"
-					+ "\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
+					+ "\"vsResolution\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
 					+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
 					+ ", \"units\": \"" + vs_units + "\" },\n"
-					+ "\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
+					+ "\"altResolution\": { \"min\": " + daa.getMinAltitude(alt_units)
 					+ ", \"max\": " + daa.getMaxAltitude(alt_units)
 					+ ", \"units\": \"" + alt_units + "\" },\n"
 					+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";

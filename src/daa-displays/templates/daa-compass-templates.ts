@@ -29,7 +29,7 @@ export const compassTemplate = '<div id="{{id}}-inner" style="position:absolute;
 +    '<div style="position:absolute; margin-left:-1px; margin-top:-110px;">'
 +        '<div id="{{id}}-top-hdg" style="color:#00f500; position:absolute;font-size:22px;margin-left:220px; top:64px;">HDG</div>'
 +        '<div id="{{id}}-top-indicator" style="position:absolute;top:56px; margin-left:280px; opacity:0.8;">'
-+            '<div id="top-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:78px; height: 39px;"></div>    '
++            '<div id="{{id}}-top-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:78px; height: 39px;"></div>    '
 +            '<div id="{{id}}-top-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(45deg); width:20px; height: 20px; top:28px; left:29px;"></div>'
 +            '<div id="{{id}}-value" style="overflow:hidden; position:absolute; width:78px; height: 39px; color:white; font-size:26px; text-align: center; font-family:serif;z-index:1;">'
 +                '0'

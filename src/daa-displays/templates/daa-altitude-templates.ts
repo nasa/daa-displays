@@ -1,8 +1,8 @@
 export const altitudeTemplate = `
-<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:870px; opacity:0.8;">
-    <div style="position:absolute; overflow:hidden; width:92px; height:650px;">
+<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
+    <div style="position:absolute; overflow:hidden; width:128px; height:650px;">
         <div id="{{id}}-spinner" style="transform:translateY(0px);">
-            <div class="{{id}}-tape" style="position:absolute; background-color:#333333; left:8px; width:85px; height:{{height}}px;">
+            <div class="{{id}}-tape" style="position:absolute; background-color:#333333; margin-left:36px; left:8px; width:85px; height:{{height}}px;">
                 <div id="{{id}}-tick-values" style="position:absolute; color:white; font-size:20px; top:24px; left:18px; line-height:162px; width:55px; text-align:right;">
                     3000 2800 2600 2400 2200 2000 1800 1600 1400 1200 1000 800 600 400 200 000
                 </div>
@@ -14,28 +14,25 @@ export const altitudeTemplate = `
                     <div style="top:648px;position:absolute; width:100%; border-top:2px solid white; border-bottom:2px solid white;height:82px;"></div>
                 </div>
             </div>
-            <div id="{{id}}-bands" style="position:absolute;top:24px;">
+            <div id="{{id}}-bands" style="position:absolute; top:24px; margin-left:36px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:19px; opacity:0.7; margin-top:98px;">
+            <div id="{{id}}-bug" style="position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
                 <div style="position:absolute;">
-                    <!-- back -->
-                    <div class="{{id}}-bug" style="width:64px; margin-left:9px; margin-top:1px; height:11px; border:1px solid white; background-color:black;"></div>
+                    <!-- box -->
+                    <div id="{{id}}-bug-box" style="width:64px; margin-left:9px; height:12px; border:2px solid white; background-color:black;"></div>
                     <!-- pointer -->
-                    <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
+                    <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; left:-2px; opacity:0.9; margin-top:99px;">
+            <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.7; margin-top:99px;">
                 <div style="position:absolute;">
-                    <!-- back -->
-                    <div class="{{id}}-resolution-bug" style="width:10px; margin-left:10px; height:11px; border:1px solid white; background-color:white;"></div>
-                    <!-- pointer -->
-                    <div class="{{id}}-resolution-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:12px; border-bottom:2px solid white; border-right:2px solid white; background-color:transparent; transform:rotate(135deg);"></div>
+                    <div class="{{id}}-resolution-bug" style="width:32px; height:11px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
         </div>
     </div>
     <div id="{{id}}-indicator" style="position:absolute;">
-        <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:99px; height: 86px; top:281px; left:34px;">
+        <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:99px; height: 86px; top:281px; left:70px;">
             <div id="{{id}}-indicator-first-still-digit" class="green-stripes" style="z-index:1; position:absolute; top:28px; left:2px; width:18%; height:28px; color:white; font-size:34px; text-align: center; line-height:85px; font-family:serif;">
                 &nbsp;
             </div>
@@ -49,7 +46,7 @@ export const altitudeTemplate = `
                80 60 40 20 00
             </div>
         </div>
-        <div id="{{id}}-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(135deg); width:20px; height: 20px; top:314px; left:24px;"></div>
+        <div id="{{id}}-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(135deg); width:20px; height: 20px; top:314px; left:60px;"></div>
     </div>
 </div>`;
 

@@ -169,8 +169,8 @@ protected:
     }
 	std::string legendM1 () const {
         std::string green_desc = "Valid finite resolution.";
-        std::string yellow_desc = "Abnormal condition: resolution is finite and region is not NONE nor RECOVERY.";
-        std::string red_desc = "Abnormal condition: resolution is finite and region is UNKNOWN.";
+        std::string yellow_desc = "Property failure: resolution is finite and region is not NONE nor RECOVERY.";
+        std::string red_desc = "Property failure: resolution is finite and region is UNKNOWN.";
         return std::string("{ ") 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
                 + " }";
@@ -205,7 +205,7 @@ protected:
     }
 	std::string legendM2 () const {
         std::string green_desc = "Consistent resolutions.";
-        std::string yellow_desc = "Abnormal condition: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
+        std::string yellow_desc = "Property failure: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
         return std::string("{ ") 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
                 + " }";
@@ -240,8 +240,8 @@ protected:
     }
 	std::string legendM3 () const {
         std::string green_desc = "Valid non-zero alerts.";
-        std::string yellow_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
-        std::string red_desc = "Abnormal condition: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
+        std::string yellow_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
+        std::string red_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
         return std::string("{ ") 
                 + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
                 + " }";

@@ -45,41 +45,43 @@ const player: DAAPlayer = new DAAPlayer();
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
-    data.map.setPosition(flightData.ownship.s);
-    data.compass.setCompass(flightData.ownship.v);
-    const hd: number = Compass.v2deg(flightData.ownship.v);
-    const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-    const vs: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
-    data.verticalSpeedTape.setVerticalSpeed(vs);
-    const alt: number = +flightData.ownship.s.alt;
-    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
-    // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = player.getCurrentBands();
-    if (bands) {
-        data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
-        data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
-        // set resolutions
-        data.compass.setBug(bands["Heading Resolution"]);
-        data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
-        data.altitudeTape.setBug(bands["Altitude Resolution"]);
-        data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
-    }
-    const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
-        return {
-            callSign: data.id,
-            s: data.s,
-            v: data.v,
-            symbol: daaSymbols[alert]
+    if (flightData && flightData.ownship) {
+        data.map.setPosition(flightData.ownship.s);
+        data.compass.setCompass(flightData.ownship.v);
+        const hd: number = Compass.v2deg(flightData.ownship.v);
+        const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
+        data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
+        const vs: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
+        data.verticalSpeedTape.setVerticalSpeed(vs);
+        const alt: number = +flightData.ownship.s.alt;
+        data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+        // console.log(`Flight data`, flightData);
+        const bands: utils.DAABandsData = player.getCurrentBands();
+        if (bands) {
+            data.compass.setBands(bands["Heading Bands"]);
+            data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
+            data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
+            data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+            // set resolutions
+            data.compass.setBug(bands["Heading Resolution"]);
+            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
+            data.altitudeTape.setBug(bands["Altitude Resolution"]);
+            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
         }
-    });
-    data.map.setTraffic(traffic);
-    const step: number = player.getCurrentSimulationStep();
-    const time: string = player.getCurrentSimulationTime();
-    plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step, time });
+        const traffic = flightData.traffic.map((data, index) => {
+            const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+            return {
+                callSign: data.id,
+                s: data.s,
+                v: data.v,
+                symbol: daaSymbols[alert]
+            }
+        });
+        data.map.setTraffic(traffic);
+        const step: number = player.getCurrentSimulationStep();
+        const time: string = player.getCurrentSimulationTime();
+        plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step, time });
+    }
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -102,10 +104,10 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
-        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"]) ? +desc.bands["Heading Resolution"]["val"]
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"]) ? +desc.bands["Horizontal Speed Resolution"]["val"]
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"]) ? +desc.bands["Vertical Speed Resolution"]["val"]
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"]) ? +desc.bands["Altitude Resolution"]["val"]
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
                                 : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
@@ -150,8 +152,8 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { parent: "daa-disp" });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 
 player.define("step", async () => {
     render({

@@ -92,11 +92,11 @@ require(["widgets/daa-displays/daa-altitude-tape"], function (AltitudeTape) {
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-altitude-templates';
+import { ResolutionElement } from 'src/daa-server/utils/daa-server';
 
 // internal class, renders a resolution bug over the tape
 class ResolutionBug {
     protected id: string;
-    protected tape: AltitudeTape;
     protected val: number = 0;
     protected zero: number = 0;
     protected tickHeight: number = 0;
@@ -112,9 +112,8 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    constructor (id: string, tape: AltitudeTape) {
+    constructor (id: string) {
         this.id = id;
-        this.tape = tape;
     }
     /**
      * @function <a name="ResolutionBug_setValue">setValue</a>
@@ -143,6 +142,7 @@ class ResolutionBug {
      */
     setColor(color: string): ResolutionBug {
         this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
+        this.useColors = true;
         this.refresh();
         return this;          
     }
@@ -169,11 +169,8 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
-            if (this.color === "white") {
-                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid black", "border-right": "2px solid black" });
-            } else {
-                $(`.${this.id}-pointer`).css({ "border-bottom": "2px solid white", "border-right": "2px solid white" });
-            }
+            $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
+            $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
     }
     reveal (flag?: boolean): void {
@@ -371,7 +368,7 @@ export class AltitudeTape {
 
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 103 : +coords.top;
-        this.left = (isNaN(+coords.left)) ? 274 : +coords.left;
+        this.left = (isNaN(+coords.left)) ? 833 : +coords.left;
 
         // altitudeStep is a parameter that can be specified using the options of the constructor
         this.altitudeStep = opt.altitudeStep || AltitudeTape.defaultTapeStep;
@@ -395,13 +392,14 @@ export class AltitudeTape {
             id: this.id,
             zIndex: 2,
             top: this.top,
+            left: this.left,
             height: (this.nAltitudeTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
-        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this); // resolution bug
+        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug"); // resolution bug
         this.resolutionBug.setTickHeight(this.tickHeight);
         this.resolutionBug.setUseColors(true);
-        this.speedBug = new ResolutionBug(this.id + "-bug", this); // speed bug, visible when the tape cannot spin
+        this.speedBug = new ResolutionBug(this.id + "-bug"); // speed bug, visible when the tape cannot spin
         this.speedBug.setTickHeight(this.tickHeight);
         this.speedBug.reveal(this.tapeCanSpin);
         this.create_altitude_ticks();
@@ -539,12 +537,15 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBug(info: number | { val: number | string, units: string, alert: string }): void {
+    setBug(info: number | ResolutionElement): void {
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "number") ? info : +info.val;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.alert}`] : utils.bugColors["UNKNOWN"];
+            const d: number = (typeof info === "object") ? +info.resolution.val : info;
+            const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
+            if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
+            }
         } else {
             this.resolutionBug.hide();
         }

@@ -1,6 +1,6 @@
 export const airspeedTemplate = `
 <div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
-    <div style="position:absolute; overflow:hidden; width:92px; height:650px;">
+    <div style="position:absolute; overflow:hidden; width:128px; height:650px;">
         <div id="{{id}}-spinner" style="transform:translateY(0px)">
             <div id="{{id}}-rule" style="position:absolute; background-color:#333333;width:85px;height:{{height}}px;">
                 <div id="{{id}}-tick-values" style="position:absolute; color:white; font-size:28px; line-height:54px; padding-top:26px; width:55px; text-align:right;">
@@ -11,20 +11,17 @@ export const airspeedTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute;top:24px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:0.7; margin-top:18px;">
+            <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:0.8; margin-top:18px;">
                 <div style="position:absolute;">
-                    <!-- back -->
-                    <div class="{{id}}-bug" style="width:64px; margin-left:2px; height:11px; border:1px solid white; background-color:black;"></div>
+                    <!-- box -->
+                    <div id="{{id}}-bug-box" style="width:64px; margin-left:2px; height:12px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->
-                    <div class="{{id}}-bug" style="width:8px; height:8px; margin-top:-10px; margin-left:62px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(-45deg);"></div>
+                    <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:62px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(-45deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; left:74px; opacity:0.9; margin-top:18px;">
+            <div id="{{id}}-resolution-bug" style="position:absolute; left:90px; opacity:0.7; margin-top:18px;">
                 <div style="position:absolute;">
-                    <!-- back -->
-                    <div class="{{id}}-resolution-bug" style="width:10px; height:11px; border:1px solid white; background-color:white;"></div>
-                    <!-- pointer -->
-                    <div class="{{id}}-resolution-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:0px; border-bottom:2px solid white; border-right:2px solid white; background-color:transparent; transform:rotate(-45deg);"></div>
+                    <div class="{{id}}-resolution-bug" style="width:32px; height:11px; margin-left:5px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
         </div>
