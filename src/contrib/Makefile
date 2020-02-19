@@ -1,3 +1,5 @@
+lite = # Lite installation and quiet
+
 # WellClear WELLCLEAR_VERSION to be used
 WELLCLEAR_VERSION = 2.0.e
 

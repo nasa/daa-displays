@@ -1,3 +1,5 @@
+lite = # Lite installation and quiet
+
 all: compile install-dependencies
 	@echo "\033[0;32m ** To start DAA-Displays, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
 
@@ -36,12 +38,12 @@ compile:
 	cp src/package.json dist/
 	cp -R src/images dist
 	# compile java files
-	cd dist && make compile
+	cd dist && make compile -e lite=$(lite) 
 	@echo "\033[0;32m Done! \033[0m"
 
 install-dependencies:
 	@echo "\033[0;32m ** Installing dependencies **\033[0m"
-	@cd dist && make install-dependencies
+	@cd dist && make install-dependencies -e lite=$(lite)
 	@echo "\033[0;32m Done! \033[0m"
 
 clean:
