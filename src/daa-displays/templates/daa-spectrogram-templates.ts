@@ -15,7 +15,7 @@ export const spectrogramTemplate: string = `
             <div id="{{../id}}-monitor-{{@index}}" class="spectrogram-monitor-element"
                  style="display:none; opacity:1; text-align:center; left:{{left}}px; top:-9px; width:{{width}}px; position:absolute; cursor:pointer;"
                  data-toggle="tooltip" data-placement="bottom" data-html="true" boundary="window"
-                 title="<div>Syntactic difference at step {{@index}}</div>">
+                 data-title="<div>Syntactic difference at step {{@index}}</div>">
                 <i class="fa fa-caret-up spectrogram-monitor-marker" style="color:#ffc107; margin-left:-3px; margin-top:4px;"></i>
             </div>
             {{/each}}
@@ -32,7 +32,7 @@ export const spectrogramTemplate: string = `
 export const spectrogramBandTemplate: string = `
 <div id="{{stepID}}" class="step_{{step}}" style="position:absolute; left:{{left}}px; opacity:0.9; height:{{height}}px; width:{{width}}px; overflow:hidden;"
     data-toggle="tooltip" data-placement="top" data-html="true" boundary="window"
-    title="<div>Time {{time}}{{tooltip}}</div>">
+    data-title="<div>Time {{time}}{{tooltip}}</div>">
     {{#each bands}}
         {{#each this}}
         <div alert="{{@../key}}" from="{{from}} ({{units}})" to="{{to}} ({{units}})" style="top:{{top}}px; height:{{height}}px; width:{{width}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>
@@ -49,7 +49,7 @@ export const spectrogramBandTemplate: string = `
 export const spectrogramAlertsTemplate: string = `
 <div id="{{stepID}}" class="step_{{step}}" style="position:absolute; left:{{left}}px; opacity:0.9; height:{{height}}px; width:{{width}}px; overflow:hidden;"
     data-toggle="tooltip" data-placement="top" data-html="true" boundary="window"
-    title="<div>Time {{time}}</div><div style='white-space:nowrap;'>Alerts: [ {{alerts}} ]</div>">
+    data-title="<div>Time {{time}}</div><div style='white-space:nowrap;'>Alerts: [ {{alerts}} ]</div>">
     {{#each bands}}
         {{#each this}}
         <div alert="{{@../key}}" alert_level="{{to}}" style="top:{{top}}px; border-radius:{{indicator.radius}}px; height:{{indicator.radius}}px; width:{{indicator.radius}}px; margin-top: {{indicator.marginTop}}px; {{#if dash}} background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,{{color}} 0px,{{color}} 4px);{{else}} background-color:{{color}};{{/if}} position:absolute;"></div>

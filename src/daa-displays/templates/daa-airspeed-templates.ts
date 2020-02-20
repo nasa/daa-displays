@@ -14,14 +14,15 @@ export const airspeedTemplate = `
             <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:0.8; margin-top:18px;">
                 <div style="position:absolute;">
                     <!-- box -->
-                    <div id="{{id}}-bug-box" style="width:64px; margin-left:2px; height:12px; border:1px solid white; background-color:black;"></div>
+                    <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:64px; margin-left:2px; height:12px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->
                     <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:62px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(-45deg);"></div>
                 </div>
             </div>
             <div id="{{id}}-resolution-bug" style="position:absolute; left:90px; opacity:0.7; margin-top:18px;">
                 <div style="position:absolute;">
-                    <div class="{{id}}-resolution-bug" style="width:32px; height:11px; margin-left:5px; background-color:white; border-radius:16px;"></div>
+                    <div data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug" 
+                         class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" style="width:32px; height:11px; margin-left:5px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
         </div>

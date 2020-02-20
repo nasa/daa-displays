@@ -190,7 +190,7 @@ export class DAASpectrogram {
         $(this.div).html(theHTML);
         this.player = opt.player;
     }
-    protected installGotoHandler(step: number) {
+    protected installGotoHandler(step: number): void {
         if (this.player) {
             const stepID = `${this.id}-step-${step}`;
             $(`#${stepID}`).on("click", () => {
@@ -202,7 +202,7 @@ export class DAASpectrogram {
         }
     }
     // utility function for compiling the HTML element of the spectrogram
-    protected compileHTML () {
+    protected compileHTML (): string {
         const grid = createGrid({
             width: this.width, 
             height: this.height, 
@@ -241,13 +241,12 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    setRange(range: { from: number | string, to: number | string, units: string }): DAASpectrogram {
+    setRange(range: { from: number | string, to: number | string, units: string }): void {
         if (range && !isNaN(+range.from) && !isNaN(+range.to)) {
             const from: number = convert(+range.from, range.units, this.units.to);
             const to: number = convert(+range.to, range.units, this.units.to);
             this.range = { from, to };
         }
-        return this;
     }
     /**
      * @function <a name="setLength">setLength</a>
@@ -256,16 +255,15 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    setLength(length: number, time?: { start: string, mid: string, end: string }): DAASpectrogram {
+    setLength(length: number, time?: { start: string, mid: string, end: string }): void {
         if (length) {
             this.length = length;
             this.time = time;
             const theHTML: string = this.compileHTML();
             $(this.div).html(theHTML);
         }
-        return this;
     }
-    plotAlerts(data: { alerts: utils.Alert[], step: number, time: string }): DAASpectrogram {
+    plotAlerts(data: { alerts: utils.Alert[], step: number, time: string }): void {
         if (data && data.alerts) {
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
@@ -340,7 +338,6 @@ export class DAASpectrogram {
             }
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
-        return this;
     }
     /**
      * @function <a name="plotBands">plotBands</a>
@@ -351,7 +348,7 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number, resolution?: number }): DAASpectrogram {
+    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number, resolution?: number }): void {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
             const band_plot_data: utils.Bands = {};
@@ -442,22 +439,20 @@ export class DAASpectrogram {
             }
             $(`#${this.id}-cursor`).css("left", leftMargin );
         }
-        return this;
     }
-    plot (data: BandsData | AlertsData): DAASpectrogram {
+    plot (data: BandsData | AlertsData): void {
         if (data) {
             if (data.id.toLocaleLowerCase() === "alerts") {
-                return this.plotAlerts(<AlertsData> data);
+                this.plotAlerts(<AlertsData> data);
+            } else {
+                this.plotBands(<BandsData> data);
             }
-            return this.plotBands(<BandsData> data);
         }
-        return this;
     }
-    resetCursorPosition (): DAASpectrogram {
+    resetCursorPosition (): void {
         $(`#${this.id}-cursor`).animate({ "left": 0 }, 500);
-        return this;
     }
-    revealMarker (desc: { step: number, tooltip?: string, color?: string, header?: string }): DAASpectrogram {
+    revealMarker (desc: { step: number, tooltip?: string, color?: string, header?: string }): void {
         if (desc) {
             const selector: string = `#${this.id}-monitor-${desc.step}`;
             $(selector).css("display", "block");
@@ -465,9 +460,9 @@ export class DAASpectrogram {
                 $(`${selector} .fa`).css("color", desc.color);
             }
             if (desc.header) {
-                $(selector).attr("title", `<div>${desc.header}<br>${desc.tooltip}</div>`);
+                $(selector).attr("data-title", `<div>${desc.header}<br>${desc.tooltip}</div>`);
             } else {
-                $(selector).attr("title", `<div>${desc.tooltip}</div>`);
+                $(selector).attr("data-title", `<div>${desc.tooltip}</div>`);
             }
             // install gotohandler
             $(selector).on("click", () => {
@@ -476,17 +471,13 @@ export class DAASpectrogram {
             // @ts-ignore -- method tooltip is added by bootstrap
             $(selector).tooltip();
         }
-        return this;
     }
-    hideMarker (i: number): DAASpectrogram {
+    hideMarker (i: number): void {
         $(`#${this.id}-monitor-${i}`).css("display", "none");
-        return this;
     }
-    deleteMarker (i: number): DAASpectrogram {
+    deleteMarker (i: number): void {
         this.hideMarker(i);
         // @ts-ignore -- method tooltip is added by bootstrap
         $(`#${this.id}-monitor-${i}`).tooltip("dispose"); // clear tooltip
-        $(`#${this.id}-monitor-${i}`).attr("title", null); // clear title
-        return this;
     }
 }

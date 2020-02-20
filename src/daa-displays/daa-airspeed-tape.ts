@@ -103,6 +103,7 @@ class ResolutionBug {
     protected airspeedStep: number = 1;
     protected useColors: boolean = false;
     protected color: string = utils.bugColors["UNKNOWN"];
+    protected tooltipActive: boolean = false;
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
@@ -168,12 +169,18 @@ class ResolutionBug {
      * @inner
      */
     refresh(): void {
-        let bugPosition = this.zero - this.val * this.tickHeight / this.airspeedStep;
+        const bugPosition = this.zero - this.val * this.tickHeight / this.airspeedStep;
         $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
             $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
+        }
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
+        if (this.tooltipActive) {
+            //@ts-ignore
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val}</div>` }).tooltip();
         }
     }
     reveal (flag?: boolean): void {
@@ -200,6 +207,20 @@ class ResolutionBug {
     }
     setUseColors (flag: boolean): void {
         this.useColors = flag;
+    }
+    enableToolTip (flag?: boolean): void {
+        this.tooltipActive = (flag === false) ? flag : true;
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
+        if (this.tooltipActive) {
+            //@ts-ignore
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val}</div>` }).tooltip();
+        }
+    }
+    disableToolTip (): void {
+        this.tooltipActive = false;
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
     }
 }
 
@@ -421,9 +442,11 @@ export class AirspeedTape {
         this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug"); // resolution bug
         this.resolutionBug.setTickHeight(this.tickHeight);
         this.resolutionBug.setUseColors(true);
+        this.resolutionBug.enableToolTip(true);
         this.speedBug = new ResolutionBug(this.id + "-bug"); // speed bug, visible when the tape cannot spin
         this.speedBug.setTickHeight(this.tickHeight);
         this.speedBug.reveal(this.tapeCanSpin);
+        this.speedBug.enableToolTip(true);
         this.create_airspeed_ticks();
         this.create_airspeed_spinner();
         this.setAirSpeed(this.currentAirspeed, this.tapeUnits);
