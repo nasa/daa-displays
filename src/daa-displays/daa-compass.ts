@@ -128,15 +128,24 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setValue(deg: number): ResolutionBug {
+    setValue(deg: number): void {
+        // we need to handle a boundary case when crossing 360.
+        // For example if the current value is 355 and the new value is 6, the bug would spin counter-clockwise from 355 to 6. What we want is a clockwise rotation from 355 to 6.
+        let flag: boolean = false;
+        if (this.deg > 180 && deg < 180) {
+            deg += 360;
+            flag = true;
+        } else if (this.deg < 180 && deg > 180) {
+            deg -= 360;
+            flag = true;
+        }
         this.deg = deg;
         if (isFinite(deg)) {
             this.reveal();
-            this.refresh();            
+            this.refresh(flag);            
         } else {
             this.hide();
         }
-        return this;
     }
     /**
      * @function <a name="ResolutionBug_setColor">setColor</a>
@@ -146,10 +155,9 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setColor(color: string): ResolutionBug {
+    setColor(color: string): void {
         this.color = (typeof color === "string") ? color : utils.bugColors["UNKNOWN"];
-        this.refresh();
-        return this;          
+        this.refresh();         
     }
     /**
      * @function <a name="ResolutionBug_getAngle">getAngle</a>
@@ -165,15 +173,22 @@ class ResolutionBug {
     /**
      * @function <a name="ResolutionBug_refresh">refresh</a>
      * @desc Triggers re-rendering of the resolution bug.
+     * @par adjustAngle {boolean} Flag indicating that post-processing is necessary for correct animation of the bug rotation (see boundary case explained in setValue)
      * @memberof module:Compass
      * @instance
      * @inner
      */
-    refresh(): ResolutionBug {
-        $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `rotate(${this.deg}deg)` });
+    refresh(adjustAngle?: boolean): void {
+        const animationDuration: number = 100;
+        $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.deg}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
-        return this;
+        if (adjustAngle) {
+            this.deg = (this.deg + 360) % 360;
+            setTimeout(() => {
+                $(`#${this.id}`).css({ "transition-duration": "0ms", "transform": `rotate(${this.deg}deg)` });
+            }, animationDuration / 2);
+        }
     }
     reveal (): void {
         $(`#${this.id}`).css({ "display": "block"});
@@ -183,74 +198,9 @@ class ResolutionBug {
     }
 }
 
-// utility function, draws resolution bands over the compass
-function _draw_bands (_this) {
-    let theHTML = "";
-    function _drawArc (ctx, from, to, alert) {
-        ctx.beginPath();
-        if (utils.bandColors[alert].style === "dash") {
-            ctx.setLineDash([4, 8]);
-        } else {
-            ctx.setLineDash([]);
-        }
-        ctx.arc(_this.centerX, _this.centerY, _this.radius, (to - 90) / 180 * Math.PI, (from - 90) / 180 * Math.PI, 2 * Math.PI, false);
-        ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = utils.bandColors[alert].color;
-        ctx.stroke();
-    }
-    let ctx = _this.canvas.getContext("2d");
-    ctx.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
-    Object.keys(_this.bands).forEach(alert => {
-        const arcs: utils.FromTo[] = _this.bands[alert];
-        let segs = [];
-        // console.log(arcs);
-        for (let i = 0; i < arcs.length; i++) {
-            let from = arcs[i].from || 0;
-            let to = arcs[i].to || 360;
-            _drawArc(ctx, from, to, alert);
-            // the following info is attached to the html to better support debugging
-            segs.push({
-                from: from,
-                to: to,
-                id: "compass-band-" + alert + "-" + i
-            });                
-        }
-        theHTML += Handlebars.compile(templates.compassBandsTemplate)({
-            segments: segs,
-            color: utils.bandColors[alert].color
-        });                        
-    });
-    $(`#${_this.id}-bands`).html(theHTML);
-}
 
-// utility function, updates the compass angle
-function _update_compass(_this, opt?: {
-    transitionDuration?: string
-}) {
-    opt = opt || {};
-    opt.transitionDuration = opt.transitionDuration || "500ms";
-    let angle = _this.currentCompassAngle;
-    if (_this.nrthup) {
-        $("#" + _this.id + "-circle").css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
-        //$("#" + this.id + "-value").html(0); // what do we do with the speed bug? does it rotate with the compass? do we just hide the pointer? The latter is implemented for now
-        $("#" + _this.id + "-top-indicator-pointer").css({ "display": "none" });
-        $("#" + _this.id + "-daa-ownship").css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + (angle) + "deg)" });
-        if (_this.map) {
-            // set map rotation based on speed vector
-            _this.map.setHeading(0);
-        }
-    } else {
-        $("#" + _this.id + "-circle").css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + (-angle) + "deg)" }); // compass needs counter-clockwise rotation
-        $("#" + _this.id + "-top-indicator-pointer").css({ "display": "block" });
-        let posangle = ((angle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
-        $("#" + _this.id + "-value").html(Math.trunc(posangle).toString());
-        $("#" + _this.id + "-daa-ownship").css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" });
-        if (_this.map) {
-            // set map rotation based on speed vector
-            _this.map.setHeading(angle);
-        }
-    }
-}
+
+
 
 export class Compass {
     id: string;
@@ -343,8 +293,39 @@ export class Compass {
             (Math.abs(this.currentCompassAngle - pos_angle) < Math.abs(neg_angle - this.currentCompassAngle))
                 ? pos_angle 
                 : -neg_angle; // choose the least variation from the current angle
-        _update_compass(this);
+        this._update_compass();
         return this;
+    }
+
+    /**
+     * Utility function, updates the compass angle
+     **/
+    protected _update_compass(opt?: {
+        transitionDuration?: string
+    }) {
+        opt = opt || {};
+        opt.transitionDuration = opt.transitionDuration || "500ms";
+        let angle = this.currentCompassAngle;
+        if (this.nrthup) {
+            $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
+            //$("#" + this.id + "-value").html(0); // what do we do with the speed bug? does it rotate with the compass? do we just hide the pointer? The latter is implemented for now
+            $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });
+            $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + (angle) + "deg)" });
+            if (this.map) {
+                // set map rotation based on speed vector
+                this.map.setHeading(0);
+            }
+        } else {
+            $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + (-angle) + "deg)" }); // compass needs counter-clockwise rotation
+            $(`#${this.id}-top-indicator-pointer`).css({ "display": "block" });
+            let posangle = ((angle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
+            $(`#${this.id}-value`).html(Math.trunc(posangle).toString());
+            $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" });
+            if (this.map) {
+                // set map rotation based on speed vector
+                this.map.setHeading(angle);
+            }
+        }
     }
 
     /**
@@ -456,9 +437,50 @@ export class Compass {
         this.bands.RECOVERY = normaliseCompassBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseCompassBand(bands.UNKNOWN);
         // console.log("danti-compass-bands", this.bands);
-        _draw_bands(this);
+        this._draw_bands();
         this.resolutionBug.refresh();
         return this;
+    }
+    /**
+     * Utility function, draws resolution bands over the compass
+     **/
+    protected _draw_bands () {
+        let theHTML = "";
+        const _drawArc = (ctx, from, to, alert) => {
+            ctx.beginPath();
+            if (utils.bandColors[alert].style === "dash") {
+                ctx.setLineDash([4, 8]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            ctx.arc(this.centerX, this.centerY, this.radius, (to - 90) / 180 * Math.PI, (from - 90) / 180 * Math.PI, 2 * Math.PI, false);
+            ctx.lineWidth = strokeWidth;
+            ctx.strokeStyle = utils.bandColors[alert].color;
+            ctx.stroke();
+        }
+        let ctx = this.canvas.getContext("2d");
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        Object.keys(this.bands).forEach(alert => {
+            const arcs: utils.FromTo[] = this.bands[alert];
+            let segs = [];
+            // console.log(arcs);
+            for (let i = 0; i < arcs.length; i++) {
+                let from = arcs[i].from || 0;
+                let to = arcs[i].to || 360;
+                _drawArc(ctx, from, to, alert);
+                // the following info is attached to the html to better support debugging
+                segs.push({
+                    from: from,
+                    to: to,
+                    id: "compass-band-" + alert + "-" + i
+                });                
+            }
+            theHTML += Handlebars.compile(templates.compassBandsTemplate)({
+                segments: segs,
+                color: utils.bandColors[alert].color
+            });                        
+        });
+        $(`#${this.id}-bands`).html(theHTML);
     }
     /**
      * @function <a name="getAlert">getAlert</a>
@@ -510,7 +532,7 @@ export class Compass {
      */
     nrthupView(on: boolean): Compass {
         this.nrthup = on;
-        _update_compass(this, { transitionDuration: "0ms" });
+        this._update_compass({ transitionDuration: "0ms" });
         return this;
     }
     /**
