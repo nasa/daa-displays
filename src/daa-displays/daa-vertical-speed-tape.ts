@@ -243,6 +243,7 @@ export class VerticalSpeedTape {
     protected tapeUnits: string = VerticalSpeedTape.defaultTapeUnits;
 
     static readonly defaultTapeUnits: string = "fpm x100";
+    static readonly defaultRange: { from: number, to: number, units: string } = { from: -24, to: 24, units: VerticalSpeedTape.defaultTapeUnits };
     protected resolutionBug: SpeedBug;
     protected speedBug: SpeedBug;
 
@@ -274,7 +275,7 @@ export class VerticalSpeedTape {
 
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 210 : +coords.top;
-        this.left = (isNaN(+coords.left)) ? 300 : +coords.left;
+        this.left = (isNaN(+coords.left)) ? 981 : +coords.left;
 
         // step is a parameter that can be specified using the options of the constructor
         this.verticalSpeedStep = (opt.verticalSpeedRange) ? opt.verticalSpeedRange / 1000 : 0.5;
@@ -292,6 +293,8 @@ export class VerticalSpeedTape {
             r3: this.tape_size[2] / 2  // px
         };
         this.tapeLength = 40 * 24; //this.tickHeight * 24; // 12 positive ticks + 12 negative ticks
+        this.range = VerticalSpeedTape.defaultRange;
+        this.tapeUnits = VerticalSpeedTape.defaultTapeUnits;
 
         // create structure for storing resolution bands
         this.bands = { NONE: [], FAR: [], MID: [], NEAR: [], RECOVERY: [], UNKNOWN: [] };
@@ -301,7 +304,8 @@ export class VerticalSpeedTape {
         let theHTML = Handlebars.compile(templates.vspeedTemplate)({
             id: this.id,
             zIndex: 2,
-            top: this.top
+            top: this.top,
+            left: this.left
         });
         $(this.div).html(theHTML);
         this.resolutionBug = new SpeedBug(this.id + "-resolution-bug", this); // resolution bug
@@ -440,6 +444,9 @@ export class VerticalSpeedTape {
     defaultUnits (): void {
         this.tapeUnits = VerticalSpeedTape.defaultTapeUnits;
     }
+    defaultRange(): void {
+        this.setRange(VerticalSpeedTape.defaultRange);
+    }
     revealUnits (): void {
         $(".vspeed-units").css("display", "block");
     }
@@ -510,7 +517,8 @@ export class VerticalSpeedTape {
         // val = limit(-6, 6, "vspeed")(val);
         // set vertical speed bug
         if (!isNaN(val)) {
-            this.currentVerticalSpeed = val / 100; // tape scale is 100xunits
+            this.currentVerticalSpeed = val;
+            $(`#${this.id}-indicator-digits`).html(`${Math.floor(val * 100 * 100) / 100}`); // tape scale is 100xunits, and we are rendering up to 2 fractional digits
             this.speedBug.setValue(this.currentVerticalSpeed);
         } else {
             console.error("Warning, trying to set vertical speed with invalid value", val);
@@ -572,7 +580,7 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setRange (range: { from: number | string, to: number | string, units: string }): VerticalSpeedTape {
+    setRange (range: { from: number | string, to: number | string, units: string }): void {
         if (range && isFinite(+range.from) && isFinite(+range.to) && +range.from < +range.to) {
             this.range = {
                 from: +range.from,
@@ -587,6 +595,18 @@ export class VerticalSpeedTape {
         } else {
             console.error("[daa-airspeed-tape] Warning: could not autoscale airspeed tape", range);
         }
-        return this;
+    }
+
+    showIndicatorBox (): void {
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).css({ "display": "block", "opacity": "0" });
+            $(`#${this.id}-indicator-box`).animate({ "opacity": "0.8" }, 500);
+        }, 500);
+    }
+    hideIndicatorBox (): void {
+        $(`#${this.id}-indicator-box`).animate({ "opacity": "0" }, 500);
+        setTimeout(() => {
+            $(`#${this.id}-indicator-box`).css({ "display": "none" });
+        }, 800);
     }
 }

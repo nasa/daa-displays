@@ -592,15 +592,15 @@ export class AltitudeTape {
         const thirdStillDigit: number = Math.abs(Math.trunc(val / 100) % 10);
         if (firstStillDigit === 0) {
             if (val < 0) {
-                $(`#${this.id}-indicator-first-still-digit`).html("-").removeClass("green-stripes").css({ top: "0px"});
+                $(`#${this.id}-indicator-first-still-digit`).html("-").css({ top: "0px", "background-color": "transparent" });
             } else {
-                $(`#${this.id}-indicator-first-still-digit`).html("").addClass("green-stripes").css({ top: "28px" });
+                $(`#${this.id}-indicator-first-still-digit`).html("").css({ top: "28px", "background-color": "grey" });
             }
         } else {
-            $(`#${this.id}-indicator-first-still-digit`).html(firstStillDigit.toString()).removeClass("green-stripes").css({ top: "0px"});
+            $(`#${this.id}-indicator-first-still-digit`).html(`${firstStillDigit}`).css({ top: "0px", "background-color": "transparent" });
         }
-        $(`#${this.id}-indicator-second-still-digit`).html(secondStillDigit.toString());
-        $(`#${this.id}-indicator-third-still-digit`).html(thirdStillDigit.toString());
+        $(`#${this.id}-indicator-second-still-digit`).html(`${secondStillDigit}`);
+        $(`#${this.id}-indicator-third-still-digit`).html(`${thirdStillDigit}`);
         const spinIndicatorValue: number = Math.floor((val % 100) / 10);
         if (this.spinnerBox) {
             const ratio2: number = 36; // px, obtained by inspecting the DOM

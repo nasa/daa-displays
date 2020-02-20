@@ -119,7 +119,7 @@ const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { 
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { parent: "daa-disp-left", compass: compass_left, map: map_left });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
 const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 833 }, { parent: "daa-disp-left" });
-const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", {top: 210, left: 600 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
+const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", { top: 210, left: 981 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
 
 const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left: 6}, { parent: "daa-disp-right" });
 // map heading is controlled by the compass
@@ -130,7 +130,7 @@ const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, 
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { parent: "daa-disp-right", compass: compass_right, map: map_right });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
 const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 833 }, { parent: "daa-disp-right" });
-const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", {top: 210, left: 600 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
+const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", { top: 210, left: 981 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
@@ -341,6 +341,11 @@ function normalMode () {
     altitudeTape_left.defaultStep();
     altitudeTape_left.enableTapeSpinning();
 
+    verticalSpeedTape_left.defaultUnits();
+    verticalSpeedTape_left.hideUnits();
+    verticalSpeedTape_left.hideIndicatorBox();
+    verticalSpeedTape_left.defaultRange();
+
     // right
     airspeedTape_right.defaultUnits();
     airspeedTape_right.hideUnits();
@@ -351,6 +356,11 @@ function normalMode () {
     altitudeTape_right.hideUnits();
     altitudeTape_right.defaultStep();
     altitudeTape_right.enableTapeSpinning();
+
+    verticalSpeedTape_right.defaultUnits();
+    verticalSpeedTape_right.hideUnits();
+    verticalSpeedTape_right.hideIndicatorBox();
+    verticalSpeedTape_right.defaultRange();
 }
 
 // -- developer mode
@@ -365,9 +375,14 @@ async function developerMode (): Promise<void> {
     airspeedTape_left.disableTapeSpinning();
 
     altitudeTape_left.setUnits(configData_left.altitude.units);
-    altitudeTape_left.setRange(configData_left["altitude"]);
+    altitudeTape_left.setRange(configData_left.altitude);
     altitudeTape_left.revealUnits();
     altitudeTape_left.disableTapeSpinning();
+
+    verticalSpeedTape_left.setUnits(configData_right["vertical-speed"].units);
+    verticalSpeedTape_left.revealUnits();
+    verticalSpeedTape_left.setRange(configData_left["vertical-speed"]);
+    verticalSpeedTape_left.showIndicatorBox();
 
     // right
     airspeedTape_right.setUnits(configData_right["horizontal-speed"].units);
@@ -376,9 +391,14 @@ async function developerMode (): Promise<void> {
     airspeedTape_right.disableTapeSpinning();
 
     altitudeTape_right.setUnits(configData_right.altitude.units);
-    altitudeTape_right.setRange(configData_right["altitude"]);
+    altitudeTape_right.setRange(configData_right.altitude);
     altitudeTape_right.revealUnits();
     altitudeTape_right.disableTapeSpinning();
+
+    verticalSpeedTape_right.setUnits(configData_right["vertical-speed"].units);
+    verticalSpeedTape_right.revealUnits();
+    verticalSpeedTape_right.setRange(configData_right["vertical-speed"]);
+    verticalSpeedTape_right.showIndicatorBox();
 }
 
 async function createPlayer() {
