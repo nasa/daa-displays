@@ -421,7 +421,7 @@ export class DAASpectrogram {
                         top: (this.range.to - data.marker) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,
                         width: barWidth,
-                        color: "white",
+                        color: "deepskyblue",
                         units: data.units
                     } : null,
                     resolution: (data.resolution !== null && isFinite(data.resolution))? {
@@ -429,7 +429,7 @@ export class DAASpectrogram {
                         top: (this.range.to - data.resolution) * yScaleFactor - (lineHeight / 2),
                         height: lineHeight,
                         width: barWidth,
-                        color: "deepskyblue",
+                        color: "white",
                         units: data.units
                     } : null
                 });
