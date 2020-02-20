@@ -95,7 +95,7 @@ import * as templates from './templates/daa-altitude-templates';
 import { ResolutionElement } from 'src/daa-server/utils/daa-server';
 
 // internal class, renders a resolution bug over the tape
-class ResolutionBug {
+class SpeedBug {
     protected id: string;
     protected val: number = 0;
     protected zero: number = 0;
@@ -239,8 +239,8 @@ export class AltitudeTape {
     protected bands: utils.Bands;
     protected div: HTMLElement;
 
-    protected resolutionBug: ResolutionBug;
-    protected speedBug: ResolutionBug; // this is visible when tapeCanSpin === false
+    protected resolutionBug: SpeedBug;
+    protected speedBug: SpeedBug; // this is visible when tapeCanSpin === false
 
     protected tapeCanSpin: boolean = true;
     protected range: { from: number, to: number };
@@ -420,11 +420,11 @@ export class AltitudeTape {
             height: (this.nAltitudeTicks + this.trailerTicks) * this.tickHeight * 2
         });
         $(this.div).html(theHTML);
-        this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug"); // resolution bug
+        this.resolutionBug = new SpeedBug(this.id + "-resolution-bug"); // resolution bug
         this.resolutionBug.setTickHeight(this.tickHeight);
         this.resolutionBug.setUseColors(true);
         this.resolutionBug.enableToolTip(true);
-        this.speedBug = new ResolutionBug(this.id + "-bug"); // speed bug, visible when the tape cannot spin
+        this.speedBug = new SpeedBug(this.id + "-bug"); // speed bug, visible when the tape cannot spin
         this.speedBug.setTickHeight(this.tickHeight);
         this.speedBug.reveal(this.tapeCanSpin);
         this.speedBug.enableToolTip(true);

@@ -102,6 +102,7 @@ class SpeedBug {
     protected useColors: boolean = false;
     protected color: string = utils.bugColors["UNKNOWN"];
     protected tape: VerticalSpeedTape;
+    protected tooltipActive: boolean = false;
 
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
@@ -198,6 +199,12 @@ class SpeedBug {
             $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
+        if (this.tooltipActive) {
+            //@ts-ignore
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val * 100}</div>` }).tooltip();
+        }
     }
     reveal (flag?: boolean): void {
         if (flag === false) {
@@ -223,6 +230,20 @@ class SpeedBug {
     }
     setUseColors (flag: boolean): void {
         this.useColors = flag;
+    }
+    enableToolTip (flag?: boolean): void {
+        this.tooltipActive = (flag === false) ? flag : true;
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
+        if (this.tooltipActive) {
+            //@ts-ignore
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val * 100}</div>` }).tooltip();
+        }
+    }
+    disableToolTip (): void {
+        this.tooltipActive = false;
+        //@ts-ignore
+        $(`.${this.id}-tooltip`).tooltip("dispose");
     }
 }
 
@@ -313,6 +334,7 @@ export class VerticalSpeedTape {
         this.resolutionBug.setUseColors(true);
         this.speedBug = new SpeedBug(this.id + "-bug", this); // speed bug
         this.speedBug.setUseColors(false);
+        this.speedBug.enableToolTip(true);
 
         this.create_vspeed_ticks();
         this.setVerticalSpeed(this.currentVerticalSpeed);
@@ -320,7 +342,7 @@ export class VerticalSpeedTape {
         // set position of resolution bug
         this.resolutionBug.setValue(0);
         this.resolutionBug.hide();
-
+        this.resolutionBug.enableToolTip(true);
         this.speedBug.setValue(0);
     }
     // utility function for creating altitude tick marks
@@ -518,8 +540,8 @@ export class VerticalSpeedTape {
         // set vertical speed bug
         if (!isNaN(val)) {
             this.currentVerticalSpeed = val;
-            $(`#${this.id}-indicator-digits`).html(`${Math.floor(val * 100 * 100) / 100}`); // tape scale is 100xunits, and we are rendering up to 2 fractional digits
-            this.speedBug.setValue(this.currentVerticalSpeed);
+            $(`#${this.id}-indicator-digits`).html(`${Math.floor(val * 100) / 100}`); // we are rendering up to 2 fractional digits
+            this.speedBug.setValue(this.currentVerticalSpeed / 100); // tape scale is 100xunits
         } else {
             console.error("Warning, trying to set vertical speed with invalid value", val);
         }

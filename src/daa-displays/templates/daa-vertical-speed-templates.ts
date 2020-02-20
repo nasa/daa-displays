@@ -6,12 +6,12 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
             <div style="position:absolute; background-color:#333333; top:278px; left:-12px; width:90px; height:80px; transform:rotate(-30deg); border-radius:2px;"></div>
             <div style="position:absolute; background-color:#333333; top:128px; left:21px; width:39px; height:230px;"></div>
         </div>
-        <div class="tape-right-small-spin-number-top" style="top:-10px; z-index:2; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:serif;">
+        <div class="tape-right-small-spin-number-top" style="top:-10px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:serif;">
             <div class="vspeedP3">6</div>
             <div class="vspeedP2">2</div>
             <div class="vspeedP1" style="line-height:78px;">1</div>
         </div>
-        <div class="tape-right-small-spin-number-bottom" style="top:270px; z-index:2; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:serif;">
+        <div class="tape-right-small-spin-number-bottom" style="top:270px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:serif;">
             <div class="vspeedP1" style="line-height:78px;">1</div>
             <div class="vspeedP2">2</div>
             <div class="vspeedP3">6</div>
@@ -32,14 +32,14 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7; margin-top:1px;">
             <div style="position:absolute;">
                 <!-- box -->
-                <div id="{{id}}-bug-box" style="width:12px; height:11px; border:2px solid white; background-color:black; margin-left:4px;"></div>
+                <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:12px; height:11px; border:2px solid white; background-color:black; margin-left:4px;"></div>
                 <!-- pointer -->
                 <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-9.5px; border-bottom:2px solid white;border-right:2px solid white;background-color:black; transform:rotate(135deg);"></div>
             </div>
         </div>
         <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.8; margin-top:1px;">
             <div style="position:absolute;">
-                <div class="{{id}}-resolution-bug" style="width:23px; height:11px; background-color:white; border-radius:16px;"></div>
+                <div class="{{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" class="{{id}}-resolution-bug" style="width:23px; height:11px; background-color:white; border-radius:16px;"></div>
             </div>
         </div>
     </div>
