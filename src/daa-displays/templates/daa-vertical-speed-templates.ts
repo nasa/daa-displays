@@ -44,7 +44,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
     </div>
     <div id="{{id}}-indicator-box" style="display:none; position:absolute; top:{{top}}px; left:{{left}}px; opacity:0.8;">
-        <div style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:82px; height:86px; top:171px; left:62px;">
+        <div style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:82px; height:86px; top:434px; left:-2px;">
             <div id="{{id}}-indicator-digits" style="float:right; width:78px; height:100%; color:white; font-size:20px; text-align: center; line-height:85px; font-family:serif;">
             60000
             </div>
