@@ -187,7 +187,7 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape.setUnits(configData["vertical-speed"].units);
     verticalSpeedTape.setRange(configData["vertical-speed"]);
     verticalSpeedTape.revealUnits();
-    verticalSpeedTape.showIndicatorBox();
+    verticalSpeedTape.showValueBox();
 }
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {

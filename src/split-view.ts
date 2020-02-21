@@ -343,7 +343,7 @@ function normalMode () {
 
     verticalSpeedTape_left.defaultUnits();
     verticalSpeedTape_left.hideUnits();
-    verticalSpeedTape_left.hideIndicatorBox();
+    verticalSpeedTape_left.hideValueBox();
     verticalSpeedTape_left.defaultRange();
 
     // right
@@ -359,7 +359,7 @@ function normalMode () {
 
     verticalSpeedTape_right.defaultUnits();
     verticalSpeedTape_right.hideUnits();
-    verticalSpeedTape_right.hideIndicatorBox();
+    verticalSpeedTape_right.hideValueBox();
     verticalSpeedTape_right.defaultRange();
 }
 
@@ -382,7 +382,7 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape_left.setUnits(configData_right["vertical-speed"].units);
     verticalSpeedTape_left.revealUnits();
     verticalSpeedTape_left.setRange(configData_left["vertical-speed"]);
-    verticalSpeedTape_left.showIndicatorBox();
+    verticalSpeedTape_left.showValueBox();
 
     // right
     airspeedTape_right.setUnits(configData_right["horizontal-speed"].units);
@@ -398,7 +398,7 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape_right.setUnits(configData_right["vertical-speed"].units);
     verticalSpeedTape_right.revealUnits();
     verticalSpeedTape_right.setRange(configData_right["vertical-speed"]);
-    verticalSpeedTape_right.showIndicatorBox();
+    verticalSpeedTape_right.showValueBox();
 }
 
 async function createPlayer() {

@@ -150,6 +150,9 @@ class SpeedBug {
         this.color = utils.bugColors["NONE"];
         this.refresh();
     }
+    getColor(): string {
+        return this.color;
+    }
     /**
      * @function <a name="ResolutionBug_getValue">getValue</a>
      * @desc Returns the value of the bug.
@@ -570,6 +573,7 @@ export class AirspeedTape {
         }, 800);
         // hide speed bug
         this.speedBug.hide();
+        this.setIndicatorColor(this.speedBug.getColor());
     }
     /**
      * @function <a name="setBug">setBug</a>
@@ -585,12 +589,25 @@ export class AirspeedTape {
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
                 this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
             this.resolutionBug.hide();
             this.speedBug.resetColor();
+            this.resetIndicatorColor();
         }
+    }
+    setIndicatorColor (color: string): void {
+        if (color) {
+            $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+            $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
+        }
+    }
+    resetIndicatorColor (): void {
+        const color: string = utils.bugColors["NONE"];
+        $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+        $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
     }
     /**
      * @function <a name="setAirSpeed">setAirSpeed</a>

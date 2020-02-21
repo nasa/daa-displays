@@ -560,12 +560,24 @@ export class VerticalSpeedTape {
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d / 100); // tape scale is 100xunits
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
                 this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
             this.resolutionBug.hide();
             this.speedBug.resetColor();
         }
+    }
+    setIndicatorColor (color: string): void {
+        if (color) {
+            $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+            $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
+        }
+    }
+    resetIndicatorColor (): void {
+        const color: string = utils.bugColors["NONE"];
+        $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+        $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
     }
     /**
      * @function <a name="setStep">setStep</a>
@@ -619,16 +631,16 @@ export class VerticalSpeedTape {
         }
     }
 
-    showIndicatorBox (): void {
+    showValueBox (): void {
         setTimeout(() => {
-            $(`#${this.id}-indicator-box`).css({ "display": "block", "opacity": "0" });
-            $(`#${this.id}-indicator-box`).animate({ "opacity": "0.8" }, 500);
+            $(`#${this.id}-indicator`).css({ "display": "block", "opacity": "0" });
+            $(`#${this.id}-indicator`).animate({ "opacity": "0.8" }, 500);
         }, 500);
     }
-    hideIndicatorBox (): void {
-        $(`#${this.id}-indicator-box`).animate({ "opacity": "0" }, 500);
+    hideValueBox (): void {
+        $(`#${this.id}-indicator`).animate({ "opacity": "0" }, 500);
         setTimeout(() => {
-            $(`#${this.id}-indicator-box`).css({ "display": "none" });
+            $(`#${this.id}-indicator`).css({ "display": "none" });
         }, 800);
     }
 }

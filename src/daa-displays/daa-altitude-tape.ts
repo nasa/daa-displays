@@ -150,6 +150,9 @@ class SpeedBug {
         this.color = utils.bugColors["NONE"];
         this.refresh();
     }
+    getColor (): string {
+        return this.color;
+    }
     /**
      * @function <a name="ResolutionBug_getValue">getValue</a>
      * @desc Returns the value of the bug.
@@ -241,6 +244,7 @@ export class AltitudeTape {
 
     protected resolutionBug: SpeedBug;
     protected speedBug: SpeedBug; // this is visible when tapeCanSpin === false
+    protected indicatorColor: string = utils.bugColors["NONE"];
 
     protected tapeCanSpin: boolean = true;
     protected range: { from: number, to: number };
@@ -273,7 +277,7 @@ export class AltitudeTape {
     
 
     // utility function for drawing resolution bands
-    protected draw_bands() {
+    protected draw_bands(): void {
         let theHTML = "";
         Object.keys(this.bands).forEach(alert => {
             const segments: utils.FromTo[] = this.bands[alert];
@@ -305,7 +309,7 @@ export class AltitudeTape {
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for creating altitude tick marks
-    protected create_altitude_ticks () {
+    protected create_altitude_ticks (): void {
         let ticks: { top: number, label?: string, units?: string }[] = [];
         let n = this.nAltitudeTicks + this.trailerTicks;
         let maxAltitudeValue = (this.nAltitudeTicks - 1) * 2 * this.altitudeStep;
@@ -570,12 +574,25 @@ export class AltitudeTape {
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
+                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
                 this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
             this.resolutionBug.hide();
             this.speedBug.resetColor();
+            this.resetIndicatorColor();
         }
+    }
+    setIndicatorColor (color: string): void {
+        if (color) {
+            $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+            $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
+        }
+    }
+    resetIndicatorColor (): void {
+        const color: string = utils.bugColors["NONE"];
+        $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });
+        $(`#${this.id}-indicator-box`).css({ "border": `2px solid ${color}` });
     }
     protected spinTapeTo (val: number, transitionDuration: string): void {
         if (!isNaN(+val)) {
