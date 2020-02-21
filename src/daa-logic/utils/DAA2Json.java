@@ -97,9 +97,9 @@ public class DAA2Json {
 				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
 				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
 				+ "\"v\": { " 
-				+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision2) + "\", " 
-				+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision2) + "\", " 
-				+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision2) + "\" }"
+				+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+				+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+				+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
 				+ " }";
 	}
 
@@ -121,9 +121,9 @@ public class DAA2Json {
 				+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
 				+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
 				+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
-				+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision2) + "\", " 
-				+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision2) + "\", " 
-				+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision2) + "\""
+				+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+				+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+				+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
 				+ " }";
 	}
 
