@@ -365,17 +365,24 @@ export class ColladaAircraft extends Aircraft {
         if (this.renderable) {
             this.renderable.enabled = false;
         } else {
-            console.error("[ColladaAircraft] Warning: collada object could not be made hidden");
+            console.error("[ColladaAircraft] Warning: collada object could not be hidden");
         }
         return this;
     }
     // removes renderables
-    remove(): ColladaAircraft {
+    remove(flag?: boolean): ColladaAircraft {
         if (this.renderable) {
             this.renderable.enabled = false;
             this.wwdLayer.removeRenderable(this.renderable);
+            if (flag) {
+                console.log(`[ColladaAircraft] Aircraft ${this.callSign} removed`)
+            }
         } else {
-            console.error("[ColladaAircraft] Warning: collada object could not be made removed");
+            console.warn(`[ColladaAircraft] Warning: collada object for ${this.callSign} could not be removed`);
+            // renderable needs some additional time to load, try to remove after a small time
+            setTimeout(() => {
+                this.remove(true);
+            }, 256);
         }
         return this;
     }
