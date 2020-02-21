@@ -95,8 +95,8 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left:
 viewOptions.applyCurrentViewOptions();
 // tape displays
 const airspeedTape: AirspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
-const altitudeTape: AltitudeTape = new AltitudeTape("altitude", { top: 100, left: 600 }, { parent: "daa-disp" });
-const verticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 600 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
+const altitudeTape: AltitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
+const verticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 
 airspeedTape.setBands({
     RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
