@@ -85,14 +85,14 @@ public class DAAMonitorsV2 {
     protected BandsRegion regionAlt;
 
     // other resolutions
-    protected double resolutionTrk_;
-    protected BandsRegion regionTrk_;
-    protected double resolutionGs_;
-    protected BandsRegion regionGs_;
-    protected double resolutionVs_;
-    protected BandsRegion regionVs_;
-    protected double resolutionAlt_;
-    protected BandsRegion regionAlt_;
+    protected double resolutionTrk_other;
+    protected BandsRegion regionTrk_other;
+    protected double resolutionGs_other;
+    protected BandsRegion regionGs_other;
+    protected double resolutionVs_other;
+    protected BandsRegion regionVs_other;
+    protected double resolutionAlt_other;
+    protected BandsRegion regionAlt_other;
 
     // current regions
     protected BandsRegion currentRegionTrk;
@@ -122,26 +122,26 @@ public class DAAMonitorsV2 {
         Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		resolutionTrk = daa.horizontalDirectionResolution(preferredTrk);
 		regionTrk = daa.regionOfHorizontalDirection(resolutionTrk);
-		resolutionTrk_ = daa.horizontalDirectionResolution(!preferredTrk);
-		regionTrk_ = daa.regionOfHorizontalDirection(resolutionTrk_);
+		resolutionTrk_other = daa.horizontalDirectionResolution(!preferredTrk);
+		regionTrk_other = daa.regionOfHorizontalDirection(resolutionTrk_other);
 
 		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		resolutionGs = daa.horizontalSpeedResolution(preferredGs);
 		regionGs = daa.regionOfHorizontalSpeed(resolutionGs);
-		resolutionGs_ = daa.horizontalSpeedResolution(!preferredGs);
-		regionGs_ = daa.regionOfHorizontalSpeed(resolutionGs_);
+		resolutionGs_other = daa.horizontalSpeedResolution(!preferredGs);
+		regionGs_other = daa.regionOfHorizontalSpeed(resolutionGs_other);
 
         Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		resolutionVs = daa.verticalSpeedResolution(preferredVs);
 		regionVs = daa.regionOfVerticalSpeed(resolutionVs);
-		resolutionVs_ = daa.verticalSpeedResolution(!preferredVs);
-		regionVs_ = daa.regionOfVerticalSpeed(resolutionVs_);
+		resolutionVs_other = daa.verticalSpeedResolution(!preferredVs);
+		regionVs_other = daa.regionOfVerticalSpeed(resolutionVs_other);
 
         Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
 		resolutionAlt = daa.altitudeResolution(preferredAlt);
 		regionAlt = daa.regionOfAltitude(resolutionAlt);
-        resolutionAlt_ = daa.altitudeResolution(!preferredAlt);
-		regionAlt_ = daa.regionOfAltitude(resolutionAlt_);
+        resolutionAlt_other = daa.altitudeResolution(!preferredAlt);
+		regionAlt_other = daa.regionOfAltitude(resolutionAlt_other);
     }
 
     protected void computeCurrentRegions () {
@@ -229,21 +229,21 @@ public class DAAMonitorsV2 {
         int vsr = checkM1(resolutionVs, regionVs);
         int ar = checkM1(resolutionAlt, regionAlt);
 
-        int hr_ = checkM1(resolutionTrk_, regionTrk_);
-        int hsr_ = checkM1(resolutionGs_, regionGs_);
-        int vsr_ = checkM1(resolutionVs_, regionVs_);
-        int ar_ = checkM1(resolutionAlt_, regionAlt_);
+        int hr_other = checkM1(resolutionTrk_other, regionTrk_other);
+        int hsr_other = checkM1(resolutionGs_other, regionGs_other);
+        int vsr_other = checkM1(resolutionVs_other, regionVs_other);
+        int ar_other = checkM1(resolutionAlt_other, regionAlt_other);
 
-        int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_, Math.max(hsr_, Math.max(vsr_, ar_)))))));
+        int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_other, Math.max(hsr_other, Math.max(vsr_other, ar_other)))))));
         if (monitorColor[0] < max_color) { monitorColor[0] = max_color; }
 
         return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_)) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_)) + "\""
-            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_)) + "\""
-            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_)) + "\""
+            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_other)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_other)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_other)) + "\""
+            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_other)) + "\""
             + " }";
     }
 
@@ -253,7 +253,7 @@ public class DAAMonitorsV2 {
      */
     protected int checkM2_preferred (double resolution, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs);// || !Double.isNaN(resolutionAlt);
+            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs);// || !Double.isNaN(resolutionAlt); M2 does not apply to altitude
             if (Double.isNaN(resolution) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -262,7 +262,7 @@ public class DAAMonitorsV2 {
     }
     protected int checkM2_other (double resolution_, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_) || !Double.isNaN(resolutionGs_) || !Double.isNaN(resolutionVs_);// || !Double.isNaN(resolutionAlt_);
+            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_other) || !Double.isNaN(resolutionGs_other) || !Double.isNaN(resolutionVs_other);// || !Double.isNaN(resolutionAlt_other); M2 does not apply to altitude
             if (Double.isNaN(resolution_) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -285,21 +285,21 @@ public class DAAMonitorsV2 {
         int vsr = checkM2_preferred(resolutionVs, currentRegionVs);
         int ar = GREEN; //checkM2_preferred(resolutionAlt, currentRegionAlt); M2 does not apply to altitude
 
-        int hr_ = checkM2_other(resolutionTrk_, currentRegionTrk);
-        int hsr_ = checkM2_other(resolutionGs_, currentRegionGs);
-        int vsr_ = checkM2_other(resolutionVs_, currentRegionVs);
-        int ar_ = GREEN; //checkM2_other(resolutionAlt_, currentRegionAlt); M2 does not apply to altitude
+        int hr_other = checkM2_other(resolutionTrk_other, currentRegionTrk);
+        int hsr_other = checkM2_other(resolutionGs_other, currentRegionGs);
+        int vsr_other = checkM2_other(resolutionVs_other, currentRegionVs);
+        int ar_other = GREEN; //checkM2_other(resolutionAlt_other, currentRegionAlt); M2 does not apply to altitude
 
-        int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_, Math.max(hsr_, Math.max(vsr_, ar_)))))));
+        int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_other, Math.max(hsr_other, Math.max(vsr_other, ar_other)))))));
         if (monitorColor[1] < max_color) { monitorColor[1] = max_color; }
 
         return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_)) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_)) + "\""
-            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_)) + "\""
-            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_)) + "\""
+            + " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_other)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_other)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_other)) + "\""
+            + ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_other)) + "\""
             + " }";
     }
 
