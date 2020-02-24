@@ -71,14 +71,14 @@ protected:
     larcfm::BandsRegion::Region regionAlt;
 
     // other resolutions
-    double resolutionTrk_;
-    larcfm::BandsRegion::Region regionTrk_;
-    double resolutionGs_;
-    larcfm::BandsRegion::Region regionGs_;
-    double resolutionVs_;
-    larcfm::BandsRegion::Region regionVs_;
-    double resolutionAlt_;
-    larcfm::BandsRegion::Region regionAlt_;
+    double resolutionTrk_other;
+    larcfm::BandsRegion::Region regionTrk_other;
+    double resolutionGs_other;
+    larcfm::BandsRegion::Region regionGs_other;
+    double resolutionVs_other;
+    larcfm::BandsRegion::Region regionVs_other;
+    double resolutionAlt_other;
+    larcfm::BandsRegion::Region regionAlt_other;
 
     // current regions
     larcfm::BandsRegion::Region currentRegionTrk;
@@ -109,26 +109,26 @@ protected:
         bool preferredTrk = daa->preferredHorizontalDirectionRightOrLeft();
 		resolutionTrk = daa->horizontalDirectionResolution(preferredTrk);
 		regionTrk = daa->regionOfHorizontalDirection(resolutionTrk);
-		resolutionTrk_ = daa->horizontalDirectionResolution(!preferredTrk);
-		regionTrk_ = daa->regionOfHorizontalDirection(resolutionTrk_);
+		resolutionTrk_other = daa->horizontalDirectionResolution(!preferredTrk);
+		regionTrk_other = daa->regionOfHorizontalDirection(resolutionTrk_other);
 
 		bool preferredGs = daa->preferredHorizontalSpeedUpOrDown();
 		resolutionGs = daa->horizontalSpeedResolution(preferredGs);
 		regionGs = daa->regionOfHorizontalSpeed(resolutionGs);
-		resolutionGs_ = daa->horizontalSpeedResolution(!preferredGs);
-		regionGs_ = daa->regionOfHorizontalSpeed(resolutionGs_);
+		resolutionGs_other = daa->horizontalSpeedResolution(!preferredGs);
+		regionGs_other = daa->regionOfHorizontalSpeed(resolutionGs_other);
 
         bool preferredVs = daa->preferredVerticalSpeedUpOrDown();
 		resolutionVs = daa->verticalSpeedResolution(preferredVs);
 		regionVs = daa->regionOfVerticalSpeed(resolutionVs);
-		resolutionVs_ = daa->verticalSpeedResolution(!preferredVs);
-		regionVs_ = daa->regionOfVerticalSpeed(resolutionVs_);
+		resolutionVs_other = daa->verticalSpeedResolution(!preferredVs);
+		regionVs_other = daa->regionOfVerticalSpeed(resolutionVs_other);
 
         bool preferredAlt = daa->preferredAltitudeUpOrDown();
 		resolutionAlt = daa->altitudeResolution(preferredAlt);
 		regionAlt = daa->regionOfAltitude(resolutionAlt);
-        resolutionAlt_ = daa->altitudeResolution(!preferredAlt);
-		regionAlt_ = daa->regionOfAltitude(resolutionAlt_);
+        resolutionAlt_other = daa->altitudeResolution(!preferredAlt);
+		regionAlt_other = daa->regionOfAltitude(resolutionAlt_other);
     }
 
     void computeCurrentRegions () {
@@ -183,7 +183,7 @@ protected:
     int checkM2_preferred (double resolution, larcfm::BandsRegion::Region region) const {
 		std::cout << resolution << std::endl;
         if (region != larcfm::BandsRegion::RECOVERY) {
-            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk) || !std::isnan(resolutionGs) || !std::isnan(resolutionVs) || !std::isnan(resolutionAlt);
+            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk) || !std::isnan(resolutionGs) || !std::isnan(resolutionVs);// || !std::isnan(resolutionAlt); M2 does not apply to altitude
             if (std::isnan(resolution) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -193,7 +193,7 @@ protected:
     int checkM2_other (double resolution_, larcfm::BandsRegion::Region region) const {
 		std::cout << resolution_ << std::endl;
         if (region != larcfm::BandsRegion::RECOVERY) {
-            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk_) || !std::isnan(resolutionGs_) || !std::isnan(resolutionVs_) || !std::isnan(resolutionAlt_);
+            bool exists_resolution_not_NaN = !std::isnan(resolutionTrk_other) || !std::isnan(resolutionGs_other) || !std::isnan(resolutionVs_other);// || !std::isnan(resolutionAlt_other); M2 does not apply to altitude
             if (std::isnan(resolution_) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -304,21 +304,21 @@ public:
         int vsr = checkM1(resolutionVs, regionVs);
         int ar = checkM1(resolutionAlt, regionAlt);
 
-        int hr_ = checkM1(resolutionTrk_, regionTrk_);
-        int hsr_ = checkM1(resolutionGs_, regionGs_);
-        int vsr_ = checkM1(resolutionVs_, regionVs_);
-        int ar_ = checkM1(resolutionAlt_, regionAlt_);
+        int hr_other = checkM1(resolutionTrk_other, regionTrk_other);
+        int hsr_other = checkM1(resolutionGs_other, regionGs_other);
+        int vsr_other = checkM1(resolutionVs_other, regionVs_other);
+        int ar_other = checkM1(resolutionAlt_other, regionAlt_other);
 
-        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_, std::max(hsr_, std::max(vsr_, ar_)))))));
+        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_other, std::max(hsr_other, std::max(vsr_other, ar_other)))))));
         if (monitorColor[0] < max_color) { monitorColor[0] = max_color; }
 
         return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "{ \"preferred\": \"" + color2string(hr) + "\", \"other\": \"" + color2string(hr_) + "\" }"
-            + ", \"Horizontal Speed\": " + "{ \"preferred\": \"" + color2string(hsr) + "\", \"other\": \"" + color2string(hsr_) + "\" }"
-            + ", \"Vertical Speed\": " + "{ \"preferred\": \"" + color2string(vsr) + "\", \"other\": \"" + color2string(vsr_) + "\" }"
-            + ", \"Altitude\": " + "{ \"preferred\": \"" + color2string(ar) + "\", \"other\": \"" + color2string(ar_) + "\" }"
+            + " \"Heading\": " + "\"" + color2string(std::max(hr, hr_other)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + color2string(std::max(hsr, hsr_other)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + color2string(std::max(vsr, vsr)) + "\""
+            + ", \"Altitude\": " + "\"" + color2string(std::max(ar, ar_other)) + "\""
             + " }";
     }
 
@@ -326,23 +326,23 @@ public:
         int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
         int hsr = checkM2_preferred(resolutionGs, currentRegionGs);
         int vsr = checkM2_preferred(resolutionVs, currentRegionVs);
-        int ar = checkM2_preferred(resolutionAlt, currentRegionAlt);
+        int ar = GREEN; //checkM2_preferred(resolutionAlt, currentRegionAlt); M2 does not apply to altitude
 
-        int hr_ = checkM2_other(resolutionTrk_, currentRegionTrk);
-        int hsr_ = checkM2_other(resolutionGs_, currentRegionGs);
-        int vsr_ = checkM2_other(resolutionVs_, currentRegionVs);
-        int ar_ = checkM2_other(resolutionAlt_, currentRegionAlt);
+        int hr_other = checkM2_other(resolutionTrk_other, currentRegionTrk);
+        int hsr_other = checkM2_other(resolutionGs_other, currentRegionGs);
+        int vsr_other = checkM2_other(resolutionVs_other, currentRegionVs);
+        int ar_other = GREEN; //checkM2_other(resolutionAlt_other, currentRegionAlt); M2 does not apply to altitude
 
-        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_, std::max(hsr_, std::max(vsr_, ar_)))))));
+        int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_other, std::max(hsr_other, std::max(vsr_other, ar_other)))))));
         if (monitorColor[1] < max_color) { monitorColor[1] = max_color; }
 
         return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
             + ", \"details\":" 
             + " {"
-            + " \"Heading\": " + "\"" + color2string(std::max(hr, hr_)) + "\""
-            + ", \"Horizontal Speed\": " + "\"" + color2string(std::max(hsr, hsr_)) + "\""
-            + ", \"Vertical Speed\": " + "\"" + color2string(std::max(vsr, vsr_)) + "\""
-            + ", \"Altitude\": " + "\"" + color2string(std::max(ar, ar_)) + "\""
+            + " \"Heading\": " + "\"" + color2string(std::max(hr, hr_other)) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + color2string(std::max(hsr, hsr_other)) + "\""
+            + ", \"Vertical Speed\": " + "\"" + color2string(std::max(vsr, vsr_other)) + "\""
+            + ", \"Altitude\": " + "\"" + color2string(std::max(ar, ar_other)) + "\""
             + " }";
     }
 
@@ -350,7 +350,7 @@ public:
         int hb = checkM3(currentRegionTrk);
         int hsb = checkM3(currentRegionGs);
         int vsb = checkM3(currentRegionVs);
-        int ab = checkM3(currentRegionAlt);
+        int ab = GREEN; //checkM3(currentRegionAlt); M3 does not apply to altitude
 
         int max_color = std::max(hb, std::max(hsb, std::max(vsb, ab)));
         if (monitorColor[2] < max_color) { monitorColor[2] = max_color; }
@@ -579,37 +579,52 @@ public:
 		altArray->push_back(alt);
 
 		// resolutions
-		std::string resTrk = "{ \"time\": " + time;
+		std::string trkResolution = "{ \"time\": " + time;
 		bool preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		double valueTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		larcfm::BandsRegion::Region alertTrk = daa.regionOfHorizontalDirection(valueTrk, trk_units);
-		resTrk += ", \"resolution\": { \"val\": \"" + std::to_string(valueTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertTrk) + "\" }"; // resolution can be number, NaN or infinity
-		resTrk += " }";
-		resTrkArray->push_back(resTrk);
+		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
+		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
+		larcfm::BandsRegion::Region resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal);
+		larcfm::TrafficState ownship = daa.getOwnshipState();
+		double currentTrk = ownship.horizontalDirection(trk_units);
+		larcfm::BandsRegion::Region currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection());
+		trkResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentTrkRegion) + "\" }";
+		trkResolution += " }";
+		resTrkArray->push_back(trkResolution);
 
-		std::string resGs = "{ \"time\": " + time;
+		std::string gsResolution = "{ \"time\": " + time;
 		bool preferredGs = daa.preferredHorizontalSpeedUpOrDown();
-		double valueGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
-		larcfm::BandsRegion::Region alertGs = daa.regionOfHorizontalSpeed(valueGs, hs_units);
-		resGs += ", \"resolution\": { \"val\": \"" + std::to_string(valueGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertGs) + "\" }"; // resolution can be number, NaN or infinity
-		resGs += " }";
-		resGsArray->push_back(resGs);
+		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
+		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
+		larcfm::BandsRegion::Region resGsRegion = daa.regionOfHorizontalSpeed(resGs, hs_units);
+		double currentGs = ownship.horizontalSpeed(hs_units);
+		larcfm::BandsRegion::Region currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed());
+		gsResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resGsRegion) + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentGsRegion) + "\" }";
+		gsResolution += " }";
+		resGsArray->push_back(gsResolution);
 
-		std::string resVs = "{ \"time\": " + time;
+		std::string vsResolution = "{ \"time\": " + time;
 		bool preferredVs = daa.preferredVerticalSpeedUpOrDown();
-		double valueVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		larcfm::BandsRegion::Region alertVs = daa.regionOfVerticalSpeed(valueVs, vs_units);
-		resVs += ", \"resolution\": { \"val\": \"" + std::to_string(valueVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertVs) + "\" }"; // resolution can be number, NaN or infinity
-		resVs += " }";
-		resVsArray->push_back(resVs);
+		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
+		larcfm::BandsRegion::Region resVsRegion = daa.regionOfVerticalSpeed(resVs, vs_units);
+		double currentVs = ownship.verticalSpeed(vs_units);
+		larcfm::BandsRegion::Region currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed());
+		vsResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resVsRegion) + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentVsRegion) + "\" }";
+		vsResolution += " }";
+		resVsArray->push_back(vsResolution);
 
-		std::string resAlt = "{ \"time\": " + time;
+		std::string altResolution = "{ \"time\": " + time;
 		bool preferredAlt = daa.preferredAltitudeUpOrDown();
-		double valueAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		larcfm::BandsRegion::Region alertAlt = daa.regionOfAltitude(valueAlt, alt_units);
-		resAlt += ", \"resolution\": { \"val\": \"" + std::to_string(valueAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(alertAlt) + "\" }"; // resolution can be number, NaN or infinity
-		resAlt += " }";
-		resAltArray->push_back(resAlt);
+		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
+		larcfm::BandsRegion::Region resAltRegion = daa.regionOfAltitude(resAlt, alt_units);
+		double currentAlt = ownship.altitude(alt_units);
+		larcfm::BandsRegion::Region currentAltRegion = daa.regionOfAltitude(ownship.altitude());
+		altResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resAltRegion) + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentAltRegion) + "\" }";
+		altResolution += " }";
+		resAltArray->push_back(altResolution);
 
 		// monitors
 		monitors.check();
