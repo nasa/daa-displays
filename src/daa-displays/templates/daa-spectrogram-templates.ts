@@ -15,7 +15,7 @@ export const spectrogramTemplate: string = `
             <div id="{{../id}}-monitor-{{@index}}" class="spectrogram-monitor-element"
                  style="display:none; opacity:1; text-align:center; left:{{left}}px; top:-9px; width:{{width}}px; position:absolute; cursor:pointer;"
                  data-toggle="tooltip" data-placement="bottom" data-html="true" boundary="window"
-                 data-title="<div>Syntactic difference at step {{@index}}</div>">
+                 data-title="<div>Marker at step {{@index}}</div>">
                 <i class="fa fa-caret-up spectrogram-monitor-marker" style="color:#ffc107; margin-left:-3px; margin-top:4px;"></i>
             </div>
             {{/each}}

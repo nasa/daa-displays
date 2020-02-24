@@ -456,12 +456,16 @@ export class DAASpectrogram {
         if (desc) {
             const selector: string = `#${this.id}-monitor-${desc.step}`;
             $(selector).css("display", "block");
+            // @ts-ignore -- method tooltip is added by bootstrap
+            $(selector).tooltip("dispose"); // remove old tooltip, if any
             if (desc.color) {
                 $(`${selector} .fa`).css("color", desc.color);
             }
             if (desc.header) {
+                $(selector).attr("data-original-title", `<div>${desc.header}<br>${desc.tooltip}</div>`);
                 $(selector).attr("data-title", `<div>${desc.header}<br>${desc.tooltip}</div>`);
             } else {
+                $(selector).attr("data-original-title", `<div>${desc.tooltip}</div>`);
                 $(selector).attr("data-title", `<div>${desc.tooltip}</div>`);
             }
             // install gotohandler
@@ -479,5 +483,10 @@ export class DAASpectrogram {
         this.hideMarker(i);
         // @ts-ignore -- method tooltip is added by bootstrap
         $(`#${this.id}-monitor-${i}`).tooltip("dispose"); // clear tooltip
+    }
+    deleteMarkers (): void {
+        $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
+        // @ts-ignore
+        $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips        
     }
 }

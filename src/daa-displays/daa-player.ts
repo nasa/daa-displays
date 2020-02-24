@@ -895,13 +895,16 @@ export class DAAPlayer {
                     // const len: number = Object.keys(this.daaMonitors).length;
                     const selector: string = `${this.id}-monitor-${id}-checkbox`;
                     $(`#${selector}`).on("change", () => {
+                        //@ts-ignore
+                        $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
+                        $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
                         if ($(`#${selector}`).is(":checked")) {
                             $(`.spectrogram-monitor-marker`).css("display", "block");
                             ebody();
                         } else {
                             //@ts-ignore
-                            $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
-                            $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
+                            // $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
+                            // $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
                         }
                     });
                 }
