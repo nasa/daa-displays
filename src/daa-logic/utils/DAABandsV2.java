@@ -264,12 +264,17 @@ public class DAABandsV2 {
 		String trkResolution = "{ \"time\": " + time;
 		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
+		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, trk_units);
 		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
+		double resTrkInternal_sec = daa.horizontalDirectionResolution(!preferredTrk);
 		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrkInternal_sec); // we want to use internal units here, to minimize round-off errors
 		TrafficState ownship = daa.getOwnshipState();
 		double currentTrk = ownship.horizontalDirection(trk_units);
 		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
 		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredTrk + "\" }"; 
 		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + currentTrkRegion + "\" }";
 		trkResolution += " }";
 		resTrkArray.add(trkResolution);
@@ -277,11 +282,16 @@ public class DAABandsV2 {
 		String gsResolution = "{ \"time\": " + time;
 		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
+		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs, hs_units);
 		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
+		double resGsInternal_sec = daa.horizontalSpeedResolution(!preferredGs);
 		BandsRegion resGsRegion = daa.regionOfHorizontalSpeed(resGsInternal); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resGsRegion_sec = daa.regionOfHorizontalSpeed(resGsInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentGs = ownship.horizontalSpeed(hs_units);
 		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); // we want to use internal units here, to minimize round-off errors
 		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + resGs_sec + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredGs + "\" }"; 
 		gsResolution += ", \"ownship\": { \"val\": \"" + currentGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + currentGsRegion + "\" }"; 
 		gsResolution += " }";
 		resGsArray.add(gsResolution);
@@ -289,11 +299,16 @@ public class DAABandsV2 {
 		String vsResolution = "{ \"time\": " + time;
 		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
+		double resVs_sec = daa.verticalSpeedResolution(!preferredVs, vs_units);
 		double resVsInternal = daa.verticalSpeedResolution(preferredVs);
+		double resVsInternal_sec = daa.verticalSpeedResolution(!preferredVs);
 		BandsRegion resVsRegion = daa.regionOfVerticalSpeed(resVsInternal); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resVsRegion_sec = daa.regionOfVerticalSpeed(resVsInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentVs = ownship.verticalSpeed(vs_units);
 		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); // we want to use internal units here, to minimize round-off errors
 		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + resVs_sec + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredVs + "\" }"; 
 		vsResolution += ", \"ownship\": { \"val\": \"" + currentVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + currentVsRegion + "\" }"; 
 		vsResolution += " }";
 		resVsArray.add(vsResolution);
@@ -301,11 +316,16 @@ public class DAABandsV2 {
 		String altResolution = "{ \"time\": " + time;
 		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
 		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		double resAltInternal = daa.altitudeResolution(preferredAlt); // we want to use internal units here, to minimize round-off errors
-		BandsRegion resAltRegion = daa.regionOfAltitude(resAlt, alt_units);
+		double resAlt_sec = daa.altitudeResolution(!preferredAlt, alt_units);
+		double resAltInternal = daa.altitudeResolution(preferredAlt); 
+		double resAltInternal_sec = daa.altitudeResolution(!preferredAlt);
+		BandsRegion resAltRegion = daa.regionOfAltitude(resAltInternal); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resAltRegion_sec = daa.regionOfAltitude(resAltInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentAlt = ownship.altitude(alt_units);
 		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); // we want to use internal units here, to minimize round-off errors
 		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"resolution-secondary\": { \"val\": \"" + resAlt_sec + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredAlt + "\" }"; 
 		altResolution += ", \"ownship\": { \"val\": \"" + currentAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + currentAltRegion + "\" }";
 		altResolution += " }";
 		resAltArray.add(altResolution);

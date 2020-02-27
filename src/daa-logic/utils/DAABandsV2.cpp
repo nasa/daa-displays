@@ -376,6 +376,17 @@ protected:
 	std::string ofname; // output file name
 	std::string ifname; // input file name
 
+	std::string printBool (bool b) { return b ? "true" : "false"; }
+	std::string printDouble (double d) {
+		if (std::isnan(d)) {
+			return std::to_string(d).compare("nan") ? "NaN" : "-NaN";
+		} else if (std::isinf(d)) {
+			return std::to_string(d).compare("inf") ? "Infinity" : "-Infinity";
+		}
+		return std::to_string(d);
+	}
+
+
 public:
 	larcfm::Daidalus daa;
 	std::ofstream* printWriter;
@@ -582,47 +593,69 @@ public:
 		std::string trkResolution = "{ \"time\": " + time;
 		bool preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
+		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, trk_units);
 		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
+		double resTrkInternal_sec = daa.horizontalDirectionResolution(!preferredTrk);
 		larcfm::BandsRegion::Region resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal);
+		larcfm::BandsRegion::Region resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrkInternal_sec);
 		larcfm::TrafficState ownship = daa.getOwnshipState();
 		double currentTrk = ownship.horizontalDirection(trk_units);
 		larcfm::BandsRegion::Region currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection());
-		trkResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentTrkRegion) + "\" }";
+		trkResolution += ", \"resolution\": { \"val\": \"" + printDouble(resTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resTrk_sec) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredTrk) + "\" }";
+		trkResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentTrkRegion) + "\" }";
 		trkResolution += " }";
 		resTrkArray->push_back(trkResolution);
 
 		std::string gsResolution = "{ \"time\": " + time;
 		bool preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
+		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs, hs_units);
 		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
-		larcfm::BandsRegion::Region resGsRegion = daa.regionOfHorizontalSpeed(resGs, hs_units);
+		double resGsInternal_sec = daa.horizontalSpeedResolution(!preferredGs);
+		larcfm::BandsRegion::Region resGsRegion = daa.regionOfHorizontalSpeed(resGsInternal);
+		larcfm::BandsRegion::Region resGsRegion_sec = daa.regionOfHorizontalSpeed(resGsInternal_sec);
 		double currentGs = ownship.horizontalSpeed(hs_units);
 		larcfm::BandsRegion::Region currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed());
-		gsResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resGsRegion) + "\" }"; // resolution can be number, NaN or infinity
-		gsResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentGsRegion) + "\" }";
+		gsResolution += ", \"resolution\": { \"val\": \"" + printDouble(resGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resGsRegion) + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resGs_sec) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resGsRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredGs) + "\" }";
+		gsResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentGsRegion) + "\" }";
 		gsResolution += " }";
 		resGsArray->push_back(gsResolution);
 
 		std::string vsResolution = "{ \"time\": " + time;
 		bool preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		larcfm::BandsRegion::Region resVsRegion = daa.regionOfVerticalSpeed(resVs, vs_units);
+		double resVs_sec = daa.verticalSpeedResolution(!preferredVs, vs_units);
+		double resVsInternal = daa.verticalSpeedResolution(preferredVs);
+		double resVsInternal_sec = daa.verticalSpeedResolution(!preferredVs);
+		larcfm::BandsRegion::Region resVsRegion = daa.regionOfVerticalSpeed(resVsInternal);
+		larcfm::BandsRegion::Region resVsRegion_sec = daa.regionOfVerticalSpeed(resVsInternal_sec);
 		double currentVs = ownship.verticalSpeed(vs_units);
 		larcfm::BandsRegion::Region currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed());
-		vsResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resVsRegion) + "\" }"; // resolution can be number, NaN or infinity
-		vsResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentVsRegion) + "\" }";
+		vsResolution += ", \"resolution\": { \"val\": \"" + printDouble(resVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resVsRegion) + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resVs_sec) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resVsRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredVs) + "\" }";
+		vsResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentVsRegion) + "\" }";
 		vsResolution += " }";
 		resVsArray->push_back(vsResolution);
 
 		std::string altResolution = "{ \"time\": " + time;
 		bool preferredAlt = daa.preferredAltitudeUpOrDown();
 		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		larcfm::BandsRegion::Region resAltRegion = daa.regionOfAltitude(resAlt, alt_units);
+		double resAlt_sec = daa.altitudeResolution(!preferredAlt);
+		double resAltInternal = daa.altitudeResolution(preferredAlt);
+		double resAltInternal_sec = daa.altitudeResolution(!preferredAlt);
+		larcfm::BandsRegion::Region resAltRegion = daa.regionOfAltitude(resAltInternal);
+		larcfm::BandsRegion::Region resAltRegion_sec = daa.regionOfAltitude(resAltInternal_sec);
 		double currentAlt = ownship.altitude(alt_units);
 		larcfm::BandsRegion::Region currentAltRegion = daa.regionOfAltitude(ownship.altitude());
-		altResolution += ", \"resolution\": { \"val\": \"" + std::to_string(resAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resAltRegion) + "\" }"; // resolution can be number, NaN or infinity
-		altResolution += ", \"ownship\": { \"val\": \"" + std::to_string(currentAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentAltRegion) + "\" }";
+		altResolution += ", \"resolution\": { \"val\": \"" + printDouble(resAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resAltRegion) + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resAlt_sec) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resAltRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredAlt) + "\" }";
+		altResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentAltRegion) + "\" }";
 		altResolution += " }";
 		resAltArray->push_back(altResolution);
 
