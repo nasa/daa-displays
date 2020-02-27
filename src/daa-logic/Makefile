@@ -81,7 +81,7 @@ download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e
 
 compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CPP_TARGETS) 
 
-clean: clean-utils clean-jar $(CLEAN_TARGETS)
+clean: clean-utils clean-jar clean-exe $(CLEAN_TARGETS)
 
 clean-utils:
 	@echo "\n\033[0;33m ** Removing .class files in utils **\033[0m"
@@ -90,6 +90,10 @@ clean-utils:
 clean-jar:
 	@echo "\n\033[0;33m ** Removing .jar files **\033[0m"
 	@-rm *.jar
+
+clean-exe:
+	@echo "\n\033[0;33m ** Removing .exe files **\033[0m"
+	@-rm *.exe
 
 remove-downloads:
 	@echo "\n\033[0;33m ** Removing downloaded JAVA_versions of WellClear **\033[0m"
