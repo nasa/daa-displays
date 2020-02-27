@@ -247,6 +247,7 @@ export function colladaAltitude(alt: number) {
 }
 export class ColladaAircraft extends Aircraft {
     static readonly aircraftSymbols: string[] = [ "daa-ownship", "daa-alert", "daa-target", "daa-traffic-avoid", "daa-traffic-monitor" ];
+    static readonly MAX_RETRY_COLLADA_ACTION: number = 64;
     protected wwd: WorldWind.WorldWindow;
     protected colladaLoader: WorldWind.ColladaLoader;
     protected rotationOffset: { xRotation: number, yRotation: number, zRotation: number };
@@ -370,7 +371,7 @@ export class ColladaAircraft extends Aircraft {
         return this;
     }
     // removes renderables
-    remove(flag?: boolean): ColladaAircraft {
+    remove(flag?: boolean, retry?: number): ColladaAircraft {
         if (this.renderable) {
             this.renderable.enabled = false;
             this.wwdLayer.removeRenderable(this.renderable);
@@ -380,8 +381,9 @@ export class ColladaAircraft extends Aircraft {
         } else {
             console.warn(`[ColladaAircraft] Warning: collada object for ${this.callSign} could not be removed`);
             // renderable needs some additional time to load, try to remove after a small time
+            const n: number = isNaN(retry) ? 1 : retry + 1;
             setTimeout(() => {
-                this.remove(true);
+                this.remove(true, n);
             }, 256);
         }
         return this;
@@ -426,17 +428,23 @@ export class ColladaAircraft extends Aircraft {
     setScale(nmiScale: number): ColladaAircraft {
         if (!isNaN(nmiScale)) {
             this.nmiScale = nmiScale;
-            if (this.renderable) {
-                const scale: number = (colladaObjects[this.symbol]) ? colladaObjects[this.symbol].scale : colladaScaleDaaSymbol;
-                this.renderable.scale = scale * this.nmiScale;
-            }
+            const scale: number = (colladaObjects[this.symbol]) ? colladaObjects[this.symbol].scale : colladaScaleDaaSymbol;
+            this.setColladaScale(scale * this.nmiScale);
         }
         return this;
     }
 
-    setColladaScale (scale: number): ColladaAircraft {
+    setColladaScale (scale: number, retry?: number): ColladaAircraft {
         if (this.renderable) {
             this.renderable.scale = scale;
+        } else {
+            // renderable still loading, try after a timeout
+            const n: number = isNaN(retry) ? 1 : retry + 1;
+            if (n < ColladaAircraft.MAX_RETRY_COLLADA_ACTION) {
+                setTimeout(() => {
+                    this.setColladaScale(scale, n);
+                }, 256);
+            }
         }
         return this;
     }
