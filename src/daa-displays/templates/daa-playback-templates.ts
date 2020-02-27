@@ -3,7 +3,9 @@ export const playbackTemplate: string = `
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="input-group-prepend">
             <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
-                <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
+                <div class="input-group-prepend">
+                    <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
+                </div>
                 <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
             </div>
             <div class="input-group input-group-sm mb-3" style="display:none; margin-right:30px;">
@@ -164,11 +166,11 @@ export const spectrogramControls: string = `
 <div id="{{id}}-spectrogram-controls-inner" style="position:absolute;width:100%;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="input-group-prepend">
-            <div class="input-group mb-3" style="width:500px; margin-right:30px;">
-                <div class="btn-group btn-group-toggle" role="group" aria-label="View">
-                    <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-reset" style="width:220px; margin-right:30px; white-space:nowrap;">Reset</button>
-                    <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-plot" style="width:200px; white-space:nowrap;">Plot</button>
-                </div>
+            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
+                <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-reset" style="width:222px; white-space:nowrap;">Reset</button>
+            </div>
+            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
+                <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-plot" style="width:200px; white-space:nowrap; margin-left:1px;">Plot</button>
             </div>
         </div>
     </div>
@@ -177,7 +179,7 @@ export const spectrogramControls: string = `
 export const developersControls: string = `
 <div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px;">
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">
-    <div class="input-group-text" style="width:215px;">
+    <div class="input-group-text" style="width:{{width}}px;">
       <input id="{{id}}-developer-mode-checkbox" type="checkbox" aria-label="Enable developer mode">
       <span style="margin-left: 4px;">Developer mode</span>
     </div>

@@ -41,7 +41,7 @@ import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
 import * as utils from './daa-displays/daa-utils';
 import { DAAPlayer } from './daa-displays/daa-player';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { ConfigData } from './daa-server/utils/daa-server';
+import { ConfigData, ResolutionElement } from './daa-server/utils/daa-server';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -235,7 +235,7 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
             splitView.getPlayer("right").getPlot("alerts").revealMarker({ step, tooltip: `Time ${time}<br>This run:<br>Alerts [ ${alertsR} ]<br>The other run:<br>Alerts [ ${alertsL} ]` });
         }
         // }
-        // check bands
+        // check bands & resolutions
         for (let i = 0; i < daaPlots.length; i++) {
             const plotID: string = daaPlots[i].id;
             const plotName: string = daaPlots[i].name;
@@ -273,6 +273,29 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
             for (let k = 0; k < bandsL.length; k++) {
                 plotL += `<br>${bandsL[k].band} [${bandsL[k].range.from}, ${bandsL[k].range.to}]`;
             }
+
+            // check resolutions
+            const resInfo: string = plotName.replace("Bands", "Resolution");
+            let resolutionR: ResolutionElement = bandsRight[resInfo];
+            let resolutionL: ResolutionElement = bandsLeft[resInfo];
+            if (resolutionR && resolutionL) {
+                // check direction
+                if (resolutionR.flags["preferred-resolution"] === resolutionL.flags["preferred-resolution"]) {
+                    // if same direction, check that the numeric value of the preferred resolutions differ less than epsilon
+                    const epsilon: number = 10e-5;
+                    const ok: boolean =
+                        (isNaN(+resolutionL.resolution.val) && isNaN(+resolutionR.resolution.val))
+                            || Math.abs(+resolutionL.resolution.val - +resolutionR.resolution.val) <= epsilon;
+                    if (!ok) {
+                        plotR += `<br>Resolution: ${resolutionR.resolution.val}`;
+                        plotL += `<br>Resolution: ${resolutionL.resolution.val}`;
+                    }
+                } else {
+                    plotR += `<br>Resolution: ${resolutionR.flags["preferred-resolution"]}`;
+                    plotL += `<br>Resolution: ${resolutionL.flags["preferred-resolution"]}`;
+                }
+            }
+
             if (plotR !== plotL) { // 1.2ms
                 splitView.getPlayer("left").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>This run:${plotL}<br><br>The other run:${plotR}` });
                 splitView.getPlayer("right").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>This run:${plotR}<br><br>The other run:${plotL}` });
@@ -421,7 +444,8 @@ async function createPlayer() {
     }, {
         parent: "simulation-controls",
         top: 56,
-        left: 858
+        left: 856,
+        width: 216
     });
     splitView.getPlayer("left").appendSimulationPlot({
         id: "alerts",

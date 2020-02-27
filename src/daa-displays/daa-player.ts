@@ -559,7 +559,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 222 : opt.width;
         const theHTML = Handlebars.compile(templates.developersControls)({
             id: this.id,
             parent: opt.parent,
