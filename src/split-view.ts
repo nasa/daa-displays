@@ -285,6 +285,7 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
                     const epsilon: number = 10e-5;
                     const ok: boolean =
                         (isNaN(+resolutionL.resolution.val) && isNaN(+resolutionR.resolution.val))
+                            || (!isFinite(+resolutionL.resolution.val) && !isFinite(+resolutionR.resolution.val) && Math.sign(+resolutionL.resolution.val) === Math.sign(+resolutionR.resolution.val))
                             || Math.abs(+resolutionL.resolution.val - +resolutionR.resolution.val) <= epsilon;
                     if (!ok) {
                         plotR += `<br>Resolution: ${resolutionR.resolution.val}`;

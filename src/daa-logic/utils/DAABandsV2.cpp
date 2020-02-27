@@ -379,9 +379,9 @@ protected:
 	std::string printBool (bool b) { return b ? "true" : "false"; }
 	std::string printDouble (double d) {
 		if (std::isnan(d)) {
-			return std::to_string(d).compare("nan") ? "NaN" : "-NaN";
+			return (std::to_string(d).compare("nan") == 0) ? "NaN" : "-NaN";
 		} else if (std::isinf(d)) {
-			return std::to_string(d).compare("inf") ? "Infinity" : "-Infinity";
+			return (std::to_string(d).compare("inf") == 0) ? "Infinity" : "-Infinity";
 		}
 		return std::to_string(d);
 	}
