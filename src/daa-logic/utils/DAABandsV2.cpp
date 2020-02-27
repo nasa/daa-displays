@@ -57,8 +57,8 @@ protected:
 
 	larcfm::Daidalus* daa;
 
-	static const int N_MONITORS = 3;
-	int monitorColor[N_MONITORS] = { -1, -1, -1 };
+	static const int N_MONITORS = 4;
+	int monitorColor[N_MONITORS] = { -1, -1, -1, -1 };
 
 	// preferred resolutions
     double resolutionTrk;
@@ -147,6 +147,15 @@ protected:
         double alt = daa->getOwnshipState().altitude();
         currentRegionAlt = daa->regionOfAltitude(alt);
         std::cout << "alt: " << alt << " region: " << currentRegionAlt << std::endl;
+    }
+
+	static std::string color2string (int color) {
+        switch (color) {
+            case GREEN: return "green";
+            case YELLOW: return "yellow";
+            case RED: return "red";
+            default: return "grey";
+        }
     }
 
     /**
@@ -247,13 +256,71 @@ protected:
                 + " }";
     }
 
-	static std::string color2string (int color) {
-        switch (color) {
-            case GREEN: return "green";
-            case YELLOW: return "yellow";
-            case RED: return "red";
-            default: return "grey";
-        }
+    /**
+     * Monitor 4: NONE and RECOVERY
+     * NONE and RECOVERY appear in the same list of bands (yellow monitor)
+     */
+    int checkM4Trk () const {
+		bool none = false;
+		bool recovery = false;
+		for (int i = 0; i < daa->horizontalDirectionBandsLength(); i++) {
+			larcfm::BandsRegion::Region b = daa->horizontalDirectionRegionAt(i);
+            if (b == larcfm::BandsRegion::NONE) {
+                none = true;
+            } else if (b == larcfm::BandsRegion::RECOVERY) {
+                recovery = true;
+            }
+		}
+        return (none && recovery) ? YELLOW : GREEN;
+    }
+    int checkM4Hs () const {
+		bool none = false;
+		bool recovery = false;
+		for (int i = 0; i < daa->horizontalSpeedBandsLength(); i++) {
+			larcfm::BandsRegion::Region b = daa->horizontalSpeedRegionAt(i);
+            if (b == larcfm::BandsRegion::NONE) {
+                none = true;
+            } else if (b == larcfm::BandsRegion::RECOVERY) {
+                recovery = true;
+            }
+		}
+        return (none && recovery) ? YELLOW : GREEN;
+    }
+    int checkM4Vs () const {
+		bool none = false;
+		bool recovery = false;
+		for (int i = 0; i < daa->verticalSpeedBandsLength(); i++) {
+			larcfm::BandsRegion::Region b = daa->verticalSpeedRegionAt(i);
+            if (b == larcfm::BandsRegion::NONE) {
+                none = true;
+            } else if (b == larcfm::BandsRegion::RECOVERY) {
+                recovery = true;
+            }
+		}
+        return (none && recovery) ? YELLOW : GREEN;
+    }
+    int checkM4Alt () const {
+		bool none = false;
+		bool recovery = false;
+		for (int i = 0; i < daa->altitudeBandsLength(); i++) {
+			larcfm::BandsRegion::Region b = daa->altitudeRegionAt(i);
+            if (b == larcfm::BandsRegion::NONE) {
+                none = true;
+            } else if (b == larcfm::BandsRegion::RECOVERY) {
+                recovery = true;
+            }
+		}
+        return (none && recovery) ? YELLOW : GREEN;
+    }
+	std::string labelM4 () const {
+        return "M4: It is never the case that NONE and RECOVERY appear in the same list of bands";
+    }
+	std::string legendM4 () const {
+        std::string green_desc = "Valid region colors.";
+        std::string yellow_desc = "Property failure: NONE and RECOVERY appear in the same list of bands.";
+        return std::string("{ ") 
+                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
+                + " }";
     }
 
 public:
@@ -277,8 +344,9 @@ public:
             if (monitorID == 1) { return labelM1(); }
             if (monitorID == 2) { return labelM2(); }
             if (monitorID == 3) { return labelM3(); }
+            if (monitorID == 4) { return labelM4(); }
         }
-        return "\"unknown\"";
+        return "unknown";
 	}
 
 	std::string getColor (int monitorID) const { // monitor ID starts from 1
@@ -294,11 +362,13 @@ public:
             if (monitorID == 1) { return legendM1(); }
             if (monitorID == 2) { return legendM2(); }
             if (monitorID == 3) { return legendM3(); }
+			if (monitorID == 4) { return legendM4(); }
         }
-        return "\"unknown\"";
+        return "unknown";
     }
 
 	std::string m1 () {
+		int monitorIndex = 0;
         int hr = checkM1(resolutionTrk, regionTrk);
         int hsr = checkM1(resolutionGs, regionGs);
         int vsr = checkM1(resolutionVs, regionVs);
@@ -310,7 +380,7 @@ public:
         int ar_other = checkM1(resolutionAlt_other, regionAlt_other);
 
         int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_other, std::max(hsr_other, std::max(vsr_other, ar_other)))))));
-        if (monitorColor[0] < max_color) { monitorColor[0] = max_color; }
+        if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
         return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
             + ", \"details\":" 
@@ -323,6 +393,7 @@ public:
     }
 
     std::string m2 () {
+		int monitorIndex = 1;
         int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
         int hsr = checkM2_preferred(resolutionGs, currentRegionGs);
         int vsr = checkM2_preferred(resolutionVs, currentRegionVs);
@@ -334,7 +405,7 @@ public:
         int ar_other = GREEN; //checkM2_other(resolutionAlt_other, currentRegionAlt); M2 does not apply to altitude
 
         int max_color = std::max(hr, std::max(hsr, std::max(vsr, std::max(ar, std::max(hr_other, std::max(hsr_other, std::max(vsr_other, ar_other)))))));
-        if (monitorColor[1] < max_color) { monitorColor[1] = max_color; }
+        if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
         return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
             + ", \"details\":" 
@@ -347,13 +418,14 @@ public:
     }
 
 	std::string m3 () {
+		int monitorIndex = 2;
         int hb = checkM3(currentRegionTrk);
         int hsb = checkM3(currentRegionGs);
         int vsb = checkM3(currentRegionVs);
         int ab = GREEN; //checkM3(currentRegionAlt); M3 does not apply to altitude
 
         int max_color = std::max(hb, std::max(hsb, std::max(vsb, ab)));
-        if (monitorColor[2] < max_color) { monitorColor[2] = max_color; }
+        if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
         return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
             + ", \"details\":" 
@@ -364,6 +436,28 @@ public:
             + ", \"Altitude\": " + "\"" + color2string(ab) + "\""
             + " }";
     }
+
+	std::string m4 () {
+		int monitorIndex = 3;
+        int hb = checkM4Trk();
+        int hsb = checkM4Hs();
+        int vsb = checkM4Vs();
+        int ab = checkM4Alt();
+
+        int max_color = std::max(hb, std::max(hsb, std::max(vsb, ab)));
+        if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
+
+        return std::string("\"color\": ") + "\"" + color2string(max_color) + "\""
+            + ", \"details\":" 
+            + " {"
+            + " \"Heading\": " + "\"" + color2string(hb) + "\""
+            + ", \"Horizontal Speed\": " + "\"" + color2string(hsb) + "\""
+            + ", \"Vertical Speed\": " + "\"" + color2string(vsb) + "\""
+            + ", \"Altitude\": " + "\"" + color2string(ab) + "\""
+            + " }";
+    }
+
+	// NB: You need to update the following items when adding new monitors: N_MONITORS, monitorColor, getLegend and getLabel
 
 };
 
@@ -517,7 +611,7 @@ public:
 		larcfm::Daidalus& daa, DAAMonitorsV2& monitors,
 		std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray,
 		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray,
-		std::vector<std::string>* monitorM1Array, std::vector<std::string>* monitorM2Array, std::vector<std::string>* monitorM3Array
+		std::vector<std::string>* monitorM1Array, std::vector<std::string>* monitorM2Array, std::vector<std::string>* monitorM3Array, std::vector<std::string>* monitorM4Array
 	) {
 		std::string hs_units = daa.getUnitsOf("step_hs");
 		std::string vs_units = daa.getUnitsOf("step_vs");
@@ -676,6 +770,11 @@ public:
 					+ " }";
 		monitorM3Array->push_back(monitorM3);
 
+		std::string monitorM4 = "{ \"time\": " + time
+					+ ", " + monitors.m4()
+					+ " }";
+		monitorM4Array->push_back(monitorM4);
+
 		// config
 		std::string stats = "\"hs\": { \"min\": " + std::to_string(daa.getMinHorizontalSpeed(hs_units))
 					+ ", \"max\": " + std::to_string(daa.getMaxHorizontalSpeed(hs_units))
@@ -716,6 +815,7 @@ public:
 		std::vector<std::string>* monitorM1Array = new std::vector<std::string>();
 		std::vector<std::string>* monitorM2Array = new std::vector<std::string>();
 		std::vector<std::string>* monitorM3Array = new std::vector<std::string>();
+		std::vector<std::string>* monitorM4Array = new std::vector<std::string>();
 
 		std::string jsonStats = "";
 
@@ -730,7 +830,7 @@ public:
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray,
 				resTrkArray, resGsArray, resVsArray, resAltArray,
-				monitorM1Array, monitorM2Array, monitorM3Array
+				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
 			);
 		}
 
@@ -760,6 +860,7 @@ public:
 		info->push_back(monitorM1Array);
 		info->push_back(monitorM2Array);
 		info->push_back(monitorM3Array);
+		info->push_back(monitorM4Array);
 		printMonitors(*printWriter, monitors, info);
 
 		*printWriter << "}\n";

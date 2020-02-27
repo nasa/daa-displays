@@ -194,7 +194,7 @@ public class DAABandsV2 {
 		Daidalus daa, DAAMonitorsV2 monitors,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
-		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array 
+		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
 	) {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
@@ -347,6 +347,11 @@ public class DAABandsV2 {
 					+ " }";
 		monitorM3Array.add(monitorM3);
 
+		String monitorM4 = "{ \"time\": " + time
+					+ ", " + monitors.m4()
+					+ " }";
+		monitorM4Array.add(monitorM4);
+
 		// config
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
@@ -384,6 +389,7 @@ public class DAABandsV2 {
 		ArrayList<String> monitorM1Array = new ArrayList<String>();
 		ArrayList<String> monitorM2Array = new ArrayList<String>();
 		ArrayList<String> monitorM3Array = new ArrayList<String>();
+		ArrayList<String> monitorM4Array = new ArrayList<String>();
 
 		String jsonStats = null;
 
@@ -399,7 +405,7 @@ public class DAABandsV2 {
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
-				monitorM1Array, monitorM2Array, monitorM3Array
+				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
 			);
 		}
 
@@ -429,6 +435,7 @@ public class DAABandsV2 {
 		info.add(monitorM1Array);
 		info.add(monitorM2Array);
 		info.add(monitorM3Array);
+		info.add(monitorM4Array);
 		DAABandsV2.printMonitors(printWriter, monitors, info);
 
 		printWriter.println("}");
