@@ -47,6 +47,11 @@ install-dependencies:
 	@echo "\033[0;32m Done! \033[0m"
 
 clean:
+	@echo "\033[0;33m ** Cleaning dist folder **\033[0m"
+	cd dist && make clean
+	@echo "\033[0;33m Done! \033[0m"
+
+delete-dist:
 	@echo "\033[0;33m ** Removing dist folder, .class files, .jar files, and node_modules **\033[0m"
 	-@rm -r dist
 	-@rm -r node_modules
