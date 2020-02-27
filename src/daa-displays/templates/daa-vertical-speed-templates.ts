@@ -39,7 +39,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
         <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.8; margin-top:1px;">
             <div style="position:absolute;">
-                <div class="{{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" class="{{id}}-resolution-bug" style="width:23px; height:11px; background-color:white; border-radius:16px;"></div>
+                <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:23px; height:11px; background-color:white; border-radius:16px;"></div>
             </div>
         </div>
     </div>

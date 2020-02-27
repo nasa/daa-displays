@@ -26,7 +26,7 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.7; margin-top:99px;">
                 <div style="position:absolute;">
-                    <div class="{{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" class="{{id}}-resolution-bug" style="width:32px; height:11px; background-color:white; border-radius:16px;"></div>
+                    <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:32px; height:11px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
         </div>
