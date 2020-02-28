@@ -1,6 +1,6 @@
 # WellClear JAVA_versions to be compiled
-JAVA_VERSIONS = 1.0.1 1.0.2 2.0.e
-CPP_VERSIONS = 2.0.e # this should always be a subset of the JAVA_VERSION
+JAVA_VERSIONS = 1.0.1 1.0.2 2.0.e 2.0.f
+CPP_VERSIONS = 2.0.e 2.0.f # this should always be a subset of the JAVA_VERSION
 
 JAVAC = javac
 JAR   = jar
@@ -77,7 +77,16 @@ download-wellclear-2.0.e:
 	mv RELEASE2e WellClear-2.0.e/DAIDALUS &&\
 	rm WellClear-2.0.e.tgz)
 
-download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e
+download-wellclear-2.0.f:
+	@echo "\n\033[0;32m ** Downloading WellClear 2.0.f from LaRC **\033[0m"
+	-@test -d WellClear-2.0.f || (\
+	mkdir WellClear-2.0.f &&\
+	curl https://shemesh.larc.nasa.gov/fm/DAIDALUS/RELEASE2f-Feb-27-20.tgz > WellClear-2.0.f.tgz &&\
+	tar xvzf WellClear-2.0.f.tgz &&\
+	mv RELEASE2f WellClear-2.0.f/DAIDALUS &&\
+	rm WellClear-2.0.f.tgz)
+
+download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e download-wellclear-2.0.f
 
 compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CPP_TARGETS) 
 
