@@ -459,7 +459,7 @@ class DAAServer {
                     const configurationsFolder: string = path.join(__dirname, "../daa-config");
                     let confFiles: string[] = null;
                     try {
-                        confFiles = this.listFilesRecursive(configurationsFolder, ['.conf']);
+                        confFiles = this.listFilesRecursive(configurationsFolder, ['.conf', '.txt']);
                     } catch (confError) {
                         console.error(`Error while reading configuratios folder`, confError);
                     } finally {
