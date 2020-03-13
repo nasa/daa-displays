@@ -71,9 +71,10 @@ The following examples illustrate some of the functionalities provided by daa-di
 ### 1. Analysis of detect-and-avoid functions in cockpit displays
 This example illustrates how interactive prototypes created with daa-displays can be used to analyze detect-and-avoid functions in cockpit displays. The example is based on DAIDALUS, a reference implementation of detect-and-avoid alerting logic for unmanned systems.
 1. Open a terminal in the daa-displays installation folder, and run the bash script `./restart.sh` to start the server. Don't close the terminal window.
-2. Open Google Chrome at http://localhost:8082 and launch the 'single-view' app by clicking on its icon
-3. Select a flight scenario, a configuration, and a version of DAIDALUS. Click on the Load button.
-4. Click `Play` to watch the behavior of DAIDALUS for the selected flight scenario.
+2. Open Google Chrome at http://localhost:8082
+3. Launch the `single-view` app by clicking on the corresponding icon.
+4. Select a flight scenario, a configuration, and a version of DAIDALUS. Click the `Load` button.
+5. Click `Play` to watch the behavior of DAIDALUS for the selected flight scenario.
 
 ## Notices
 ### Copyright 
