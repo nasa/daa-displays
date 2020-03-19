@@ -1,5 +1,5 @@
 # DAA-Displays: A Toolkit for the Analysis of Detect-And-Avoid Functions in Cockpit Displays
-DAA-Displays is a toolkit for model-based design and analysis of cockpit
+DAA-Displays is a toolkit for model-based design and analysis of software functions in cockpit
 displays. It includes a library of interactive graphical display elements (widgets)
 for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.
 
@@ -22,18 +22,88 @@ The following software is necessary to compile and execute DAA-Displays
 1. Download the latest release of DAA-Displays from the github repository.
 2. Open a terminal window and change directory to the daadisplays folder.
 3. Run `make` in the terminal window.
-   This command will create a folder dist/ with the JavaScript distribution.
-4. Run the bash script `./restart.sh` in the terminal window.
-   The script will download the dependencies and launch the daa-server on port 8082.
-5. Open Google Chrome at http://localhost:8082 to render an example interactive prototype developed with DAA-Displays.
+   This command will download the dependencies and create a folder `dist/` with the distribution.
+
+## Use instructions
+1. Open a terminal in the daadisplays folder, and run the bash script `./restart.sh` in the terminal window. The script will launch the daa-server on port 8082. *(Please keep the terminal window open otherwise the execution of the server will be terminated.)*
+2. Open Google Chrome at http://localhost:8082
+3. Launch one of the DAA Apps (`DANTi`, `single-view`, etc.) by clicking on the corresponding icon.
+4. Select a flight scenario, a configuration, and a DAA specification using the drop-down menus provided by the App. Click `Load Selected Scenario and Configuration` to initialize the simulation.
+5. Click `Play` to simulate the DAA specification in the selected flight scenario. Use the other simulation controls to jump to specific time instants, change the simulation speed, and generate plot diagrams.
 
 ## Tips for developers
 The `./restart.sh` script supports the following options:
 - `-help`                (Shows the available options)
 - `-pvsio`               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
-- `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires nasalib)
+- `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires PVS and NASALib)
 - `-fast`                (Enables optimizations, including caching of simulation results)
 - `-port <port number>`  (The server will use the given port)
+
+## Use Cases
+The following examples illustrate concrete applications of the daa-displays toolkit for the analysis of DAA functions in cockpit displays.
+
+### **Example 1**: Demonstration of a DAA algorithm
+The rapid prototyping functionalities of the toolkit allow developers to create realistic simulations of cockpit displays suitable to demonstrate DAA specifications and implementations on concrete encounters.
+The following example is for the analysis of maneuver guidance provided by a DAA algorithm
+to help pilots resolve route conflicts in a flight scenario. 
+Maneuver guidance has the form of *bands*, i.e., ranges
+of heading, horizontal speed, vertical speed, and altitude maneuvers that
+are predicted to be conflict free (the prediction is based on a mathematical 
+formula that uses distance and time separation thresholds). Bands are color-coded: 
+yellow denotes a corrective maneuver, red denotes a warning maneuver, and green
+denotes a recovery maneuver.
+
+The simulation shown in the figure below, illustrate a scenario where a traffic 
+aircraft is overtaking the ownship.
+Bands on the flight display indicate maneuvers that can be performed to avoid
+the conflict. For example, yellow and red bands on the right side of the compass 
+indicate that the ownship should avoid right turns.
+
+![](screenshots/scenario_6_danti.gif "")
+
+To reproduce the demonstration shown in the figure:
+1. Launch the `DANTi` app (see *Use instructions* above).
+2. Select flight scenario `scenario_6` and click `Load Selected Scenario and Configuration`.
+3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario.
+
+### **Example 2**: Comparison of different DAA configurations
+Split-view simulations facilitate the comparative analysis of 
+two DAA implementations and formal specifications on the same encounter.
+In the following example, a newer version of a DAA reference implementation
+(on the left-hand side of the split-view) is compared with an older version. 
+The newer version introduces additional maneuver guidance in the form of 
+speed/heading/altitude bugs rendered on the flight display. 
+
+![](screenshots/s_1_turn_L_wind_0_50.gif "")
+
+To reproduce the demonstration shown in the figure:
+1. Launch the `split-view` app (see *Use instructions* above).
+2. Select flight scenario `s_1_turn_L_wind_0_50`, then select `WellClear-2.0.f.jar` on the left player and `WellClear-1.0.1.jar` in the right player. Click `Load Selected Scenario and Configuration`.
+3. Click `Play` to watch the behavior of the two versions in the same flight scenario.
+
+### **Example 3**: 3D Simulation
+3D simulations move the focus of the analysis from a cockpit-centric 
+view to a scenario-centric view that includes the wider airspace 
+around the ownship. The viewport can be adjusted by tilting, 
+panning, and zooming the view.  This capability
+can be used to gain a better understanding of spatial information 
+on the trajectories followed by the ownship and
+traffic aircraft in a given scenario. This is useful, e.g., when
+assessing DAA algorithms with computer-generated flight scenarios, as
+this view provides a tangible idea of what the scenario is about.
+
+The following example 3D simulation is used to examine 
+the same flight scenario of Example 1, where a traffic aircraft overtakes the ownship.
+
+![](screenshots/scenario_6_3d.gif "")
+
+To reproduce the demonstration shown in the figure:
+1. Launch the `3D view` app (see *Use instructions* above).
+2. Select flight scenario `scenario_6` and click `Load Selected Scenario and Configuration`.
+3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario. Position the mouse in the view and use mouse wheel to zoom in/out, use the central mouse button to tilt/pan the view.
+
+
+
 
 ## Structure
 ```
@@ -59,22 +129,12 @@ The `./restart.sh` script supports the following options:
 │   ├── LICENSES                         // NASA Open Source License Agreement
 │   └── index.html                       // Client entry-point
 │
-├── restart.sh                           // Script for starting up the server-side of DAA-Displays
+├── restart.sh                           // Script for launching the daa-server
 ├── Makefile                             // Compilation targets
 └── package.json                         // Manifest file
 
 ```
 
-## Examples
-The following examples illustrate some of the functionalities provided by daa-displays for the analysis of detect-and-avoid functions in cockpit display systems.
-
-### 1. Analysis of detect-and-avoid functions in cockpit displays
-This example illustrates how interactive prototypes created with daa-displays can be used to analyze detect-and-avoid functions in cockpit displays. The example is based on DAIDALUS, a reference implementation of detect-and-avoid alerting logic for unmanned systems.
-1. Open a terminal in the daa-displays installation folder, and run the bash script `./restart.sh` to start the server. Don't close the terminal window.
-2. Open Google Chrome at http://localhost:8082
-3. Launch the `single-view` app by clicking on the corresponding icon.
-4. Select a flight scenario, a configuration, and a version of DAIDALUS. Click the `Load` button.
-5. Click `Play` to watch the behavior of DAIDALUS for the selected flight scenario.
 
 ## Notices
 ### Copyright 
