@@ -23,15 +23,14 @@
 		"node": "^8.9.1"
 	},
 	"devDependencies": {
-		"typescript": "^3.5.3",
-		"tslint": "^6.1.0",
 		"@types/express": "^4.16.1",
-		"@types/jquery": "^3.3.29",
-		"@types/ws": "^6.0.1",
-		"ts-node": "^8.3.0",
 		"@types/jasmine": "^3.5.0",
+		"@types/jquery": "^3.3.29",
 		"@types/node": "^8.9.1",
-		"jasmine": "^3.4.0"
+		"@types/ws": "^6.0.1",
+		"jasmine": "^3.4.0",
+		"ts-node": "^8.3.0",
+		"typescript": "^3.5.3"
 	},
 	"_obsolete_dep_": {
 		"jasmine-ts": "^0.3.0"
