@@ -246,7 +246,9 @@ class DAAServer {
                                         : (impl === "pvsio") ? await this.pvsioProcess.getVersion(wellClearFolder, data.daaLogic)
                                         : null;
                             
-                            const outputFileName: string = fsUtils.getBandsFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                            const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
+                            
+                            const outputFileName: string = fsUtils.getBandsFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName, wind });
                             const outputFolder: string = path.join(__dirname, "../daa-output", wellClearVersion, impl);
                             try {
                                 if (this.useCache && fs.existsSync(path.join(outputFolder, bandsFile))) {
@@ -254,14 +256,29 @@ class DAAServer {
                                 } else {
                                     switch (impl) {
                                         case "java": {
-                                            await this.javaProcess.exec(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, outputFileName);
+                                            await this.javaProcess.exec({
+                                                daaFolder: wellClearFolder, 
+                                                daaLogic: data.daaLogic, 
+                                                daaConfig: data.daaConfig, 
+                                                daaScenario: data.scenarioName, 
+                                                outputFileName: outputFileName,
+                                                wind
+                                            });
                                             break;
                                         }
                                         case "cpp": {
-                                            await this.cppProcess.exec(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, outputFileName);
+                                            await this.cppProcess.exec({
+                                                daaFolder: wellClearFolder, 
+                                                daaLogic: data.daaLogic, 
+                                                daaConfig: data.daaConfig, 
+                                                daaScenario: data.scenarioName, 
+                                                outputFileName: outputFileName,
+                                                wind
+                                            });
                                             break;
                                         }
                                         case "pvsio": {
+                                            //@TODO: implement pvs functions for setting wind
                                             const res: { configFile: string, scenarioFile: string } = await this.javaProcess.daa2pvs(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, `${data.scenarioName}.pvs`);
                                             try {
                                                 const contextFolder: string = path.join(wellClearFolder, `WellClear-${wellClearVersion}`, "PVS");
@@ -307,11 +324,19 @@ class DAAServer {
                         const losVersion: string = await this.javaProcess.getVersion(losFolder, losLogic);
                         const outputFileName: string = fsUtils.getLoSFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
                         const outputFolder: string = path.join(__dirname, "../daa-output", losVersion);
+                        const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
                         try {
                             if (this.useCache && fs.existsSync(path.join(outputFolder, losFile))) {
                                 console.log(`Reading daa los regions file ${losFile} from cache`);
                             } else {
-                                await this.javaProcess.exec(losFolder, losLogic, data.daaConfig, data.scenarioName, outputFileName);
+                                await this.javaProcess.exec({
+                                    daaFolder: losFolder, 
+                                    daaLogic: losLogic, 
+                                    daaConfig: data.daaConfig, 
+                                    daaScenario: data.scenarioName, 
+                                    wind,
+                                    outputFileName
+                                });
                             }
                             try {
                                 const buf: Buffer = fs.readFileSync(path.join(outputFolder, losFile));
@@ -341,9 +366,17 @@ class DAAServer {
                         const outputFileName: string = fsUtils.getVirtualPilotFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
                         console.log("fileName:" + outputFileName);
                         const outputFolder: string = path.join(__dirname, "../../daa-output/virtual_pilot");
+                        const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
                         // use the .ic file to generate the .daa file
                         try {
-                            await this.javaProcess.exec(virtualPilotFolder, virtualPilot, data.daaConfig, data.scenarioName, outputFileName, { contrib: true });
+                            await this.javaProcess.exec({
+                                daaFolder: virtualPilotFolder, 
+                                daaLogic: virtualPilot, 
+                                daaConfig: data.daaConfig, 
+                                daaScenario: data.scenarioName, 
+                                wind,
+                                outputFileName
+                            }, { contrib: true });
                             console.log("executed");
                             try {
                                 const buf: Buffer = fs.readFileSync(path.join(outputFolder, outputFile));

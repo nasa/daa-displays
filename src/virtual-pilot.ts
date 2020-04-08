@@ -143,7 +143,8 @@ splitView.getPlayer("left").define("init", async () => {
     await splitView.getPlayer("left").javaVirtualPilot({
         virtualPilot: splitView.getPlayer("left").getSelectedLogic(),
         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario()
+        scenario: splitView.getSelectedScenario(),
+        wind: splitView.getSelectedWindSettings()
     });
     // viewOptions_left.applyCurrentViewOptions();
 });
@@ -152,7 +153,8 @@ splitView.getPlayer("right").define("init", async () => {
     await splitView.getPlayer("right").javaVirtualPilot({
         virtualPilot: splitView.getPlayer("right").getSelectedLogic(),
         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario()
+        scenario: splitView.getSelectedScenario(),
+        wind: splitView.getSelectedWindSettings()
     });
     // viewOptions_right.applyCurrentViewOptions();
 });

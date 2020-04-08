@@ -1,9 +1,12 @@
 import * as fs from 'fs';
-import * as path from 'path';
 
-export function getBandsFileName (desc: { daaConfig: string, scenarioName: string }) {
+export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, wind: { deg: number, knot: number } }) {
     if (desc) {
-        return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
+		if (desc.wind && desc.wind.knot) {
+			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
+		} else {
+			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
+		}
     }
     return null;
 }

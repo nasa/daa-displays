@@ -50,6 +50,8 @@ import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
 import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.f;
+import gov.nasa.larcfm.Util.Velocity;
+import gov.nasa.larcfm.Util.Units;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
@@ -63,6 +65,8 @@ public class DAABandsV2 {
 	protected String scenario = null;
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
+
+	protected String wind = null;
 
 	PrintWriter printWriter = null;
 
@@ -99,6 +103,7 @@ public class DAABandsV2 {
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint WellClear version");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
+		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.exit(0);
@@ -117,17 +122,6 @@ public class DAABandsV2 {
 		}
 		return "[ " + res + " ]";
 	}
-
-	// protected static String region2str(BandsRegion r) {
-	// 	switch (r) {
-	// 		case NONE: return "0";
-	// 		case FAR: return "1";
-	// 		case MID: return "2";
-	// 		case NEAR: return "3";
-	// 		case RECOVERY: return "4";
-	// 		default: return "-1";
-	// 	}
-	// }
 
 	protected static void printArray(PrintWriter out, ArrayList<String> info, String label) {
 		out.println("\"" + label + "\": [");
@@ -183,15 +177,42 @@ public class DAABandsV2 {
 		}
 		return false;
 	}
+
+	Boolean loadWind () {
+		if (this.daa != null) {
+			if (this.wind != null) {
+				System.out.println("Loading wind " + this.wind);
+				double deg = 0;
+				double knot = 0;
+				double fpm = 0;
+				java.util.regex.Matcher match_deg = java.util.regex.Pattern.compile("\\bdeg\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				if (match_deg.find()) {
+					deg = Double.parseDouble(match_deg.group(1));
+				}
+				java.util.regex.Matcher match_knot = java.util.regex.Pattern.compile("\\bknot\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				if (match_knot.find()) {
+					knot = Double.parseDouble(match_knot.group(1));
+				}
+				Velocity windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
+				this.daa.setWindVelocityTo(windVelocity);
+				return true;
+			}
+		} else {
+			System.err.println("** Error: Daidalus is not initialized.");
+		}
+		return false;
+	}
 	
 	protected String jsonHeader () {
 		return "\"Info\": "
 				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfig() + "\" },\n"
-				+   "\"Scenario\": \"" + this.scenario + "\",";  
+				+ "\"Scenario\": \"" + this.scenario + "\",\n"
+				+ "\"Wind\": { \"deg\": \"" + Units.to("deg", this.daa.getWindVelocityTo().compassAngle()) 
+						+ "\", \"knot\": \"" + Units.to("knot", this.daa.getWindVelocityTo().gs()) + "\" },";
 	}
 
 	protected String jsonBands (
-		Daidalus daa, DAAMonitorsV2 monitors,
+		DAAMonitorsV2 monitors,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
 		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
@@ -356,22 +377,31 @@ public class DAABandsV2 {
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
 					+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
 					+ ", \"units\": \"" + hs_units + "\" },\n"
-					+ "\"vsResolution\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
+					+ "\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
 					+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
 					+ ", \"units\": \"" + vs_units + "\" },\n"
-					+ "\"altResolution\": { \"min\": " + daa.getMinAltitude(alt_units)
+					+ "\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
 					+ ", \"max\": " + daa.getMaxAltitude(alt_units)
 					+ ", \"units\": \"" + alt_units + "\" },\n"
 					+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";
 		return stats;
 	}
 	public void walkFile (DaidalusWrapperInterface wrapper) {
+		if (this.ifname == "" || this.ifname == null) {
+			System.err.println("** Error: Please specify a daa file");
+			System.exit(1);
+		}
+		if (!this.inputFileReadable()) {
+			System.err.println("** Error: File " + this.getInputFileName() + " cannot be read");
+			System.exit(1);
+		}
+
 		this.createPrintWriter();
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 
-		printWriter.println("{" + this.jsonHeader());
+		printWriter.println("{\n" + this.jsonHeader());
 
 		ArrayList<String> trkArray = new ArrayList<String>();
 		ArrayList<String> gsArray = new ArrayList<String>();
@@ -401,7 +431,7 @@ public class DAABandsV2 {
 			}
 
 			jsonStats = this.jsonBands(
-				daa, monitors,
+				monitors,
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
@@ -467,27 +497,28 @@ public class DAABandsV2 {
 			printHelpMsg();
 			System.exit(0);
 		}
-		int a = 0;
-		for (; a < args.length && args[a].startsWith("-"); a++) {
+		for (int a = 0; a < args.length; a++) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
 				printHelpMsg();
 				System.exit(0);
 			} else if (args[a].startsWith("--list-monitors") || args[a].startsWith("-list-monitors")) {
 				System.out.println(printMonitorList());
 				System.exit(0);
-			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
-				daaConfig = args[++a];
-			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
-				ofname = args[++a];
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(getVersion());
 				System.exit(0);
+			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
+				daaConfig = args[++a];
+			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
+				ofname = args[++a];
+			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
+				this.wind = args[++a];
 			} else if (args[a].startsWith("-")) {
-				System.err.println("** Error: Invalid option ("+args[a]+")");
-				System.exit(1);
+				System.err.println("** Warning: Invalid option (" + args[a] + ")");
+			} else {
+				this.ifname = args[a];
 			}
 		}
-		this.ifname = args[a];
 		this.scenario = removeExtension(getFileName(this.ifname));
 		if (ofname == null) {
 			ofname = scenario + ".json";
@@ -525,11 +556,8 @@ public class DAABandsV2 {
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
-		if (!daaBands.inputFileReadable()) {
-			System.err.println("** Error: File " + daaBands.getInputFileName() + " cannot be read");
-			System.exit(1);
-		}
 		daaBands.loadDaaConfig();
+		daaBands.loadWind();
 		daaBands.walkFile(null);
 	}
 

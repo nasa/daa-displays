@@ -166,7 +166,8 @@ player.define("init", async () => {
     await player.exec({
         alertingLogic: player.getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: player.getSelectedConfiguration(),
-        scenario: player.getSelectedScenario()
+        scenario: player.getSelectedScenario(),
+        wind: player.getSelectedWindSettings()
     });
     viewOptions.applyCurrentViewOptions();
     player.updateMonitors();
@@ -258,6 +259,7 @@ async function createPlayer() {
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
+    await player.appendWindSettings();
     await player.appendWellClearVersionSelector();
     await player.appendWellClearConfigurationSelector();
     await player.appendMonitorPanel();

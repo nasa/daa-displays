@@ -45,6 +45,7 @@ TERMINATION OF THIS AGREEMENT.
 #include "WCV_tvar.h"
 #include "DaidalusFileWalker.h"
 #include <cstring>
+#include <regex>
 
 class DaidalusWrapperInterface {
 	public:
@@ -469,6 +470,7 @@ protected:
 	std::string scenario;
 	std::string ofname; // output file name
 	std::string ifname; // input file name
+	std::string wind; // wind information
 
 	std::string printBool (bool b) { return b ? "true" : "false"; }
 	std::string printDouble (double d) {
@@ -491,6 +493,7 @@ public:
 		scenario = "";
 		ofname = "";
 		ifname = "";
+		wind = "";
 	}
 
 	std::string getScenario() const {
@@ -524,6 +527,7 @@ public:
 		std::cout << "  --help\n\tPrint this message" << std::endl;
 		std::cout << "  --version\n\tPrint WellClear version" << std::endl;
 		std::cout << "  --config <file.conf>\n\tLoad configuration <file.conf>" << std::endl;
+		std::cout << "  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers" << std::endl;
 		std::cout << "  --output <file.json>\n\tOutput file <file.json>" << std::endl;
 		std::cout << "  --list-monitors\nReturns the list of available monitors, in JSON format" << std::endl;
 		exit(0);
@@ -600,7 +604,37 @@ public:
 		}
 		return false;
 	}
-	
+
+	bool loadWind () {
+		if (!wind.empty()) {
+			std::cout << "Loading wind " << wind << std::endl;
+			double deg = 0;
+			double knot = 0;
+			double fpm = 0;
+			const std::regex re_deg(".*\\bdeg\\s*:\\s*(.*)");
+			std::smatch match_deg;
+			std::regex_match(wind, match_deg, re_deg);
+			if (match_deg.size() == 2) {
+				// std::cout << "match size: " << match_deg.size() << std::endl;
+				deg = std::stod(match_deg[1].str());
+				// std::cout << deg << std::endl;
+			}
+			
+			const std::regex re_knot(".*\\bknot\\s*:\\s*(.*)");
+			std::smatch match_knot;
+			std::regex_match(wind, match_knot, re_knot);
+			if (match_knot.size() == 2) {
+				// std::cout << "match size: " << match_knot.size() << std::endl;
+				knot = std::stod(match_knot[1].str());
+				// std::cout << knot << std::endl;
+			}
+			larcfm::Velocity windVelocity = larcfm::Velocity::makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
+			daa.setWindVelocityTo(windVelocity);
+			return true;
+		}
+		return false;
+	}
+
 	std::string jsonHeader () const {
 		const std::string ans = std::string("{ \"version\": ") + std::string("\"") + getVersion() 
 								+ std::string("\", \"configuration\": ") + std::string("\"") + getDaaConfig() + std::string("\" }"); 
@@ -789,6 +823,15 @@ public:
 		return stats;
 	}
 	void walkFile (DaidalusWrapperInterface* wrapper) {
+		if (ifname.empty()) {
+			std::cerr << "** Error: Please specify a daa file" << std::endl;
+			exit(1);
+		}
+		if (!inputFileReadable()) {
+			std::cerr << "** Error: File " << getInputFileName() << " cannot be read" << std::endl;
+			exit(1);
+		}
+
 		createPrintWriter();
 
 		/* Create DaidalusFileWalker */
@@ -796,8 +839,10 @@ public:
 
 		*printWriter << "{\n\"Info\": ";
 		*printWriter << jsonHeader() << "," << std::endl;
-		*printWriter << "\"Scenario\": \"" + scenario + "\",";
-		*printWriter << "\n";
+		*printWriter << "\"Scenario\": \"" + scenario + "\"," << std::endl;
+		*printWriter << "\"Wind\": { \"deg\": \"" << larcfm::Units::to("deg", daa.getWindVelocityTo().compassAngle()) 
+					 << "\", \"knot\": \"" << larcfm::Units::to("knot", daa.getWindVelocityTo().gs()) 
+					 << "\" }," << std::endl;
 
 		std::vector<std::string>* trkArray = new std::vector<std::string>();
 		std::vector<std::string>* gsArray = new std::vector<std::string>();
@@ -904,33 +949,32 @@ public:
 
 	void parseCliArgs (char* const args[], int length) {
 		// System.out.println(args.toString());
-		if (args == NULL || length == 0) {
-			std::cout << "Invalid args" << std::endl;
+		if (args == NULL || length <= 1) {
 			printHelpMsg();
 			exit(0);
 		}
-		int a = 1;
-		for (; a < length && larcfm::startsWith(args[a], "-"); a++) {
+		for (int a = 1; a < length; a++) {
 			if (std::strcmp(args[a], "--help") == 0 || std::strcmp(args[a], "-help") == 0 || std::strcmp(args[a], "-h") == 0) {
-				std::cout << "DAABandsV2 help" << std::endl;
 				printHelpMsg();
 				exit(0);
 			} else if (larcfm::startsWith(args[a], "--list-monitors") || larcfm::startsWith(args[a], "-list-monitors")) {
 				std::cout << printMonitorList() << std::endl;
 				exit(0);
-			} else if (larcfm::startsWith(args[a], "--conf") || larcfm::startsWith(args[a], "-conf") || std::strcmp(args[a], "-c") == 0) {
-				daa_config = args[++a];
-			} else if (larcfm::startsWith(args[a], "--out") || larcfm::startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0) {
-				ofname = args[++a];
 			} else if (larcfm::startsWith(args[a], "--version") || larcfm::startsWith(args[a], "-version")) {
 				std::cout << getVersion() << std::endl;
 				exit(0);
+			} else if (a < length - 1 && (larcfm::startsWith(args[a], "--conf") || larcfm::startsWith(args[a], "-conf") || std::strcmp(args[a], "-c") == 0)) {
+				daa_config = args[++a];
+			} else if (a < length - 1 && (larcfm::startsWith(args[a], "--out") || larcfm::startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0)) {
+				ofname = args[++a];
+			} else if (a < length - 1 && (larcfm::startsWith(args[a], "--wind") || larcfm::startsWith(args[a], "-wind"))) {
+				wind = args[++a];
 			} else if (larcfm::startsWith(args[a], "-")) {
 				std::cerr << "** Error: Invalid option (" << args[a] << ")" << std::endl;
-				exit(1);
+			} else {
+				ifname = args[a];
 			}
 		}
-		ifname = args[a];
 		scenario = removeExtension(getFileName(ifname));
 		if (ofname.empty()) {
 			ofname = "./" + scenario + ".json";
@@ -962,11 +1006,8 @@ public:
 int main(int argc, char* argv[]) {
 	DAABandsV2 daaBands;
 	daaBands.parseCliArgs(argv, argc);
-	if (!daaBands.inputFileReadable()) {
-		std::cerr << "** Error: File " << daaBands.getInputFileName() << " cannot be read" << std::endl;
-		exit(1);
-	}
 	daaBands.loadDaaConfig();
+	daaBands.loadWind();
 	daaBands.walkFile(NULL);
 }
 

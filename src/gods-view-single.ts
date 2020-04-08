@@ -125,13 +125,15 @@ player.define("init", async () => {
     await player.javaLoS({
         losLogic: player.getSelectedLoSVersion(),
         alertingConfig: player.getSelectedConfiguration(),
-        scenario: player.getSelectedScenario()
+        scenario: player.getSelectedScenario(),
+        wind: player.getSelectedWindSettings()
     });
     // compute bands
     await player.exec({
         alertingLogic: player.getSelectedWellClearVersion(),
         alertingConfig: player.getSelectedConfiguration(),
-        scenario: player.getSelectedScenario()
+        scenario: player.getSelectedScenario(),
+        wind: player.getSelectedWindSettings()
     });
     // center the map at the ownship location
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();

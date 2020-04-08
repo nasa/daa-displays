@@ -203,6 +203,7 @@ export class DAAPlayer {
 
     protected wellClearVersionSelector: string = "sidebar-daidalus-version";
     protected wellClearConfigurationSelector: string = "sidebar-daidalus-configuration";
+    protected windSettingsSelector: string = "sidebar-wind-settings";
     protected monitorDomSelector: string = "daa-monitors";
     protected configInfo: ConfigFile;
     protected daaMonitors: { id: number, name: string, color: string }[] = [];
@@ -748,14 +749,16 @@ export class DAAPlayer {
      */
     async listMonitors (data: {
         alertingLogic: string,
+        wind: { deg: number, knot: number },
         alertingConfig?: string,
-        scenario?: string
+        scenario?: string,
     }): Promise<string[]> {
         await this.connectToServer();
         const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "WellClear-2.0.e.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
-            scenarioName: data.scenario || "H1.daa"
+            scenarioName: data.scenario || "H1.daa",
+            wind: data.wind || { knot: 0, deg: 0 }
         }
         const res: WebSocketMessage<string> = await this.ws.send({
             type: `list-monitors`,
@@ -1056,23 +1059,27 @@ export class DAAPlayer {
     /**
      * @function <a name="java">java</a>
      * @description Sends a java evaluation request to the server
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., DAAtoPVS-1.0.1.jar (Base path is daa-logic/)
-     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "WellClear-2.0.f.jar" (Base path is daa-logic/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
+     * @param scenarioName Flight scenario, e.g., "H1.daa"
+     * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
     async exec (data: {
         alertingLogic: string,
         alertingConfig: string,
-        scenario: string
+        scenario: string,
+        wind: { deg: number, knot: number }
     }): Promise<{
         err: string,
         bands: DaidalusBandsDescriptor
     }> {
         const msg: ExecMsg = {
-            daaLogic: data.alertingLogic ||  "DAAtoPVS-1.0.1.jar",
-            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.txt",
-            scenarioName: data.scenario || "H1.daa"
+            daaLogic: data.alertingLogic ||  "WellClear-2.0.f.jar",
+            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
+            scenarioName: data.scenario || "H1.daa",
+            wind: data.wind || { knot: 0, deg: 0 }
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1107,23 +1114,27 @@ export class DAAPlayer {
     /**
      * @function <a name="javaLoS">javaLoS</a>
      * @description Computes conflict regions using the java implementation of well-clear
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., DAAtoPVS-1.0.1.jar (Base path is daa-logic/)
-     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "WellClear-2.0.f.jar" (Base path is daa-logic/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
+     * @param scenarioName Flight scenario, e.g., "H1.daa"
+     * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
     async javaLoS (data: {
         losLogic: string,
         alertingConfig: string,
-        scenario: string
+        scenario: string,
+        wind: { deg: number, knot: number }
     }): Promise<{
         err: string,
         los: DAALosDescriptor
     }> {
         const msg: ExecMsg = {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
-            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
-            scenarioName: data.scenario || "H1.daa"
+            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
+            scenarioName: data.scenario || "H1.daa",
+            wind: data.wind || { knot: 0, deg: 0 }
         }
         console.log(`Computing conflict regions using java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1165,7 +1176,8 @@ export class DAAPlayer {
     async javaVirtualPilot (data: {
         virtualPilot: string,
         alertingConfig: string,
-        scenario: string
+        scenario: string,
+        wind: { deg: number, knot: number }
     }): Promise<{
         err: string,
         //scenario: .... 
@@ -1174,7 +1186,8 @@ export class DAAPlayer {
         const msg: ExecMsg = {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
             daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
-            scenarioName: data.scenario || "H1.ic"
+            scenarioName: data.scenario || "H1.ic",
+            wind: data.wind || { knot: 0, deg: 0 }
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1277,11 +1290,11 @@ export class DAAPlayer {
     // }    
 
     getSelectedConfiguration(): string {
-        return $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list option:selected`).text();
+        return $(`#${this.wellClearConfigurationSelector}-list option:selected`).text();
     }
 
     getSelectedWellClearVersion(): string {
-        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+        const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
         if (sel) {
             const components: string[] = sel.split("-");
             if (components && components.length > 2) {
@@ -1293,21 +1306,32 @@ export class DAAPlayer {
     }
     getSelectedLoSVersion(): string {
         if (this.selectedAppType === this.appTypes[1]) {
-            const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+            const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
             return sel;
         }
         return null;
     }
     getSelectedVirtualPilotVersion(): string {
         if (this.selectedAppType === this.appTypes[2]) {
-            const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+            const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
             return sel;
         }
         return null;
     }
     getSelectedLogic(): string {
-        const sel: string = $(`#${this.wellClearVersionSelector}-daidalus-versions-list option:selected`).text();
+        const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
         return sel;
+    }
+    /**
+     * Wind configuration
+     * @return JSON object { knot: number, deg: number } 
+     * @memberof module:DAAPlaybackPlayer
+     * @instance
+     */
+    getSelectedWindSettings (): { knot: number, deg: number } {
+        const knot: number = +$(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value");
+        const deg: number = +$(`#${this.windSettingsSelector}-list-degs option:selected`).attr("value");
+        return { knot, deg };
     }
     /**
      * @function <a name="play">play</a>
@@ -1676,6 +1700,13 @@ export class DAAPlayer {
         await this.refreshConfigurationView();
     }
 
+    async appendWindSettings(selector?: string): Promise<void> {
+        selector = selector || this.windSettingsSelector;
+        this.windSettingsSelector = selector;
+        // update the front-end
+        this.refreshWindSettingsView();
+    }
+
     async appendMonitorPanel(monitorDomSelector?: string): Promise<void> {
         monitorDomSelector = monitorDomSelector || "daa-monitors";
         this.monitorDomSelector = monitorDomSelector;
@@ -1685,7 +1716,10 @@ export class DAAPlayer {
         $(`#${this.monitorDomSelector}`).append(theHTML);
 
         // list monitors supported by the wellclear version selected in the list (which is by default the first one in the list)
-        const monitorList: string[] = await this.listMonitors({ alertingLogic: this._wellClearVersions[0]});
+        const monitorList: string[] = await this.listMonitors({
+            alertingLogic: this._wellClearVersions[0],
+            wind: this.getSelectedWindSettings()
+        });
         if (monitorList && monitorList.length > 0) {
             for (let i = 0; i < monitorList.length; i++) {
                 const monitorID: number = i + 1;
@@ -1968,7 +2002,7 @@ export class DAAPlayer {
             configurations: this._wellClearConfigurations,
             id: this.wellClearConfigurationSelector
         });
-        $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list`).remove();
+        $(`#${this.wellClearConfigurationSelector}-list`).remove();
         $(`#${this.wellClearConfigurationSelector}`).append(theHTML);
 
         const refreshConfigurationAttributesView = async (config: string) => {
@@ -1979,15 +2013,15 @@ export class DAAPlayer {
                     attributes: this.configInfo.fileContent.split("\n"),
                     id: this.wellClearConfigurationSelector
                 });
-                $(`#${this.wellClearConfigurationSelector}-daidalus-configuration-attributes-list`).remove();
-                $(`#sidebar-daidalus-configuration-attributes`).append(theAttributes);
+                $(`#${this.wellClearConfigurationSelector}-attributes-list`).remove();
+                $(`#${this.wellClearConfigurationSelector}-attributes`).append(theAttributes);
             }
         }
         const selectedConfig: string = this.getSelectedConfiguration();
         await refreshConfigurationAttributesView(selectedConfig);
 
         // update simulation when configuration changes
-        $(`#${this.wellClearConfigurationSelector}-daidalus-configurations-list`).on("change", async () => {
+        $(`#${this.wellClearConfigurationSelector}-list`).on("change", async () => {
             this.disableSimulationControls();
             this.revealActivationPanel();
             const selectedConfig: string = this.getSelectedConfiguration();
@@ -2003,23 +2037,36 @@ export class DAAPlayer {
             versions: this._wellClearVersions,
             id: this.wellClearVersionSelector
         });
-        $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).remove();
+        $(`#${this.wellClearVersionSelector}-list`).remove();
         $(`#${this.wellClearVersionSelector}`).append(theHTML);
         // append handlers for selection of well clear version
-        $(`#${this.wellClearVersionSelector}-daidalus-versions-list`).on("change", async () => {
+        $(`#${this.wellClearVersionSelector}-list`).on("change", async () => {
             this.disableSimulationControls();
             this.revealActivationPanel();
+        });
+        return this;
+    }
 
-
-            // this.loadingAnimation();
-            // // this will update the list of configurations for the selected version
-            // await this.listConfigurations();
-            // // debug lines
-            // console.log(`new daidalus version selected: ${this.getSelectedWellClearVersion()}`);
-            // // this will trigger the init function of the simulation. The wellclear version is specified in the java command defined by the caller
-            // await this.reloadScenarioFile();
-            // this.refreshSimulationPlots();
-            // this.loadingComplete();
+    protected refreshWindSettingsView(): DAAPlayer {
+        const knots: number[] = [];
+        for (let i = 0; i <= 200; i+=10) {
+            knots.push(i);
+        }
+        const degs: number[] = [];
+        for (let i = 0; i < 360; i+=10) {
+            degs.push(i);
+        }
+        const theHTML: string = Handlebars.compile(templates.windSettingsTemplate)({
+            knots,
+            degs,
+            id: this.windSettingsSelector
+        });
+        $(`#${this.windSettingsSelector}-list`).remove();
+        $(`#${this.windSettingsSelector}`).append(theHTML);
+        // append handlers for selection of well clear version
+        $(`.${this.windSettingsSelector}-list`).on("change", async () => {
+            this.disableSimulationControls();
+            this.revealActivationPanel();
         });
         return this;
     }

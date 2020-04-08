@@ -51,19 +51,30 @@ export const activationPanel: string =`
 </div>`;
 
 export const daidalusParametersTemplate: string = `
-<select id="{{id}}-daidalus-parameters-list" class="form-control" size="16" style="overflow:auto;">
+<select id="{{id}}-list" class="form-control" size="16" style="overflow:auto;">
     {{#each daidalus.parameters}}
     <option id="{{../id}}-{{@key}}">{{@key}}: {{this}}</option>
     {{/each}}
 </select>`;
 
 export const daidalusVersionsTemplate: string = `
-<select id="{{id}}-daidalus-versions-list" class="form-control sim-selector" size="1">
+<select id="{{id}}-list" class="form-control sim-selector" size="1">
     {{#each versions}}
     <option {{#if @first}}selected {{/if}}id="{{../id}}-{{this}}">{{this}}</option>
     {{/each}}
 </select>`;
 
+export const windSettingsTemplate: string = `
+<select id="{{id}}-list-degs" class="form-control sim-selector {{id}}-list" size="1">
+    {{#each degs}}
+    <option {{#if @first}}selected {{/if}}id="{{../id}}-{{this}}" value="{{this}}">{{this}} deg</option>
+    {{/each}}
+</select>
+<select id="{{id}}-list-knots" class="form-control sim-selector {{id}}-list" size="1">
+    {{#each knots}}
+    <option {{#if @first}}selected {{/if}}id="{{../id}}-{{this}}" value="{{this}}">{{this}} knot</option>
+    {{/each}}
+</select>`;
 
 export const daaScenariosTemplate: string = `
 <select id={{id}}-scenarios-list class="form-control" size="20" style="overflow:auto;">
@@ -73,14 +84,14 @@ export const daaScenariosTemplate: string = `
 </select>`;
 
 export const daidalusConfigurationsTemplate: string = `
-<select id="{{id}}-daidalus-configurations-list" class="form-control sim-selector" size="1">
+<select id="{{id}}-list" class="form-control sim-selector" size="1">
     {{#each configurations}}
     <option id="{{../id}}-{{this}}">{{this}}</option>
     {{/each}}
 </select>`;
 
 export const daidalusAttributesTemplate: string = `
-<select id={{id}}-daidalus-configuration-attributes-list class="form-control" size="16" style="overflow:auto;margin-bottom:20px;">
+<select id={{id}}-attributes-list class="form-control" size="24" style="overflow:auto;margin-bottom:20px;">
     <option id="{{id}}-{{fileName}}">## Configuration {{fileName}}</option>
     {{#each attributes}}
     <option id="{{id}}-{{this}}">{{this}}</option>
@@ -101,6 +112,14 @@ export const sidePanelTemplate: string = `
             </h6>
             <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
                 <li class="nav-item" id="{{id}}-scenarios">
+                </li>
+            </ul>
+
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span><b>Wind Vector</b></span>
+            </h6>
+            <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                <li class="nav-item" id="sidebar-wind-settings">
                 </li>
             </ul>
 

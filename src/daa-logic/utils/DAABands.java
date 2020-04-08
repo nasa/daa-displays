@@ -54,6 +54,7 @@ import gov.nasa.larcfm.ACCoRD.KinematicMultiBands;
 import gov.nasa.larcfm.Util.Units;
 import gov.nasa.larcfm.Util.Util;
 import gov.nasa.larcfm.Util.f;
+import gov.nasa.larcfm.Util.Velocity;
 
 public class DAABands {
 
@@ -66,6 +67,7 @@ public class DAABands {
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint WellClear version");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
+		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.exit(0);
     }
@@ -96,37 +98,61 @@ public class DAABands {
 		}
 	}
 
+	protected static Boolean loadWind (Daidalus daa, String wind) {
+		if (daa != null) {
+			if (wind != null) {
+				System.out.println("Loading wind " + wind);
+				double deg = 0;
+				double knot = 0;
+				double fpm = 0;
+				java.util.regex.Matcher match_deg = java.util.regex.Pattern.compile("\\bdeg\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				if (match_deg.find()) {
+					deg = Double.parseDouble(match_deg.group(1));
+				}
+				java.util.regex.Matcher match_knot = java.util.regex.Pattern.compile("\\bknot\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				if (match_knot.find()) {
+					knot = Double.parseDouble(match_knot.group(1));
+				}
+				Velocity windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
+				daa.setWindField(windVelocity);
+				return true;
+			}
+		} else {
+			System.err.println("** Error: Daidalus is not initialized.");
+		}
+		return false;
+	}
+
 	public static void main(String[] args) {
 		PrintWriter out = new PrintWriter(System.out);
 		String config = null;
 		String scenario = null;
 		String output = null;
+		String input = null;
+		String wind = null;
 
-		/* Reading and processing options */
-		int a=0;
-		for (;a < args.length && args[a].startsWith("-"); ++a) {
+		for (int a = 0; a < args.length; a++) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
 				printHelpMsg();
-			} else if (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c")) {
-				config = args[++a];
-			} else if (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o")) {
-				output = args[++a];
-            } else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
+				System.exit(0);
+			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(KinematicBandsParameters.VERSION);
                 System.exit(0);
-            } else if (args[a].startsWith("-")) {
-				System.err.println("** Error: Invalid option ("+args[a]+")");
-				System.exit(1);
+            } else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
+				config = args[++a];
+			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
+				output = args[++a];
+			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
+				wind = args[++a];
+			} else if (args[a].startsWith("-")) {
+				System.err.println("** Warning: Invalid option (" + args[a] + ")");
+			} else {
+				input = args[a];
 			}
 		}
-		if (a+1 != args.length) {
-			System.err.println("** Error: Expecting exactly one input file. Try --help for usage.");
-			System.exit(1);
-		} 
-		String input = args[a];
 		File file = new File(input);
 		if (!file.exists() || !file.canRead()) {
-			System.err.println("** Error: File "+input+" cannot be read");
+			System.err.println("** Error: File " + input + " cannot be read");
 			System.exit(1);
 		}
 		try {
@@ -138,16 +164,20 @@ public class DAABands {
 			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
 			System.out.println("Writing file " + output);
 		} catch (Exception e) {
-			System.err.println("** Error: "+e);
+			System.err.println("** Error: " + e);
 			System.exit(1);
 		}
 
 		/* Create Daidalus object and setting the configuration parameters */
-		Daidalus daa  = new Daidalus();
+		Daidalus daa = new Daidalus();
 
 		if (config != null && !daa.parameters.loadFromFile(config)) {
 		    System.err.println("** Error: Configuration file " + config + " not found");
 		    System.exit(1);
+		}
+
+		if (wind != null) {
+			loadWind(daa, wind);
 		}
 
 		/* Creating a DaidalusFileWalker */
@@ -158,11 +188,11 @@ public class DAABands {
         
         String conf = (config != null) ? config.split("/")[config.split("/").length - 1] : "";
 
-        out.print("{\n\"WellClear\": ");
+        out.print("{\n\"Info\": ");
 		out.println("{ \"version\": " + "\"" + KinematicBandsParameters.VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");
-
         out.println("\"Scenario\": \"" + scenario + "\",");
-         
+		out.println("\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindField().compassAngle()) 
+					+ "\", \"knot\": \"" + Units.to("knot", daa.getWindField().gs()) + "\" },");        
 		String str_to = "";
 		String str_trko = "";
 		String str_gso = "";

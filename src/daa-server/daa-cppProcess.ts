@@ -42,14 +42,28 @@
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as fsUtils from './utils/fsUtils';
 
 export class CppProcess {
-	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
+	async exec (desc: {
+		daaFolder: string, 
+		daaLogic: string, 
+		daaConfig: string, 
+		daaScenario: string, 
+		outputFileName: string,
+		wind: { deg: number, knot: number }
+	},
+	opt?: { 
+		contrib?: boolean 
+	}): Promise<string> {
 		opt = opt || {};
-		if (daaFolder && daaLogic && daaConfig && scenarioName && outputFileName) {
-			daaLogic = daaLogic || "DAAtoPVS-1.0.1";
-			daaConfig = daaConfig || "WC_SC_228_nom_b.txt";
-			scenarioName = scenarioName || "H1.daa";
+		if (desc) {
+			const daaFolder: string = desc.daaFolder
+			const daaLogic: string = desc.daaLogic || "WellClear-2.0.f.jar";
+			const daaConfig = desc.daaConfig || "1.x/WC_SC_228_nom_a.conf";
+			const daaScenario = desc.daaScenario || "H1.daa";
+			const wind: { deg: number, knot: number } = desc.wind || { deg: 0, knot: 0 };
+			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
 			const f1: string = path.join("../daa-output", ver);
 			const outputFolder: string = path.join(f1, "cpp");
@@ -62,11 +76,11 @@ export class CppProcess {
 			}
 			const outputFilePath: string = opt.contrib ? path.join("..", outputFolder, outputFileName) : path.join(outputFolder, outputFileName);
 			return new Promise((resolve, reject) => {
-				const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", scenarioName);
+				const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", daaScenario);
 				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`./${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} ${wellClearScenario}`
+					`./${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);

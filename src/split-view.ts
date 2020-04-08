@@ -316,7 +316,8 @@ splitView.getPlayer("left").define("init", async () => {
     await splitView.getPlayer("left").exec({
         alertingLogic: splitView.getPlayer("left").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario()
+        scenario: splitView.getSelectedScenario(),
+        wind: splitView.getSelectedWindSettings()
     });
     // viewOptions_left.applyCurrentViewOptions();
     // scale displays
@@ -338,7 +339,8 @@ splitView.getPlayer("right").define("init", async () => {
     await splitView.getPlayer("right").exec({
         alertingLogic: splitView.getPlayer("right").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario()
+        scenario: splitView.getSelectedScenario(),
+        wind: splitView.getSelectedWindSettings()
     });
     // viewOptions_right.applyCurrentViewOptions();
     // if (developerMode) {
@@ -429,6 +431,7 @@ async function createPlayer() {
     splitView.appendNavbar();
     splitView.appendSidePanelView();
     await splitView.appendScenarioSelector();
+    await splitView.appendWindSettings();
     await splitView.appendWellClearVersionSelector();
     await splitView.appendWellClearConfigurationSelector();
     splitView.appendSimulationControls({
