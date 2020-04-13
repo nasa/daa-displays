@@ -317,7 +317,7 @@ splitView.getPlayer("left").define("init", async () => {
         alertingLogic: splitView.getPlayer("left").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario(),
-        wind: splitView.getSelectedWindSettings()
+        wind: splitView.getPlayer("left").getSelectedWindSettings()
     });
     // viewOptions_left.applyCurrentViewOptions();
     // scale displays
@@ -340,7 +340,7 @@ splitView.getPlayer("right").define("init", async () => {
         alertingLogic: splitView.getPlayer("right").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
         scenario: splitView.getSelectedScenario(),
-        wind: splitView.getSelectedWindSettings()
+        wind: splitView.getPlayer("right").getSelectedWindSettings()
     });
     // viewOptions_right.applyCurrentViewOptions();
     // if (developerMode) {

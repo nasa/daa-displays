@@ -115,15 +115,15 @@ export const sidePanelTemplate: string = `
                 </li>
             </ul>
 
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span><b>Wind Vector</b></span>
-            </h6>
-            <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
-                <li class="nav-item" id="sidebar-wind-settings">
-                </li>
-            </ul>
-
             <div id="single-view">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span><b>Wind Vector</b></span>
+                </h6>
+                <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                    <li class="nav-item" id="sidebar-wind-settings">
+                    </li>
+                </ul>
+
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span><b>Daidalus Version</b></span>
                     <button id="{{id}}-refresh-daidalus-versions" class="btn btn-secondary btn-sm" type="button" style="display:none">

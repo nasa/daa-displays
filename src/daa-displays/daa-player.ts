@@ -94,8 +94,8 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
-import { ExecMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LbUb, LoadScenarioRequest, LoadConfigRequest, BandRange, DaidalusBand, DaidalusResolution, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
+import { ExecMsg, LLAData, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {

@@ -85,8 +85,8 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
-import { DAAPlayer, safeSelector } from './daa-player';
-import { ExecMsg, LLAData, DAADataXYZ, DaidalusBandsDescriptor, BandElement } from 'src/daa-server/utils/daa-server';
+import { DAAPlayer } from './daa-player';
+import { LLAData } from 'src/daa-server/utils/daa-server';
     
 export class DAASplitView extends DAAPlayer {
     private players: { [key: string]: DAAPlayer };
@@ -344,6 +344,22 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
+    async appendWindSettings(selector?: string, opt?: { parent?: string }): Promise<void> {
+        selector = selector || this.windSettingsSelector;
+        this.windSettingsSelector = selector;
+        opt = opt || {};
+        // update the front-end
+        if (this.players) {
+            if (this.players.left) {
+                await this.players.left.appendWindSettings("daidalus-wind-left");
+            }
+            if (this.players.right) { 
+                await this.players.right.appendWindSettings("daidalus-wind-right"); 
+            }
+        }
+    }
+
+    // @overrides
     async appendWellClearVersionSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
         wellClearConfigurationSelector = wellClearConfigurationSelector || this.id;
         opt = opt || {};
@@ -358,6 +374,7 @@ export class DAASplitView extends DAAPlayer {
         }
     }
 
+    // @overrides
     async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
         wellClearConfigurationSelector = wellClearConfigurationSelector || "sidebar-daidalus-configuration";
         opt = opt || {};
