@@ -1329,14 +1329,19 @@ export class DAAPlayer {
      * @instance
      */
     getSelectedWindSettings (): { knot: string, deg: string } {
+        let knot: string = "0";
+        let deg: string = "0";
+        const fromTo: string = $(`#${this.windSettingsSelector}-from-to-selector option:selected`).attr("value");
         if ($(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value")) {
-            const knot: string = $(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value");
-            const deg: string = $(`#${this.windSettingsSelector}-list-degs option:selected`).attr("value");
-            return { knot, deg };
+            knot = $(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value");
+            deg = $(`#${this.windSettingsSelector}-list-degs option:selected`).attr("value");
+        } else {
+            knot = `${$(`#${this.windSettingsSelector}-list-knots`).val()}`;
+            deg = `${$(`#${this.windSettingsSelector}-list-degs`).val()}`;
         }
-        // else
-        const knot: string = `${$(`#${this.windSettingsSelector}-list-knots`).val()}`;
-        const deg: string = `${$(`#${this.windSettingsSelector}-list-degs`).val()}`;
+        if (fromTo === "to") {
+            deg = `${+deg + 180}`; 
+        }
         return { knot, deg };    
     }
     /**
@@ -1698,27 +1703,27 @@ export class DAAPlayer {
         $('body').append(theHTML);
     }
 
-    async appendWellClearVersionSelector(wellClearVersionSelector?: string): Promise<void> {
-        wellClearVersionSelector = wellClearVersionSelector || "sidebar-daidalus-version";
-        this.wellClearVersionSelector = wellClearVersionSelector;
+    async appendWellClearVersionSelector(opt?: { selector?: string }): Promise<void> {
+        opt = opt || {};
+        this.wellClearVersionSelector = opt.selector || "sidebar-daidalus-version";
         // update data structures
         await this.listVersions();
         // update the front-end
         this.refreshVersionsView();
     }
 
-    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string): Promise<void> {
-        wellClearConfigurationSelector = wellClearConfigurationSelector || "sidebar-daidalus-configuration";
-        this.wellClearConfigurationSelector = wellClearConfigurationSelector;
+    async appendWellClearConfigurationSelector(opt?: { selector?: string }): Promise<void> {
+        opt = opt || {};
+        this.wellClearConfigurationSelector = opt.selector || "sidebar-daidalus-configuration";
         // update data structures
         await this.listConfigurations();
         // update the front-end
         await this.refreshConfigurationView();
     }
 
-    async appendWindSettings(selector?: string, opt?: { parent?: string, dropDown?: boolean }): Promise<void> {
-        selector = selector || this.windSettingsSelector;
-        this.windSettingsSelector = selector;
+    async appendWindSettings(opt?: { selector?: string, parent?: string, dropDown?: boolean, fromToSelectorVisible?: boolean }): Promise<void> {
+        opt = opt || {};
+        this.windSettingsSelector = opt.selector || this.windSettingsSelector
         // update the front-end
         this.refreshWindSettingsView(opt);
     }
@@ -2063,8 +2068,9 @@ export class DAAPlayer {
         return this;
     }
 
-    protected refreshWindSettingsView(opt?: { dropDown?: boolean }): DAAPlayer {
-        if (opt && opt.dropDown) {
+    refreshWindSettingsView(opt?: { dropDown?: boolean, fromToSelectorVisible?: boolean }): DAAPlayer {
+        opt = opt || {};
+        if (opt.dropDown) {
             const knots: number[] = [];
             for (let i = 0; i <= 200; i+=10) {
                 knots.push(i);
@@ -2096,6 +2102,9 @@ export class DAAPlayer {
                 this.revealActivationPanel();
             });
         }
+        $(`#${this.windSettingsSelector}-from-to-selector`).css({
+            display: opt.fromToSelectorVisible ? "block" : "none"
+        });
         return this;
     }
 

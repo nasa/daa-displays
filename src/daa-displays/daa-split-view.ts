@@ -344,48 +344,47 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    async appendWindSettings(selector?: string, opt?: { parent?: string, dropDown?: boolean }): Promise<void> {
-        selector = selector || this.windSettingsSelector;
-        this.windSettingsSelector = selector;
+    async appendWindSettings(opt?: { selector?: string, parent?: string, dropDown?: boolean, fromToSelectorVisible?: boolean }): Promise<void> {
         opt = opt || {};
+        this.windSettingsSelector = opt.selector || this.windSettingsSelector;
         // update the front-end
         if (this.players) {
             if (this.players.left) {
-                await this.players.left.appendWindSettings("daidalus-wind-left");
+                await this.players.left.appendWindSettings({ selector: "daidalus-wind-left", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible });
             }
             if (this.players.right) { 
-                await this.players.right.appendWindSettings("daidalus-wind-right"); 
+                await this.players.right.appendWindSettings({ selector: "daidalus-wind-right", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible }); 
             }
         }
     }
 
     // @overrides
-    async appendWellClearVersionSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
-        wellClearConfigurationSelector = wellClearConfigurationSelector || this.id;
+    async appendWellClearVersionSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
         opt = opt || {};
-        utils.createDiv("split-view-wellclear-version-selector", { parent: opt.parent });
+        // const selector: string = opt.selector || "split-view-wellclear-version-selector";
+        // utils.createDiv(selector, { parent: opt.parent });
         if (this.players) {
             if (this.players.left) {
-                await this.players.left.appendWellClearVersionSelector("daidalus-version-left");
+                await this.players.left.appendWellClearVersionSelector({ selector: "daidalus-version-left" });
             }
             if (this.players.right) { 
-                await this.players.right.appendWellClearVersionSelector("daidalus-version-right"); 
+                await this.players.right.appendWellClearVersionSelector({ selector: "daidalus-version-right" }); 
             }
         }
     }
 
     // @overrides
-    async appendWellClearConfigurationSelector(wellClearConfigurationSelector?: string, opt?: { parent?: string }): Promise<void> {
-        wellClearConfigurationSelector = wellClearConfigurationSelector || "sidebar-daidalus-configuration";
+    async appendWellClearConfigurationSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
         opt = opt || {};
-        // utils.createDiv("split-view-wellclear-version-selector", { parent: opt.parent });
+        // const selector: string = opt.selector || "sidebar-daidalus-configuration";
+        // utils.createDiv(selector, { parent: opt.parent });
         $("#single-view").css("display", "none"); // hide attributes on side panel
         if (this.players) {
             if (this.players.left) {
-                await this.players.left.appendWellClearConfigurationSelector("daidalus-configuration-left"); 
+                await this.players.left.appendWellClearConfigurationSelector({ selector: "daidalus-configuration-left" }); 
             }
             if (this.players.right) { 
-                await this.players.right.appendWellClearConfigurationSelector("daidalus-configuration-right"); 
+                await this.players.right.appendWellClearConfigurationSelector({ selector: "daidalus-configuration-right" }); 
             }
         }
     }

@@ -94,6 +94,7 @@ import * as utils from './daa-utils';
 import * as templates from './templates/daa-compass-templates';
 import * as server from '../daa-server/utils/daa-server';
 import { InteractiveMap } from './daa-interactive-map';
+import { WindIndicator } from './daa-wind-indicator';
 
 const strokeWidth = 8;
 // const compassTemplate = require("text!widgets/daa-displays/templates/daa-compass.handlebars");
@@ -188,20 +189,23 @@ class ResolutionBug {
 
 
 export class Compass {
-    id: string;
-    top: number;
-    left: number;
-    currentCompassAngle: number;
-    previousCompassAngle: number;
-    nrthup: boolean;
-    map: InteractiveMap;
-    bands: utils.Bands;
-    canvas: HTMLCanvasElement;
-    radius: number;
-    centerX: number;
-    centerY: number;
-    resolutionBug: ResolutionBug;
-    div: HTMLElement;
+    protected id: string;
+    protected top: number;
+    protected left: number;
+    protected currentCompassAngle: number;
+    protected previousCompassAngle: number;
+    protected nrthup: boolean;
+
+    protected map: InteractiveMap;
+    protected wind: WindIndicator;
+
+    protected bands: utils.Bands;
+    protected canvas: HTMLCanvasElement;
+    protected radius: number;
+    protected centerX: number;
+    protected centerY: number;
+    protected resolutionBug: ResolutionBug;
+    protected div: HTMLElement;
 
     /**
      * @function <a name="Compass">Compass</a>
@@ -217,7 +221,11 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, parent?: string}) {
+    constructor(id: string, coords: utils.Coords, opt?: { 
+        map?: InteractiveMap,
+        wind?: WindIndicator, 
+        parent?: string
+    }) {
         opt = opt || {};
         this.id = id || "daa-compass";
 
@@ -232,8 +240,9 @@ export class Compass {
         this.currentCompassAngle = this.previousCompassAngle = 0; //deg
         this.nrthup = false;
 
-        // save pointer to a daa-interactive-map object, if provided
+        // save pointer to a daa-interactive-map and wind object, if provided
         this.map = opt.map;
+        this.wind = opt.wind;
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
@@ -294,18 +303,16 @@ export class Compass {
             $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });
             $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + this.currentCompassAngle + "deg)" });
-            if (this.map) {
-                // rotate map accordingly
-                this.map.setHeading(0);
-            }
+            // rotate map and wind indicator accordingly
+            if (this.map) { this.map.setHeading(0); }
+            if (this.wind) { this.wind.setHeading(0); }
         } else {
             $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + -this.currentCompassAngle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "block" });
             $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" });
-            if (this.map) {
-                // rotate map accordingly
-                this.map.setHeading(this.currentCompassAngle);
-            }
+            // rotate map and wind indicator accordingly
+            if (this.map) { this.map.setHeading(this.currentCompassAngle); }
+            if (this.wind) { this.wind.setHeading(this.currentCompassAngle); }
         }
     }
 

@@ -77,17 +77,23 @@ export const windSettingsTemplate: string = `
 </select>`;
 
 export const windSettingsInputGroupTemplate: string = `
-<div class="input-group input-group-sm mb-3">
+<div class="input-group input-group-sm">
     <div class="input-group-prepend">
         <span class="input-group-text" id="{{id}}-deg-label">deg&nbsp;</span>
     </div>
-    <input type="number" id="{{id}}-list-degs" class="form-control {{id}}-list" aria-label="direction" aria-describedby="{{id}}-deg-label"
+    <input type="number" id="{{id}}-list-degs" class="form-control {{id}}-list" aria-label="direction" aria-describedby="{{id}}-deg-label">
+    <div class="input-group-append">
+        <select id="{{id}}-from-to-selector" style="display:none;" class="form-control sim-selector {{id}}-list" size="1">
+            <option selected value="from">from</option>
+            <option value="to">to</option>
+        </select>
+    </div>
 </div>
-<div class="input-group input-group-sm mb-3">
+<div class="input-group input-group-sm">
     <div class="input-group-prepend">
         <span class="input-group-text" id="{{id}}-knot-label">knot</span>
     </div>
-    <input type="number" id="{{id}}-list-knots" class="form-control {{id}}-list" aria-label="magnitude" aria-describedby="{{id}}-knot-label"
+    <input type="number" id="{{id}}-list-knots" class="form-control {{id}}-list" aria-label="magnitude" aria-describedby="{{id}}-knot-label">
 </div>`;
 
 export const daaScenariosTemplate: string = `

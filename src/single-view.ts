@@ -81,8 +81,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.map.setTraffic(traffic);
         // set wind indicator
         if (bands && bands.Wind) {
-            windIndicator.setAngleFrom(bands.Wind.deg);
-            windIndicator.setMagnitude(bands.Wind.knot);
+            wind.setAngleFrom(bands.Wind.deg);
+            wind.setMagnitude(bands.Wind.knot);
         }
         const step: number = player.getCurrentSimulationStep();
         const time: string = player.getCurrentSimulationTime();
@@ -148,14 +148,14 @@ function plotMonitor (desc: { data: MonitorElement, monitorID: number }) {
     }
 }
 
-// single player
+// interactive map
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
-// map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
-// map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
 // wind indicator
-const windIndicator: WindIndicator = new WindIndicator("wind", { top: 665, left: 195 }, { parent: "daa-disp"});
+const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
+// map heading is controlled by the compass
+const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map, wind });
+// map zoom is controlled by nmiSelector
+const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
 // create remaining display widgets
@@ -267,7 +267,7 @@ async function createPlayer() {
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
-    await player.appendWindSettings();
+    await player.appendWindSettings({ fromToSelectorVisible: true });
     await player.appendWellClearVersionSelector();
     await player.appendWellClearConfigurationSelector();
     await player.appendMonitorPanel();

@@ -60,16 +60,18 @@ export class WindIndicator {
     protected height: number;
     protected div: HTMLElement;
 
-
     protected currentAngle: number = 0;
     protected previousAngle: number = 0;
+    protected compassHeading: number = 0;
+
     protected magnitude: number = 0;
+
 
     /**
      * @function <a name="WindIndicator">WindIndicator</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
-     * @param id {String} Unique bug identifier.
-     * @param daaCompass {Object} DAA Compass widget over which the resolution bug should be rendered.
+     * @param id {String} Unique identifier to be assigned to the widget.
+     * @param coords { top: number, left: number, width: number, height: number } Position and size of the widget.
      * @memberof module:Compass
      * @instance
      * @inner
@@ -79,13 +81,10 @@ export class WindIndicator {
         this.id = id || "daa-wind";
 
         coords = coords || {};
-        this.top = (isNaN(+coords.top)) ? 665 : +coords.top;
+        this.top = (isNaN(+coords.top)) ? 690 : +coords.top;
         this.left = (isNaN(+coords.left)) ? 195 : +coords.left;
-        this.height = (isNaN(+coords.height)) ? 85 : +coords.height;
-        this.width = (isNaN(+coords.width)) ? 116 : +coords.width;
-
-        // set compass angle and rotation mode
-        this.currentAngle = this.previousAngle = 0; //deg
+        this.height = (isNaN(+coords.height)) ? 60 : +coords.height;
+        this.width = (isNaN(+coords.width)) ? 140 : +coords.width;
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
@@ -101,14 +100,14 @@ export class WindIndicator {
         this.refresh();
     }
     /**
-     * @function <a name="WindIndicator_setAngle">setAngle</a>
+     * @function <a name="WindIndicator_setAngleTo">setAngleTo</a>
      * @desc Sets the direction of the wind arrow, given in degrees, clockwise rotation, north is 0 deg.
      * @param deg (real) True wind direction
      * @memberof module:Compass
      * @instance
      * @inner
      */
-    setAngle(deg: number | string): void {
+    setAngleTo(deg: number | string): void {
         if (isFinite(+deg)) {
             this.previousAngle = (isNaN(this.previousAngle)) ? +deg : this.currentAngle;
             const c_rotation: number = Math.abs((((+deg - this.previousAngle) % 360) + 360) % 360); // counter-clockwise rotation
@@ -129,8 +128,8 @@ export class WindIndicator {
      * @inner
      */
     setAngleFrom(deg: number | string): void {
-        const trueDirection: number = +deg + 180;
-        this.setAngle(trueDirection);
+        const trueWindDirection: number = +deg + 180;
+        this.setAngleTo(trueWindDirection);
     }
     /**
      * @function <a name="WindIndicator_getAngle">getAngle</a>
@@ -140,8 +139,11 @@ export class WindIndicator {
      * @instance
      * @inner
      */
-    getAngle(): number {
+    getAngleTo(): number {
         return this.currentAngle;
+    }
+    getAngleFrom(): number {
+        return this.currentAngle + 180;
     }
 
     setMagnitude (knot: number | string): void {
@@ -160,14 +162,19 @@ export class WindIndicator {
      * @inner
      */
     refresh(): void {
+        const relativeAngle: number = this.currentAngle - this.compassHeading; // angle relative to the compass
         const animationDuration: number = 100;
         $(`#${this.id}-arrow`).css({
             "transition-duration": `${animationDuration}ms`, 
-            transform: `rotate(${this.currentAngle}deg)`,
-            display: (this.magnitude) ? "block" : "none" // hide arrow if there's no wind 
+            transform: `rotate(${relativeAngle}deg)`
         });
-        // $(`#${this.id}-deg`).text(this.currentAngle % 360);
-        const mag: number = Math.floor(this.magnitude * 100) / 100; // max 2 decimal digits
+        const fromDirection: number = (relativeAngle + 180) % 360; // +180 gives the angle from where the wind blows -- this is the way pilots indicate wind angles
+        $(`#${this.id}-deg`).text(Math.floor(fromDirection)); // display only integer part for angles
+        $(`.${this.id}-deg`).css({ 
+            display: (this.magnitude) ? "block" : "none"  // hide arrow and rotation value if there's no wind 
+        });
+
+        const mag: number = Math.floor(this.magnitude * 100) / 100; // display max 2 decimal digits
         $(`#${this.id}-knot`).text(mag);
     }
     reveal (): void {
@@ -175,5 +182,10 @@ export class WindIndicator {
     }
     hide (): void {
         $(`#${this.id}`).css({ "display": "none"});
+    }
+
+    setHeading (compassHeading: number): void {
+        this.compassHeading = compassHeading;
+        this.refresh();
     }
 }
