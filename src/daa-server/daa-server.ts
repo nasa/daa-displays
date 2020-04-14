@@ -246,7 +246,7 @@ class DAAServer {
                                         : (impl === "pvsio") ? await this.pvsioProcess.getVersion(wellClearFolder, data.daaLogic)
                                         : null;
                             
-                            const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
+                            const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
                             
                             const outputFileName: string = fsUtils.getBandsFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName, wind });
                             const outputFolder: string = path.join(__dirname, "../daa-output", wellClearVersion, impl);
@@ -324,7 +324,7 @@ class DAAServer {
                         const losVersion: string = await this.javaProcess.getVersion(losFolder, losLogic);
                         const outputFileName: string = fsUtils.getLoSFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
                         const outputFolder: string = path.join(__dirname, "../daa-output", losVersion);
-                        const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
+                        const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
                         try {
                             if (this.useCache && fs.existsSync(path.join(outputFolder, losFile))) {
                                 console.log(`Reading daa los regions file ${losFile} from cache`);
@@ -366,7 +366,7 @@ class DAAServer {
                         const outputFileName: string = fsUtils.getVirtualPilotFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
                         console.log("fileName:" + outputFileName);
                         const outputFolder: string = path.join(__dirname, "../../daa-output/virtual_pilot");
-                        const wind: { deg: number, knot: number } = data.wind || { deg: 0, knot: 0 };
+                        const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
                         // use the .ic file to generate the .daa file
                         try {
                             await this.javaProcess.exec({

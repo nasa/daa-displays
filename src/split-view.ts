@@ -36,14 +36,21 @@ import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
-import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
+import { LLAData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
-import { DAAPlayer } from './daa-displays/daa-player';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { ConfigData, ResolutionElement } from './daa-server/utils/daa-server';
+import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
+function render(playerID: string, data: { 
+    map: InteractiveMap, 
+    compass: Compass, 
+    airspeedTape: AirspeedTape, 
+    altitudeTape: AltitudeTape,
+    verticalSpeedTape: VerticalSpeedTape,
+    windIndicator: WindIndicator
+}) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
@@ -78,6 +85,12 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         }
     }); 
     data.map.setTraffic(traffic);
+    // set wind indicator
+    if (bands && bands.Wind) {
+        data.windIndicator.setAngleFrom(bands.Wind.deg);
+        data.windIndicator.setMagnitude(bands.Wind.knot);
+    }
+    
     plot(playerID, { ownship: { gs, vs, alt, hd }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
@@ -115,6 +128,8 @@ const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 
 const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left });
 // map zoom is controlled by nmiSelector
 const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left });
+// wind indicator
+const windIndicator_left: WindIndicator = new WindIndicator("wind-left", { top: 665, left: 195 }, { parent: "daa-disp-left"});
 // map view options
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { parent: "daa-disp-left", compass: compass_left, map: map_left });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
@@ -126,6 +141,8 @@ const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left
 const compass_right: Compass = new Compass("compass-right", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_right });
 // map zoom is controlled by nmiSelector
 const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right });
+// wind indicator
+const windIndicator_right: WindIndicator = new WindIndicator("wind-right", { top: 665, left: 195 }, { parent: "daa-disp-right"});
 // map view options
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { parent: "daa-disp-right", compass: compass_right, map: map_right });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
@@ -156,14 +173,16 @@ splitView.getPlayer("left").define("step", async () => {
     // await playback.getPlayer("left").render...
     render("left", {
         map: map_left, compass: compass_left, airspeedTape: airspeedTape_left, 
-        altitudeTape: altitudeTape_left, verticalSpeedTape: verticalSpeedTape_left
+        altitudeTape: altitudeTape_left, verticalSpeedTape: verticalSpeedTape_left,
+        windIndicator: windIndicator_left
     });
 });
 splitView.getPlayer("right").define("step", async () => {
     // render right
     render("right", {
         map: map_right, compass: compass_right, airspeedTape: airspeedTape_right, 
-        altitudeTape: altitudeTape_right, verticalSpeedTape: verticalSpeedTape_right
+        altitudeTape: altitudeTape_right, verticalSpeedTape: verticalSpeedTape_right,
+        windIndicator: windIndicator_right
     });
 });
 // -- plot

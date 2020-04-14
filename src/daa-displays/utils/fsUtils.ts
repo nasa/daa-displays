@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 
-export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, wind: { deg: number, knot: number } }) {
+export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, wind: { deg: string, knot: string } }) {
     if (desc) {
-		if (desc.wind && desc.wind.knot) {
+		if (desc.wind && desc.wind.knot && +desc.wind.knot > 0) {
 			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
 		} else {
 			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;

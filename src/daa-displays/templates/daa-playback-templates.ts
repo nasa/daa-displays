@@ -76,6 +76,20 @@ export const windSettingsTemplate: string = `
     {{/each}}
 </select>`;
 
+export const windSettingsInputGroupTemplate: string = `
+<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="{{id}}-deg-label">deg&nbsp;</span>
+    </div>
+    <input type="number" id="{{id}}-list-degs" class="form-control {{id}}-list" aria-label="direction" aria-describedby="{{id}}-deg-label"
+</div>
+<div class="input-group input-group-sm mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="{{id}}-knot-label">knot</span>
+    </div>
+    <input type="number" id="{{id}}-list-knots" class="form-control {{id}}-list" aria-label="magnitude" aria-describedby="{{id}}-knot-label"
+</div>`;
+
 export const daaScenariosTemplate: string = `
 <select id={{id}}-scenarios-list class="form-control" size="20" style="overflow:auto;">
     {{#each scenarios}}
@@ -117,7 +131,7 @@ export const sidePanelTemplate: string = `
 
             <div id="single-view">
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span><b>Wind Vector</b></span>
+                    <span><b>Wind Settings</b></span>
                 </h6>
                 <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-wind-settings">

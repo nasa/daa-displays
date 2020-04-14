@@ -72,26 +72,26 @@ public class DAABandsV2 {
 
 	DAABandsV2 () {
 		/* Create Daidalus object and setting the configuration parameters */
-		this.daa = new Daidalus();
+		daa = new Daidalus();
 	}
 
 	String getScenario() {
-		return this.scenario;
+		return scenario;
 	}
 	String getConfigFileName() {
-		return this.daaConfig;
+		return daaConfig;
 	}
 	String getDaaConfig () {
 		if (daaConfig != null) {
-			return daaConfig.split("/")[ this.daaConfig.split("/").length - 1 ];
+			return daaConfig.split("/")[ daaConfig.split("/").length - 1 ];
 		}
 		return null;
 	}
 	String getOutputFileName() {
-		return this.ofname;
+		return ofname;
 	}
 	String getInputFileName() {
-		return this.ifname;
+		return ifname;
 	}
 
 	protected void printHelpMsg() {
@@ -103,7 +103,7 @@ public class DAABandsV2 {
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint WellClear version");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
-		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers");
+		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.exit(0);
@@ -159,10 +159,10 @@ public class DAABandsV2 {
 		out.println(" ]");
 	}
 
-	Boolean loadDaaConfig () {
+	boolean loadDaaConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
-				Boolean paramLoaded = this.daa.loadFromFile(daaConfig);
+				boolean paramLoaded = daa.loadFromFile(daaConfig);
 				if (paramLoaded) {
 					System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
 					return true;
@@ -178,10 +178,10 @@ public class DAABandsV2 {
 		return false;
 	}
 
-	Boolean loadWind () {
-		if (this.daa != null) {
-			if (this.wind != null) {
-				System.out.println("Loading wind " + this.wind);
+	boolean loadWind () {
+		if (daa != null) {
+			if (wind != null) {
+				System.out.println("Loading wind " + wind);
 				double deg = 0;
 				double knot = 0;
 				double fpm = 0;
@@ -194,7 +194,7 @@ public class DAABandsV2 {
 					knot = Double.parseDouble(match_knot.group(1));
 				}
 				Velocity windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
-				this.daa.setWindVelocityTo(windVelocity);
+				daa.setWindVelocityFrom(windVelocity);
 				return true;
 			}
 		} else {
@@ -205,10 +205,10 @@ public class DAABandsV2 {
 	
 	protected String jsonHeader () {
 		return "\"Info\": "
-				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + this.getDaaConfig() + "\" },\n"
-				+ "\"Scenario\": \"" + this.scenario + "\",\n"
-				+ "\"Wind\": { \"deg\": \"" + Units.to("deg", this.daa.getWindVelocityTo().compassAngle()) 
-						+ "\", \"knot\": \"" + Units.to("knot", this.daa.getWindVelocityTo().gs()) + "\" },";
+				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + getDaaConfig() + "\" },\n"
+				+ "\"Scenario\": \"" + scenario + "\",\n"
+				+ "\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindVelocityFrom().compassAngle()) 
+						+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
 	}
 
 	protected String jsonBands (
@@ -221,6 +221,9 @@ public class DAABandsV2 {
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
 		String trk_units = daa.getUnitsOf("step_hdir");
+
+		// load wind settings at each time step --- wind is not persistent in DAIDALUS
+		loadWind();
 
 		// traffic alerts
 		String time = f.FmPrecision(daa.getCurrentTime());
@@ -283,7 +286,7 @@ public class DAABandsV2 {
 
 		// resolutions
 		String trkResolution = "{ \"time\": " + time;
-		Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
+		boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
 		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, trk_units);
 		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
@@ -301,7 +304,7 @@ public class DAABandsV2 {
 		resTrkArray.add(trkResolution);
 
 		String gsResolution = "{ \"time\": " + time;
-		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
+		boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
 		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
 		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs, hs_units);
 		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
@@ -318,7 +321,7 @@ public class DAABandsV2 {
 		resGsArray.add(gsResolution);
 
 		String vsResolution = "{ \"time\": " + time;
-		Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
+		boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
 		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
 		double resVs_sec = daa.verticalSpeedResolution(!preferredVs, vs_units);
 		double resVsInternal = daa.verticalSpeedResolution(preferredVs);
@@ -335,7 +338,7 @@ public class DAABandsV2 {
 		resVsArray.add(vsResolution);
 
 		String altResolution = "{ \"time\": " + time;
-		Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
+		boolean preferredAlt = daa.preferredAltitudeUpOrDown();
 		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
 		double resAlt_sec = daa.altitudeResolution(!preferredAlt, alt_units);
 		double resAltInternal = daa.altitudeResolution(preferredAlt); 
@@ -387,21 +390,23 @@ public class DAABandsV2 {
 		return stats;
 	}
 	public void walkFile (DaidalusWrapperInterface wrapper) {
-		if (this.ifname == "" || this.ifname == null) {
+		if (ifname == "" || ifname == null) {
 			System.err.println("** Error: Please specify a daa file");
 			System.exit(1);
 		}
-		if (!this.inputFileReadable()) {
-			System.err.println("** Error: File " + this.getInputFileName() + " cannot be read");
+		if (!inputFileReadable()) {
+			System.err.println("** Error: File " + getInputFileName() + " cannot be read");
 			System.exit(1);
 		}
 
-		this.createPrintWriter();
+		createPrintWriter();
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
+		// load wind settings
+		loadWind();
 
-		printWriter.println("{\n" + this.jsonHeader());
+		printWriter.println("{\n" + jsonHeader());
 
 		ArrayList<String> trkArray = new ArrayList<String>();
 		ArrayList<String> gsArray = new ArrayList<String>();
@@ -430,7 +435,7 @@ public class DAABandsV2 {
 				wrapper.adjustAlertingTime();
 			}
 
-			jsonStats = this.jsonBands(
+			jsonStats = jsonBands(
 				monitors,
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
@@ -470,7 +475,7 @@ public class DAABandsV2 {
 
 		printWriter.println("}");
 
-		this.closePrintWriter();
+		closePrintWriter();
 	}
 
 	static String getFileName (String fname) {
@@ -512,21 +517,21 @@ public class DAABandsV2 {
 			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
 				ofname = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
-				this.wind = args[++a];
+				wind = args[++a];
 			} else if (args[a].startsWith("-")) {
 				System.err.println("** Warning: Invalid option (" + args[a] + ")");
 			} else {
-				this.ifname = args[a];
+				ifname = args[a];
 			}
 		}
-		this.scenario = removeExtension(getFileName(this.ifname));
+		scenario = removeExtension(getFileName(ifname));
 		if (ofname == null) {
 			ofname = scenario + ".json";
 		}
 		return this;
 	}
 
-	public Boolean inputFileReadable () {
+	public boolean inputFileReadable () {
 		String inputFile = getInputFileName();
 		File file = new File(inputFile);
 		if (!file.exists() || !file.canRead()) {
@@ -535,7 +540,7 @@ public class DAABandsV2 {
 		return true;
 	}
 
-	protected Boolean createPrintWriter () {
+	protected boolean createPrintWriter () {
 		try {
 			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
 			System.out.println("Creating output file " + ofname);
@@ -545,7 +550,7 @@ public class DAABandsV2 {
 		}
 		return true;
 	}
-	protected Boolean closePrintWriter () {
+	protected boolean closePrintWriter () {
 		if (printWriter != null) {
 			printWriter.close();
 			return true;
@@ -557,7 +562,6 @@ public class DAABandsV2 {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
 		daaBands.loadDaaConfig();
-		daaBands.loadWind();
 		daaBands.walkFile(null);
 	}
 

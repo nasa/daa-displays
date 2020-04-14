@@ -67,7 +67,7 @@ public class DAABands {
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint WellClear version");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
-		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers");
+		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.exit(0);
     }
@@ -98,7 +98,7 @@ public class DAABands {
 		}
 	}
 
-	protected static Boolean loadWind (Daidalus daa, String wind) {
+	protected static boolean loadWind (Daidalus daa, String wind) {
 		if (daa != null) {
 			if (wind != null) {
 				System.out.println("Loading wind " + wind);
@@ -114,7 +114,7 @@ public class DAABands {
 					knot = Double.parseDouble(match_knot.group(1));
 				}
 				Velocity windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
-				daa.setWindField(windVelocity);
+				daa.setWindField(windVelocity.Neg());
 				return true;
 			}
 		} else {
@@ -170,14 +170,12 @@ public class DAABands {
 
 		/* Create Daidalus object and setting the configuration parameters */
 		Daidalus daa = new Daidalus();
+		// load wind settings
+		loadWind(daa, wind);
 
 		if (config != null && !daa.parameters.loadFromFile(config)) {
 		    System.err.println("** Error: Configuration file " + config + " not found");
 		    System.exit(1);
-		}
-
-		if (wind != null) {
-			loadWind(daa, wind);
 		}
 
 		/* Creating a DaidalusFileWalker */
@@ -191,8 +189,8 @@ public class DAABands {
         out.print("{\n\"Info\": ");
 		out.println("{ \"version\": " + "\"" + KinematicBandsParameters.VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");
         out.println("\"Scenario\": \"" + scenario + "\",");
-		out.println("\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindField().compassAngle()) 
-					+ "\", \"knot\": \"" + Units.to("knot", daa.getWindField().gs()) + "\" },");        
+		out.println("\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindField().Neg().compassAngle())  // we wanto to show FROM format
+					+ "\", \"knot\": \"" + Units.to("knot", daa.getWindField().gs()) + "\" },");
 		String str_to = "";
 		String str_trko = "";
 		String str_gso = "";
@@ -208,6 +206,9 @@ public class DAABands {
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
+
+			// load wind settings at each step --- wind is not persistent in DAIDALUS
+			loadWind(daa, wind);
 
 			str_to += f.Fm8(daa.getCurrentTime())+" ";
 

@@ -344,7 +344,7 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    async appendWindSettings(selector?: string, opt?: { parent?: string }): Promise<void> {
+    async appendWindSettings(selector?: string, opt?: { parent?: string, dropDown?: boolean }): Promise<void> {
         selector = selector || this.windSettingsSelector;
         this.windSettingsSelector = selector;
         opt = opt || {};

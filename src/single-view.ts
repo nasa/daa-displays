@@ -32,6 +32,7 @@ import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
+import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
@@ -78,6 +79,11 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         });
         data.map.setTraffic(traffic);
+        // set wind indicator
+        if (bands && bands.Wind) {
+            windIndicator.setAngleFrom(bands.Wind.deg);
+            windIndicator.setMagnitude(bands.Wind.knot);
+        }
         const step: number = player.getCurrentSimulationStep();
         const time: string = player.getCurrentSimulationTime();
         plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step, time });
@@ -148,6 +154,8 @@ const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { pare
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
+// wind indicator
+const windIndicator: WindIndicator = new WindIndicator("wind", { top: 665, left: 195 }, { parent: "daa-disp"});
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
 // create remaining display widgets

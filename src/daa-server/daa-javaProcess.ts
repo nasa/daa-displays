@@ -52,7 +52,7 @@ export class JavaProcess {
 		daaConfig: string, 
 		daaScenario: string, 
 		outputFileName: string, 
-		wind: { deg: number, knot: number }
+		wind: { deg: string, knot: string }
 	},
 	opt?: { 
 		contrib?: boolean 
@@ -63,7 +63,7 @@ export class JavaProcess {
 			const daaLogic: string = desc.daaLogic || "WellClear-2.0.f.jar";
 			const daaConfig: string = desc.daaConfig || "1.x/WC_SC_228_nom_a.conf";
 			const daaScenario: string = desc.daaScenario || "H1.daa";
-			const wind: { deg: number, knot: number } = desc.wind || { deg: 0, knot: 0 };
+			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
 			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
 			const f1: string = path.join("../daa-output", ver);

@@ -749,7 +749,7 @@ export class DAAPlayer {
      */
     async listMonitors (data: {
         alertingLogic: string,
-        wind: { deg: number, knot: number },
+        wind: { deg: string, knot: string },
         alertingConfig?: string,
         scenario?: string,
     }): Promise<string[]> {
@@ -758,7 +758,7 @@ export class DAAPlayer {
             daaLogic: data.alertingLogic ||  "WellClear-2.0.e.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.daa",
-            wind: data.wind || { knot: 0, deg: 0 }
+            wind: data.wind || { knot: "0", deg: "0" }
         }
         const res: WebSocketMessage<string> = await this.ws.send({
             type: `list-monitors`,
@@ -1070,7 +1070,7 @@ export class DAAPlayer {
         alertingLogic: string,
         alertingConfig: string,
         scenario: string,
-        wind: { deg: number, knot: number }
+        wind: { deg: string, knot: string }
     }): Promise<{
         err: string,
         bands: DaidalusBandsDescriptor
@@ -1079,7 +1079,7 @@ export class DAAPlayer {
             daaLogic: data.alertingLogic ||  "WellClear-2.0.f.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
             scenarioName: data.scenario || "H1.daa",
-            wind: data.wind || { knot: 0, deg: 0 }
+            wind: data.wind || { knot: "0", deg: "0" }
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1093,7 +1093,7 @@ export class DAAPlayer {
         });
         try {
             if (res && res.data) {
-                const data = JSON.parse(res.data);
+                const data: DaidalusBandsDescriptor = JSON.parse(res.data);
                 this._bands = data;
             }
             console.log("WellClear data ready!", this._bands);
@@ -1125,7 +1125,7 @@ export class DAAPlayer {
         losLogic: string,
         alertingConfig: string,
         scenario: string,
-        wind: { deg: number, knot: number }
+        wind: { deg: string, knot: string }
     }): Promise<{
         err: string,
         los: DAALosDescriptor
@@ -1134,7 +1134,7 @@ export class DAAPlayer {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
             scenarioName: data.scenario || "H1.daa",
-            wind: data.wind || { knot: 0, deg: 0 }
+            wind: data.wind || { knot: "0", deg: "0" }
         }
         console.log(`Computing conflict regions using java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1177,7 +1177,7 @@ export class DAAPlayer {
         virtualPilot: string,
         alertingConfig: string,
         scenario: string,
-        wind: { deg: number, knot: number }
+        wind: { deg: string, knot: string }
     }): Promise<{
         err: string,
         //scenario: .... 
@@ -1187,7 +1187,7 @@ export class DAAPlayer {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
             daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.ic",
-            wind: data.wind || { knot: 0, deg: 0 }
+            wind: data.wind || { knot: "0", deg: "0" }
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {
@@ -1324,14 +1324,20 @@ export class DAAPlayer {
     }
     /**
      * Wind configuration
-     * @return JSON object { knot: number, deg: number } 
+     * @return JSON object { knot: string, deg: string } 
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    getSelectedWindSettings (): { knot: number, deg: number } {
-        const knot: number = +$(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value");
-        const deg: number = +$(`#${this.windSettingsSelector}-list-degs option:selected`).attr("value");
-        return { knot, deg };
+    getSelectedWindSettings (): { knot: string, deg: string } {
+        if ($(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value")) {
+            const knot: string = $(`#${this.windSettingsSelector}-list-knots option:selected`).attr("value");
+            const deg: string = $(`#${this.windSettingsSelector}-list-degs option:selected`).attr("value");
+            return { knot, deg };
+        }
+        // else
+        const knot: string = `${$(`#${this.windSettingsSelector}-list-knots`).val()}`;
+        const deg: string = `${$(`#${this.windSettingsSelector}-list-degs`).val()}`;
+        return { knot, deg };    
     }
     /**
      * @function <a name="play">play</a>
@@ -1437,6 +1443,7 @@ export class DAAPlayer {
                 for (let step = 0; step < this._simulationLength; step++) {
                     // convert bands to the DAA format
                     const res: utils.DAABandsData = {
+                        Wind: { deg: `0`, knot: `0` },
                         Alerts: [],
                         "Altitude Bands": {},
                         "Heading Bands": {},
@@ -1446,7 +1453,7 @@ export class DAAPlayer {
                         "Heading Resolution": null,
                         "Horizontal Speed Resolution": null,
                         "Vertical Speed Resolution": null,
-                        "Monitors": []
+                        Monitors: []
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
@@ -1482,6 +1489,10 @@ export class DAAPlayer {
                             // copy monitors
                             res.Monitors = this._bands.Monitors;
                         }
+                        if (this._bands.Wind) {
+                            // copy wind
+                            res.Wind = this._bands.Wind;
+                        }
                     }
                     ans.push(res);
                 }
@@ -1492,7 +1503,8 @@ export class DAAPlayer {
     // TODO: replace DAABandsData with DaidalusBandsDescriptor
     getCurrentBands (): utils.DAABandsData {
         const res: utils.DAABandsData = {
-            "Alerts": [],
+            Wind: { deg: `0`, knot: `0` },
+            Alerts: [],
             "Altitude Bands": {},
             "Heading Bands": {},
             "Horizontal Speed Bands": {},
@@ -1501,7 +1513,7 @@ export class DAAPlayer {
             "Heading Resolution": null,
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
-            "Monitors": []
+            Monitors: []
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
@@ -1541,6 +1553,10 @@ export class DAAPlayer {
                 if (this._bands.Monitors) {
                     // copy monitors
                     res.Monitors = this._bands.Monitors;
+                }
+                if (this._bands.Wind) {
+                    // copy wind
+                    res.Wind = this._bands.Wind;
                 }
             }
         }
@@ -1700,11 +1716,11 @@ export class DAAPlayer {
         await this.refreshConfigurationView();
     }
 
-    async appendWindSettings(selector?: string): Promise<void> {
+    async appendWindSettings(selector?: string, opt?: { parent?: string, dropDown?: boolean }): Promise<void> {
         selector = selector || this.windSettingsSelector;
         this.windSettingsSelector = selector;
         // update the front-end
-        this.refreshWindSettingsView();
+        this.refreshWindSettingsView(opt);
     }
 
     async appendMonitorPanel(monitorDomSelector?: string): Promise<void> {
@@ -2047,27 +2063,39 @@ export class DAAPlayer {
         return this;
     }
 
-    protected refreshWindSettingsView(): DAAPlayer {
-        const knots: number[] = [];
-        for (let i = 0; i <= 200; i+=10) {
-            knots.push(i);
+    protected refreshWindSettingsView(opt?: { dropDown?: boolean }): DAAPlayer {
+        if (opt && opt.dropDown) {
+            const knots: number[] = [];
+            for (let i = 0; i <= 200; i+=10) {
+                knots.push(i);
+            }
+            const degs: number[] = [];
+            for (let i = 0; i < 360; i+=10) {
+                degs.push(i);
+            }
+            const theHTML: string = Handlebars.compile(templates.windSettingsTemplate)({
+                knots,
+                degs,
+                id: this.windSettingsSelector
+            });
+            $(`#${this.windSettingsSelector}-list`).remove();
+            $(`#${this.windSettingsSelector}`).append(theHTML);
+            // append handlers for wind selection
+            $(`.${this.windSettingsSelector}-list`).on("change", () => {
+                this.disableSimulationControls();
+                this.revealActivationPanel();
+            });
+        } else {
+            const theHTML: string = Handlebars.compile(templates.windSettingsInputGroupTemplate)({
+                id: this.windSettingsSelector
+            });
+            $(`#${this.windSettingsSelector}`).append(theHTML);
+            // append handlers for wind selection
+            $(`.${this.windSettingsSelector}-list`).on("input", () => {
+                this.disableSimulationControls();
+                this.revealActivationPanel();
+            });
         }
-        const degs: number[] = [];
-        for (let i = 0; i < 360; i+=10) {
-            degs.push(i);
-        }
-        const theHTML: string = Handlebars.compile(templates.windSettingsTemplate)({
-            knots,
-            degs,
-            id: this.windSettingsSelector
-        });
-        $(`#${this.windSettingsSelector}-list`).remove();
-        $(`#${this.windSettingsSelector}`).append(theHTML);
-        // append handlers for selection of well clear version
-        $(`.${this.windSettingsSelector}-list`).on("change", async () => {
-            this.disableSimulationControls();
-            this.revealActivationPanel();
-        });
         return this;
     }
 

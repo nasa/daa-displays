@@ -527,7 +527,7 @@ public:
 		std::cout << "  --help\n\tPrint this message" << std::endl;
 		std::cout << "  --version\n\tPrint WellClear version" << std::endl;
 		std::cout << "  --config <file.conf>\n\tLoad configuration <file.conf>" << std::endl;
-		std::cout << "  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are integers" << std::endl;
+		std::cout << "  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are eals" << std::endl;
 		std::cout << "  --output <file.json>\n\tOutput file <file.json>" << std::endl;
 		std::cout << "  --list-monitors\nReturns the list of available monitors, in JSON format" << std::endl;
 		exit(0);
@@ -629,7 +629,7 @@ public:
 				// std::cout << knot << std::endl;
 			}
 			larcfm::Velocity windVelocity = larcfm::Velocity::makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
-			daa.setWindVelocityTo(windVelocity);
+			daa.setWindVelocityFrom(windVelocity);
 			return true;
 		}
 		return false;
@@ -642,7 +642,7 @@ public:
 	}
 
 	std::string jsonBands (
-		larcfm::Daidalus& daa, DAAMonitorsV2& monitors,
+		DAAMonitorsV2& monitors,
 		std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray,
 		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray,
 		std::vector<std::string>* monitorM1Array, std::vector<std::string>* monitorM2Array, std::vector<std::string>* monitorM3Array, std::vector<std::string>* monitorM4Array
@@ -651,6 +651,9 @@ public:
 		std::string vs_units = daa.getUnitsOf("step_vs");
 		std::string alt_units = daa.getUnitsOf("step_alt");
 		std::string trk_units = daa.getUnitsOf("step_hdir");
+
+		// load wind settings at each step -- wind is not persistent in DAIDALUS
+		loadWind();
 
 		// traffic alerts
 		std::string time = larcfm::FmPrecision(daa.getCurrentTime());
@@ -836,12 +839,14 @@ public:
 
 		/* Create DaidalusFileWalker */
 		larcfm::DaidalusFileWalker walker(ifname);
+		// load wind settings
+		loadWind();
 
 		*printWriter << "{\n\"Info\": ";
 		*printWriter << jsonHeader() << "," << std::endl;
 		*printWriter << "\"Scenario\": \"" + scenario + "\"," << std::endl;
-		*printWriter << "\"Wind\": { \"deg\": \"" << larcfm::Units::to("deg", daa.getWindVelocityTo().compassAngle()) 
-					 << "\", \"knot\": \"" << larcfm::Units::to("knot", daa.getWindVelocityTo().gs()) 
+		*printWriter << "\"Wind\": { \"deg\": \"" << larcfm::Units::to("deg", daa.getWindVelocityFrom().compassAngle()) 
+					 << "\", \"knot\": \"" << larcfm::Units::to("knot", daa.getWindVelocityFrom().gs()) 
 					 << "\" }," << std::endl;
 
 		std::vector<std::string>* trkArray = new std::vector<std::string>();
@@ -871,7 +876,7 @@ public:
 				wrapper->adjustAlertingTime();
 			}
 			jsonStats = jsonBands(
-				daa, monitors,
+				monitors,
 				alertsArray, 
 				trkArray, gsArray, vsArray, altArray,
 				resTrkArray, resGsArray, resVsArray, resAltArray,
@@ -1007,7 +1012,6 @@ int main(int argc, char* argv[]) {
 	DAABandsV2 daaBands;
 	daaBands.parseCliArgs(argv, argc);
 	daaBands.loadDaaConfig();
-	daaBands.loadWind();
 	daaBands.walkFile(NULL);
 }
 
