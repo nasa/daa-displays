@@ -641,7 +641,7 @@ export class AltitudeTape {
         }
         $(`#${this.id}-indicator-second-still-digit`).html(`${secondStillDigit}`);
         $(`#${this.id}-indicator-third-still-digit`).html(`${thirdStillDigit}`);
-        const spinIndicatorValue: number = Math.floor((val % 100) / 10);
+        const spinIndicatorValue: number = Math.floor(val % 100);
         if (this.spinnerBox) {
             const ratio2: number = 36; // px, obtained by inspecting the DOM
             const spinGroup: number = Math.trunc(val / 100);
