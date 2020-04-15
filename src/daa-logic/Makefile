@@ -142,12 +142,12 @@ daa2pvsv2:
 ##	&& cd ../../../../ && unzip -vl DAA2PVS-2.x.jar
 
 wrapper:
-	@echo "\n\033[0;32m ** Building WellClear-DW-2.0.e.jar **\033[0m"
-	@echo Compiling for WellClear version 2.0.e with Daidalus Wrapper 2.3.1
-	-@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/src DAABandsV2.java DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2Wrapper.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-2.0.e/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	-@cd utils && $(JAR) cfe ../WellClear-DW-2.0.e.jar DAABandsV2Wrapper *.class
-	-@cd WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../WellClear-DW-2.0.e.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-##	-@unzip -vl WellClear-DW-2.0.e.jar && unzip -c WellClear-DW-2.0.e.jar META-INF/MANIFEST.MF
+	@echo "\n\033[0;32m ** Building WellClear-2.0.e.WR.jar **\033[0m"
+	@test ! -f "WellClear-2.0.e/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-2.0.e/DAIDALUS/Java && make lib)
+	@if [ -e WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar ]; then \
+	  cd utils; $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2Wrapper.java && $(JAR) cfe ../WellClear-2.0.e.WR.jar DAABandsV2Wrapper *.class && unzip -qn ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar -d temp; \
+	  cd temp; $(JAR) uf ../../WellClear-2.0.e.WR.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
+	else echo "*** Directory WellClear-2.0.e/DAIDALUS/Java not found"; fi
 
 ver?=2.0.x
 compile-jar:

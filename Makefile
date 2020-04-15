@@ -46,6 +46,10 @@ install-dependencies:
 	@cd dist && make install-dependencies -e lite=$(lite)
 	@echo "\033[0;32m Done! \033[0m"
 
+wrapper: compile install-dependencies
+	@cd dist/daa-logic && make wrapper
+	@echo "\033[0;32m ** To start DAA-Displays, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
+
 clean:
 	@echo "\033[0;33m ** Cleaning dist folder **\033[0m"
 	cd dist && make clean
