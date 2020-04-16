@@ -151,6 +151,7 @@ export declare interface DaidalusBandsDescriptor {
         version: string, // well clear version
         configuration: string // daidalus configuration file used to produce bands data
     },
+    Ownship: { heading: { val: string, units: string }, airspeed: { val: string, units: string } }[],
     Wind: { deg: string, knot: string }, // FROM
     Scenario: string,
     Alerts: AlertElement[], // alerts over time

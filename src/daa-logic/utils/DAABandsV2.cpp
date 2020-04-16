@@ -643,6 +643,7 @@ public:
 
 	std::string jsonBands (
 		DAAMonitorsV2& monitors,
+		std::vector<std::string>* ownshipArray,
 		std::vector<std::string>* alertsArray, std::vector<std::string>* trkArray, std::vector<std::string>* gsArray, std::vector<std::string>* vsArray, std::vector<std::string>* altArray,
 		std::vector<std::string>* resTrkArray, std::vector<std::string>* resGsArray, std::vector<std::string>* resVsArray, std::vector<std::string>* resAltArray,
 		std::vector<std::string>* monitorM1Array, std::vector<std::string>* monitorM2Array, std::vector<std::string>* monitorM3Array, std::vector<std::string>* monitorM4Array
@@ -650,13 +651,22 @@ public:
 		std::string hs_units = daa.getUnitsOf("step_hs");
 		std::string vs_units = daa.getUnitsOf("step_vs");
 		std::string alt_units = daa.getUnitsOf("step_alt");
-		std::string trk_units = daa.getUnitsOf("step_hdir");
+		std::string hdir_units = daa.getUnitsOf("step_hdir");
 
 		// load wind settings at each step -- wind is not persistent in DAIDALUS
 		loadWind();
 
-		// traffic alerts
+		// ownship
 		std::string time = larcfm::FmPrecision(daa.getCurrentTime());
+		std::string own = "{ \"time\": " + time; 
+		own += ", \"heading\": { \"val\": \"" + std::to_string(daa.getAircraftStateAt(0).horizontalDirection(hdir_units)) + "\"";
+		own += ", \"units\": \"" + hdir_units + "\" }";
+		own += ", \"airspeed\": { \"val\": \"" + std::to_string(daa.getAircraftStateAt(0).horizontalSpeed(hdir_units)) + "\"";
+		own += ", \"units\": \"" + hs_units + "\" }";
+		own += " }";
+		ownshipArray->push_back(own);
+
+		// traffic alerts
 		std::string alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 		std::string tmp = "";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) { // aircraft 0 is the ownship
@@ -675,8 +685,8 @@ public:
 		std::string trk = "{ \"time\": " + time;
 		trk += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units).toString();
-			trk += ", \"units\": \"" + trk_units + "\"";
+			trk += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, hdir_units).toString();
+			trk += ", \"units\": \"" + hdir_units + "\"";
 			trk += ", \"alert\": \"" + larcfm::BandsRegion::to_string(daa.horizontalDirectionRegionAt(i));
 			trk += "\" }";
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trk += ", "; }
@@ -723,19 +733,19 @@ public:
 		// resolutions
 		std::string trkResolution = "{ \"time\": " + time;
 		bool preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, trk_units);
+		double resTrk = daa.horizontalDirectionResolution(preferredTrk, hdir_units);
+		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, hdir_units);
 		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
 		double resTrkInternal_sec = daa.horizontalDirectionResolution(!preferredTrk);
 		larcfm::BandsRegion::Region resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal);
 		larcfm::BandsRegion::Region resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrkInternal_sec);
 		larcfm::TrafficState ownship = daa.getOwnshipState();
-		double currentTrk = ownship.horizontalDirection(trk_units);
+		double currentTrk = ownship.horizontalDirection(hdir_units);
 		larcfm::BandsRegion::Region currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection());
-		trkResolution += ", \"resolution\": { \"val\": \"" + printDouble(resTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resTrk_sec) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution\": { \"val\": \"" + printDouble(resTrk) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resTrk_sec) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(resTrkRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
 		trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredTrk) + "\" }";
-		trkResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentTrk) + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentTrkRegion) + "\" }";
+		trkResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentTrk) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + larcfm::BandsRegion::to_string(currentTrkRegion) + "\" }";
 		trkResolution += " }";
 		resTrkArray->push_back(trkResolution);
 
@@ -854,6 +864,7 @@ public:
 		std::vector<std::string>* vsArray = new std::vector<std::string>();
 		std::vector<std::string>* altArray = new std::vector<std::string>();
 		std::vector<std::string>* alertsArray = new std::vector<std::string>();
+		std::vector<std::string>* ownshipArray = new std::vector<std::string>();
 
 		std::vector<std::string>* resTrkArray = new std::vector<std::string>();
 		std::vector<std::string>* resGsArray = new std::vector<std::string>();
@@ -877,7 +888,7 @@ public:
 			}
 			jsonStats = jsonBands(
 				monitors,
-				alertsArray, 
+				ownshipArray, alertsArray, 
 				trkArray, gsArray, vsArray, altArray,
 				resTrkArray, resGsArray, resVsArray, resAltArray,
 				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
@@ -886,6 +897,8 @@ public:
 
 		*printWriter << jsonStats + "," << std::endl;
 
+		printArray(*printWriter, ownshipArray, "Ownship");
+		*printWriter << ",\n";
 		printArray(*printWriter, alertsArray, "Alerts");
 		*printWriter << ",\n";
 		printArray(*printWriter, trkArray, "Heading Bands");

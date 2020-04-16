@@ -48,16 +48,20 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     if (flightData && flightData.ownship) {
         data.map.setPosition(flightData.ownship.s);
-        data.compass.setCompass(flightData.ownship.v);
-        const hd: number = Compass.v2deg(flightData.ownship.v);
-        const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-        data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-        const vs: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
-        data.verticalSpeedTape.setVerticalSpeed(vs);
+
+        const bands: utils.DAABandsData = player.getCurrentBands();
+        if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
+    
+        const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
+        const airspeed: number = (bands && bands.Ownship && bands.Ownship.airspeed) ? +bands.Ownship.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+        const vspeed: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
         const alt: number = +flightData.ownship.s.alt;
+
+        data.compass.setCompass(flightData.ownship.v);
+        data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
+        data.verticalSpeedTape.setVerticalSpeed(vspeed);
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
         // console.log(`Flight data`, flightData);
-        const bands: utils.DAABandsData = player.getCurrentBands();
         if (bands) {
             data.compass.setBands(bands["Heading Bands"]);
             data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
@@ -86,7 +90,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
         const step: number = player.getCurrentSimulationStep();
         const time: string = player.getCurrentSimulationTime();
-        plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step, time });
+        plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
     }
 }
 

@@ -103,6 +103,7 @@ export const BAND_NAMES: string[] = [
 // TODO: replace DAABandsData with DaidalusBandsDescriptor
 export interface DAABandsData {
     Wind: { deg: string, knot: string }, // FROM
+    Ownship: { heading: { val: string, units: string }, airspeed: { val: string, units: string } },
     Alerts: Alert[],
     "Altitude Bands": Bands, // FIXME: use BandElement and get rid of Bands
     "Heading Bands": Bands,

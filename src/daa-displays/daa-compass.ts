@@ -273,11 +273,11 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setCompass(data: number | utils.Vector3D | server.Vector3D, opt?: { units?: string }): Compass {
+    setCompass(data: number | string | utils.Vector3D | server.Vector3D, opt?: { units?: string }): Compass {
         opt = opt || {};
         this.previousCompassAngle = this.currentCompassAngle;
         // x and y are swapped in atan2 because axes are inverted in the map view (x is the aircraft direction, and it's facing up)
-        const deg = (typeof data === "number")? data : 
+        const deg = (typeof data === "number" || typeof data === "string")? +data : 
                         (opt && opt.units === "deg") ? 
                             utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
                             : utils.rad2deg(Math.atan2(+data.x, +data.y));

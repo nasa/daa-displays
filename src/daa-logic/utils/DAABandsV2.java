@@ -213,6 +213,7 @@ public class DAABandsV2 {
 
 	protected String jsonBands (
 		DAAMonitorsV2 monitors,
+		ArrayList<String> ownshipArray,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
 		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
@@ -220,13 +221,22 @@ public class DAABandsV2 {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
-		String trk_units = daa.getUnitsOf("step_hdir");
+		String hdir_units = daa.getUnitsOf("step_hdir");
 
 		// load wind settings at each time step --- wind is not persistent in DAIDALUS
 		loadWind();
 
-		// traffic alerts
+		// ownship
 		String time = f.FmPrecision(daa.getCurrentTime());
+		String own = "{ \"time\": " + time; 
+		own += ", \"heading\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalDirection(hdir_units) + "\"";
+		own += ", \"units\": \"" + hdir_units + "\" }";
+		own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalSpeed(hdir_units) + "\"";
+		own += ", \"units\": \"" + hs_units + "\" }";
+		own += " }";
+		ownshipArray.add(own);
+
+		// traffic alerts
 		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 		String tmp = "";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
@@ -243,8 +253,8 @@ public class DAABandsV2 {
 		String trkBands = "{ \"time\": " + time;
 		trkBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			trkBands += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, trk_units);
-			trkBands += ", \"units\": \"" +  trk_units + "\"";
+			trkBands += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, hdir_units);
+			trkBands += ", \"units\": \"" +  hdir_units + "\"";
 			trkBands += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trkBands += ", "; }
 		}
@@ -287,19 +297,19 @@ public class DAABandsV2 {
 		// resolutions
 		String trkResolution = "{ \"time\": " + time;
 		boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		double resTrk = daa.horizontalDirectionResolution(preferredTrk, trk_units);
-		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, trk_units);
+		double resTrk = daa.horizontalDirectionResolution(preferredTrk, hdir_units);
+		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, hdir_units);
 		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
 		double resTrkInternal_sec = daa.horizontalDirectionResolution(!preferredTrk);
 		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal); // we want to use internal units here, to minimize round-off errors
 		BandsRegion resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrkInternal_sec); // we want to use internal units here, to minimize round-off errors
 		TrafficState ownship = daa.getOwnshipState();
-		double currentTrk = ownship.horizontalDirection(trk_units);
+		double currentTrk = ownship.horizontalDirection(hdir_units);
 		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
-		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
 		trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredTrk + "\" }"; 
-		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + trk_units + "\", \"alert\": \"" + currentTrkRegion + "\" }";
+		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + currentTrkRegion + "\" }";
 		trkResolution += " }";
 		resTrkArray.add(trkResolution);
 
@@ -413,6 +423,7 @@ public class DAABandsV2 {
 		ArrayList<String> vsArray = new ArrayList<String>();
 		ArrayList<String> altArray = new ArrayList<String>();
 		ArrayList<String> alertsArray = new ArrayList<String>();
+		ArrayList<String> ownshipArray = new ArrayList<String>();
 
 		ArrayList<String> resTrkArray = new ArrayList<String>();
 		ArrayList<String> resGsArray = new ArrayList<String>();
@@ -437,7 +448,7 @@ public class DAABandsV2 {
 
 			jsonStats = jsonBands(
 				monitors,
-				alertsArray, 
+				ownshipArray, alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
 				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
@@ -446,6 +457,8 @@ public class DAABandsV2 {
 
 		printWriter.println(jsonStats + ",");
 
+		DAABandsV2.printArray(printWriter, ownshipArray, "Ownship");
+		printWriter.println(",");
 		DAABandsV2.printArray(printWriter, alertsArray, "Alerts");
 		printWriter.println(",");
 		DAABandsV2.printArray(printWriter, trkArray, "Heading Bands");

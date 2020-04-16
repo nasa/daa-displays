@@ -54,16 +54,20 @@ function render(playerID: string, data: {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
-    data.compass.setCompass(flightData.ownship.v);
-    const hd: number = Compass.v2deg(flightData.ownship.v)
-    const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-    const vs: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
-    data.verticalSpeedTape.setVerticalSpeed(vs);
+
+    const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
+    if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
+    
+    const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
+    const airspeed: number = (bands && bands.Ownship && bands.Ownship.airspeed) ? +bands.Ownship.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+    const vspeed: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     const alt: number = +flightData.ownship.s.alt;
+
+    data.compass.setCompass(heading);
+    data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
+    data.verticalSpeedTape.setVerticalSpeed(vspeed);
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
@@ -91,7 +95,7 @@ function render(playerID: string, data: {
         data.windIndicator.setMagnitude(bands.Wind.knot);
     }
     
-    plot(playerID, { ownship: { gs, vs, alt, hd }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
+    plot(playerID, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
 function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {

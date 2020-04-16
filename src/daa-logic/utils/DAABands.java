@@ -180,10 +180,11 @@ public class DAABands {
 
 		/* Creating a DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
-		String gs_units = daa.parameters.getUnits("gs_step");
+		String hs_units = daa.parameters.getUnits("trk_step");
 		String vs_units = daa.parameters.getUnits("vs_step");
         String alt_units = daa.parameters.getUnits("alt_step");
-        
+		String hdir_units = daa.parameters.getUnits("gs_step");
+
         String conf = (config != null) ? config.split("/")[config.split("/").length - 1] : "";
 
         out.print("{\n\"Info\": ");
@@ -201,7 +202,7 @@ public class DAABands {
 		ArrayList<String> vsArray = new ArrayList<String>();
 		ArrayList<String> altArray = new ArrayList<String>();
 		ArrayList<String> alertsArray = new ArrayList<String>();
-
+		ArrayList<String> ownshipArray = new ArrayList<String>();
 
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
@@ -216,7 +217,7 @@ public class DAABands {
 			str_trko += f.Fm8(Units.to("deg",trko))+" ";
 
 			double gso = daa.getOwnshipState().groundSpeed();
-			str_gso += f.Fm8(Units.to(gs_units,gso))+" ";
+			str_gso += f.Fm8(Units.to(hdir_units,gso))+" ";
 
 			double vso = daa.getOwnshipState().verticalSpeed();
 			str_vso += f.Fm8(Units.to(vs_units,vso))+" ";
@@ -226,7 +227,16 @@ public class DAABands {
 
 			KinematicMultiBands kb = daa.getKinematicMultiBands();
 
+			// ownship
 			String time = f.Fm8(daa.getCurrentTime());
+			String own = "{ \"time\": " + time; 
+			own += ", \"heading\": { \"val\": \"" + daa.getAircraftState(0).track(hdir_units) + "\"";
+			own += ", \"units\": \"" + hdir_units + "\" }";
+			own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftState(0).groundSpeed(hdir_units) + "\"";
+			own += ", \"units\": \"" + hs_units + "\" }";
+			own += " }";
+			ownshipArray.add(own);
+
 			String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 			String tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
@@ -253,8 +263,8 @@ public class DAABands {
             String gs = "{ \"time\": " + time;
 			gs += ", \"bands\": [ ";
 			for (int i = 0; i < kb.groundSpeedLength(); i++) {
-				gs += "{ \"range\": " + kb.groundSpeed(i, gs_units);
-				gs += ", \"units\": \"" + gs_units + "\"";
+				gs += "{ \"range\": " + kb.groundSpeed(i, hdir_units);
+				gs += ", \"units\": \"" + hdir_units + "\"";
                 gs += ", \"alert\": \"" + kb.groundSpeedRegion(i) + "\" }";
                 if (i < kb.groundSpeedLength() - 1) { gs += ", "; }
 			}
@@ -284,9 +294,9 @@ public class DAABands {
             altArray.add(alt);
 		}
 		
-		out.println("\"hs\": { \"min\": " + daa.parameters.getMinGroundSpeed(gs_units) 
-							+ ", \"max\": " + daa.parameters.getMaxGroundSpeed(gs_units) 
-							+ ", \"units\": \"" + gs_units + "\" },");
+		out.println("\"hs\": { \"min\": " + daa.parameters.getMinGroundSpeed(hdir_units) 
+							+ ", \"max\": " + daa.parameters.getMaxGroundSpeed(hdir_units) 
+							+ ", \"units\": \"" + hdir_units + "\" },");
 		out.println("\"vs\": { \"min\": " + daa.parameters.getMinVerticalSpeed(vs_units)
 							+ ", \"max\": " + daa.parameters.getMaxVerticalSpeed(vs_units)
 							+ ", \"units\": \"" + vs_units + "\" },");
@@ -295,6 +305,8 @@ public class DAABands {
 							+ ", \"units\": \"" + alt_units + "\" },");
 		out.println("\"MostSevereAlertLevel\": \"" + daa.parameters.alertor.mostSevereAlertLevel() + "\",");
 
+		DAABands.printBands(out, ownshipArray, "Ownship");
+		out.println(",");
 		DAABands.printBands(out, alertsArray, "Alerts");
 		out.println(",");
         DAABands.printBands(out, trkArray, "Heading Bands");

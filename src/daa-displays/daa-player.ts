@@ -1448,6 +1448,7 @@ export class DAAPlayer {
                 for (let step = 0; step < this._simulationLength; step++) {
                     // convert bands to the DAA format
                     const res: utils.DAABandsData = {
+                        Ownship: { heading: { val: `0`, units: "deg" }, airspeed: { val: `0`, units: "knots" } },
                         Wind: { deg: `0`, knot: `0` },
                         Alerts: [],
                         "Altitude Bands": {},
@@ -1498,6 +1499,9 @@ export class DAAPlayer {
                             // copy wind
                             res.Wind = this._bands.Wind;
                         }
+                        if (this._bands.Ownship && step < this._bands.Ownship.length) {
+                            res.Ownship = this._bands.Ownship[step];
+                        }
                     }
                     ans.push(res);
                 }
@@ -1509,6 +1513,7 @@ export class DAAPlayer {
     getCurrentBands (): utils.DAABandsData {
         const res: utils.DAABandsData = {
             Wind: { deg: `0`, knot: `0` },
+            Ownship: { heading: { val: `0`, units: "deg" }, airspeed: { val: `0`, units: "knots" } },
             Alerts: [],
             "Altitude Bands": {},
             "Heading Bands": {},
@@ -1553,6 +1558,9 @@ export class DAAPlayer {
                     if (this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
                         // copy alerting info
                         res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
+                    }
+                    if (this._bands.Ownship && this._bands.Ownship.length > this.simulationStep) {
+                        res.Ownship = this._bands.Ownship[this.simulationStep];
                     }
                 }
                 if (this._bands.Monitors) {

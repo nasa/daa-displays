@@ -44,16 +44,20 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
-    data.compass.setCompass(flightData.ownship.v);
-    const hd: number = Compass.v2deg(flightData.ownship.v);
-    const gs: number = AirspeedTape.v2gs(flightData.ownship.v);
-    data.airspeedTape.setAirSpeed(gs, AirspeedTape.units.knots);
-    const vs: number = +flightData.ownship.v.z;
-    data.verticalSpeedTape.setVerticalSpeed(vs);
-    const alt: number = +flightData.ownship.s.alt;
-    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
-    // console.log(`Flight data`, flightData);
+
     const bands: utils.DAABandsData = player.getCurrentBands();
+    if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
+
+    const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
+    const airspeed: number = (bands && bands.Ownship && bands.Ownship.airspeed) ? +bands.Ownship.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+    const vspeed: number = +flightData.ownship.v.z;
+    const alt: number = +flightData.ownship.s.alt;
+    data.compass.setCompass(heading);
+    data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
+    data.verticalSpeedTape.setVerticalSpeed(vspeed);
+    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+
+    // console.log(`Flight data`, flightData);
     if (bands) {
         data.compass.setBands(bands["Heading Bands"]);
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
@@ -70,7 +74,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     });
     data.map.setTraffic(traffic);
-    plot({ ownship: { gs, vs: vs / 100, alt, hd }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
+    plot({ ownship: { hs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -80,7 +84,7 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
-function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
+function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
         alerts: desc.bands["Alerts"],
@@ -89,7 +93,7 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
     });
     for (let i = 0; i < daaPlots.length; i++) {
         const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
-                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.hs
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
@@ -145,7 +149,7 @@ player.define("plot", () => {
                 const gs: number = AirspeedTape.v2gs(lla.ownship.v);
                 const vs: number = +lla.ownship.v.z / 100;
                 const alt: number = +lla.ownship.s.alt;
-                plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
+                plot({ ownship: {hd, hs: gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
             }, step);
         }
     }
