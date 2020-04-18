@@ -231,7 +231,7 @@ public class DAABandsV2 {
 		String own = "{ \"time\": " + time; 
 		own += ", \"heading\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalDirection(hdir_units) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalSpeed(hdir_units) + "\"";
+		own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalSpeed(hs_units) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
 		own += " }";
 		ownshipArray.add(own);

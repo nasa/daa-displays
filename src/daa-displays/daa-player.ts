@@ -1079,7 +1079,10 @@ export class DAAPlayer {
             daaLogic: data.alertingLogic ||  "WellClear-2.0.f.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
             scenarioName: data.scenario || "H1.daa",
-            wind: data.wind || { knot: "0", deg: "0" }
+            wind: { 
+                knot: (data.wind && data.wind.knot) ? data.wind.knot : "0",
+                deg: (data.wind && data.wind.deg) ? data.wind.deg : "0"
+            }
         }
         console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
         if (!this._repl[msg.daaLogic]) {

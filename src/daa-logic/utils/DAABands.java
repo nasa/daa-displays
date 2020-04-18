@@ -232,7 +232,7 @@ public class DAABands {
 			String own = "{ \"time\": " + time; 
 			own += ", \"heading\": { \"val\": \"" + daa.getAircraftState(0).track(hdir_units) + "\"";
 			own += ", \"units\": \"" + hdir_units + "\" }";
-			own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftState(0).groundSpeed(hdir_units) + "\"";
+			own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftState(0).groundSpeed(hs_units) + "\"";
 			own += ", \"units\": \"" + hs_units + "\" }";
 			own += " }";
 			ownshipArray.add(own);

@@ -661,7 +661,7 @@ public:
 		std::string own = "{ \"time\": " + time; 
 		own += ", \"heading\": { \"val\": \"" + std::to_string(daa.getAircraftStateAt(0).horizontalDirection(hdir_units)) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"airspeed\": { \"val\": \"" + std::to_string(daa.getAircraftStateAt(0).horizontalSpeed(hdir_units)) + "\"";
+		own += ", \"airspeed\": { \"val\": \"" + std::to_string(daa.getAircraftStateAt(0).horizontalSpeed(hs_units)) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
 		own += " }";
 		ownshipArray->push_back(own);
