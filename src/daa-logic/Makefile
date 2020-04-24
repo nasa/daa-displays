@@ -92,7 +92,7 @@ download-wellclear-2.0.g:
 	tar xvzf WellClear-2.0.g.tgz &&\
 	(test ! -d WellClear-2.0.g || rm -rf WellClear-2.0.g) &&\
 	mkdir WellClear-2.0.g &&\
-	mv RELEASE2f WellClear-2.0.g/DAIDALUS &&\
+	mv RELEASE2g WellClear-2.0.g/DAIDALUS &&\
 	rm WellClear-2.0.g.tgz
 
 
