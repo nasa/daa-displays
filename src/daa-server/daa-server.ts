@@ -199,7 +199,7 @@ class DAAServer {
                             });
                         }
                     } catch (subfolderError) {
-                        console.warn(`[daa-server.listFileRecursive] ignoring subfolder ${subfolder} (read error)`);
+                        console.warn(`[daa-server.listFileRecursive] ignoring subfolder ${subfolder} (read error)`, subfolderError);
                     }
                 }
             }
