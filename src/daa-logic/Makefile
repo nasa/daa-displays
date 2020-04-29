@@ -86,6 +86,16 @@ download-wellclear-2.0.f:
 	mv RELEASE2f WellClear-2.0.f/DAIDALUS &&\
 	rm WellClear-2.0.f.tgz
 
+download-wellclear-2.0.g:
+	@echo "\n\033[0;32m ** Downloading WellClear 2.0.g from LaRC **\033[0m"
+	-@curl https://shemesh.larc.nasa.gov/fm/DAIDALUS/RELEASE2g-Apr-24-20.tgz > WellClear-2.0.g.tgz &&\
+	tar xvzf WellClear-2.0.g.tgz &&\
+	(test ! -d WellClear-2.0.g || rm -rf WellClear-2.0.g) &&\
+	mkdir WellClear-2.0.g &&\
+	mv RELEASE2g WellClear-2.0.g/DAIDALUS &&\
+	rm WellClear-2.0.g.tgz
+
+
 download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e download-wellclear-2.0.f
 
 compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CPP_TARGETS) 
