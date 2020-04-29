@@ -177,8 +177,8 @@ export class DAASplitView extends DAAPlayer {
         await super.activate(opt);
         if (!this.activationControlsPresent) {
             if (this.players) {
-                if (this.players.left) { await this.players.left.activate(); }
-                if (this.players.right) { await this.players.right.activate(); }
+                if (this.players.left) { await this.players.left.activate(opt); }
+                if (this.players.right) { await this.players.right.activate(opt); }
             }
         }
     }
@@ -420,7 +420,7 @@ export class DAASplitView extends DAAPlayer {
     // @overrides
     appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
         super.appendPlotControls(opt);
-        $(`#${this.id}-plot`).unbind("click", super.plot);
+        $(`#${this.id}-plot`).unbind("click", this.plot);
         // override the plot handler
         $(`#${this.id}-plot`).on("click", async () => {
             if (this.players) {
@@ -430,4 +430,48 @@ export class DAASplitView extends DAAPlayer {
         });
         return this;
     }
+
+    // // @overrides
+    // appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+    //     super.appendDeveloperControls(desc, opt);
+    //     $(`#${this.id}-developer-mode-checkbox`).unbind("change", this.developerControls.developerMode);
+    //     // override developer control handler
+    //     $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
+    //         const isChecked = $(`#${this.id}-developer-mode-checkbox`).prop("checked");
+    //         this.mode = (isChecked) ? "developerMode" : "normalMode";
+    //         if (isChecked && this.developerControls.developerMode) {
+    //             if (this.players) {
+    //                 if (this.players.left) { this.players.left.clickDeveloperMode(); }
+    //                 if (this.players.right) { this.players.right.clickDeveloperMode(); }
+    //             }
+    //         } else {
+    //             if (this.players) {
+    //                 if (this.players.left) { this.players.left.clickNormalMode(); }
+    //                 if (this.players.right) { this.players.right.clickNormalMode(); }
+    //             }
+    //         }
+    //     });
+    //     return this;
+    // }
+
+    // // @overrides
+    // clickDeveloperMode (): void {
+    //     $(`#${this.id}-developer-mode-checkbox`).prop("checked", true);
+    //     this.mode = "developerMode";
+    //     if (this.players) {
+    //         if (this.players.left) { this.players.left.clickDeveloperMode(); }
+    //         if (this.players.right) { this.players.right.clickDeveloperMode(); }
+    //     }
+    // }
+
+    // // @overrides
+    // clickNormalMode (): void {
+    //     $(`#${this.id}-developer-mode-checkbox`).prop("checked", false);
+    //     this.mode = "normalMode";
+    //     if (this.players) {
+    //         if (this.players.left) { this.players.left.clickNormalMode(); }
+    //         if (this.players.right) { this.players.right.clickNormalMode(); }
+    //     }
+    // }
+
 }

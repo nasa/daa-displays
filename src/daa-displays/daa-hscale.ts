@@ -11,9 +11,9 @@ export class HScale {
     protected div: HTMLElement;
     readonly nRadios: number = 16;
     protected readonly nmiRadios: number[] = [ 0, // valid radio IDs start from 1
-        0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.5, 2, 
+        0.1, 0.2, 0.4, 0.8, 1, 1.2, 1.5, 2, 
         2.5, 5, 10, 20, 40, 80, 160, 320
-    ];
+    ]; // this array must contain 17 elements --- see daa-hscale-template.ts
 
     constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, parent?: string }) {
         opt = opt || {};
@@ -32,7 +32,8 @@ export class HScale {
             id: this.id,
             zIndex: 2,
             top: this.top,
-            left: this.left
+            left: this.left,
+            nmiRadios: this.nmiRadios
         });
         $(this.div).html(theHTML);
         // @ts-ignore // .carousel is added by bootstrap

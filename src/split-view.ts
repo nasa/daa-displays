@@ -345,18 +345,11 @@ splitView.getPlayer("left").define("init", async () => {
     });
     // viewOptions_left.applyCurrentViewOptions();
     // scale displays
-    // if (developerMode) {
-    //     const configData: ConfigData = await splitView.getPlayer("left").loadSelectedConfiguration();
-    //     airspeedTape_left.setUnits(configData["horizontal-speed"].units);
-    //     airspeedTape_left.revealUnits();
-    //     airspeedTape_left.setRange(configData["horizontal-speed"]);
-    //     airspeedTape_left.disableTapeSpinning();
-
-    //     altitudeTape_left.setUnits(configData.altitude.units);
-    //     altitudeTape_left.revealUnits();
-    //     altitudeTape_left.setRange(configData["altitude"]);
-    //     altitudeTape_left.disableTapeSpinning();
-    // }
+    if (developerMode && splitView.getMode() === "developerMode") {
+        developerMode();
+    } else {
+        normalMode();
+    }
 });
 splitView.getPlayer("right").define("init", async () => {
     // init right
@@ -367,15 +360,12 @@ splitView.getPlayer("right").define("init", async () => {
         wind: splitView.getPlayer("right").getSelectedWindSettings()
     });
     // viewOptions_right.applyCurrentViewOptions();
-    // if (developerMode) {
-    //     const configData: ConfigData = await splitView.getPlayer("right").loadSelectedConfiguration();
-    //     airspeedTape_right.revealUnits();
-    //     airspeedTape_right.setRange(configData["horizontal-speed"]);
-    //     airspeedTape_right.disableTapeSpinning();
-    //     altitudeTape_right.revealUnits();
-    //     altitudeTape_right.setRange(configData["altitude"]);
-    //     altitudeTape_right.disableTapeSpinning();
-    // }
+    // scale displays
+    if (developerMode && splitView.getMode() === "developerMode") {
+        developerMode();
+    } else {
+        normalMode();
+    }
 });
 
 // -- normal mode

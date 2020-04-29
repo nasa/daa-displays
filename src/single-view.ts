@@ -183,6 +183,7 @@ player.define("init", async () => {
     });
     viewOptions.applyCurrentViewOptions();
     player.updateMonitors();
+    developerMode();
 });
 async function developerMode (): Promise<void> {
     const configData: ConfigData = await player.loadSelectedConfiguration();
@@ -302,6 +303,5 @@ async function createPlayer() {
         width: 1072
     });
     await player.activate();
-    developerMode();
 }
 createPlayer();

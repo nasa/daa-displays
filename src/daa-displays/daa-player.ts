@@ -168,6 +168,12 @@ export class DAAPlayer {
     readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
 
+    protected mode: "developerMode" | "normalMode" = "normalMode";
+
+    getMode (): "developerMode" | "normalMode" {
+        return this.mode;
+    }
+    
     static readonly modes = {
         developerMode: "developerMode",
         normalMode: "normalMode"
@@ -570,15 +576,14 @@ export class DAAPlayer {
         $(`#${this.id}-developers-controls`).html(theHTML);
         this.developerControls = desc;
         // install handlers
-        const _this: DAAPlayer = this;
+        // const _this: DAAPlayer = this;
         $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
-            const isChecked = $(`#${_this.id}-developer-mode-checkbox`).prop("checked");
-            if (isChecked && _this.developerControls.developerMode) {
-                _this.developerControls.developerMode();
+            const isChecked = $(`#${this.id}-developer-mode-checkbox`).prop("checked");
+            this.mode = (isChecked) ? "developerMode" : "normalMode";
+            if (isChecked) {
+                this.clickDeveloperMode();
             } else {
-                if (_this.developerControls.normalMode) {
-                    _this.developerControls.normalMode();
-                }
+                this.clickNormalMode();
             }
         });
         return this;
@@ -586,12 +591,18 @@ export class DAAPlayer {
 
     clickDeveloperMode (): void {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", true);
-        this.developerControls.developerMode();
+        this.mode = "developerMode";
+        if (this.developerControls.developerMode) {
+            this.developerControls.developerMode();
+        }
     }
 
     clickNormalMode (): void {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", false);
-        this.developerControls.normalMode();
+        this.mode = "normalMode";
+        if (this.developerControls.normalMode) {
+            this.developerControls.normalMode();
+        }
     }
 
     /**
@@ -2047,6 +2058,11 @@ export class DAAPlayer {
                 });
                 $(`#${this.wellClearConfigurationSelector}-attributes-list`).remove();
                 $(`#${this.wellClearConfigurationSelector}-attributes`).append(theAttributes);
+                if (this.mode === "developerMode") {
+                    this.clickDeveloperMode();
+                } else if (this.mode === "normalMode") {
+                    this.clickNormalMode();
+                }
             }
         }
         const selectedConfig: string = this.getSelectedConfiguration();
