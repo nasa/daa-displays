@@ -214,7 +214,7 @@ public class DAALoSRegionV2 extends DAABandsV2 {
 		return null;
 	}
 
-	public void walkFile (DaidalusWrapperInterface wrapper) {
+	public void walkFile () {
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 
@@ -247,6 +247,6 @@ public class DAALoSRegionV2 extends DAABandsV2 {
 		}
 		los.loadDaaConfig();
 
-		los.walkFile(null);
+		los.walkFile();
 	}
 }

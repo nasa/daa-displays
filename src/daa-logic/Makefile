@@ -36,7 +36,7 @@ compile-java-$(1):
 	@echo "\n\033[0;32m ** Building WellClear-$(1).jar **\033[0m"
 	@test ! -f "WellClear-$(1)/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-$(1)/DAIDALUS/Java && make lib)
 	@if [ -e WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) ]; then \
-	  cd utils; $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java) && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1,WellClear-$(1)),DAABands,DAABandsV2) *.class && unzip -qn ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) -d temp; \
+	  cd utils; $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java) && $(JAR) cfe ../WellClear-$(1).jar $(if $(call version1,WellClear-$(1)),DAABands,DAABandsV2) *.class && unzip -qn ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) -d temp; \
 	  cd temp; $(JAR) uf ../../WellClear-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
 	else echo "*** Directory WellClear-$(1)/DAIDALUS/Java not found"; fi
 endef
@@ -66,7 +66,7 @@ endef
 clean-all = $(foreach ver,$(JAVA_VERSIONS),$(eval $(call clean-template,$(ver))))
 
 # makefile targets
-all: download compile daa2json daa2xyz daa2pvs daa2pvsv2 #wrapper #los-1.0.1 los-1.0.2 los-2.0.e 
+all: download compile daa2json daa2xyz daa2pvs daa2pvsv2 #los-1.0.1 los-1.0.2 los-2.0.e 
 
 download-wellclear-2.0.e:
 	@echo "\n\033[0;32m ** Downloading WellClear 2.0.e from LaRC **\033[0m"
@@ -122,7 +122,7 @@ remove-downloads:
 define los-template
 los-$(1):
 	@echo "\n\033[0;32m ** Building DAALoSRegion for WellClear-$(1) **\033[0m"
-	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAALoSRegion.java,DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2.java DAALoSRegionV2.java DAAMonitorsV2.java) && $(JAR) cfe ../LoSRegion-$(1).jar $(if $(call version1,WellClear-$(1)),DAALoSRegion,DAALoSRegionV2) *.class
+	-@cd utils && $(JAVAC) -cp ../WellClear-$(1)/DAIDALUS/Java/lib/$(if $(call version1,WellClear-$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,WellClear-$(1)),DAALoSRegion.java DAABandsV2.java DAALoSRegionV2.java DAAMonitorsV2.java) && $(JAR) cfe ../LoSRegion-$(1).jar $(if $(call version1,WellClear-$(1)),DAALoSRegion,DAALoSRegionV2) *.class
 	-@cd WellClear-$(1)/DAIDALUS/Java/src && $(JAR) uf ../../../../LoSRegion-$(1).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
 ##	unzip -vl LoSRegion-$(1).jar
 endef
@@ -151,20 +151,12 @@ daa2pvsv2:
 	@cd utils && $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar DAA2PVSV2.java && $(JAR) cfe ../DAA2PVS-2.x.jar DAA2PVSV2 *.class && cd ../WellClear-2.0.e/DAIDALUS/Java/src && $(JAR) uf ../../../../DAA2PVS-2.x.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
 ##	&& cd ../../../../ && unzip -vl DAA2PVS-2.x.jar
 
-wrapper:
-	@echo "\n\033[0;32m ** Building WellClear-2.0.e.WR.jar **\033[0m"
-	@test ! -f "WellClear-2.0.e/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-2.0.e/DAIDALUS/Java && make lib)
-	@if [ -e WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar ]; then \
-	  cd utils; $(JAVAC) -cp ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java DaidalusWrapper.java DAABandsV2Wrapper.java && $(JAR) cfe ../WellClear-2.0.e.WR.jar DAABandsV2Wrapper *.class && unzip -qn ../WellClear-2.0.e/DAIDALUS/Java/lib/DAIDALUS2.jar -d temp; \
-	  cd temp; $(JAR) uf ../../WellClear-2.0.e.WR.jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
-	else echo "*** Directory WellClear-2.0.e/DAIDALUS/Java not found"; fi
-
 ver?=2.0.x
 compile-jar:
 	@echo "\n\033[0;32m ** Building WellClear-$(ver).jar **\033[0m"
 	@test ! -f "WellClear-$(ver)/DAIDALUS/Java/Makefile" -o -n "$(lite)" || (cd WellClear-$(ver)/DAIDALUS/Java && make lib)
 	@if [ -e "WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar" ]; then \
-	  cd utils; $(JAVAC) -cp ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar DAABandsV2.java DAAMonitorsV2.java DaidalusWrapperInterface.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class && unzip -qn ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar -d temp; \
+	  cd utils; $(JAVAC) -cp ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar DAABandsV2.java DAAMonitorsV2.java && $(JAR) cfe ../WellClear-$(ver).jar DAABandsV2 *.class && unzip -qn ../WellClear-$(ver)/DAIDALUS/Java/lib/DAIDALUS2.jar -d temp; \
 	  cd temp; $(JAR) uf ../../WellClear-$(ver).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class && cd ../ && rm -rf temp; \
 	else echo "*** Directory WellClear-$(ver)/DAIDALUS/Java not found"; fi
 

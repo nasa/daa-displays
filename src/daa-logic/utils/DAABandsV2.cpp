@@ -47,11 +47,6 @@ TERMINATION OF THIS AGREEMENT.
 #include <cstring>
 #include <regex>
 
-class DaidalusWrapperInterface {
-	public:
-	    virtual void adjustAlertingTime();
-};
-
 class DAAMonitorsV2 {
 
 protected:
@@ -835,7 +830,8 @@ public:
 					+ "\"MostSevereAlertLevel\": \"" + std::to_string(daa.mostSevereAlertLevel(1)) + "\"";
 		return stats;
 	}
-	void walkFile (DaidalusWrapperInterface* wrapper) {
+  
+	void walkFile () {
 		if (ifname.empty()) {
 			std::cerr << "** Error: Please specify a daa file" << std::endl;
 			exit(1);
@@ -849,8 +845,6 @@ public:
 
 		/* Create DaidalusFileWalker */
 		larcfm::DaidalusFileWalker walker(ifname);
-		// load wind settings
-		loadWind();
 
 		*printWriter << "{\n\"Info\": ";
 		*printWriter << jsonHeader() << "," << std::endl;
@@ -883,9 +877,6 @@ public:
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
-			if (wrapper != NULL) {
-				wrapper->adjustAlertingTime();
-			}
 			jsonStats = jsonBands(
 				monitors,
 				ownshipArray, alertsArray, 
@@ -1025,6 +1016,6 @@ int main(int argc, char* argv[]) {
 	DAABandsV2 daaBands;
 	daaBands.parseCliArgs(argv, argc);
 	daaBands.loadDaaConfig();
-	daaBands.walkFile(NULL);
+	daaBands.walkFile();
 }
 

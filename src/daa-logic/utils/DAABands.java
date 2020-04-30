@@ -170,8 +170,6 @@ public class DAABands {
 
 		/* Create Daidalus object and setting the configuration parameters */
 		Daidalus daa = new Daidalus();
-		// load wind settings
-		loadWind(daa, wind);
 
 		if (config != null && !daa.parameters.loadFromFile(config)) {
 		    System.err.println("** Error: Configuration file " + config + " not found");

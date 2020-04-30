@@ -399,7 +399,8 @@ public class DAABandsV2 {
 					+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";
 		return stats;
 	}
-	public void walkFile (DaidalusWrapperInterface wrapper) {
+    
+    public void walkFile () {
 		if (ifname == "" || ifname == null) {
 			System.err.println("** Error: Please specify a daa file");
 			System.exit(1);
@@ -413,8 +414,6 @@ public class DAABandsV2 {
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
-		// load wind settings
-		loadWind();
 
 		printWriter.println("{\n" + jsonHeader());
 
@@ -442,10 +441,6 @@ public class DAABandsV2 {
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
-			if (wrapper != null) {
-				wrapper.adjustAlertingTime();
-			}
-
 			jsonStats = jsonBands(
 				monitors,
 				ownshipArray, alertsArray, 
@@ -575,7 +570,7 @@ public class DAABandsV2 {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
 		daaBands.loadDaaConfig();
-		daaBands.walkFile(null);
+		daaBands.walkFile();
 	}
 
 }
