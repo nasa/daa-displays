@@ -19,7 +19,7 @@
 		"common-js": "^0.3.8",
 		"express": "^4.16.4",
 		"handlebars": "^4.7.6",
-		"jquery": "^3.3.29",
+		"jquery": "^3.5.0",
 		"node": "^8.9.1",
 		"npm-force-resolutions": "0.0.3"
 	},
