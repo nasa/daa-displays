@@ -142,7 +142,7 @@ export declare interface MonitorElement {
 export declare interface ResolutionElement {
     resolution: { val: string, units: string, alert: string },
     "resolution-secondary": { val: string, units: string, alert: string },
-    flags: { "preferred-resolution": boolean },
+    flags: { "preferred-resolution": "true" | "false" },
     ownship: { val: string, units: string, alert: string }
 }
 

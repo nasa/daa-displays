@@ -104,9 +104,11 @@ const strokeWidth = 8;
 class ResolutionBug {
     protected id: string;
     protected compass: Compass;
-    protected currentAngle: number = 0;
-    protected previousAngle: number = 0;
+    protected currentAngle: number = 0; // deg
+    protected previousAngle: number = 0; // deg
     protected color: string = utils.bugColors["UNKNOWN"];
+    protected wedgeAperture: number = 0; // degrees
+    protected wedgeSide: "left" | "right" = "right"; // side of the wedge wrt the resolution indicator
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
@@ -138,6 +140,34 @@ class ResolutionBug {
             this.refresh();
         } else {
             this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_setWedgeAperture">setWedgeAperture</a>
+     * @desc Sets the aperture of the resolution wedge.
+     * @param deg (real) Aperture of the wedge (in degrees)
+     * @memberof module:Compass
+     * @instance
+     * @inner
+     */
+    setWedgeAperture (deg: number, opt?: { wedgeConstraints?: utils.FromTo[], usePreferredResolution?: boolean }): void {
+        opt = opt || {};
+        if (isFinite(deg) && deg >= 0) {
+            if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
+                this.wedgeAperture = deg;
+                const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
+                this.wedgeSide = (opt.usePreferredResolution) ? "right" : "left";
+                for (let i = 0; i < opt.wedgeConstraints.length; i++) {
+                    const aperture1: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].from) % 360) + 360) % 360);
+                    const aperture2: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].to) % 360) + 360) % 360);
+                    const aperture: number = Math.max(aperture1, aperture2);
+                    if (aperture < this.wedgeAperture) {
+                        this.wedgeAperture = aperture;
+                    }
+                }
+            } else {
+                this.wedgeAperture = deg;
+            }
         }
     }
     /**
@@ -175,6 +205,26 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
+        if (this.wedgeAperture) {
+            $(`#${this.id}-wedge`).css({ "display": "block"});
+            $(`#${this.id}-indicator`).css({ "display": "none"});
+            const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById(`${this.id}-wedge`);
+            const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+            const radius: number = canvas.width / 2;
+            const centerX: number = canvas.width / 2;
+            const centerY: number = canvas.width / 2;
+            const from: number = (this.wedgeSide === "right") ? 0 : -utils.deg2rad(this.wedgeAperture);
+            const to: number = (this.wedgeSide === "right") ? utils.deg2rad(this.wedgeAperture) : 0;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, from - Math.PI / 2, to - Math.PI / 2, false); // 0 degrees in the compass is -90 degrees in the canvas
+            ctx.closePath();
+            ctx.fillStyle = "green";
+            ctx.fill();
+        } else {
+            $(`#${this.id}-wedge`).css({ "display": "none"});
+            $(`#${this.id}-indicator`).css({ "display": "block"});
+        }
     }
     reveal (): void {
         $(`#${this.id}`).css({ "display": "block"});
@@ -347,19 +397,34 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBug(info: number | server.ResolutionElement): void {
+    setBug(info: number | server.ResolutionElement, opt?: { 
+        maxWedgeAperture?: number, 
+        wedgeConstraints?: utils.FromTo[],
+        usePreferredResolution?: boolean
+    }): void {
+        opt = opt || {};
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "object") ? +info.resolution.val : info;
+            const d: number = (typeof info === "object") ?
+                (opt.usePreferredResolution) ?
+                    (info.flags && info.flags["preferred-resolution"] === "true") ? +info.resolution.val : +info["resolution-secondary"].val
+                    : +info.resolution.val
+                    : info;
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
+            
+            this.resolutionBug.setWedgeAperture(opt.maxWedgeAperture, opt);
+            
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
                 this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
-            this.resolutionBug.hide();
-            this.resetIndicatorColor();
+            this.hideBug();
         }
+    }
+    hideBug(): void {
+        this.resolutionBug.hide();
+        this.resetIndicatorColor();
     }
     /**
      * @function <a name="setBands">setBands</a>
@@ -425,29 +490,28 @@ export class Compass {
         this.bands.RECOVERY = normaliseCompassBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseCompassBand(bands.UNKNOWN);
         // console.log("danti-compass-bands", this.bands);
-        this._draw_bands();
+        this.draw_bands();
         this.resolutionBug.refresh();
         return this;
     }
     /**
      * Utility function, draws resolution bands over the compass
      **/
-    protected _draw_bands () {
+    protected draw_bands () {
         let theHTML = "";
-        const _drawArc = (ctx: CanvasRenderingContext2D, from: number, to: number, alert: string) => {
+        const drawArc = (ctx: CanvasRenderingContext2D, from: number, to: number, alert: string) => {
             ctx.beginPath();
             if (utils.bandColors[alert].style === "dash") {
                 ctx.setLineDash([4, 8]);
             } else {
                 ctx.setLineDash([]);
             }
-            // @ts-ignore
-            ctx.arc(this.centerX, this.centerY, this.radius, (to - 90) / 180 * Math.PI, (from - 90) / 180 * Math.PI, 2 * Math.PI, false);
+            ctx.arc(this.centerX, this.centerY, this.radius, utils.deg2rad(from) - Math.PI / 2, utils.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
             ctx.lineWidth = strokeWidth;
             ctx.strokeStyle = utils.bandColors[alert].color;
             ctx.stroke();
         }
-        let ctx = this.canvas.getContext("2d");
+        const ctx: CanvasRenderingContext2D = this.canvas.getContext("2d");
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         Object.keys(this.bands).forEach(alert => {
             const arcs: utils.FromTo[] = this.bands[alert];
@@ -456,7 +520,7 @@ export class Compass {
             for (let i = 0; i < arcs.length; i++) {
                 let from = arcs[i].from || 0;
                 let to = arcs[i].to || 360;
-                _drawArc(ctx, from, to, alert);
+                drawArc(ctx, from, to, alert);
                 // the following info is attached to the html to better support debugging
                 segs.push({
                     from: from,

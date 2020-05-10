@@ -9,6 +9,7 @@ import { CppProcess } from './daa-cppProcess';
 import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile } from './utils/daa-server';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
+import { AddressInfo } from 'net';
 
 const helpMsg: string = `
   Usage: node daa-server.js [options]
@@ -753,7 +754,7 @@ class DAAServer {
         // create http server
         this.httpServer = http.createServer(app);
         this.httpServer.listen(this.config.port, "0.0.0.0", async () => {
-            const url: string = "http://" + this.httpServer.address().address + ":" + this.httpServer.address().port;
+            const url: string = "http://" + (<AddressInfo>this.httpServer.address()).address + ":" + (<AddressInfo>this.httpServer.address()).port;
             // console.info(`Server folder ${daaDisplaysRoot}`);
             console.info(`daa-displays server ready at ${url}`);
         });

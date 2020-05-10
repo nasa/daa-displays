@@ -391,11 +391,14 @@ export class DAASpectrogram {
                 let tooltip: string = (data.marker !== null && isFinite(data.marker)) ? 
                                         (data.units) ? `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100} ${data.units}` 
                                             : `<br>OWNSHIP: ${Math.floor(data.marker * 100) / 100}` : "";
-                tooltip += (data.resolution !== null && data.resolution !== undefined) ? 
-                                (isFinite(data.resolution) ? 
-                                    (data.units) ? `<br>Resolution: ${Math.floor(data.resolution * 100) / 100} ${data.units}` 
-                                        : `<br>Resolution: ${Math.floor(data.resolution * 100) / 100}` : `<br>Resolution: ${data.resolution}`)
-                                        : `<br>Resolution: N\A`;
+                if (data.resolution !== null && data.resolution !== undefined) {
+                    tooltip += (isFinite(data.resolution) ?
+                                `<br>Resolution: ${Math.floor(data.resolution * 100) / 100} ${(data.units) ? data.units : ""}`
+                                : `<br>Resolution: ${data.resolution}`);
+                                    
+                } else {
+                    tooltip += `<br>Resolution: N\A`;
+                }
                 for (let i = 0; i < tooltipData.length; i++) {
                     tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
                 }

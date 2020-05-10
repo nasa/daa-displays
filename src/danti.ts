@@ -63,6 +63,20 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+        // set resolutions
+        // show the resolution only for recovery bands
+        if (bands["Heading Bands"].RECOVERY) {
+            data.compass.setBug(bands["Heading Resolution"], {
+                maxWedgeAperture: 15, 
+                usePreferredResolution: true,
+                wedgeConstraints: bands["Heading Bands"].RECOVERY
+            });
+        } else {
+            data.compass.hideBug();
+        }
+        // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
+        // data.altitudeTape.setBug(bands["Altitude Resolution"]);
+        // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);        
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -97,12 +111,28 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
+        const preferred: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+                                : null;
+        const secondary: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"]["resolution-secondary"]) ? +desc.bands["Heading Resolution"]["resolution-secondary"].val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"]["resolution-secondary"]) ? +desc.bands["Horizontal Speed Resolution"]["resolution-secondary"].val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"]["resolution-secondary"]) ? +desc.bands["Vertical Speed Resolution"]["resolution-secondary"].val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"]["resolution-secondary"]) ? +desc.bands["Altitude Resolution"]["resolution-secondary"].val
+                                : null;
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"]) ? (desc.bands["Heading Resolution"].flags && desc.bands["Heading Resolution"].flags["preferred-resolution"] === "true") ? preferred : secondary
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"]) ? (desc.bands["Horizontal Speed Resolution"].flags && desc.bands["Horizontal Speed Resolution"].flags["preferred-resolution"] === "true") ? preferred : secondary
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"]) ? (desc.bands["Vertical Speed Resolution"].flags && desc.bands["Vertical Speed Resolution"].flags["preferred-resolution"]) ? preferred : secondary
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] ) ? (desc.bands["Altitude Resolution"].flags && desc.bands["Altitude Resolution"].flags["preferred-resolution"] === "true") ? preferred : secondary
+                                : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
             step: desc.step,
             time: desc.time,
             units: daaPlots[i].units,
-            marker
+            marker,
+            resolution
         });
     }
 }
