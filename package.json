@@ -3,7 +3,7 @@
 	"description": "DAA-Displays is a toolkit for model-based design and analysis of cockpit displays. It includes a library of interactive graphical display elements (widgets) for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.",
 	"author": "Paolo Masci",
 	"license": "NASA-1.3",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/nasa/daa-displays"
@@ -19,15 +19,15 @@
 		"common-js": "^0.3.8",
 		"express": "^4.16.4",
 		"handlebars": "^4.7.6",
-		"jquery": "^3.3.29",
-		"node": "^8.9.1",
+		"jquery": "^3.5.1",
+		"node": "^12.12.2",
 		"npm-force-resolutions": "0.0.3"
 	},
 	"devDependencies": {
 		"@types/express": "^4.16.1",
 		"@types/jasmine": "^3.5.0",
-		"@types/jquery": "^3.3.29",
-		"@types/node": "^8.9.1",
+		"@types/jquery": "^3.3.38",
+		"@types/node": "^12.12.2",
 		"@types/ws": "^6.0.1",
 		"jasmine": "^3.4.0",
 		"minimist": "^1.2.5",
