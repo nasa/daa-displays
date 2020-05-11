@@ -139,6 +139,7 @@ class ResolutionBug {
             const cC_rotation: number = Math.abs((c_rotation - 360) % 360); // clockwise rotation
             this.currentAngle = (c_rotation < cC_rotation) ? this.previousAngle + c_rotation : this.previousAngle - cC_rotation;
 
+            // update wedge aperture
             this.wedgeAperture = this.maxWedgeAperture;
             if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
                 const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
@@ -170,6 +171,7 @@ class ResolutionBug {
     setMaxWedgeAperture (deg: number | string): void {
         if (isFinite(+deg) && deg >= 0) {
             this.maxWedgeAperture = + deg;
+            this.setValue(this.currentAngle); // this will refresh the display
         }
     }
     /**
@@ -430,7 +432,6 @@ export class Compass {
     }
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
-        this.resolutionBug.refresh();
     }
     /**
      * @function <a name="setBands">setBands</a>

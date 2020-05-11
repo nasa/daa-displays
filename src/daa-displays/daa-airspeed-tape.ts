@@ -162,6 +162,7 @@ class SpeedBug {
     setMaxWedgeAperture (deg: number | string): void {
         if (isFinite(+deg) && deg >= 0) {
             this.maxWedgeAperture = + deg;
+            this.setValue(this.val); // this will refresh the bug
         }
     }
     /**
@@ -652,7 +653,6 @@ export class AirspeedTape {
     }
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
-        this.resolutionBug.refresh();
     }
 
 

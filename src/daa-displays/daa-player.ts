@@ -607,10 +607,16 @@ export class DAAPlayer {
         utils.createDiv(`${this.id}-resolution-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-resolution-controls`).html(theHTML);
         // install handlers
-        $(`#${this.id}-max-wedge-aperture-input`).on("input", () => {
-            const maxAperture: string = <string> $(`#${this.id}-max-wedge-aperture-input`).val();
-            if (handlers && handlers["setMaxWedgeAperture"]) {
-                handlers["setMaxWedgeAperture"](maxAperture);
+        $(`#${this.id}-max-compass-wedge-aperture-input`).on("input", () => {
+            const maxAperture: string = <string> $(`#${this.id}-max-compass-wedge-aperture-input`).val();
+            if (handlers && handlers["setCompassWedgeAperture"]) {
+                handlers["setCompassWedgeAperture"](maxAperture);
+            }
+        });
+        $(`#${this.id}-max-airspeed-wedge-aperture-input`).on("input", () => {
+            const maxAperture: string = <string> $(`#${this.id}-max-airspeed-wedge-aperture-input`).val();
+            if (handlers && handlers["setAirspeedWedgeAperture"]) {
+                handlers["setAirspeedWedgeAperture"](maxAperture);
             }
         });
     }
