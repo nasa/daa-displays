@@ -67,7 +67,6 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         // show the resolution only for recovery bands
         if (bands["Heading Bands"].RECOVERY) {
             data.compass.setBug(bands["Heading Resolution"], {
-                maxWedgeAperture: 15, 
                 wedgeConstraints: bands["Heading Bands"].RECOVERY
             });
         } else {
@@ -135,7 +134,7 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
 // single player
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
+const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
 // map view options
@@ -239,6 +238,11 @@ async function createPlayer() {
     player.appendActivationPanel({
         parent: "activation-controls"
     });
+    player.appendResolutionControls({
+        setMaxWedgeAperture: (aperture: string) => {
+            compass.setMaxWedgeAperture(aperture);
+        }
+    }, { top: -63 });
     await player.activate();
 }
 createPlayer();

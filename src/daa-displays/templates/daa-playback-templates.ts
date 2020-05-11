@@ -49,8 +49,6 @@ export const playbackTemplate: string = `
                 <div class="col-sm">
                 </div>
                 <div class="col-sm">
-                </div>
-                <div class="col-sm">
                     <div class="input-group input-group-sm mb-3" style="display:none;">
                         <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary sim-control" style="width:84px;">GoTo</button>
                         <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
@@ -59,6 +57,8 @@ export const playbackTemplate: string = `
                         <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
                         <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
                     </div>
+                </div>
+                <div class="col-sm">
                 </div>
             </div>
         </div>
@@ -253,4 +253,26 @@ export const developersControls: string = `
       <span style="margin-left: 4px;">Developer mode</span>
     </div>
   </div>
+</div>`;
+
+export const resolutionControls: string = `
+<div id="{{id}}" class="resolution-controls" style="position:absolute;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+                </div>
+                <div class="col-sm">
+                </div>
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-prepend">
+                            <span class="btn-sm max-wedge-aperture" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Wedge Aperture</span>
+                        </div>
+                        <input id="{{id}}-max-wedge-aperture-input" style="text-align:center;" type="number" value="15" min="0" max="360" step="1" aria-label="wedge aperture" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>`;

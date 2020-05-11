@@ -109,6 +109,8 @@ export declare interface DAAPlaybackHandlers {
     identify: () => Promise<void>;
 }
 
+export declare type InputHandler = (data: string) => void;
+
 export declare interface Handlers extends DAAPlaybackHandlers {
     scenarioReloader: (scenarios: string[]) => Promise<void>;
     configurationReloader: () => Promise<void>;
@@ -560,7 +562,7 @@ export class DAAPlayer {
     /**
      * utility function, renders the DOM elements necessary for developers
      */
-    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
         opt = opt || {};
         desc = desc || {};
         opt.parent = opt.parent || this.id;
@@ -576,7 +578,6 @@ export class DAAPlayer {
         $(`#${this.id}-developers-controls`).html(theHTML);
         this.developerControls = desc;
         // install handlers
-        // const _this: DAAPlayer = this;
         $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
             const isChecked = $(`#${this.id}-developer-mode-checkbox`).prop("checked");
             this.mode = (isChecked) ? "developerMode" : "normalMode";
@@ -586,7 +587,32 @@ export class DAAPlayer {
                 this.clickNormalMode();
             }
         });
-        return this;
+    }
+
+    /**
+     * utility function, renders the DOM elements necessary for the configuration of conflict resolutions elements
+     */
+    appendResolutionControls (handlers: { [key: string]: InputHandler }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
+        opt = opt || {};
+        handlers = handlers || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
+        const theHTML = Handlebars.compile(templates.resolutionControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-resolution-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-resolution-controls`).html(theHTML);
+        // install handlers
+        $(`#${this.id}-max-wedge-aperture-input`).on("input", () => {
+            const maxAperture: string = <string> $(`#${this.id}-max-wedge-aperture-input`).val();
+            if (handlers && handlers["setMaxWedgeAperture"]) {
+                handlers["setMaxWedgeAperture"](maxAperture);
+            }
+        });
     }
 
     clickDeveloperMode (): void {
@@ -613,7 +639,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 374 : opt.width;
         const theHTML = Handlebars.compile(templates.spectrogramControls)({
             id: this.id,
             parent: opt.parent,
