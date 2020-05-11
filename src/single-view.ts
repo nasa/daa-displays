@@ -296,11 +296,10 @@ async function createPlayer() {
     });
     player.appendPlotControls({
         parent: "simulation-controls",
-        top: 60
+        top: 47
     });
     player.appendActivationPanel({
-        parent: "activation-controls",
-        width: 1072
+        parent: "activation-controls"
     });
     await player.activate();
 }

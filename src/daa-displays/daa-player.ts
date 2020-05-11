@@ -531,7 +531,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
         const theHTML = Handlebars.compile(templates.activationPanel)({
             id: this.id,
             parent: opt.parent,
@@ -613,7 +613,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
         const theHTML = Handlebars.compile(templates.spectrogramControls)({
             id: this.id,
             parent: opt.parent,
@@ -1832,7 +1832,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || (`${this.id}-simulation-controls`);
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1800 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
 
         this._displays = opt.displays;
 

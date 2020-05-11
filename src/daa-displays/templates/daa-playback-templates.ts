@@ -1,41 +1,65 @@
 export const playbackTemplate: string = `
 <div id="{{id}}" class="simulation-controls" style="position:absolute;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
-        <div class="input-group-prepend">
-            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
-                <div class="input-group-prepend">
-                    <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em;">Simulation Speed</span>
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-prepend">
+                            <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Simulation Speed</span>
+                        </div>
+                        <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
+                    </div>
                 </div>
-                <input id="{{id}}-speed-input" style="text-align:center;" type="number" value="10" min="1" max="1000" step="1" aria-label="simulation speed" class="form-control">
-            </div>
-            <div class="input-group input-group-sm mb-3" style="display:none; margin-right:30px;">
-                <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; width:400px;">
-                    Simulation step: 
-                    <span id="{{id}}-curr-sim-step" style="margin-left:4px; margin-right:4px;">0</span>
-                    of
-                    <span id="{{id}}-tot-sim-steps" style="margin-left:4px; margin-right:4px;">0</span>
-                </span>
-            </div>
-            <div class="input-group input-group-sm mb-3">
-                <span class="btn-sm" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; line-height:1.5em; min-width:200px;">
-                    Current Time: 
-                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span>sec
-            </div>
-            <div class="input-group mb-3" style="width: 240px; margin-left:20px; margin-right:30px;">
-                <div class="btn-group btn-group-toggle" role="group" aria-label="View">
-                    <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-back" style="width:84px;" alt="Step backward"><i class="fa fa-step-backward"></i></button>
-                    <button type="button" class="btn btn-sm btn-danger sim-control" id="{{id}}-pause" style="width:84px;">Stop</button>
-                    <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-play" style="width:84px;">Play</button>
-                    <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-step" style="width:84px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
+                <div class="col-sm">
+
+                    <div class="input-group input-group-sm mb-3" style="display:none; margin-right:30px;">
+                        <span class="btn-sm sim-control" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap; vertical-align: middle; width:100%;">
+                            Simulation step: 
+                            <span id="{{id}}-curr-sim-step" style="margin-left:4px; margin-right:4px;">0</span>
+                            of
+                            <span id="{{id}}-tot-sim-steps" style="margin-left:4px; margin-right:4px;">0</span>
+                        </span>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="btn-sm" style="text-align:left; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; min-width:200px; width:100%;">
+                            Current Time: 
+                            <span style="float:right; text-align:right;">
+                                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span><span>sec</span>
+                            </span>
+                        </span>
+                    </div>
+
+                </div>
+                <div class="col-sm">
+    
+                    <div class="input-group mb-3">
+                        <div class="btn-group btn-group-toggle" role="group" aria-label="View">
+                            <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-back" style="width:86px;" alt="Step backward"><i class="fa fa-step-backward"></i></button>
+                            <button type="button" class="btn btn-sm btn-danger sim-control" id="{{id}}-pause" style="width:86px;">Stop</button>
+                            <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-play" style="width:90px;">Play</button>
+                            <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-step" style="width:86px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <div class="input-group input-group-sm mb-3" style="display:none; margin-left:106px; margin-right:30px;">
-                <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary sim-control" style="width:84px;">GoTo</button>
-                <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
-            </div>
-            <div class="input-group input-group-sm mb-3" style="margin-left:106px; margin-right:30px;">
-                <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
-                <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
+            <div class="row">
+                <div class="col-sm">
+                </div>
+                <div class="col-sm">
+                </div>
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3" style="display:none;">
+                        <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary sim-control" style="width:84px;">GoTo</button>
+                        <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
+                        <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -204,12 +228,18 @@ export const navbarTemplate: string = `
 export const spectrogramControls: string = `
 <div id="{{id}}-spectrogram-controls-inner" style="position:absolute;width:100%;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
-        <div class="input-group-prepend">
-            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
-                <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-reset" style="width:222px; white-space:nowrap;">Reset</button>
-            </div>
-            <div class="input-group input-group-sm mb-3" style="margin-right:30px;">
-                <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-plot" style="width:200px; white-space:nowrap; margin-left:1px;">Plot</button>
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col">
+                    <div class="btn-group btn-group-toggle" role="group" aria-label="Plot Controls">
+                        <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-reset" style="width:136px; white-space:nowrap;">Reset</button>
+                        <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-plot" style="width:212px; white-space:nowrap;">Plot</button>
+                    </div>
+                </div>
+                <div class="col">
+                </div>
+                <div class="col">
+                </div>
             </div>
         </div>
     </div>

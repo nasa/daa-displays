@@ -454,16 +454,16 @@ async function createPlayer() {
     });
     splitView.appendPlotControls({
         parent: "simulation-controls",
-        top: 60
+        top: 47
     });
     splitView.appendDeveloperControls({
         normalMode,
         developerMode
     }, {
         parent: "simulation-controls",
-        top: 56,
-        left: 856,
-        width: 216
+        top: 48,
+        left: 1132,
+        width: 242
     });
     splitView.getPlayer("left").appendSimulationPlot({
         id: "alerts",
@@ -506,8 +506,7 @@ async function createPlayer() {
         });    
     }
     splitView.appendActivationPanel({
-        parent: "activation-controls",
-        width: 1072
+        parent: "activation-controls"
     });
     await splitView.activate({ developerMode: true });
 }
