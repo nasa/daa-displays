@@ -104,6 +104,9 @@ class SpeedBug {
     protected useColors: boolean = false;
     protected color: string = utils.bugColors["UNKNOWN"];
     protected tooltipActive: boolean = false;
+    protected wedgeSide: "up" | "down" = "up";
+    protected maxWedgeAperture: number = 0;
+    protected wedgeAperture: number = 0;
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
@@ -124,13 +127,41 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    setValue(val: number): void {
-        this.val = val;
-        if (isFinite(val)) {
+    setValue(val: number | string, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
+        this.val = +val;
+        opt = opt || {};
+        if (isFinite(+val)) {
+
+            this.wedgeAperture = this.maxWedgeAperture;
+            if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
+                if (opt.wedgeTurning) { this.wedgeSide = opt.wedgeTurning; }
+                for (let i = 0; i < opt.wedgeConstraints.length; i++) {
+                    const aperture1: number = Math.abs(this.val - opt.wedgeConstraints[i].from);
+                    const aperture2: number = Math.abs(this.val - opt.wedgeConstraints[i].to);
+                    const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
+                    if (aperture < this.wedgeAperture) {
+                        this.wedgeAperture = aperture;
+                    }
+                }
+            }
+
             this.reveal();
             this.refresh();            
         } else {
             this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
+     * @desc Sets the maximum aperture of the resolution wedge.
+     * @param deg (real) Aperture of the wedge (in degrees)
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setMaxWedgeAperture (deg: number | string): void {
+        if (isFinite(+deg) && deg >= 0) {
+            this.maxWedgeAperture = + deg;
         }
     }
     /**
@@ -172,19 +203,28 @@ class SpeedBug {
      * @inner
      */
     refresh(): void {
-        const bugPosition = this.zero - this.val * this.tickHeight / this.airspeedStep;
-        $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+        let bugPosition: number = this.zero - this.val * this.tickHeight / this.airspeedStep;
+        if (this.maxWedgeAperture) {
+            if (this.wedgeSide === "up") { bugPosition -= this.wedgeAperture * this.tickHeight / this.airspeedStep; }
+            const notchHeight: number = this.wedgeAperture * this.tickHeight / this.airspeedStep;
+            $(`#${this.id}-notch`).css({ "height": notchHeight });
+            $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+        } else {
+            $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+        }
+
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
             $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
+        
         //@ts-ignore
         $(`.${this.id}-tooltip`).tooltip("dispose");
         if (this.tooltipActive) {
             //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val}</div>` }).tooltip();
-        }
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
+        }    
     }
     reveal (flag?: boolean): void {
         if (flag === false) {
@@ -404,7 +444,7 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    constructor(id: string, coords: { top?: number, left?: number }, opt?: { airspeedStep?: number, parent?: string }) {
+    constructor(id: string, coords: { top?: number, left?: number }, opt?: { airspeedStep?: number, parent?: string, maxWedgeAperture?: number }) {
         opt = opt || {};
         this.id = id || "daa-airspeed-tape";
 
@@ -448,7 +488,7 @@ export class AirspeedTape {
         this.resolutionBug.enableToolTip(true);
         this.speedBug = new SpeedBug(this.id + "-bug"); // speed bug, visible when the tape cannot spin
         this.speedBug.setTickHeight(this.tickHeight);
-        this.speedBug.reveal(this.tapeCanSpin);
+        this.speedBug.reveal(!this.tapeCanSpin);
         this.speedBug.enableToolTip(true);
         this.create_airspeed_ticks();
         this.create_airspeed_spinner();
@@ -456,6 +496,7 @@ export class AirspeedTape {
 
         // set position of resolution bug
         this.resolutionBug.setValue(0);
+        this.resolutionBug.setMaxWedgeAperture(opt.maxWedgeAperture);
         this.resolutionBug.hide();
     }
     /**
@@ -582,22 +623,39 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBug(info: number | server.ResolutionElement): void {
+    setBug(info: number | server.ResolutionElement, opt?: { 
+        wedgeConstraints?: utils.FromTo[]
+    }): void {
+        opt = opt || {};
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
-            this.resolutionBug.setValue(d);
+            this.resolutionBug.setValue(d, {
+                wedgeConstraints: opt.wedgeConstraints,
+                wedgeTurning: (typeof info === "object") ? 
+                    (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
+                    : "up"
+            });
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
                 this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
                 this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
-            this.resolutionBug.hide();
-            this.speedBug.resetColor();
-            this.resetIndicatorColor();
+            this.hideBug(); // resolution bug
+            // this.speedBug.resetColor();
         }
     }
+    hideBug(): void {
+        this.resolutionBug.hide();
+        this.resetIndicatorColor();
+    }
+    setMaxWedgeAperture (aperture: number | string): void {
+        this.resolutionBug.setMaxWedgeAperture(aperture);
+        this.resolutionBug.refresh();
+    }
+
+
     setIndicatorColor (color: string): void {
         if (color) {
             $(`#${this.id}-indicator-pointer`).css({ "border-bottom": `2px solid ${color}`, "border-right": `2px solid ${color}` });

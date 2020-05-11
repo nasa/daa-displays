@@ -41,7 +41,7 @@ import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
 
@@ -64,14 +64,13 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
         // set resolutions
-        // show the resolution only for recovery bands
+        // show the resolution bug only for recovery bands
         if (bands["Heading Bands"].RECOVERY) {
-            data.compass.setBug(bands["Heading Resolution"], {
-                wedgeConstraints: bands["Heading Bands"].RECOVERY
-            });
-        } else {
-            data.compass.hideBug();
-        }
+            data.compass.setBug(bands["Heading Resolution"], { wedgeConstraints: bands["Heading Bands"].RECOVERY });
+        } else { data.compass.hideBug(); }
+        if (bands["Horizontal Speed Bands"].RECOVERY) {
+            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], { wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY });
+        } else { data.airspeedTape.hideBug(); }
         // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         // data.altitudeTape.setBug(bands["Altitude Resolution"]);
         // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);        
@@ -140,7 +139,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
 // create remaining display widgets
-const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
+const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 const player: DAAPlayer = new DAAPlayer();
@@ -239,8 +238,11 @@ async function createPlayer() {
         parent: "activation-controls"
     });
     player.appendResolutionControls({
-        setMaxWedgeAperture: (aperture: string) => {
+        setCompassWedgeAperture: (aperture: string) => {
             compass.setMaxWedgeAperture(aperture);
+        },
+        setAirspeedWedgeAperture: (aperture: string) => {
+            airspeedTape.setMaxWedgeAperture(aperture);
         }
     }, { top: -63 });
     await player.activate();

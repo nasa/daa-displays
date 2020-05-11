@@ -108,13 +108,14 @@ class ResolutionBug {
     protected previousAngle: number = 0; // deg
     protected color: string = utils.bugColors["UNKNOWN"];
     protected maxWedgeAperture: number = 0; // degrees
+    protected wedgeAperture: number = 0; // degrees
     protected wedgeSide: "left" | "right" = "right"; // side of the wedge wrt the resolution indicator
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
      * @param id {String} Unique bug identifier.
      * @param daaCompass {Object} DAA Compass widget over which the resolution bug should be rendered.
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -126,7 +127,7 @@ class ResolutionBug {
      * @function <a name="ResolutionBug_setValue">setValue</a>
      * @desc Sets the bug position to a given heading angle, given in degrees, clockwise rotation, north is 0 deg.
      * @param deg (real) Heading degrees
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -138,15 +139,16 @@ class ResolutionBug {
             const cC_rotation: number = Math.abs((c_rotation - 360) % 360); // clockwise rotation
             this.currentAngle = (c_rotation < cC_rotation) ? this.previousAngle + c_rotation : this.previousAngle - cC_rotation;
 
+            this.wedgeAperture = this.maxWedgeAperture;
             if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
                 const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
                 if (opt.wedgeTurning) { this.wedgeSide = opt.wedgeTurning; }
                 for (let i = 0; i < opt.wedgeConstraints.length; i++) {
                     const aperture1: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].from) % 360) + 360) % 360);
                     const aperture2: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].to) % 360) + 360) % 360);
-                    const aperture: number = Math.max(aperture1, aperture2);
-                    if (aperture < this.maxWedgeAperture) {
-                        this.maxWedgeAperture = aperture;
+                    const aperture: number = (this.wedgeSide === "right") ? aperture2 : aperture1;
+                    if (aperture < this.wedgeAperture) {
+                        this.wedgeAperture = aperture;
                     }
                 }
             }
@@ -158,10 +160,10 @@ class ResolutionBug {
         }
     }
     /**
-     * @function <a name="ResolutionBug_setWedgeAperture">setWedgeAperture</a>
-     * @desc Sets the aperture of the resolution wedge.
+     * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
+     * @desc Sets the maximum aperture of the resolution wedge.
      * @param deg (real) Aperture of the wedge (in degrees)
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -174,7 +176,7 @@ class ResolutionBug {
      * @function <a name="ResolutionBug_setColor">setColor</a>
      * @desc Sets the bug color.
      * @param color (string) Bug color
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -186,7 +188,7 @@ class ResolutionBug {
      * @function <a name="ResolutionBug_getAngle">getAngle</a>
      * @desc Returns the heading angle of the bug, in degrees, clockwise rotation, north is 0 deg.
      * @return {real} Heading angle
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -196,7 +198,7 @@ class ResolutionBug {
     /**
      * @function <a name="ResolutionBug_refresh">refresh</a>
      * @desc Triggers re-rendering of the resolution bug.
-     * @memberof module:Compass
+     * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
@@ -205,7 +207,7 @@ class ResolutionBug {
         $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
-        if (this.maxWedgeAperture) {
+        if (this.wedgeAperture) {
             $(`#${this.id}-wedge`).css({ "display": "block"});
             $(`#${this.id}-indicator`).css({ "display": "none"});
             const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById(`${this.id}-wedge`);
@@ -213,8 +215,8 @@ class ResolutionBug {
             const radius: number = canvas.width / 2;
             const centerX: number = canvas.width / 2;
             const centerY: number = canvas.width / 2;
-            const from: number = (this.wedgeSide === "right") ? 0 : -utils.deg2rad(this.maxWedgeAperture);
-            const to: number = (this.wedgeSide === "right") ? utils.deg2rad(this.maxWedgeAperture) : 0;
+            const from: number = (this.wedgeSide === "right") ? 0 : -utils.deg2rad(this.wedgeAperture);
+            const to: number = (this.wedgeSide === "right") ? utils.deg2rad(this.wedgeAperture) : 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);

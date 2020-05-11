@@ -21,7 +21,7 @@ export const airspeedTemplate = `
             </div>
             <div id="{{id}}-resolution-bug" style="position:absolute; left:90px; opacity:0.7; margin-top:18px;">
                 <div style="position:absolute;">
-                    <div data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug" 
+                    <div id="{{id}}-resolution-bug-notch" data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug" 
                          class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" style="width:32px; height:11px; margin-left:5px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
