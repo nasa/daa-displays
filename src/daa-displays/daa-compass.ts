@@ -150,13 +150,14 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setWedgeAperture (deg: number, opt?: { wedgeConstraints?: utils.FromTo[], usePreferredResolution?: boolean }): void {
+    setWedgeAperture (deg: number, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "left" | "right" }): void {
         opt = opt || {};
         if (isFinite(deg) && deg >= 0) {
             if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
                 this.wedgeAperture = deg;
                 const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
-                this.wedgeSide = (opt.usePreferredResolution) ? "right" : "left";
+
+                if (opt.wedgeTurning) { this.wedgeSide = opt.wedgeTurning; }
                 for (let i = 0; i < opt.wedgeConstraints.length; i++) {
                     const aperture1: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].from) % 360) + 360) % 360);
                     const aperture2: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].to) % 360) + 360) % 360);
@@ -215,6 +216,7 @@ class ResolutionBug {
             const centerY: number = canvas.width / 2;
             const from: number = (this.wedgeSide === "right") ? 0 : -utils.deg2rad(this.wedgeAperture);
             const to: number = (this.wedgeSide === "right") ? utils.deg2rad(this.wedgeAperture) : 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
             ctx.arc(centerX, centerY, radius, from - Math.PI / 2, to - Math.PI / 2, false); // 0 degrees in the compass is -90 degrees in the canvas
@@ -399,19 +401,19 @@ export class Compass {
      */
     setBug(info: number | server.ResolutionElement, opt?: { 
         maxWedgeAperture?: number, 
-        wedgeConstraints?: utils.FromTo[],
-        usePreferredResolution?: boolean
+        wedgeConstraints?: utils.FromTo[]
     }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "object") ?
-                (opt.usePreferredResolution) ?
-                    (info.flags && info.flags["preferred-resolution"] === "true") ? +info.resolution.val : +info["resolution-secondary"].val
-                    : +info.resolution.val
-                    : info;
+            const d: number = (typeof info === "object") ? +info.resolution.val : info;
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             
-            this.resolutionBug.setWedgeAperture(opt.maxWedgeAperture, opt);
+            this.resolutionBug.setWedgeAperture(opt.maxWedgeAperture, {
+                wedgeConstraints: opt.wedgeConstraints,
+                wedgeTurning: (typeof info === "object") ? 
+                    (info.flags && info.flags["preferred-resolution"] === "true") ? "right" : "left"
+                    : "right"
+            });
             
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d);
