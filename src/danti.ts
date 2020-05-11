@@ -71,6 +71,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         if (bands["Horizontal Speed Bands"].RECOVERY) {
             data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], { wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY });
         } else { data.airspeedTape.hideBug(); }
+        if (bands["Altitude Bands"].RECOVERY) {
+            data.altitudeTape.setBug(bands["Altitude Resolution"], { wedgeConstraints: bands["Altitude Bands"].RECOVERY });
+        } else { data.altitudeTape.hideBug(); }
         // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         // data.altitudeTape.setBug(bands["Altitude Resolution"]);
         // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);        
@@ -140,7 +143,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 const player: DAAPlayer = new DAAPlayer();
 player.define("step", async () => {
@@ -243,8 +246,11 @@ async function createPlayer() {
         },
         setAirspeedWedgeAperture: (aperture: string) => {
             airspeedTape.setMaxWedgeAperture(aperture);
+        },
+        setAltitudeWedgeAperture: (aperture: string) => {
+            altitudeTape.setMaxWedgeAperture(aperture);
         }
-    }, { top: -63 });
+    }, { top: -110, left: 1174 });
     await player.activate();
 }
 createPlayer();

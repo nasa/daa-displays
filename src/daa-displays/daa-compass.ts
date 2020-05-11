@@ -110,6 +110,7 @@ class ResolutionBug {
     protected maxWedgeAperture: number = 0; // degrees
     protected wedgeAperture: number = 0; // degrees
     protected wedgeSide: "left" | "right" = "right"; // side of the wedge wrt the resolution indicator
+    protected wedgeConstraints: utils.FromTo[] = null;
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
@@ -139,25 +140,54 @@ class ResolutionBug {
             const cC_rotation: number = Math.abs((c_rotation - 360) % 360); // clockwise rotation
             this.currentAngle = (c_rotation < cC_rotation) ? this.previousAngle + c_rotation : this.previousAngle - cC_rotation;
 
-            // update wedge aperture
-            this.wedgeAperture = this.maxWedgeAperture;
-            if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
-                const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
-                if (opt.wedgeTurning) { this.wedgeSide = opt.wedgeTurning; }
-                for (let i = 0; i < opt.wedgeConstraints.length; i++) {
-                    const aperture1: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].from) % 360) + 360) % 360);
-                    const aperture2: number = Math.abs((((currentAngle - opt.wedgeConstraints[i].to) % 360) + 360) % 360);
-                    const aperture: number = (this.wedgeSide === "right") ? aperture2 : aperture1;
-                    if (aperture < this.wedgeAperture) {
-                        this.wedgeAperture = aperture;
-                    }
-                }
-            }
+            // update wedge info -- refresh will update the visual appearance
+            this.wedgeConstraints = opt.wedgeConstraints;
+            this.wedgeSide = opt.wedgeTurning;
 
             this.reveal();
             this.refresh();
         } else {
             this.hide();
+        }
+    }
+    /**
+     * Internal functions, updates the visual appearance of the wedge
+     */
+    protected refreshWedge (): void {
+        this.wedgeAperture = this.maxWedgeAperture;
+        if (this.wedgeConstraints) {
+            // merge zero crossing in constraints -- e.g., the two constraints [0..200] [260, 360] be transformed into [260..560] and [-100,200]
+            const constraints: utils.FromTo[] = [];
+            for (let i = 0; i < this.wedgeConstraints.length; i++) {
+                const ct: utils.FromTo = this.wedgeConstraints[i];
+                if (ct.from === 0 || ct.to === 360) {
+                    if (ct.from === 0) {
+                        for (let j = 0; j < this.wedgeConstraints.length; j++) {
+                            if (this.wedgeConstraints[j].to === 360) {
+                                ct.from = this.wedgeConstraints[j].from - 360;
+                            }
+                        }
+                    } else if (ct.to === 360) {
+                        for (let j = 0; j < this.wedgeConstraints.length; j++) {
+                            if (this.wedgeConstraints[j].from === 0) {
+                                ct.to = 360 + this.wedgeConstraints[j].to;
+                            }
+                        }
+                    }
+
+                }
+                constraints.push(ct);
+            }
+            // adjust aperture to satisfy the given constraints
+            const currentAngle = Math.abs(((this.currentAngle % 360) + 360) % 360);
+            for (let i = 0; i < constraints.length; i++) {
+                const aperture1: number = Math.abs((((currentAngle - constraints[i].from) % 360) + 360) % 360);
+                const aperture2: number = Math.abs((((currentAngle - constraints[i].to) % 360) + 360) % 360);
+                const aperture: number = (this.wedgeSide === "right") ? aperture2 : aperture1;
+                if (aperture < this.wedgeAperture) {
+                    this.wedgeAperture = aperture;
+                }
+            }
         }
     }
     /**
@@ -171,7 +201,6 @@ class ResolutionBug {
     setMaxWedgeAperture (deg: number | string): void {
         if (isFinite(+deg) && deg >= 0) {
             this.maxWedgeAperture = + deg;
-            this.setValue(this.currentAngle); // this will refresh the display
         }
     }
     /**
@@ -205,6 +234,8 @@ class ResolutionBug {
      * @inner
      */
     refresh(): void {
+        this.refreshWedge();
+
         const animationDuration: number = 100;
         $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
@@ -432,6 +463,7 @@ export class Compass {
     }
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
+        this.resolutionBug.refresh();
     }
     /**
      * @function <a name="setBands">setBands</a>

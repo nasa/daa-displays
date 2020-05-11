@@ -598,7 +598,7 @@ export class DAAPlayer {
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
-        opt.width = (isNaN(+opt.width)) ? 1100 : opt.width;
+        opt.width = (isNaN(+opt.width)) ? 400 : opt.width;
         const theHTML = Handlebars.compile(templates.resolutionControls)({
             id: this.id,
             parent: opt.parent,
@@ -617,6 +617,12 @@ export class DAAPlayer {
             const maxAperture: string = <string> $(`#${this.id}-max-airspeed-wedge-aperture-input`).val();
             if (handlers && handlers["setAirspeedWedgeAperture"]) {
                 handlers["setAirspeedWedgeAperture"](maxAperture);
+            }
+        });
+        $(`#${this.id}-max-altitude-wedge-aperture-input`).on("input", () => {
+            const maxAperture: string = <string> $(`#${this.id}-max-altitude-wedge-aperture-input`).val();
+            if (handlers && handlers["setAltitudeWedgeAperture"]) {
+                handlers["setAltitudeWedgeAperture"](maxAperture);
             }
         });
     }

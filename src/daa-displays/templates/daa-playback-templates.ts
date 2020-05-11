@@ -261,13 +261,9 @@ export const resolutionControls: string = `
         <div class="container-fluid" style="padding:0px;">
             <div class="row">
                 <div class="col-sm">
-                </div>
-                <div class="col-sm">
-                </div>
-                <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
                         <div class="input-group-prepend">
-                            <span class="btn-sm max-compass-wedge-aperture" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Compass Wedge</span>
+                            <span class="btn-sm max-compass-wedge-aperture" style="width:200px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Compass Wedge</span>
                         </div>
                         <input id="{{id}}-max-compass-wedge-aperture-input" style="text-align:center;" type="number" value="15" min="0" max="360" step="1" aria-label="compass wedge aperture" class="form-control">
                     </div>
@@ -275,15 +271,21 @@ export const resolutionControls: string = `
             </div>
             <div class="row">
                 <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-prepend">
+                            <span class="btn-sm max-airspeed-wedge-aperture" style="width:200px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Airspeed Notch</span>
+                        </div>
+                        <input id="{{id}}-max-airspeed-wedge-aperture-input" style="text-align:center;" type="number" value="50" min="0" max="200" step="1" aria-label="airspeed wedge aperture" class="form-control">
+                    </div>
                 </div>
-                <div class="col-sm">
-                </div>
+            </div>
+            <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
                         <div class="input-group-prepend">
-                            <span class="btn-sm max-airspeed-wedge-aperture" style="text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Airspeed Wedge</span>
+                            <span class="btn-sm max-altitude-wedge-aperture" style="width:200px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Altitude Notch</span>
                         </div>
-                        <input id="{{id}}-max-airspeed-wedge-aperture-input" style="text-align:center;" type="number" value="50" min="0" max="200" step="1" aria-label="airspeed wedge aperture" class="form-control">
+                        <input id="{{id}}-max-altitude-wedge-aperture-input" style="text-align:center;" type="number" value="300" min="0" max="1000" step="1" aria-label="altitude wedge aperture" class="form-control">
                     </div>
                 </div>
             </div>

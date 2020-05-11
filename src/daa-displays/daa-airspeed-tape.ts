@@ -107,6 +107,7 @@ class SpeedBug {
     protected wedgeSide: "up" | "down" = "up";
     protected maxWedgeAperture: number = 0;
     protected wedgeAperture: number = 0;
+    protected wedgeConstraints: utils.FromTo[] = null;
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
@@ -132,18 +133,9 @@ class SpeedBug {
         opt = opt || {};
         if (isFinite(+val)) {
 
-            this.wedgeAperture = this.maxWedgeAperture;
-            if (opt.wedgeConstraints && opt.wedgeConstraints.length) {
-                if (opt.wedgeTurning) { this.wedgeSide = opt.wedgeTurning; }
-                for (let i = 0; i < opt.wedgeConstraints.length; i++) {
-                    const aperture1: number = Math.abs(this.val - opt.wedgeConstraints[i].from);
-                    const aperture2: number = Math.abs(this.val - opt.wedgeConstraints[i].to);
-                    const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
-                    if (aperture < this.wedgeAperture) {
-                        this.wedgeAperture = aperture;
-                    }
-                }
-            }
+            // update wedge info -- refresh will update the visual appearance
+            this.wedgeConstraints = opt.wedgeConstraints;
+            this.wedgeSide = opt.wedgeTurning;
 
             this.reveal();
             this.refresh();            
@@ -162,7 +154,6 @@ class SpeedBug {
     setMaxWedgeAperture (deg: number | string): void {
         if (isFinite(+deg) && deg >= 0) {
             this.maxWedgeAperture = + deg;
-            this.setValue(this.val); // this will refresh the bug
         }
     }
     /**
@@ -196,6 +187,19 @@ class SpeedBug {
     getValue(): number {
         return this.val;
     }
+    protected refreshWedge (): void {
+        this.wedgeAperture = this.maxWedgeAperture;
+        if (this.wedgeConstraints && this.wedgeConstraints.length) {
+            for (let i = 0; i < this.wedgeConstraints.length; i++) {
+                const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
+                const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
+                const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
+                if (aperture < this.wedgeAperture) {
+                    this.wedgeAperture = aperture;
+                }
+            }
+        }
+    }
     /**
      * @function <a name="ResolutionBug_refresh">refresh</a>
      * @desc Triggers re-rendering of the resolution bug.
@@ -204,6 +208,8 @@ class SpeedBug {
      * @inner
      */
     refresh(): void {
+        this.refreshWedge();
+
         let bugPosition: number = this.zero - this.val * this.tickHeight / this.airspeedStep;
         if (this.maxWedgeAperture) {
             if (this.wedgeSide === "up") { bugPosition -= this.wedgeAperture * this.tickHeight / this.airspeedStep; }
@@ -644,7 +650,7 @@ export class AirspeedTape {
             }
         } else {
             this.hideBug(); // resolution bug
-            // this.speedBug.resetColor();
+            this.speedBug.resetColor();
         }
     }
     hideBug(): void {
@@ -653,8 +659,8 @@ export class AirspeedTape {
     }
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
+        this.resolutionBug.refresh();
     }
-
 
     setIndicatorColor (color: string): void {
         if (color) {

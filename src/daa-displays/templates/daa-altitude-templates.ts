@@ -16,7 +16,7 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute; top:24px; margin-left:36px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
+            <div id="{{id}}-bug" style="opacity:0.6; position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
                 <div style="position:absolute;">
                     <!-- box -->
                     <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="altitudebug" id="{{id}}-bug-box" style="width:64px; margin-left:9px; height:12px; border:2px solid white; background-color:black;"></div>
@@ -26,7 +26,7 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.7; margin-top:99px;">
                 <div style="position:absolute;">
-                    <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:32px; height:11px; background-color:white; border-radius:16px;"></div>
+                    <div id="{{id}}-resolution-bug-notch" class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:18px; margin-left:15px; height:11px; background-color:white; border-radius:16px;"></div>
                 </div>
             </div>
         </div>
