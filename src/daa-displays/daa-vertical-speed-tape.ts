@@ -103,6 +103,10 @@ class SpeedBug {
     protected color: string = utils.bugColors["UNKNOWN"];
     protected tape: VerticalSpeedTape;
     protected tooltipActive: boolean = false;
+    protected wedgeSide: "up" | "down" = "up";
+    protected maxWedgeAperture: number = 0;
+    protected wedgeAperture: number = 0;
+    protected wedgeConstraints: utils.FromTo[] = null;
 
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
@@ -125,13 +129,31 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    setValue(val: number): void {
-        this.val = val;
-        if (isFinite(val)) {
+    setValue(val: number | string, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
+        this.val = +val;
+        opt = opt || {};
+        if (isFinite(+val)) {
+            // update wedge info -- refresh will update the visual appearance
+            this.wedgeConstraints = opt.wedgeConstraints;
+            this.wedgeSide = opt.wedgeTurning;
+            
             this.reveal();
             this.refresh();            
         } else {
             this.hide();
+        }
+    }
+    /**
+     * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
+     * @desc Sets the maximum aperture of the resolution wedge.
+     * @param deg (real) Aperture of the wedge (in degrees)
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    setMaxWedgeAperture (deg: number | string): void {
+        if (isFinite(+deg) && deg >= 0) {
+            this.maxWedgeAperture = + deg;
         }
     }
     /**
@@ -163,6 +185,51 @@ class SpeedBug {
         return this.val;
     }
     /**
+     * Internal function, updates the visual appearance of the wedge resolution
+     */
+    protected refreshWedge (): void {
+        this.wedgeAperture = this.maxWedgeAperture;
+        if (this.wedgeConstraints && this.wedgeConstraints.length) {
+            for (let i = 0; i < this.wedgeConstraints.length; i++) {
+                const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
+                const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
+                const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
+                if (aperture < this.wedgeAperture) {
+                    this.wedgeAperture = aperture;
+                }
+            }
+        }
+    }
+    /**
+     * Internal function, computes the bug position in the DOM element for a given value
+     */
+    protected computeBugPosition (val: number): number {
+        let bugPosition = this.zero;
+        const verticalSpeedStep: number = this.tape.getVerticalSpeedStep();
+        const tape_size: number[] = this.tape.getTapeSize();
+        let range1 = verticalSpeedStep * 2;
+        let range2 = range1 * 2;
+        // let max = range2 * 3;
+        if (val >= 0) {
+            if (val <= range1) {
+                bugPosition = this.zero - (val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+            } else if (val <= range2) {
+                bugPosition = 118 - ((val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
+            } else {
+                bugPosition = 55 - ((val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
+            }
+        } else {
+            if (val >= -range1) {
+                bugPosition = this.zero - (val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
+            } else if (this.val >= -range2) {
+                bugPosition = 176 - ((val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
+            } else {
+                bugPosition = 318 - ((val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
+            }
+        }
+        return bugPosition;
+    }
+    /**
      * @function <a name="ResolutionBug_refresh">refresh</a>
      * @desc Triggers re-rendering of the resolution bug.
      * @memberof module:ResolutionBug
@@ -170,40 +237,37 @@ class SpeedBug {
      * @inner
      */
     refresh(): void {
-        let bug_position = this.zero;
-        const verticalSpeedStep: number = this.tape.getVerticalSpeedStep();
-        const tape_size: number[] = this.tape.getTapeSize();
-        let range1 = verticalSpeedStep * 2;
-        let range2 = range1 * 2;
-        let max = range2 * 3;
-        if (this.val >= 0) {
-            if (this.val <= range1) {
-                bug_position = this.zero - (this.val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
-            } else if (this.val <= range2) {
-                bug_position = 118 - ((this.val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
-            } else {
-                bug_position = 55 - ((this.val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
-            }
+        this.refreshWedge();
+
+        let bugPosition: number = this.computeBugPosition(this.val);
+
+        if (this.maxWedgeAperture) {
+            $(`#${this.id}-notch`).css({ display: "block"});
+            $(`#${this.id}-indicator`).css({ display: "none"});
+
+            // FIXME: val is in x100fpm, and wedge aperture is in fpm -- make everything fpm
+            const notchHeight: number = Math.abs(this.computeBugPosition(this.val + this.wedgeAperture / 100) - this.computeBugPosition(this.val));
+            if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", top: `${bugPosition}px` });
+
         } else {
-            if (this.val >= -range1) {
-                bug_position = this.zero - (this.val / verticalSpeedStep) * (tape_size[0] / 2); // the division by two is because the tape contains 2 ticks
-            } else if (this.val >= -range2) {
-                bug_position = 176 - ((this.val - verticalSpeedStep * 2) / verticalSpeedStep) * (tape_size[1] / 2);
-            } else {
-                bug_position = 318 - ((this.val - verticalSpeedStep * 4) / verticalSpeedStep) * (tape_size[2] / 2);
-            }
+            $(`#${this.id}-notch`).css({ display: "none"});
+            $(`#${this.id}-indicator`).css({ display: "block"});
+
+            $(`#${this.id}-indicator`).css({ "transition-duration": "100ms", top: `${bugPosition}px` });
         }
-        $(`#${this.id}`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
+
         if (this.useColors) {
             $(`.${this.id}`).css({ "background-color": this.color });
             $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
+
         //@ts-ignore
         $(`.${this.id}-tooltip`).tooltip("dispose");
         if (this.tooltipActive) {
             //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val * 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100 * 100) / 100}</div>` }).tooltip();
         }
     }
     reveal (flag?: boolean): void {
@@ -289,7 +353,8 @@ export class VerticalSpeedTape {
      */
     constructor(id: string, coords: utils.Coords, opt?: {
         verticalSpeedRange?: number,
-        parent?: string
+        parent?: string,
+        maxWedgeAperture?: number
     }) {
         opt = opt || {};
         this.id = id || "daa-vertical-speed-tape";
@@ -342,7 +407,8 @@ export class VerticalSpeedTape {
         // set position of resolution bug
         this.resolutionBug.setValue(0);
         this.resolutionBug.hide();
-        this.resolutionBug.enableToolTip(true);
+        // this.resolutionBug.enableToolTip(true);
+        this.resolutionBug.setMaxWedgeAperture(opt.maxWedgeAperture);
         this.speedBug.setValue(0);
     }
     // utility function for creating altitude tick marks
@@ -553,20 +619,33 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setBug(info: number | ResolutionElement): void {
+    setBug(info: number | ResolutionElement, opt?: { wedgeConstraints?: utils.FromTo[] }): void {
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
-            this.resolutionBug.setValue(d / 100); // tape scale is 100xunits
+            this.resolutionBug.setValue(d / 100, {
+                wedgeConstraints: opt.wedgeConstraints,
+                wedgeTurning: (typeof info === "object") ? 
+                    (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
+                    : "up"
+            }); // tape scale is 100xunits
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
                 this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
                 this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
             }
         } else {
-            this.resolutionBug.hide();
+            this.hideBug(); // resolution bug
             this.speedBug.resetColor();
         }
+    }
+    hideBug(): void {
+        this.resolutionBug.hide();
+        this.resetIndicatorColor();
+    }
+    setMaxWedgeAperture (aperture: number | string): void {
+        this.resolutionBug.setMaxWedgeAperture(aperture);
+        this.resolutionBug.refresh();
     }
     setIndicatorColor (color: string): void {
         if (color) {

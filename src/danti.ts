@@ -74,6 +74,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         if (bands["Altitude Bands"].RECOVERY) {
             data.altitudeTape.setBug(bands["Altitude Resolution"], { wedgeConstraints: bands["Altitude Bands"].RECOVERY });
         } else { data.altitudeTape.hideBug(); }
+        if (bands["Vertical Speed Bands"].RECOVERY) {
+            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], { wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY });
+        } else { data.verticalSpeedTape.hideBug(); }
         // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         // data.altitudeTape.setBug(bands["Altitude Resolution"]);
         // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);        
@@ -144,7 +147,7 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left:
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 const player: DAAPlayer = new DAAPlayer();
 player.define("step", async () => {
     render({
@@ -249,8 +252,11 @@ async function createPlayer() {
         },
         setAltitudeWedgeAperture: (aperture: string) => {
             altitudeTape.setMaxWedgeAperture(aperture);
+        },
+        setVerticalSpeedWedgeAperture: (aperture: string) => {
+            verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
-    }, { top: -110, left: 1174 });
+    }, { top: -110, left: 1140 });
     await player.activate();
 }
 createPlayer();

@@ -625,6 +625,12 @@ export class DAAPlayer {
                 handlers["setAltitudeWedgeAperture"](maxAperture);
             }
         });
+        $(`#${this.id}-max-vspeed-wedge-aperture-input`).on("input", () => {
+            const maxAperture: string = <string> $(`#${this.id}-max-vspeed-wedge-aperture-input`).val();
+            if (handlers && handlers["setVerticalSpeedWedgeAperture"]) {
+                handlers["setVerticalSpeedWedgeAperture"](maxAperture);
+            }
+        });
     }
 
     clickDeveloperMode (): void {

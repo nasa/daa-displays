@@ -29,17 +29,19 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
         <div id="{{id}}-bands" style="position:absolute;top:24px;left:-6px; opacity:0.8;">
         </div>
-        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7; margin-top:1px;">
-            <div style="position:absolute;">
+        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7; margin-top:1px; z-index:99;">
+            <div id="{{id}}-bug-indicator" style="position:absolute;">
                 <!-- box -->
                 <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:12px; height:11px; border:2px solid white; background-color:black; margin-left:4px;"></div>
                 <!-- pointer -->
                 <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-9.5px; border-bottom:2px solid white;border-right:2px solid white;background-color:black; transform:rotate(135deg);"></div>
             </div>
         </div>
-        <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.8; margin-top:1px;">
-            <div style="position:absolute;">
-                <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:23px; height:11px; background-color:white; border-radius:16px;"></div>
+        <div id="{{id}}-resolution-bug" style="position:absolute; margin-top:1px;">
+            <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:0.8;">
+                <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:18px; margin-left:4px; height:11px; background-color:white; border-radius:16px;"></div>
+            </div>
+            <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.6; margin-left:24px; margin-top:6px; width:20px; height:11px; background-color:white;"></div>
             </div>
         </div>
     </div>

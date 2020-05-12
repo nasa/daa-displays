@@ -187,6 +187,9 @@ class SpeedBug {
     getValue(): number {
         return this.val;
     }
+    /**
+     * Internal function, updates the visual appearance of the wedge resolution
+     */
     protected refreshWedge (): void {
         this.wedgeAperture = this.maxWedgeAperture;
         if (this.wedgeConstraints && this.wedgeConstraints.length) {
@@ -215,8 +218,8 @@ class SpeedBug {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 
-            if (this.wedgeSide === "up") { bugPosition -= this.wedgeAperture * this.tickHeight / this.airspeedStep; }
             const notchHeight: number = this.wedgeAperture * this.tickHeight / this.airspeedStep;
+            if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
             $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
