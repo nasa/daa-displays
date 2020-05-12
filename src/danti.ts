@@ -66,16 +66,28 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         // set resolutions
         // show the resolution bug only for recovery bands
         if (bands["Heading Bands"].RECOVERY) {
-            data.compass.setBug(bands["Heading Resolution"], { wedgeConstraints: bands["Heading Bands"].RECOVERY });
+            data.compass.setBug(bands["Heading Resolution"], {
+                wedgeConstraints: bands["Heading Bands"].RECOVERY,
+                resolutionBugColor: "green"
+            });
         } else { data.compass.hideBug(); }
         if (bands["Horizontal Speed Bands"].RECOVERY) {
-            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], { wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY });
+            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
+                resolutionBugColor: "green"
+            });
         } else { data.airspeedTape.hideBug(); }
         if (bands["Altitude Bands"].RECOVERY) {
-            data.altitudeTape.setBug(bands["Altitude Resolution"], { wedgeConstraints: bands["Altitude Bands"].RECOVERY });
+            data.altitudeTape.setBug(bands["Altitude Resolution"], {
+                wedgeConstraints: bands["Altitude Bands"].RECOVERY,
+                resolutionBugColor: "green"
+            });
         } else { data.altitudeTape.hideBug(); }
         if (bands["Vertical Speed Bands"].RECOVERY) {
-            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], { wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY });
+            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
+                resolutionBugColor: "green"
+            });
         } else { data.verticalSpeedTape.hideBug(); }
         // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         // data.altitudeTape.setBug(bands["Altitude Resolution"]);

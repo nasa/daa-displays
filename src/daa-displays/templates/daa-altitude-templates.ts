@@ -28,7 +28,7 @@ export const altitudeTemplate = `
                 <div id="{{id}}-resolution-bug-indicator" style="position:absolute;">
                     <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:18px; margin-left:15px; height:11px; background-color:white; border-radius:16px;"></div>
                 </div>
-                <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.5; width:28px; margin-left:18px; margin-top:6px; height:11px; background-color:white;"></div>
+                <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.6; width:28px; margin-left:18px; margin-top:6px; height:11px; background-color:white;"></div>
             </div>
         </div>
     </div>

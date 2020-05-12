@@ -639,18 +639,20 @@ export class AirspeedTape {
      * @instance
      */
     setBug(info: number | server.ResolutionElement, opt?: { 
-        wedgeConstraints?: utils.FromTo[]
+        wedgeConstraints?: utils.FromTo[],
+        resolutionBugColor?: string
     }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
-            const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
+            const c: string = opt.resolutionBugColor ? opt.resolutionBugColor
+                                : (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d, {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
-                    : "up"
+                    : "up",
             });
             if (typeof info === "object" && info.ownship && info.ownship.alert) {
                 this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
