@@ -24,10 +24,11 @@ export const altitudeTemplate = `
                     <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; opacity:0.7; margin-top:99px;">
-                <div style="position:absolute;">
-                    <div id="{{id}}-resolution-bug-notch" class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:18px; margin-left:15px; height:11px; background-color:white; border-radius:16px;"></div>
+            <div id="{{id}}-resolution-bug" style="position:absolute; margin-top:99px;">
+                <div id="{{id}}-resolution-bug-indicator" style="position:absolute;">
+                    <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:18px; margin-left:15px; height:11px; background-color:white; border-radius:16px;"></div>
                 </div>
+                <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.5; width:28px; margin-left:18px; margin-top:6px; height:11px; background-color:white;"></div>
             </div>
         </div>
     </div>

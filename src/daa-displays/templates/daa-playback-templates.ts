@@ -230,15 +230,11 @@ export const spectrogramControls: string = `
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="container-fluid" style="padding:0px;">
             <div class="row">
-                <div class="col">
+                <div class="col-sm">
                     <div class="btn-group btn-group-toggle" role="group" aria-label="Plot Controls">
                         <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-reset" style="width:136px; white-space:nowrap;">Reset</button>
                         <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-plot" style="width:212px; white-space:nowrap;">Plot</button>
                     </div>
-                </div>
-                <div class="col">
-                </div>
-                <div class="col">
                 </div>
             </div>
         </div>

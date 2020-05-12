@@ -212,12 +212,17 @@ class SpeedBug {
 
         let bugPosition = this.zero - this.val * this.tickHeight / this.altitudeStep;
         if (this.maxWedgeAperture) {
+            $(`#${this.id}-notch`).css({ display: "block"});
+            $(`#${this.id}-indicator`).css({ display: "none"});
+
             if (this.wedgeSide === "up") { bugPosition -= this.wedgeAperture * this.tickHeight / this.altitudeStep; }
             const notchHeight: number = this.wedgeAperture * this.tickHeight / this.altitudeStep;
-            $(`#${this.id}-notch`).css({ "height": notchHeight });
-            $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         } else {
-            $(`#${this.id}`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-notch`).css({ display: "none"});
+            $(`#${this.id}-indicator`).css({ display: "block"});
+
+            $(`#${this.id}-indicator`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
         }
 
         if (this.useColors) {
