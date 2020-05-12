@@ -407,7 +407,7 @@ export class VerticalSpeedTape {
         // set position of resolution bug
         this.resolutionBug.setValue(0);
         this.resolutionBug.hide();
-        // this.resolutionBug.enableToolTip(true);
+        this.resolutionBug.enableToolTip(true);
         this.resolutionBug.setMaxWedgeAperture(opt.maxWedgeAperture);
         this.speedBug.setValue(0);
     }
@@ -620,6 +620,7 @@ export class VerticalSpeedTape {
      * @instance
      */
     setBug(info: number | ResolutionElement, opt?: { wedgeConstraints?: utils.FromTo[] }): void {
+        opt = opt || {};
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
             const c: string = (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];

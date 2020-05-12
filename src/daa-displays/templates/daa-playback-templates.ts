@@ -271,7 +271,7 @@ export const resolutionControls: string = `
                         <div class="input-group-prepend">
                             <span class="btn-sm max-airspeed-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Horizontal Speed Notch</span>
                         </div>
-                        <input id="{{id}}-max-airspeed-wedge-aperture-input" style="text-align:center;" type="number" value="50" min="0" max="200" step="1" aria-label="horizontal speed notch aperture" class="form-control">
+                        <input id="{{id}}-max-airspeed-wedge-aperture-input" style="text-align:center;" type="number" value="50" min="0" step="1" aria-label="horizontal speed notch aperture" class="form-control">
                     </div>
                 </div>
             </div>
@@ -281,7 +281,7 @@ export const resolutionControls: string = `
                         <div class="input-group-prepend">
                             <span class="btn-sm max-vspeed-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Vertical Speed Notch</span>
                         </div>
-                        <input id="{{id}}-max-vspeed-wedge-aperture-input" style="text-align:center;" type="number" value="500" min="0" max="2000" step="1" aria-label="vertical speed notch aperture" class="form-control">
+                        <input id="{{id}}-max-vspeed-wedge-aperture-input" style="text-align:center;" type="number" value="500" min="0" step="1" aria-label="vertical speed notch aperture" class="form-control">
                     </div>
                 </div>
             </div>
@@ -291,7 +291,7 @@ export const resolutionControls: string = `
                         <div class="input-group-prepend">
                             <span class="btn-sm max-altitude-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Altitude Notch</span>
                         </div>
-                        <input id="{{id}}-max-altitude-wedge-aperture-input" style="text-align:center;" type="number" value="300" min="0" max="1000" step="1" aria-label="altitude notch aperture" class="form-control">
+                        <input id="{{id}}-max-altitude-wedge-aperture-input" style="text-align:center;" type="number" value="300" min="0" step="1" aria-label="altitude notch aperture" class="form-control">
                     </div>
                 </div>
             </div>
