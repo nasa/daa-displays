@@ -654,13 +654,13 @@ export class AirspeedTape {
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
                     : "up",
             });
-            if (typeof info === "object" && info.ownship && info.ownship.alert) {
-                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
-                this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
-            }
+            // if (typeof info === "object" && info.ownship && info.ownship.alert) {
+            //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
+            //     this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
+            // }
         } else {
             this.hideBug(); // resolution bug
-            this.speedBug.resetColor();
+            // this.speedBug.resetColor();
         }
     }
     hideBug(): void {
@@ -720,6 +720,7 @@ export class AirspeedTape {
         // ground speed and true airspeed need to be updated every time we set air speed
         this.updateGroundSpeed();
         this.updateTAS();
+
         return this;
     }
     /**

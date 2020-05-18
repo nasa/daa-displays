@@ -635,13 +635,13 @@ export class AltitudeTape {
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
                     : "up"
             });
-            if (typeof info === "object" && info.ownship && info.ownship.alert) {
-                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
-                this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
-            }
+            // if (typeof info === "object" && info.ownship && info.ownship.alert) {
+            //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
+            //     this.speedBug.setColor(utils.bugColors[info.ownship.alert]);
+            // }
         } else {
             this.hideBug(); // resolution bug
-            this.speedBug.resetColor();
+            // this.speedBug.resetColor();
         }
     }
     hideBug (): void {
