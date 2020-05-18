@@ -30,7 +30,7 @@
 import { AirspeedTape } from './daa-displays/daa-airspeed-tape';
 import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
-import { Compass } from './daa-displays/daa-compass';
+import { Compass, singleStroke, doubleStroke } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
@@ -59,12 +59,15 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
 
     // console.log(`Flight data`, flightData);
     if (bands) {
-        data.compass.setBands(bands["Heading Bands"]);
+        const compassStrokeWidth: number = (bands["Heading Bands"].RECOVERY) ? doubleStroke : singleStroke;
+
+        data.compass.setBands(bands["Heading Bands"], { strokeWidth: compassStrokeWidth });
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+        
         // set resolutions
-        // show the resolution bug only for recovery bands
+        // show the resolution bug only for recovery bands        
         if (bands["Heading Bands"].RECOVERY) {
             data.compass.setBug(bands["Heading Resolution"], {
                 wedgeConstraints: bands["Heading Bands"].RECOVERY,
@@ -89,9 +92,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 resolutionBugColor: "green"
             });
         } else { data.verticalSpeedTape.hideBug(); }
-        // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
-        // data.altitudeTape.setBug(bands["Altitude Resolution"]);
-        // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);        
+
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;

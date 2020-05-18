@@ -96,9 +96,8 @@ import * as server from '../daa-server/utils/daa-server';
 import { InteractiveMap } from './daa-interactive-map';
 import { WindIndicator } from './daa-wind-indicator';
 
-const strokeWidth = 8;
-// const compassTemplate = require("text!widgets/daa-displays/templates/daa-compass.handlebars");
-// const compassBandsTemplate = require("text!widgets/daa-displays/templates/daa-linear-bands-template.handlebars");
+export const singleStroke: number = 8;
+export const doubleStroke: number = 20;
 
 // internal class, renders a resolution bug over the compass
 class ResolutionBug {
@@ -270,10 +269,6 @@ class ResolutionBug {
     }
 }
 
-
-
-
-
 export class Compass {
     protected id: string;
     protected top: number;
@@ -287,6 +282,7 @@ export class Compass {
 
     protected bands: utils.Bands;
     protected canvas: HTMLCanvasElement;
+    protected strokeWidth: number = singleStroke;
     protected radius: number;
     protected centerX: number;
     protected centerY: number;
@@ -342,7 +338,7 @@ export class Compass {
         });
         $(this.div).html(theHTML);
         this.canvas = <HTMLCanvasElement> document.getElementById(id + "-bands");
-        this.radius = this.canvas.width / 2 - strokeWidth + 1;
+        this.radius = this.canvas.width / 2 - this.strokeWidth + 1;
         this.centerX = this.centerY = this.canvas.width / 2;
 
         // create resolution bug
@@ -451,11 +447,12 @@ export class Compass {
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "right" : "left"
                     : "right"
             });
-            if (typeof info === "object" && info.ownship && info.ownship.alert) {
-                this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
-            }
+            // if (typeof info === "object" && info.ownship && info.ownship.alert) {
+            //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
+            // }
         } else {
             this.hideBug();
+            // this.resetIndicatorColor();
         }
     }
     hideBug(): void {
@@ -488,7 +485,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }): Compass {
+    setBands(bands: utils.Bands, opt?: { units?: string, strokeWidth?: number }): Compass {
         opt = opt || {};
         const normaliseCompassBand = (b: utils.FromTo[]) => {
             // normaliseRange converts range in bands to positive degrees (e.g., -10..0 becomes 350..360), and range.from is always < range.to 
@@ -530,15 +527,16 @@ export class Compass {
         this.bands.RECOVERY = normaliseCompassBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseCompassBand(bands.UNKNOWN);
         // console.log("danti-compass-bands", this.bands);
-        this.draw_bands();
+        this.draw_bands(opt);
         this.resolutionBug.refresh();
         return this;
     }
     /**
      * Utility function, draws resolution bands over the compass
      **/
-    protected draw_bands () {
+    protected draw_bands (opt?: { strokeWidth?: number }) {
         let theHTML = "";
+        opt = opt || {};
         const drawArc = (ctx: CanvasRenderingContext2D, from: number, to: number, alert: string) => {
             ctx.beginPath();
             if (utils.bandColors[alert].style === "dash") {
@@ -547,7 +545,7 @@ export class Compass {
                 ctx.setLineDash([]);
             }
             ctx.arc(this.centerX, this.centerY, this.radius, utils.deg2rad(from) - Math.PI / 2, utils.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
-            ctx.lineWidth = strokeWidth;
+            ctx.lineWidth = opt.strokeWidth || this.strokeWidth;
             ctx.strokeStyle = utils.bandColors[alert].color;
             ctx.stroke();
         }
