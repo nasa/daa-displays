@@ -88,7 +88,7 @@ download-wellclear-2.0.f:
 
 download-wellclear-2.0.g:
 	@echo "\n\033[0;32m ** Downloading WellClear 2.0.g from LaRC **\033[0m"
-	-@curl https://shemesh.larc.nasa.gov/fm/DAIDALUS/RELEASE2g-May-20-20.tgz > WellClear-2.0.g.tgz &&\
+	-@curl https://shemesh.larc.nasa.gov/fm/DAIDALUS/RELEASE2g-Jun-08-20.tgz > WellClear-2.0.g.tgz &&\
 	tar xvzf WellClear-2.0.g.tgz &&\
 	(test ! -d WellClear-2.0.g || rm -rf WellClear-2.0.g) &&\
 	mkdir WellClear-2.0.g &&\
