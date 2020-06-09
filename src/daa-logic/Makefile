@@ -1,6 +1,8 @@
 # WellClear JAVA_versions to be compiled
-JAVA_VERSIONS = 1.0.1 1.0.2 2.0.e 2.0.f
-CPP_VERSIONS = 2.0.e 2.0.f # this should always be a subset of the JAVA_VERSION
+MORE_VERSIONS = 2.0.e 
+GIT_VERSIONS = 1.0.1 1.0.2
+JAVA_VERSIONS = $(GIT_VERSIONS) $(MORE_VERSIONS)
+CPP_VERSIONS = $(MORE_VERSIONS) 
 
 JAVAC = javac
 JAR   = jar
@@ -18,7 +20,7 @@ version1 = $(shell echo $(1) | grep "WellClear-1.")
 github = curl --output /dev/null --silent --head --fail "https://codeload.github.com/nasa/WellClear/zip/v$(1)"
 
 # download templates
-DOWNLOAD_TARGETS = $(foreach ver,$(JAVA_VERSIONS), download-$(ver))
+DOWNLOAD_TARGETS = $(foreach ver,$(GIT_VERSIONS), download-$(ver))
 define download-template
 download-$(1):
 	@echo "\n\033[0;32m ** Downloading WellClear $(1) from GitHub **\033[0m"
@@ -95,8 +97,9 @@ download-wellclear-2.0.g:
 	mv RELEASE2g WellClear-2.0.g/DAIDALUS &&\
 	rm WellClear-2.0.g.tgz
 
+DOWNLOAD_MORE_TARGETS = $(foreach ver,$(MORE_VERSIONS), download-wellclear-$(ver))
 
-download: $(DOWNLOAD_TARGETS) download-wellclear-2.0.e download-wellclear-2.0.f
+download: $(DOWNLOAD_TARGETS) $(DOWNLOAD_MORE_TARGETS)
 
 compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CPP_TARGETS) 
 
