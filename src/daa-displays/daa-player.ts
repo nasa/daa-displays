@@ -1517,6 +1517,7 @@ export class DAAPlayer {
                         "Heading Resolution": null,
                         "Horizontal Speed Resolution": null,
                         "Vertical Speed Resolution": null,
+                        Contours: null,
                         Monitors: []
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
@@ -1548,6 +1549,10 @@ export class DAAPlayer {
                         if (this._bands.Alerts && step < this._bands.Alerts.length) {
                             // copy alerting info
                             res.Alerts = this._bands.Alerts[step].alerts;
+                        }
+                        if (this._bands.Contours && step < this._bands.Contours.length) {
+                            // copy contours
+                            res.Contours = this._bands.Contours[step];
                         }
                         if (this._bands.Monitors) {
                             // copy monitors
@@ -1581,6 +1586,7 @@ export class DAAPlayer {
             "Heading Resolution": null,
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
+            Contours: null,
             Monitors: []
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
@@ -1613,13 +1619,17 @@ export class DAAPlayer {
                             res[band_or_resolution] = data;
                         }
                     }
-                    if (this._bands.Alerts && this._bands.Alerts.length > this.simulationStep) {
+                    if (this._bands.Alerts && this.simulationStep < this._bands.Alerts.length) {
                         // copy alerting info
                         res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
                     }
-                    if (this._bands.Ownship && this._bands.Ownship.length > this.simulationStep) {
+                    if (this._bands.Ownship && this.simulationStep < this._bands.Ownship.length) {
                         res.Ownship = this._bands.Ownship[this.simulationStep];
                     }
+                }
+                if (this._bands.Contours && this.simulationStep < this._bands.Contours.length) {
+                    // copy contours
+                    res.Contours = this._bands.Contours[this.simulationStep];
                 }
                 if (this._bands.Monitors) {
                     // copy monitors

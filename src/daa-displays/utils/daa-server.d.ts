@@ -146,6 +146,18 @@ export declare interface ResolutionElement {
     ownship: { val: string, units: string, alert: string }
 }
 
+export declare type Polygon = LatLonAlt[];
+
+export declare interface AircraftCountourElement {
+    ac: string,
+    polygons: Polygon[]
+}
+
+export declare interface ContourElement {
+    time: number,
+    data: AircraftCountourElement[]
+} 
+
 export declare interface DaidalusBandsDescriptor {
     Info: {
         version: string, // well clear version
@@ -163,6 +175,7 @@ export declare interface DaidalusBandsDescriptor {
     "Heading Resolution": ResolutionElement[],
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
+    "Contours": ContourElement[],
     Monitors: MonitorElement[];
 }
 

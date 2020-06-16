@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
@@ -52,6 +53,7 @@ import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.f;
 import gov.nasa.larcfm.Util.Velocity;
 import gov.nasa.larcfm.Util.Units;
+import gov.nasa.larcfm.Util.Position;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
@@ -211,11 +213,37 @@ public class DAABandsV2 {
 						+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
 	}
 
+	protected String printPolygons (List<List<Position>> polygons) {
+		if (polygons != null) {
+			int n = polygons.size();
+			String res = "";
+			for (int i = 0; i < n; i++) {
+				List<Position> ply = polygons.get(i);
+				int m = ply.size();
+				String polygon = "";
+				for (int j = 0; j < m; j++) {
+					Position p = ply.get(j);
+					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", p.lat());
+					polygon += "\", \"lon\": \"" + Units.to("deg", p.lon()); 
+					polygon += "\", \"alt\": \"" + Units.to("ft", p.alt());
+					polygon += "\" }"; 
+					if (j < m - 1) { polygon += ",\n"; }
+				}
+				polygon = "\t[\n" + polygon + "\n\t]";
+				if (i < n - 1) { polygon += ",\n"; }
+				res += polygon;
+			}
+			return "[ \n" + res + "]";
+		}
+		return "[ ]";
+	}
+
 	protected String jsonBands (
 		DAAMonitorsV2 monitors,
 		ArrayList<String> ownshipArray,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
+		ArrayList<String> contoursArray,
 		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
 	) {
 		String hs_units = daa.getUnitsOf("step_hs");
@@ -364,6 +392,22 @@ public class DAABandsV2 {
 		altResolution += " }";
 		resAltArray.add(altResolution);
 
+		// Contours are lists of polygons, and polygons are list of points.
+		String contours =  "{ \"time\": " + time;
+		contours += ",\n  \"data\": [ ";
+		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
+			String ac_name = daa.getAircraftStateAt(ac).getId();
+			ArrayList<List<Position>> polygons = new ArrayList<List<Position>>();
+			daa.horizontalContours(polygons, ac);
+			contours += "{ \"ac\": \"" + ac_name + "\",\n";
+			contours +=	"  \"polygons\": " + printPolygons(polygons) + "}";
+			if (ac < daa.lastTrafficIndex()) {
+				contours += ", ";
+			}
+		}
+		contours += " ]}";
+		contoursArray.add(contours);
+
 		// monitors
 		monitors.check();
 		String monitorM1 = "{ \"time\": " + time
@@ -429,6 +473,8 @@ public class DAABandsV2 {
 		ArrayList<String> resVsArray = new ArrayList<String>();
 		ArrayList<String> resAltArray = new ArrayList<String>();
 
+		ArrayList<String> contoursArray = new ArrayList<String>();
+
 		DAAMonitorsV2 monitors = new DAAMonitorsV2(daa);
 
 		ArrayList<String> monitorM1Array = new ArrayList<String>();
@@ -446,6 +492,7 @@ public class DAABandsV2 {
 				ownshipArray, alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
+				contoursArray,
 				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
 			);
 		}
@@ -471,6 +518,9 @@ public class DAABandsV2 {
 		DAABandsV2.printArray(printWriter, resVsArray, "Vertical Speed Resolution");
 		printWriter.println(",");
 		DAABandsV2.printArray(printWriter, resAltArray, "Altitude Resolution");
+		printWriter.println(",");
+
+		DAABandsV2.printArray(printWriter, contoursArray, "Contours");
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");

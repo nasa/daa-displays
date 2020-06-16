@@ -757,7 +757,12 @@ export class DAA_Airspace {
         id: string, 
         perimeter: utils.LatLon[] | serverInterface.LatLon[], 
         floor: { top: number | string, bottom: number | string }, 
-        opt?: { opacity?: number, color?: { r: number, g: number, b: number } }
+        opt?: {
+            opacity?: number, 
+            color?: { r: number, g: number, b: number },
+            fontScale?: number,
+            showLabel?: boolean
+        }
     ) : DAA_Airspace {
         if (this.geofence) {
             this.geofence.addPolygon2D(id, perimeter, floor, opt);
@@ -765,7 +770,7 @@ export class DAA_Airspace {
         }
         return this;
     }
-    removeGeoFencePolygon (id: string) : DAA_Airspace {
+    removeGeoFencePolygon (id?: string) : DAA_Airspace {
         if (this.geofence) {
             this.geofence.removePolygon(id);
             this.redraw();

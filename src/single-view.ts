@@ -39,6 +39,7 @@ import { DAAPlayer } from './daa-displays/daa-player';
 import { LLAData, ConfigData, MonitorElement, MonitorData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 
 const player: DAAPlayer = new DAAPlayer();
@@ -72,6 +73,28 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
             data.altitudeTape.setBug(bands["Altitude Resolution"]);
             data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
+        }
+        // set contours
+        data.map.removeGeoFence();
+        if (bands && bands.Contours && bands.Contours.data) {
+            for (let i = 0; i < bands.Contours.data.length; i++) {
+                if (bands.Contours.data[i].polygons) {
+                    for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
+                        const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
+                        if (perimeter && perimeter.length) {
+                            const floor: { top: number, bottom: number } = {
+                                top: +perimeter[0].alt + 20,
+                                bottom: +perimeter[0].alt - 20
+                            }
+                            // add geofence to the map
+                            data.map.addGeoFence(`c-${bands.Contours.data[i].ac}`, perimeter, floor, {
+                                showLabel: false
+                            });
+                            data.map.showGeoFence(true);
+                        }
+                    }
+                }
+            }
         }
         const traffic = flightData.traffic.map((data, index) => {
             const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;

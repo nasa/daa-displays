@@ -415,12 +415,17 @@ export class InteractiveMap {
         id: string, 
         perimeter: utils.LatLon[] | serverInterface.LatLon[], 
         floor: { top: number | string, bottom: number | string },
-        opt?: { opacity?: number, color?: { r: number, g: number, b: number } }
+        opt?: { 
+            opacity?: number, 
+            color?: { r: number, g: number, b: number },
+            fontScale?: number,
+            showLabel?: boolean
+        }
     ): InteractiveMap {
         this.airspace.addGeoFencePolygon(id, perimeter, floor, opt);
         return this;
     }
-    removeGeoFence (id: string): InteractiveMap {
+    removeGeoFence (id?: string): InteractiveMap {
         this.airspace.removeGeoFencePolygon(id);
         return this;
     }
