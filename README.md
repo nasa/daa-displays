@@ -6,7 +6,7 @@ for cockpit systems, and simulations tools supporting comparative analysis of co
 ![](src/images/danti.gif "")
 
 ## Latest version
-daa-displays-1.0.8
+daa-displays-1.0.9
 
 ## Functionalities
 - Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
