@@ -353,7 +353,7 @@ export class AirspeedTape {
                     this.speedBug.setZero(this.tickHeight * 2 * i);
                     this.speedBug.setAirspeedStep(this.airspeedStep);
                 } else {
-                    tickValue = val.toString();
+                    tickValue = Math.round(val).toString();
                 }
             }
             ticks.push({ top: this.tickHeight * 2 * i - 54, units: this.tapeUnits });
