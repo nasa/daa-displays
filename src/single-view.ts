@@ -87,7 +87,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                                 bottom: +perimeter[0].alt - 20
                             }
                             // add geofence to the map
-                            data.map.addGeoFence(`c-${bands.Contours.data[i].ac}`, perimeter, floor, {
+                            data.map.addGeoFence(`c-${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
                                 showLabel: false
                             });
                             data.map.showGeoFence(true);

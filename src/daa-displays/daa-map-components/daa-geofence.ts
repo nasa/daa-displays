@@ -104,7 +104,7 @@ export class GeoFence {
             if (contour && contour.length > 0) {
                 opt = opt || {};
                 opt.color = opt.color || { r: 1, g: 0, b: 0 }; // default color is red, as in Temporary Flight Restriction (TFR) areas
-                const opacity: number = opt.opacity || 0.2;
+                const opacity: number = 0.2;
                 // create perimeter
                 const outer: WorldWind.Position[] = [];
                 const mid: { lat: number, lon: number } = { lat: 0, lon: 0 };
@@ -179,6 +179,7 @@ export class GeoFence {
                 if (this.renderablePolygons[id].label) {
                     this.layer.removeRenderable(this.renderablePolygons[id].label);
                 }
+                delete this.renderablePolygons[id];
             } else {
                 const keys: string[] = Object.keys(this.renderablePolygons);
                 for (let i = 0; i < keys.length; i++) {
@@ -187,6 +188,7 @@ export class GeoFence {
                     if (this.renderablePolygons[keys[i]].label) {
                         this.layer.removeRenderable(this.renderablePolygons[keys[i]].label);
                     }
+                    delete this.renderablePolygons[keys[i]];
                 }
             }
         }
