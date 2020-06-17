@@ -54,6 +54,9 @@ import gov.nasa.larcfm.Util.f;
 import gov.nasa.larcfm.Util.Velocity;
 import gov.nasa.larcfm.Util.Units;
 import gov.nasa.larcfm.Util.Position;
+import gov.nasa.larcfm.Util.LatLonAlt;
+import gov.nasa.larcfm.Util.Projection;
+import gov.nasa.larcfm.Util.EuclideanProjection;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
@@ -213,7 +216,20 @@ public class DAABandsV2 {
 						+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
 	}
 
-	protected String printPolygons (List<List<Position>> polygons) {
+	/**
+	 * Utility function, returns LLA coordinates of a point in space
+	 * @param pi Position of the intruder
+	 * @param po Position of the ownship
+	 */
+	protected LatLonAlt getLatLonAlt (Position pi, Position po) {
+		if (pi.isLatLon()) {
+			return pi.lla();
+		}
+		EuclideanProjection eprj = Projection.createProjection(po);
+		return eprj.inverse(pi.vect3());
+	}
+
+	protected String printPolygons (List<List<Position>> polygons, Position po) {
 		if (polygons != null) {
 			int n = polygons.size();
 			String res = "";
@@ -222,11 +238,12 @@ public class DAABandsV2 {
 				int m = ply.size();
 				String polygon = "";
 				for (int j = 0; j < m; j++) {
-					Position p = ply.get(j);
-					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", p.lat());
-					polygon += "\", \"lon\": \"" + Units.to("deg", p.lon()); 
-					polygon += "\", \"alt\": \"" + Units.to("ft", p.alt());
-					polygon += "\" }"; 
+					Position pi = ply.get(j);
+					LatLonAlt lla = getLatLonAlt(pi, po);
+					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", pi.lat());
+					polygon += "\", \"lon\": \"" + Units.to("deg", pi.lon()); 
+					polygon += "\", \"alt\": \"" + Units.to("ft", pi.alt());
+					polygon += "\" }";
 					if (j < m - 1) { polygon += ",\n"; }
 				}
 				polygon = "\t[\n" + polygon + "\n\t]";
@@ -393,6 +410,7 @@ public class DAABandsV2 {
 		resAltArray.add(altResolution);
 
 		// Contours are lists of polygons, and polygons are list of points.
+		Position po = daa.getAircraftStateAt(0).getPosition();
 		String contours =  "{ \"time\": " + time;
 		contours += ",\n  \"data\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
@@ -400,7 +418,7 @@ public class DAABandsV2 {
 			ArrayList<List<Position>> polygons = new ArrayList<List<Position>>();
 			daa.horizontalContours(polygons, ac);
 			contours += "{ \"ac\": \"" + ac_name + "\",\n";
-			contours +=	"  \"polygons\": " + printPolygons(polygons) + "}";
+			contours +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
 				contours += ", ";
 			}
