@@ -208,7 +208,7 @@ export class DAA_Airspace {
     protected godsView: boolean;
     protected callSignVisible: boolean = false;
     protected trafficVisible: boolean = true;
-    protected contoursVisible: boolean = false;
+    protected geofenceVisible: boolean = false;
     protected _3dview: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
@@ -653,7 +653,7 @@ export class DAA_Airspace {
                 }
             }
         }
-        if (this.callSignVisible) {
+        if (this.geofenceVisible) {
             this.revealGeoFence();
         } else {
             this.hideGeoFence();
@@ -779,6 +779,7 @@ export class DAA_Airspace {
         return this;
     }
     revealGeoFence () : DAA_Airspace {
+        this.geofenceVisible = true;
         if (this.geofence) {
             this.geofence.reveal();
             this.redraw();
@@ -786,6 +787,7 @@ export class DAA_Airspace {
         return this;
     }
     hideGeoFence () : DAA_Airspace {
+        this.geofenceVisible = false;
         if (this.geofence) {
             this.geofence.hide();
             this.redraw();

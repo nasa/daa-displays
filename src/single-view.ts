@@ -90,7 +90,6 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                             data.map.addGeoFence(`c-${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
                                 showLabel: false
                             });
-                            data.map.showGeoFence(true);
                         }
                     }
                 }
