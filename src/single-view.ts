@@ -184,7 +184,10 @@ const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { paren
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map });
 // map view options
-const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
+    labels: [
+        "nrthup", "call-sign", "terrain", "contours"
+    ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });

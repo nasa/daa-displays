@@ -206,8 +206,9 @@ export class DAA_Airspace {
     protected textLayer: WorldWind.RenderableLayer;
 
     protected godsView: boolean;
-    protected callSignVisible: boolean;
-    protected trafficVisible: boolean;
+    protected callSignVisible: boolean = false;
+    protected trafficVisible: boolean = true;
+    protected contoursVisible: boolean = false;
     protected _3dview: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
@@ -239,7 +240,6 @@ export class DAA_Airspace {
         opt.shader = (isNaN(+opt.shader)) ? 0.4 : +opt.shader;
         this.godsView = !!opt.godsView;
         this.callSignVisible = !!opt.callSignVisible;
-        this.trafficVisible = true;
         this.offlineMap = opt.offlineMap;
 
         // create worldwind view in the canvas
@@ -628,14 +628,10 @@ export class DAA_Airspace {
                     aircraft.setScale(nmiScale);
                     if (this.callSignVisible) {
                         aircraft.revealCallSign();
-                    } else {
-                        aircraft.hideCallSign();
-                    }
+                    } else { aircraft.hideCallSign(); }
                     if (this.trafficVisible) {
                         aircraft.reveal();
-                    } else {
-                        aircraft.hide();
-                    }
+                    } else { aircraft.hide(); }
                 } else {
                     const aircraft = new DAA_Aircraft(this.wwd, {
                         s: traffic[i].s,
@@ -656,6 +652,11 @@ export class DAA_Airspace {
                     this._traffic.push(aircraft);
                 }
             }
+        }
+        if (this.callSignVisible) {
+            this.revealGeoFence();
+        } else {
+            this.hideGeoFence();
         }
         this.redraw();
         return this;
