@@ -240,9 +240,9 @@ public class DAABandsV2 {
 				for (int j = 0; j < m; j++) {
 					Position pi = ply.get(j);
 					LatLonAlt lla = getLatLonAlt(pi, po);
-					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", pi.lat());
-					polygon += "\", \"lon\": \"" + Units.to("deg", pi.lon()); 
-					polygon += "\", \"alt\": \"" + Units.to("ft", pi.alt());
+					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", lla.lat());
+					polygon += "\", \"lon\": \"" + Units.to("deg", lla.lon()); 
+					polygon += "\", \"alt\": \"" + Units.to("ft", lla.alt());
 					polygon += "\" }";
 					if (j < m - 1) { polygon += ",\n"; }
 				}
