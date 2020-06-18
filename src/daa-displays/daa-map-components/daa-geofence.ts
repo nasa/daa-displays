@@ -68,6 +68,9 @@ export class GeoFence {
             if (this.renderablePolygons[keys[i]].label) {
                 this.renderablePolygons[keys[i]].label.attributes.font.size = 80 / NMI;
             }
+            if (this.renderablePolygons[keys[i]].perimeter && NMI < 1) {
+                this.renderablePolygons[keys[i]].perimeter.attributes.outlineWidth = NMI;
+            }
         }
         return this;
     }
@@ -131,7 +134,7 @@ export class GeoFence {
                 contour_attributes.drawInterior = false;
                 contour_attributes.drawOutline = true;
                 contour_attributes.outlineWidth = 2;
-                contour_attributes.outlineColor = new WorldWind.Color(opt.color.r, opt.color.g, opt.color.b, 0.8);
+                contour_attributes.outlineColor = new WorldWind.Color(opt.color.r, opt.color.g, opt.color.b, 1);
                 contour_attributes.drawVerticals = false;
                 contour_attributes.applyLighting = false;
                 contour_attributes.depthTest = false; // this prevents the area from being occluded by other objects in the scene

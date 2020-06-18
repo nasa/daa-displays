@@ -191,6 +191,7 @@ export declare class LookAtNavigator extends Navigator {
     range: number;
 }
 export declare class SurfaceShape extends Renderable {
+    attributes?: ShapeAttributes;
     constructor(attributes: ShapeAttributes);
 }
 export declare class SurfacePolygon extends SurfaceShape {
