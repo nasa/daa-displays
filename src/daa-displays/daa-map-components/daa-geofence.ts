@@ -52,6 +52,13 @@ export class GeoFence {
     protected renderablePolygons: { [ key: string ] : { area: WorldWind.SurfacePolygon, perimeter: WorldWind.SurfacePolygon, label: WorldWind.GeographicText } } = {};
     protected layer: WorldWind.RenderableLayer;
     static readonly maxLabelFontSize: number = 32;
+    protected NMI: number = 5;
+
+    static readonly defaultColor: { r: number, g: number, b: number } = { r: 1, g: 0, b: 0 }; // default color is red, as in Temporary Flight Restriction (TFR) areas
+    protected color: { r: number, g: number, b: number } = GeoFence.defaultColor;
+
+    static readonly defaultOpacity: number = 0.2;
+    protected opacity: number = GeoFence.defaultOpacity;
 
     /**
      * Constructor
@@ -62,14 +69,21 @@ export class GeoFence {
             this.layer = layer;
         }
     }
-    setScale (NMI: number): GeoFence {
+    setScale (NMI?: number): GeoFence {
+        if (NMI) {
+            this.NMI = NMI;
+        }
         const keys: string[] = Object.keys(this.renderablePolygons);
         for (let i = 0; i < keys.length; i++) {
             if (this.renderablePolygons[keys[i]].label) {
                 this.renderablePolygons[keys[i]].label.attributes.font.size = 80 / NMI;
             }
-            if (this.renderablePolygons[keys[i]].perimeter && NMI < 1) {
-                this.renderablePolygons[keys[i]].perimeter.attributes.outlineWidth = NMI;
+            if (this.renderablePolygons[keys[i]].perimeter) {
+                this.renderablePolygons[keys[i]].perimeter.attributes.outlineWidth = (this.NMI < 1) ? this.NMI : 2;
+            }
+            if (this.renderablePolygons[keys[i]].area) {
+                const opacity: number = (this.NMI < 1) ? (this.opacity + 0.4) : this.opacity;
+                this.renderablePolygons[keys[i]].area.attributes.interiorColor = new WorldWind.Color(this.color.r, this.color.g, this.color.b, opacity);
             }
         }
         return this;
@@ -106,8 +120,8 @@ export class GeoFence {
         if (this.layer) {
             if (contour && contour.length > 0) {
                 opt = opt || {};
-                opt.color = opt.color || { r: 1, g: 0, b: 0 }; // default color is red, as in Temporary Flight Restriction (TFR) areas
-                const opacity: number = 0.2;
+                this.color = opt.color || GeoFence.defaultColor; 
+                this.opacity = opt.opacity || GeoFence.defaultOpacity;
                 // create perimeter
                 const outer: WorldWind.Position[] = [];
                 const mid: { lat: number, lon: number } = { lat: 0, lon: 0 };
@@ -124,7 +138,7 @@ export class GeoFence {
                 const area_attributes = new WorldWind.ShapeAttributes(null);
                 area_attributes.drawInterior = true;
                 area_attributes.drawOutline = false;
-                area_attributes.interiorColor = new WorldWind.Color(opt.color.r, opt.color.g, opt.color.b, opacity);
+                area_attributes.interiorColor = new WorldWind.Color(this.color.r, this.color.g, this.color.b, this.opacity);
                 area_attributes.drawVerticals = false;
                 area_attributes.applyLighting = false;
                 area_attributes.depthTest = false; // this prevents the area from being occluded by other objects in the scene
@@ -134,7 +148,7 @@ export class GeoFence {
                 contour_attributes.drawInterior = false;
                 contour_attributes.drawOutline = true;
                 contour_attributes.outlineWidth = 2;
-                contour_attributes.outlineColor = new WorldWind.Color(opt.color.r, opt.color.g, opt.color.b, 1);
+                contour_attributes.outlineColor = new WorldWind.Color(this.color.r, this.color.g, this.color.b, 1);
                 contour_attributes.drawVerticals = false;
                 contour_attributes.applyLighting = false;
                 contour_attributes.depthTest = false; // this prevents the area from being occluded by other objects in the scene
@@ -203,6 +217,7 @@ export class GeoFence {
     reveal (): GeoFence {
         if (this.layer) {
             this.layer.enabled = true;
+            this.setScale();
         }
         return this;
     }
