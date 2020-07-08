@@ -30,7 +30,7 @@
 import { AirspeedTape } from './daa-displays/daa-airspeed-tape';
 import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
-import { Compass } from './daa-displays/daa-compass';
+import { Compass, singleStroke, doubleStroke } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
@@ -64,15 +64,43 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
         // console.log(`Flight data`, flightData);
         if (bands) {
-            data.compass.setBands(bands["Heading Bands"]);
+            const compassStrokeWidth: number = (bands["Heading Bands"].RECOVERY) ? doubleStroke : singleStroke;
+
+            data.compass.setBands(bands["Heading Bands"], { strokeWidth: compassStrokeWidth });
             data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
             data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
             data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+
             // set resolutions
-            data.compass.setBug(bands["Heading Resolution"]);
-            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
-            data.altitudeTape.setBug(bands["Altitude Resolution"]);
-            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
+            // show the resolution bug only for recovery bands
+            // data.compass.setBug(bands["Heading Resolution"]);
+            // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
+            // data.altitudeTape.setBug(bands["Altitude Resolution"]);
+            // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
+            if (bands["Heading Bands"].RECOVERY) {
+                data.compass.setBug(bands["Heading Resolution"], {
+                    wedgeConstraints: bands["Heading Bands"].RECOVERY,
+                    resolutionBugColor: "green"
+                });
+            } else { data.compass.hideBug(); }
+            if (bands["Horizontal Speed Bands"].RECOVERY) {
+                data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                    wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
+                    resolutionBugColor: "green"
+                });
+            } else { data.airspeedTape.hideBug(); }
+            if (bands["Altitude Bands"].RECOVERY) {
+                data.altitudeTape.setBug(bands["Altitude Resolution"], {
+                    wedgeConstraints: bands["Altitude Bands"].RECOVERY,
+                    resolutionBugColor: "green"
+                });
+            } else { data.altitudeTape.hideBug(); }
+            if (bands["Vertical Speed Bands"].RECOVERY) {
+                data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                    wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
+                    resolutionBugColor: "green"
+                });
+            } else { data.verticalSpeedTape.hideBug(); }
         }
         // set contours
         data.map.removeGeoFence();
@@ -179,17 +207,17 @@ const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { pare
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map, wind });
+const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map });
+const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
         "nrthup", "call-sign", "terrain", "contours"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
-const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
+const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 
 player.define("step", async () => {
@@ -326,6 +354,20 @@ async function createPlayer() {
     player.appendActivationPanel({
         parent: "activation-controls"
     });
+    player.appendResolutionControls({
+        setCompassWedgeAperture: (aperture: string) => {
+            compass.setMaxWedgeAperture(aperture);
+        },
+        setAirspeedWedgeAperture: (aperture: string) => {
+            airspeedTape.setMaxWedgeAperture(aperture);
+        },
+        setAltitudeWedgeAperture: (aperture: string) => {
+            altitudeTape.setMaxWedgeAperture(aperture);
+        },
+        setVerticalSpeedWedgeAperture: (aperture: string) => {
+            verticalSpeedTape.setMaxWedgeAperture(aperture);
+        }
+    }, { top: -110, left: 1140 });
     await player.activate();
 }
 createPlayer();

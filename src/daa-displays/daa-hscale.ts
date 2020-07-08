@@ -1,6 +1,7 @@
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-hscale-templates';
 import { InteractiveMap } from './daa-interactive-map';
+import { Compass } from './daa-compass';
 
 export class HScale {
     protected id: string;
@@ -8,6 +9,7 @@ export class HScale {
     protected left: number;
     protected zoomLevel: number;
     protected map: InteractiveMap;
+    protected compass: Compass;
     protected div: HTMLElement;
     readonly nRadios: number = 16;
     protected readonly nmiRadios: number[] = [ 0, // valid radio IDs start from 1
@@ -15,7 +17,7 @@ export class HScale {
         2.5, 5, 10, 20, 40, 80, 160, 320
     ]; // this array must contain 17 elements --- see daa-hscale-template.ts
 
-    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, parent?: string }) {
+    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, compass?: Compass, parent?: string }) {
         opt = opt || {};
         this.id = id || "daa-hscale";
 
@@ -25,6 +27,7 @@ export class HScale {
 
         // save pointer to a daa-interactive-map object, if provided
         this.map = opt.map;
+        this.compass = opt.compass;
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
@@ -80,6 +83,11 @@ export class HScale {
             this.map.setZoomLevel(NMI);
         } else {
             console.warn("Warning: HScale is not linked to an interactive map object");
+        }
+        if (this.compass) {
+            this.compass.setZoomLevel(NMI);
+        } else {
+            console.warn("Warning: HScale is not linked to a compass");
         }
         return this;
     }

@@ -374,6 +374,21 @@ export class Compass {
     }
 
     /**
+     * @function <a name="setZoomLevel">setZoomLevel</a>
+     * @description Sets the labels on the compass.
+     * @param NMI {real} Zoom level, given in nautical miles.
+     * @memberof module:Compass
+     * @instance
+     */
+    setZoomLevel (NMI: number): void {
+        // set compass labels
+        $(`#${this.id}-compass-label-outer`).html(`${NMI}`);
+        $(`#${this.id}-compass-label-mid`).html(`${Math.floor((NMI / 2) * 100) / 100}`);
+        $(`#${this.id}-compass-label-inner`).html(`${(NMI <= 0.02) ? Math.floor((NMI / 4) * 1000) / 1000 : Math.floor((NMI / 4) * 100) / 100}`);
+        $(`#${this.id}-compass-labels`).css({ display: "block" });
+    }
+
+    /**
      * Utility function, updates the compass angle
      **/
     protected _update_compass(opt?: {

@@ -13,6 +13,12 @@ export const compassTemplate = `<div id="{{id}}-inner" style="position:absolute;
         </div> -->
         <!-- compass bands -->
         <canvas id="{{id}}-bands" width="634" height="634" style="position:absolute; opacity:0.8;"></canvas>
+        <!-- compass labels -->
+        <div id="{{id}}-compass-labels" style="position:absolute; opacity:0.8; color:white; display:none;">
+            <div id="{{id}}-compass-label-outer" style="position: absolute; left:546px; top:76px;">5</div>
+            <div id="{{id}}-compass-label-mid" style="position: absolute; left:435px; top:190px;">2.5</div>
+            <div id="{{id}}-compass-label-inner" style="position: absolute; left:378px; top:247px;">1.25</div>
+        </div>
         <!-- resolution bug -->
         <div id="{{id}}-resolution-bug" style="position:absolute; width:634px; height:634px; transform:rotate(0deg); display:none;">
             <!-- indicator -->

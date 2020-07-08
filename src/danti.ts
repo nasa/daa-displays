@@ -67,7 +67,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
         
         // set resolutions
-        // show the resolution bug only for recovery bands        
+        // show the resolution bug only for recovery bands
         if (bands["Heading Bands"].RECOVERY) {
             data.compass.setBug(bands["Heading Resolution"], {
                 wedgeConstraints: bands["Heading Bands"].RECOVERY,
