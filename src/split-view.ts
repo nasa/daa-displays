@@ -39,6 +39,7 @@ import { DAASplitView } from './daa-displays/daa-split-view';
 import { LLAData } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { ConfigData, ResolutionElement } from './daa-server/utils/daa-server';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
@@ -78,6 +79,27 @@ function render(playerID: string, data: {
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         data.altitudeTape.setBug(bands["Altitude Resolution"]);
         data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
+    }
+    // set contours
+    data.map.removeGeoFence();
+    if (bands && bands.Contours && bands.Contours.data) {
+        for (let i = 0; i < bands.Contours.data.length; i++) {
+            if (bands.Contours.data[i].polygons) {
+                for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
+                    const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
+                    if (perimeter && perimeter.length) {
+                        const floor: { top: number, bottom: number } = {
+                            top: +perimeter[0].alt + 20,
+                            bottom: +perimeter[0].alt - 20
+                        }
+                        // add geofence to the map
+                        data.map.addGeoFence(`c-${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                            showLabel: false
+                        });
+                    }
+                }
+            }
+        }
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -135,7 +157,11 @@ const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 
 // map zoom is controlled by nmiSelector
 const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left });
 // map view options
-const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { parent: "daa-disp-left", compass: compass_left, map: map_left });
+const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { 
+    labels: [
+        "nrthup", "call-sign", "terrain", "contours"
+    ], parent: "daa-disp-left", compass: compass_left, map: map_left 
+});
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
 const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 833 }, { parent: "daa-disp-left" });
 const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", { top: 210, left: 981 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
@@ -149,7 +175,11 @@ const compass_right: Compass = new Compass("compass-right", { top: 110, left: 21
 // map zoom is controlled by nmiSelector
 const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right });
 // map view options
-const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { parent: "daa-disp-right", compass: compass_right, map: map_right });
+const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { 
+    labels: [
+        "nrthup", "call-sign", "terrain", "contours"
+    ], parent: "daa-disp-right", compass: compass_right, map: map_right 
+});
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
 const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 833 }, { parent: "daa-disp-right" });
 const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", { top: 210, left: 981 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
@@ -343,7 +373,7 @@ splitView.getPlayer("left").define("init", async () => {
         scenario: splitView.getSelectedScenario(),
         wind: splitView.getPlayer("left").getSelectedWindSettings()
     });
-    // viewOptions_left.applyCurrentViewOptions();
+    viewOptions_left.applyCurrentViewOptions();
     // scale displays
     if (developerMode && splitView.getMode() === "developerMode") {
         developerMode();
@@ -359,7 +389,7 @@ splitView.getPlayer("right").define("init", async () => {
         scenario: splitView.getSelectedScenario(),
         wind: splitView.getPlayer("right").getSelectedWindSettings()
     });
-    // viewOptions_right.applyCurrentViewOptions();
+    viewOptions_right.applyCurrentViewOptions();
     // scale displays
     if (developerMode && splitView.getMode() === "developerMode") {
         developerMode();

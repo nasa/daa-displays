@@ -368,6 +368,6 @@ async function createPlayer() {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
     }, { top: -110, left: 1140 });
-    await player.activate();
+    await player.activate({ developerMode: true });
 }
 createPlayer();
