@@ -128,23 +128,23 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    setValue(val: number | string, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
+    setValue(val: number | string, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
         this.val = +val;
         opt = opt || {};
         if (isFinite(+val)) {
-
             // update wedge info -- refresh will update the visual appearance
             this.wedgeConstraints = opt.wedgeConstraints;
             this.wedgeSide = opt.wedgeTurning;
             
             this.reveal();
-            this.refresh();            
+            this.refresh(opt);            
         } else {
             this.hide();
         }
     }
-    protected refreshWedge (): void {
-        this.wedgeAperture = this.maxWedgeAperture;
+    protected refreshWedge (opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
         if (this.wedgeConstraints && this.wedgeConstraints.length) {
             for (let i = 0; i < this.wedgeConstraints.length; i++) {
                 const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
@@ -207,11 +207,12 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    refresh(): void {
-        this.refreshWedge();
+    refresh(opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.refreshWedge(opt);
 
         let bugPosition = this.zero - this.val * this.tickHeight / this.altitudeStep;
-        if (this.maxWedgeAperture) {
+        if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 
@@ -621,7 +622,8 @@ export class AltitudeTape {
      */
     setBug(info: number | ResolutionElement, opt?: { 
         wedgeConstraints?: utils.FromTo[],
-        resolutionBugColor?: string
+        resolutionBugColor?: string,
+        wedgeAperture?: number
     }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
@@ -633,7 +635,8 @@ export class AltitudeTape {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
-                    : "up"
+                    : "up",
+                wedgeAperture: opt.wedgeAperture
             });
             // if (typeof info === "object" && info.ownship && info.ownship.alert) {
             //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);

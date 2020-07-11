@@ -129,7 +129,7 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    setValue(val: number | string, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
+    setValue(val: number | string, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], wedgeTurning?: "up" | "down" }): void {
         this.val = +val;
         opt = opt || {};
         if (isFinite(+val)) {
@@ -138,7 +138,7 @@ class SpeedBug {
             this.wedgeSide = opt.wedgeTurning;
             
             this.reveal();
-            this.refresh();            
+            this.refresh(opt);            
         } else {
             this.hide();
         }
@@ -187,8 +187,9 @@ class SpeedBug {
     /**
      * Internal function, updates the visual appearance of the wedge resolution
      */
-    protected refreshWedge (): void {
-        this.wedgeAperture = this.maxWedgeAperture;
+    protected refreshWedge (opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
         if (this.wedgeConstraints && this.wedgeConstraints.length) {
             for (let i = 0; i < this.wedgeConstraints.length; i++) {
                 const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
@@ -236,12 +237,12 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    refresh(): void {
-        this.refreshWedge();
+    refresh(opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.refreshWedge(opt);
 
         let bugPosition: number = this.computeBugPosition(this.val);
-
-        if (this.maxWedgeAperture) {
+        if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 
@@ -619,7 +620,7 @@ export class VerticalSpeedTape {
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setBug(info: number | ResolutionElement, opt?: { wedgeConstraints?: utils.FromTo[], resolutionBugColor?: string }): void {
+    setBug(info: number | ResolutionElement, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], resolutionBugColor?: string }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
@@ -630,7 +631,8 @@ export class VerticalSpeedTape {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
-                    : "up"
+                    : "up",
+                wedgeAperture: opt.wedgeAperture
             }); // tape scale is 100xunits
             // if (typeof info === "object" && info.ownship && info.ownship.alert) {
             //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);

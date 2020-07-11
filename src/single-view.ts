@@ -82,25 +82,41 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                     wedgeConstraints: bands["Heading Bands"].RECOVERY,
                     resolutionBugColor: "green"
                 });
-            } else { data.compass.hideBug(); }
+            } else {
+                data.compass.setBug(bands["Heading Resolution"], {
+                    wedgeAperture: 0
+                });
+            }
             if (bands["Horizontal Speed Bands"].RECOVERY) {
                 data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
                     resolutionBugColor: "green"
                 });
-            } else { data.airspeedTape.hideBug(); }
+            } else {
+                data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                    wedgeAperture: 0
+                });
+            }
             if (bands["Altitude Bands"].RECOVERY) {
                 data.altitudeTape.setBug(bands["Altitude Resolution"], {
                     wedgeConstraints: bands["Altitude Bands"].RECOVERY,
                     resolutionBugColor: "green"
                 });
-            } else { data.altitudeTape.hideBug(); }
+            } else {
+                data.altitudeTape.setBug(bands["Altitude Resolution"], {
+                    wedgeAperture: 0
+                });
+            }
             if (bands["Vertical Speed Bands"].RECOVERY) {
                 data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
                     resolutionBugColor: "green"
                 });
-            } else { data.verticalSpeedTape.hideBug(); }
+            } else {
+                data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                    wedgeAperture: 0
+                });
+            }
         }
         // set contours
         data.map.removeGeoFence();

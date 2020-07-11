@@ -131,7 +131,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setValue(deg: number | string, opt?: { wedgeConstraints?: utils.FromTo[], wedgeTurning?: "left" | "right" }): void {
+    setValue(deg: number | string, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], wedgeTurning?: "left" | "right" }): void {
         opt = opt || {};
         if (isFinite(+deg)) {
             this.previousAngle = (isNaN(this.previousAngle)) ? +deg : this.currentAngle;
@@ -144,7 +144,7 @@ class ResolutionBug {
             this.wedgeSide = opt.wedgeTurning;
 
             this.reveal();
-            this.refresh();
+            this.refresh(opt);
         } else {
             this.hide();
         }
@@ -152,8 +152,9 @@ class ResolutionBug {
     /**
      * Internal functions, updates the visual appearance of the wedge
      */
-    protected refreshWedge (): void {
-        this.wedgeAperture = this.maxWedgeAperture;
+    protected refreshWedge (opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
         if (this.wedgeConstraints) {
             // merge zero crossing in constraints -- e.g., the two constraints [0..200] [260, 360] be transformed into [260..560] and [-100,200]
             const constraints: utils.FromTo[] = [];
@@ -232,14 +233,15 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    refresh(): void {
-        this.refreshWedge();
+    refresh(opt?: { wedgeAperture?: number }): void {
+        opt = opt || {};
+        this.refreshWedge(opt);
 
         const animationDuration: number = 100;
         $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
-        if (this.wedgeAperture) {
+        if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-wedge`).css({ "display": "block"});
             $(`#${this.id}-indicator`).css({ "display": "none"});
             const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById(`${this.id}-wedge`);
@@ -448,7 +450,8 @@ export class Compass {
      */
     setBug(info: number | server.ResolutionElement, opt?: { 
         wedgeConstraints?: utils.FromTo[],
-        resolutionBugColor?: string
+        resolutionBugColor?: string,
+        wedgeAperture?: number
     }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
@@ -460,7 +463,8 @@ export class Compass {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
                     (info.flags && info.flags["preferred-resolution"] === "true") ? "right" : "left"
-                    : "right"
+                    : "right",
+                wedgeAperture: opt.wedgeAperture
             });
             // if (typeof info === "object" && info.ownship && info.ownship.alert) {
             //     this.setIndicatorColor(utils.bugColors[info.ownship.alert]);
