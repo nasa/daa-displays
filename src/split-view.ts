@@ -155,7 +155,7 @@ const wind_left: WindIndicator = new WindIndicator("wind-left", { top: 690, left
 // map heading is controlled by the compass
 const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left, wind: wind_left });
 // map zoom is controlled by nmiSelector
-const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left });
+const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left, compass: compass_left });
 // map view options
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { 
     labels: [
@@ -173,7 +173,7 @@ const wind_right: WindIndicator = new WindIndicator("wind-right", { top: 690, le
 // map heading is controlled by the compass
 const compass_right: Compass = new Compass("compass-right", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_right, wind: wind_right });
 // map zoom is controlled by nmiSelector
-const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right });
+const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right, compass: compass_right });
 // map view options
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { 
     labels: [
