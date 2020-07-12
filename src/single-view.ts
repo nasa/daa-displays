@@ -72,12 +72,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
 
             // set resolutions
-            // show the resolution bug only for recovery bands
-            // data.compass.setBug(bands["Heading Resolution"]);
-            // data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
-            // data.altitudeTape.setBug(bands["Altitude Resolution"]);
-            // data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
-            if (bands["Heading Bands"].RECOVERY) {
+            // show wedge only for recovery bands
+            if (bands["Heading Bands"] && bands["Heading Bands"].RECOVERY) {
                 data.compass.setBug(bands["Heading Resolution"], {
                     wedgeConstraints: bands["Heading Bands"].RECOVERY,
                     resolutionBugColor: "green"
@@ -87,7 +83,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                     wedgeAperture: 0
                 });
             }
-            if (bands["Horizontal Speed Bands"].RECOVERY) {
+            if (bands["Horizontal Speed Bands"] && bands["Horizontal Speed Bands"].RECOVERY) {
                 data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
                     resolutionBugColor: "green"
@@ -97,7 +93,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                     wedgeAperture: 0
                 });
             }
-            if (bands["Altitude Bands"].RECOVERY) {
+            if (bands["Altitude Bands"] && bands["Altitude Bands"].RECOVERY) {
                 data.altitudeTape.setBug(bands["Altitude Resolution"], {
                     wedgeConstraints: bands["Altitude Bands"].RECOVERY,
                     resolutionBugColor: "green"
@@ -107,7 +103,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                     wedgeAperture: 0
                 });
             }
-            if (bands["Vertical Speed Bands"].RECOVERY) {
+            if (bands["Vertical Speed Bands"] && bands["Vertical Speed Bands"].RECOVERY) {
                 data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
                     resolutionBugColor: "green"
@@ -272,6 +268,23 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape.revealUnits();
     verticalSpeedTape.showValueBox();
 }
+function normalMode () {
+    // left
+    airspeedTape.defaultUnits();
+    airspeedTape.hideUnits();
+    airspeedTape.defaultStep();
+    airspeedTape.enableTapeSpinning();
+
+    altitudeTape.defaultUnits();
+    altitudeTape.hideUnits();
+    altitudeTape.defaultStep();
+    altitudeTape.enableTapeSpinning();
+
+    verticalSpeedTape.defaultUnits();
+    verticalSpeedTape.hideUnits();
+    verticalSpeedTape.hideValueBox();
+    verticalSpeedTape.defaultRange();
+}
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {
     const bandsData: utils.DAABandsData[] = player.getBandsData();
@@ -301,6 +314,8 @@ async function createPlayer() {
         label: "Alerts",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
+    }, {
+        overheadLabel: true
     });
     player.appendSimulationPlot({
         id: "heading-bands",
@@ -341,9 +356,9 @@ async function createPlayer() {
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
-    await player.appendWindSettings({ fromToSelectorVisible: true });
-    await player.appendWellClearVersionSelector();
-    await player.appendWellClearConfigurationSelector();
+    await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
+    await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
+    await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
     await player.appendMonitorPanel();
     // handlers can be defined only after creating the monitor panel
     for (let i = 0; i < 3; i++) {
@@ -384,6 +399,16 @@ async function createPlayer() {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
     }, { top: -110, left: 1140 });
+    player.appendDeveloperControls({
+        normalMode,
+        developerMode
+    }, {
+        parent: "simulation-controls",
+        top: 48,
+        left: 754,
+        width: 344,
+        hidden: true
+    });
     await player.activate({ developerMode: true });
 }
 createPlayer();

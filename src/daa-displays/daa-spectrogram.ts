@@ -84,6 +84,7 @@ import * as utils from './daa-utils';
 import * as templates from './templates/daa-spectrogram-templates';
 import { AlertElement } from '../daa-server/utils/daa-server';
 import { DAAPlayer } from './daa-player';
+import { stringify } from 'querystring';
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data: { width: number, height: number, length: number }) {
@@ -139,6 +140,7 @@ export class DAASpectrogram {
     units: { from: string, to: string };
     label: { top: string, left: string };
     time: { start: string, mid: string, end: string };
+    overheadLabel: boolean = false;
     div: HTMLElement;
     player: DAAPlayer;
     /**
@@ -162,7 +164,8 @@ export class DAASpectrogram {
         label?: string | { top?: string, left?: string },
         time?: { start: string, mid: string, end: string },
         player?: DAAPlayer,
-        parent?: string
+        parent?: string,
+        overheadLabel?: boolean
     }) {
         opt = opt || {};
         this.id = id || "plot";
@@ -185,6 +188,7 @@ export class DAASpectrogram {
             left: (typeof opt.label === "object") ? opt.label.left : null,
         } : { top: null, left: null };
         this.time = opt.time;
+        this.overheadLabel = !!opt.overheadLabel;
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2, top: this.top, left: this.left });
         const theHTML = this.compileHTML();
         $(this.div).html(theHTML);
@@ -233,6 +237,21 @@ export class DAASpectrogram {
                 top: this.height + 25
             } : null
         });
+    }
+    /**
+     * @function <a name="setOverheadLabel">setOverheadLabel</a>
+     * @description Defines the overhead label. This label is used to characterize a group of spectrograms. The label can be set only if the corresponding flag (this.overheadLabel) is true.
+     * @param label {string}
+     * @memberof module:DAASpectrogram
+     * @instance
+     */
+    setOverheadLabel (label: string): void {
+        if (this.overheadLabel) {
+            $(`#${this.id}-overhead-label`).html(label);
+            $(`#${this.id}-overhead-label`).css({ display: "block" });
+        } else {
+            $(`#${this.id}-overhead-label`).css({ display: "none" });
+        }
     }
     /**
      * @function <a name="setRange">setRange</a>

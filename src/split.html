@@ -40,25 +40,27 @@
     </head>
     <body>
 
-        <div id="daa-cockpit" style="position:absolute; left:25%;">
-            <div id="daa-display-left" style="position:absolute; margin-top:64px; margin-left:-10px;">
-                <div id="daidalus-version-left" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
-                <div id="daidalus-configuration-left" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
-                <div id="daidalus-wind-left" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
-                <div id="daa-disp-left" style="margin-top:10px;"></div>
+        <div class="zoomable">
+            <div id="daa-cockpit" style="position:absolute;">
+                <div id="daa-display-left" style="position:absolute; margin-top:64px; margin-left:-10px;">
+                    <div id="daidalus-version-left" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
+                    <div id="daidalus-configuration-left" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
+                    <div id="daidalus-wind-left" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
+                    <div id="daa-disp-left" style="margin-top:10px;"></div>
+                </div>
+                <div id="daa-display-right" style="position:absolute; margin-top:64px; margin-left:-10px; left:1190px;">
+                    <div id="daidalus-version-right" class="input-group" style="height:31px; width:400px; margin-left:4px;"></div>
+                    <div id="daidalus-configuration-right" class="input-group" style="height:31px; width:400px; margin-left:4px;"></div>
+                    <div id="daidalus-wind-right" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
+                    <div id="daa-disp-right" style="margin-top:10px;"></div>
+                </div>
             </div>
-            <div id="daa-display-right" style="position:absolute; margin-top:64px; margin-left:-10px; left:1190px;">
-                <div id="daidalus-version-right" class="input-group" style="height:31px; width:400px; margin-left:4px;"></div>
-                <div id="daidalus-configuration-right" class="input-group" style="height:31px; width:400px; margin-left:4px;"></div>
-                <div id="daidalus-wind-right" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
-                <div id="daa-disp-right" style="margin-top:10px;"></div>
+            <div id="activation-controls" style="position:absolute; top:1020px; width:80%; margin-left:454px;">
             </div>
-        </div>
-        <div id="activation-controls" style="position:absolute; top:1020px; width:80%; margin-left:454px; left:25%;">
-        </div>
-        <div id="simulation-controls" style="position:absolute; top:1124px; left:25%; padding-left:454px; width:80%;">
-        </div>
-        <div id="simulation-plot" style="position:absolute; top:1260px; left:25%; height:200px; width:1020px;">
+            <div id="simulation-controls" style="position:absolute; top:1124px; padding-left:454px; width:80%;">
+            </div>
+            <div id="simulation-plot" style="position:absolute; top:1260px; height:200px; width:1020px;">
+            </div>
         </div>
 
         <script src="node_modules/jquery/dist/jquery.min.js"></script>

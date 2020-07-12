@@ -67,32 +67,47 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
         
         // set resolutions
-        // show the resolution bug only for recovery bands
-        if (bands["Heading Bands"].RECOVERY) {
+        // show wedge only for recovery bands
+        if (bands["Heading Bands"] && bands["Heading Bands"].RECOVERY) {
             data.compass.setBug(bands["Heading Resolution"], {
                 wedgeConstraints: bands["Heading Bands"].RECOVERY,
                 resolutionBugColor: "green"
             });
-        } else { data.compass.hideBug(); }
-        if (bands["Horizontal Speed Bands"].RECOVERY) {
+        } else {
+            data.compass.setBug(bands["Heading Resolution"], {
+                wedgeAperture: 0
+            });
+        }
+        if (bands["Horizontal Speed Bands"] && bands["Horizontal Speed Bands"].RECOVERY) {
             data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                 wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
                 resolutionBugColor: "green"
             });
-        } else { data.airspeedTape.hideBug(); }
-        if (bands["Altitude Bands"].RECOVERY) {
+        } else {
+            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+                wedgeAperture: 0
+            });
+        }
+        if (bands["Altitude Bands"] && bands["Altitude Bands"].RECOVERY) {
             data.altitudeTape.setBug(bands["Altitude Resolution"], {
                 wedgeConstraints: bands["Altitude Bands"].RECOVERY,
                 resolutionBugColor: "green"
             });
-        } else { data.altitudeTape.hideBug(); }
-        if (bands["Vertical Speed Bands"].RECOVERY) {
+        } else {
+            data.altitudeTape.setBug(bands["Altitude Resolution"], {
+                wedgeAperture: 0
+            });
+        }
+        if (bands["Vertical Speed Bands"] && bands["Vertical Speed Bands"].RECOVERY) {
             data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                 wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
                 resolutionBugColor: "green"
             });
-        } else { data.verticalSpeedTape.hideBug(); }
-
+        } else {
+            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+                wedgeAperture: 0
+            });
+        }
     }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
@@ -202,6 +217,8 @@ async function createPlayer() {
         label: "Alerts",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
+    }, {
+        overheadLabel: true
     });
     player.appendSimulationPlot({
         id: "heading-bands",

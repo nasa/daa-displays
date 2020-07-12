@@ -1,5 +1,6 @@
 export const spectrogramTemplate: string = `
 <div id="{{id}}" style="position:absolute;{{#if label.top}} margin-top:30px;{{/if}}">
+    <div id="{{id}}-overhead-label" style="display:none; position:absolute; width:{{width}}px; text-align: center; margin-top:-44px; margin-left:-10px; white-space: nowrap;">{{overheadLabel}}</div>
     {{#if label.top}}
     <div style="position:absolute; white-space:nowrap; height:30px; top:-23px;">{{label.top}}</div>
     {{/if}}{{#if label.left}}

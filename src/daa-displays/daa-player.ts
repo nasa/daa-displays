@@ -166,6 +166,8 @@ export class DAAPlayer {
     protected _plot: { [plotName:string]: DAASpectrogram }; // TODO: this should be moved to daa-playback
     protected href: string;
     protected timers: { [ tname: string ]: NodeJS.Timer } = {};
+    protected windowZoomLevel: number = 100;
+    readonly minZoomLevel: number = 20;
 
     readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
     protected selectedAppType: string = this.appTypes[0]; 
@@ -486,18 +488,28 @@ export class DAAPlayer {
         const min: number = 20;
         $("#sidebar-resize").mousedown((e) => {
             e.preventDefault();
+            $('html').css({ cursor: "col-resize" });
             $(document).on("mousemove", (e: JQuery.MouseMoveEvent) => {
                 e.preventDefault();
                 $("#sidebar-panel").removeClass("col-md-2");
                 const x: number = e.pageX - $("#sidebar-panel").offset().left;
                 if (x > min && e.pageX < $(window).width()) {
                     $("#sidebar-panel").css("width", x);
+                    // $(".zoomable").css("margin-left", x);
                 }
             });
         });
         $(document).on("mouseup", (e: JQuery.MouseUpEvent) => {
             $(document).unbind("mousemove");
+            $('html').css({ cursor: "default" });
+            const marginLeft: string = $("#sidebar-panel").css("width");
+            $(".zoomable").css({ "margin-left": marginLeft });
         });
+        $("#sidebar-resize").on("mouseover", () => {
+            $("#sidebar-resize").css({ cursor: "col-resize" });
+        });
+        const marginLeft: string = $("#sidebar-panel").css("width");
+        $(".zoomable").css({ "margin-left": marginLeft });
         return this;
     }
 
@@ -562,7 +574,7 @@ export class DAAPlayer {
     /**
      * utility function, renders the DOM elements necessary for developers
      */
-    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
+    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string, hidden?: boolean }): void {
         opt = opt || {};
         desc = desc || {};
         opt.parent = opt.parent || this.id;
@@ -572,7 +584,8 @@ export class DAAPlayer {
         const theHTML = Handlebars.compile(templates.developersControls)({
             id: this.id,
             parent: opt.parent,
-            top: opt.top, left: opt.left, width: opt.width
+            top: opt.top, left: opt.left, width: opt.width,
+            display: opt.hidden ? "none" : "block"
         });
         utils.createDiv(`${this.id}-developers-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-developers-controls`).html(theHTML);
@@ -1774,14 +1787,40 @@ export class DAAPlayer {
 
     appendNavbar(): void {
         const theHTML: string = Handlebars.compile(templates.navbarTemplate)({
-            id: this.id
+            id: this.id,
+            zoomables: $(".zoomable").length ? true : undefined
         });
         $('body').append(theHTML);
+        if ($(".zoomable").length) {
+            // adjust margin-left based on the presence of the sidebar
+            const marginLeft: string = $("#sidebar-panel").css("width");
+            $(".zoomable").css({ "margin-left": marginLeft, "padding-left": "40px" });
+            // append zoom handlers
+            $(`#${this.id}-zoom-minus`).on("click", () => {
+                this.windowZoomLevel = (this.windowZoomLevel > this.minZoomLevel) ? this.windowZoomLevel - 20 : this.windowZoomLevel;
+                const marginLeft: string = $("#sidebar-panel").css("width");
+                const marginTop: string = (this.windowZoomLevel < 100) ? $(".navbar").css("height") : "0px";
+                const scale: number = this.windowZoomLevel / 100;
+                $(".zoomable").css({transform: `scale(${scale})`, "transform-origin": "left top", "margin-left": marginLeft, "margin-top": marginTop });
+                $(".zoomable-sidebar").css({transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+            });
+            $(`#${this.id}-zoom-plus`).on("click", () => {
+                this.windowZoomLevel += 20;
+                const marginLeft: string = $("#sidebar-panel").css("width");
+                const marginTop: string = (this.windowZoomLevel < 100) ? $(".navbar").css("height") : "0px";
+                const scale: number = this.windowZoomLevel / 100;
+                $(".zoomable").css({ transform: `scale(${scale})`, "transform-origin": "left top", "left": marginLeft, "margin-top": marginTop });
+                $(".zoomable-sidebar").css({transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+            });
+        }
     }
 
     async appendWellClearVersionSelector(opt?: { selector?: string }): Promise<void> {
         opt = opt || {};
         this.wellClearVersionSelector = opt.selector || "sidebar-daidalus-version";
+        if (this.wellClearVersionSelector === "sidebar-daidalus-version") {
+            $(`.sidebar-version-optionals`).css({ display: "block" });
+        }
         // update data structures
         await this.listVersions();
         // update the front-end
@@ -1791,6 +1830,9 @@ export class DAAPlayer {
     async appendWellClearConfigurationSelector(opt?: { selector?: string }): Promise<void> {
         opt = opt || {};
         this.wellClearConfigurationSelector = opt.selector || "sidebar-daidalus-configuration";
+        if (this.wellClearVersionSelector === "sidebar-daidalus-configuration") {
+            $(`.sidebar-config-optionals`).css({ display: "block" });
+        }
         // update data structures
         await this.listConfigurations();
         // update the front-end
@@ -1938,9 +1980,10 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    appendSimulationPlot(desc: PlotDescriptor): DAAPlayer {
+    appendSimulationPlot(desc: PlotDescriptor, opt?: { overheadLabel?: boolean }): DAAPlayer {
         desc.id = desc.id;
         desc.type = desc.type || "spectrogram";
+        opt = opt || {};
         if (desc.type === "spectrogram") {
             this._plot[desc.id] = new DAASpectrogram(`${this.id}-${desc.id.replace(/\s/g, "")}`, {
                 top: desc.top, left: desc.left, height: desc.height, width: desc.width
@@ -1955,7 +1998,8 @@ export class DAAPlayer {
                     end: this._scenarios[this._selectedScenario].steps[this._simulationLength - 1]
                 } : null,
                 player: desc.player || this,
-                parent: desc.parent
+                parent: desc.parent,
+                overheadLabel: opt.overheadLabel
             });
         }
         return this;
@@ -2088,6 +2132,13 @@ export class DAAPlayer {
                     end: this._scenarios[this._selectedScenario].steps[this._simulationLength - 1]
                 });
                 this._plot[plotID].resetCursorPosition();
+                // update overhead labels
+                const selectedScenario: string = this.getSelectedScenario();
+                const selectedConfiguration: string = this.getSelectedConfiguration();
+                const selectedWellClear: string = this.getSelectedWellClearVersion();
+                const wind: { knot: string, deg: string } = this.getSelectedWindSettings();
+                const scenario: string = (wind && wind.knot) ? `${selectedScenario} (wind ${wind.deg}deg ${wind.knot}knot)` : selectedScenario;
+                this._plot[plotID].setOverheadLabel(`${scenario} - ${selectedWellClear.replace("WellClear", "DAIDALUS")} - ${selectedConfiguration}`);
             });
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());

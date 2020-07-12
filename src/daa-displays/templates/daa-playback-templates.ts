@@ -105,7 +105,7 @@ export const windSettingsInputGroupTemplate: string = `
     <div class="input-group-prepend">
         <span class="input-group-text" id="{{id}}-deg-label">deg&nbsp;</span>
     </div>
-    <input type="number" id="{{id}}-list-degs" class="form-control {{id}}-list" aria-label="direction" aria-describedby="{{id}}-deg-label">
+    <input type="number" id="{{id}}-list-degs" style="font-size:1em !important;" class="form-control {{id}}-list" aria-label="direction" aria-describedby="{{id}}-deg-label">
     <div class="input-group-append">
         <select id="{{id}}-from-to-selector" style="display:none;" class="form-control sim-selector {{id}}-list" size="1">
             <option selected value="from">from</option>
@@ -135,7 +135,7 @@ export const daidalusConfigurationsTemplate: string = `
 </select>`;
 
 export const daidalusAttributesTemplate: string = `
-<select id={{id}}-attributes-list class="form-control" size="24" style="overflow:auto;margin-bottom:20px;">
+<select id={{id}}-attributes-list class="form-control" size="30" style="overflow:auto;margin-bottom:20px;">
     <option id="{{id}}-{{fileName}}">## Configuration {{fileName}}</option>
     {{#each attributes}}
     <option id="{{id}}-{{this}}">{{this}}</option>
@@ -148,52 +148,52 @@ export const sidePanelTemplate: string = `
     <nav id="sidebar-panel" class="col-md-2 d-none d-md-block bg-light sidebar">
         <div id="sidebar-resize" style="float:right; width: 6px; cursor: col-resize; height: 100%; background-color: #272b2f;"></div>
         <div class="sidebar-sticky">
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                 <span><b>Scenarios</b></span> 
                 <button id="{{id}}-refresh-scenarios" class="btn btn-secondary btn-sm" type="button" style="display:none">
                     <i class="fa fa-refresh" aria-hidden="true"></i>
                 </button>
             </h6>
-            <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+            <ul class="zoomable-sidebar nav flex-column mb-2" style="width:90%; margin-left:16px; margin-right:18px;">
                 <li class="nav-item" id="{{id}}-scenarios">
                 </li>
             </ul>
 
             <div id="single-view">
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span><b>Wind Settings</b></span>
+                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span class="sidebar-wind-optionals" style="display:none;"><b>Wind Settings</b></span>
                 </h6>
-                <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                <ul class="sidebar-wind-optionals zoomable-sidebar nav flex-column mb-2" style="display:none; width:90%; margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-wind-settings">
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span><b>Daidalus Version</b></span>
+                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span style="display:none;" class="sidebar-version-optionals"><b>Daidalus Version</b></span>
                     <button id="{{id}}-refresh-daidalus-versions" class="btn btn-secondary btn-sm" type="button" style="display:none">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </h6>
-                <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                <ul class="zoomable-sidebar sidebar-version-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-daidalus-version">
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span><b>Daidalus Configuration</b></span>
+                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span style="display:none;" class="sidebar-config-optionals"><b>Daidalus Configuration</b></span>
                     <button id="{{id}}-refresh-daidalus-configurations" class="btn btn-secondary btn-sm" type="button" style="display:none">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </h6>
-                <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                <ul class="zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-daidalus-configuration">
                     </li>
                 </ul>
 
-                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span><b>Daidalus Parameters</b></span>
+                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span style="display:none;" class="sidebar-config-optionals"><b>Daidalus Parameters</b></span>
                 </h6>
-                <ul class="nav flex-column mb-2" style="margin-left:16px; margin-right:18px;">
+                <ul class="zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-daidalus-configuration-attributes">
                     </li>
                 </ul>
@@ -221,7 +221,17 @@ export const loadingTemplate: string = `
 export const navbarTemplate: string = `
 <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
     <span class="navbar-brand col-sm-3 col-md-2 mr-0">DAA-Displays {{version}}</span>
-    <!-- <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">DAA-Displays 2.0.0</a> -->
+    {{#if zoomables}}
+    <span style="position:absolute; left:20%;">
+        <div class="input-group input-group-sm mb-3" style="margin:0px !important;">
+            <div class="input-group-prepend">
+                <span class="btn-sm" style="text-align:center; color:white; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Window Zoom Level</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-warning" id="{{id}}-zoom-minus"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-sm btn-primary" id="{{id}}-zoom-plus"><i class="fa fa-plus"></i></button>
+        </div>
+    </span>
+    {{/if}}
     <span id="{{id}}-status" class="animated infinite pulse navbar-text col-sm-3 col-md-2 mr-0" style="color:white; display:none; position:absolute; left:950px; text-align:center;"></span>
 </nav>`;
 
@@ -242,7 +252,7 @@ export const spectrogramControls: string = `
 </div>`;
 
 export const developersControls: string = `
-<div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px;">
+<div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px; display:{{display}};">
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">
     <div class="input-group-text" style="width:{{width}}px;">
       <input id="{{id}}-developer-mode-checkbox" type="checkbox" aria-label="Enable developer mode">

@@ -492,8 +492,8 @@ async function createPlayer() {
     }, {
         parent: "simulation-controls",
         top: 48,
-        left: 1132,
-        width: 242
+        left: 754,
+        width: 344
     });
     splitView.getPlayer("left").appendSimulationPlot({
         id: "alerts",
@@ -502,6 +502,8 @@ async function createPlayer() {
         range: { from: 1, to: 3 },
         player: splitView,
         parent: "simulation-plot"
+    }, {
+        overheadLabel: true
     });
     splitView.getPlayer("right").appendSimulationPlot({
         id: "alerts",
@@ -511,6 +513,8 @@ async function createPlayer() {
         range: { from: 1, to: 3 },
         player: splitView,
         parent: "simulation-plot"
+    }, {
+        overheadLabel: true
     });
     for (let i = 0; i < daaPlots.length; i++) {
         splitView.getPlayer("left").appendSimulationPlot({

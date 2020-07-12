@@ -6,6 +6,15 @@ all: compile install-dependencies
 ts:
 	# generate javascript files
 	npm run build
+	# copy html files
+	cp src/index.html dist/
+	cp src/danti.html dist/
+	cp src/single.html dist/
+	cp src/split.html dist/
+	cp src/virtual-pilot.html dist/
+	cp src/gods.html dist/
+	cp src/3d.html dist/
+
 
 compile:
 	@npm install
