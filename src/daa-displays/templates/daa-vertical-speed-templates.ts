@@ -29,7 +29,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         </div>
         <div id="{{id}}-bands" style="position:absolute;top:24px;left:-6px; opacity:0.8;">
         </div>
-        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.7; margin-top:1px; z-index:99;">
+        <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:0.9; margin-top:1px; z-index:99;">
             <div id="{{id}}-bug-indicator" style="position:absolute;">
                 <!-- box -->
                 <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:12px; height:11px; border:2px solid white; background-color:black; margin-left:4px;"></div>

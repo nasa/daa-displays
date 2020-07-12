@@ -11,8 +11,8 @@ export const airspeedTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute;top:24px;">
             </div>
-            <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:0.8; margin-top:18px;">
-                <div style="position:absolute;">
+            <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:0.5; margin-top:18px;">
+                <div id="{{id}}-bug-indicator" style="position:absolute;">
                     <!-- box -->
                     <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:64px; margin-left:2px; height:12px; border:1px solid white; background-color:black;"></div>
                     <!-- pointer -->

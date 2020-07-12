@@ -235,7 +235,7 @@ class SpeedBug {
         $(`.${this.id}-tooltip`).tooltip("dispose");
         if (this.tooltipActive) {
             //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val / 100) * 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
         }
     }
     reveal (flag?: boolean): void {

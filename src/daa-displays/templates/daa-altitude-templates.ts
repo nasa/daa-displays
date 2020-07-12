@@ -16,8 +16,8 @@ export const altitudeTemplate = `
             </div>
             <div id="{{id}}-bands" style="position:absolute; top:24px; margin-left:36px;">
             </div>
-            <div id="{{id}}-bug" style="opacity:0.6; position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
-                <div style="position:absolute;">
+            <div id="{{id}}-bug" style="opacity:0.5; position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
+                <div id="{{id}}-bug-indicator" style="position:absolute;">
                     <!-- box -->
                     <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="altitudebug" id="{{id}}-bug-box" style="width:64px; margin-left:9px; height:12px; border:2px solid white; background-color:black;"></div>
                     <!-- pointer -->
