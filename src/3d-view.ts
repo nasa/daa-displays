@@ -192,9 +192,9 @@ async function createPlayer() {
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
-    await player.appendWindSettings();
-    await player.appendWellClearVersionSelector();
-    await player.appendWellClearConfigurationSelector();
+    await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
+    await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
+    await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
