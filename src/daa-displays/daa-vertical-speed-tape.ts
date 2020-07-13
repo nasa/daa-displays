@@ -91,6 +91,7 @@ require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpee
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-vertical-speed-templates';
 import { ResolutionElement } from 'src/daa-server/utils/daa-server';
+import { timeStamp } from 'console';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {
@@ -192,11 +193,14 @@ class SpeedBug {
         this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
         if (this.wedgeConstraints && this.wedgeConstraints.length) {
             for (let i = 0; i < this.wedgeConstraints.length; i++) {
-                const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
-                const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
-                const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
-                if (aperture < this.wedgeAperture) {
-                    this.wedgeAperture = aperture;
+                if (Math.round(this.val) >= Math.round(this.wedgeConstraints[i].from) 
+                        && Math.round(this.val) <= Math.round(this.wedgeConstraints[i].to)) {
+                    const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
+                    const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
+                    const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
+                    if (aperture < this.wedgeAperture) {
+                        this.wedgeAperture = aperture;
+                    }
                 }
             }
         }
@@ -242,7 +246,7 @@ class SpeedBug {
         this.refreshWedge(opt);
 
         let bugPosition: number = this.computeBugPosition(this.val);
-        if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
+        if (this.color === "green" && (isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 

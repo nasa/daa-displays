@@ -191,14 +191,17 @@ class SpeedBug {
      */
     protected refreshWedge (opt?: { wedgeAperture?: number }): void {
         opt = opt || {};
-        this.wedgeAperture = (!isNaN(opt.wedgeAperture))? opt.wedgeAperture : this.maxWedgeAperture;
+        this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
         if (this.wedgeConstraints && this.wedgeConstraints.length) {
             for (let i = 0; i < this.wedgeConstraints.length; i++) {
-                const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
-                const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
-                const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
-                if (aperture < this.wedgeAperture) {
-                    this.wedgeAperture = aperture;
+                if (Math.round(this.val) >= Math.round(this.wedgeConstraints[i].from) 
+                        && Math.round(this.val) <= Math.round(this.wedgeConstraints[i].to)) {
+                    const aperture1: number = Math.abs(this.val - this.wedgeConstraints[i].from);
+                    const aperture2: number = Math.abs(this.val - this.wedgeConstraints[i].to);
+                    const aperture: number = (this.wedgeSide === "up")? aperture2 : aperture1;
+                    if (aperture < this.wedgeAperture) {
+                        this.wedgeAperture = aperture;
+                    }
                 }
             }
         }
@@ -215,7 +218,7 @@ class SpeedBug {
         this.refreshWedge(opt);
 
         let bugPosition: number = this.zero - this.val * this.tickHeight / this.airspeedStep;
-        if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
+        if (this.color === "green" && (isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 
