@@ -381,10 +381,14 @@ export class DAASplitView extends DAAPlayer {
         $("#single-view").css("display", "none"); // hide attributes on side panel
         if (this.players) {
             if (this.players.left) {
-                await this.players.left.appendWellClearConfigurationSelector({ selector: "daidalus-configuration-left" }); 
+                await this.players.left.appendWellClearConfigurationSelector({
+                    selector: "daidalus-configuration-left"
+                }); 
             }
             if (this.players.right) { 
-                await this.players.right.appendWellClearConfigurationSelector({ selector: "daidalus-configuration-right" }); 
+                await this.players.right.appendWellClearConfigurationSelector({
+                    selector: "daidalus-configuration-right"
+                }); 
             }
         }
     }

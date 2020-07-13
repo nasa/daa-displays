@@ -213,6 +213,7 @@ export class DAAPlayer {
 
     protected wellClearVersionSelector: string = "sidebar-daidalus-version";
     protected wellClearConfigurationSelector: string = "sidebar-daidalus-configuration";
+    protected wellClearConfigurationAttributesSelector: string = "sidebar-daidalus-configuration-attributes";
     protected windSettingsSelector: string = "sidebar-wind-settings";
     protected monitorDomSelector: string = "daa-monitors";
     protected configInfo: ConfigFile;
@@ -1802,7 +1803,10 @@ export class DAAPlayer {
                 const marginTop: string = (this.windowZoomLevel < 100) ? $(".navbar").css("height") : "0px";
                 const scale: number = this.windowZoomLevel / 100;
                 $(".zoomable").css({transform: `scale(${scale})`, "transform-origin": "left top", "margin-left": marginLeft, "margin-top": marginTop });
-                $(".zoomable-sidebar").css({transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+                if (this.windowZoomLevel <= 100) {
+                    $(".zoomable-sidebar").css({ transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+                    $(".sidebar-optionals").css({ "margin-top": `-${(100 - this.windowZoomLevel) * 4}px`});
+                }
             });
             $(`#${this.id}-zoom-plus`).on("click", () => {
                 this.windowZoomLevel += 20;
@@ -1810,7 +1814,10 @@ export class DAAPlayer {
                 const marginTop: string = (this.windowZoomLevel < 100) ? $(".navbar").css("height") : "0px";
                 const scale: number = this.windowZoomLevel / 100;
                 $(".zoomable").css({ transform: `scale(${scale})`, "transform-origin": "left top", "left": marginLeft, "margin-top": marginTop });
-                $(".zoomable-sidebar").css({transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+                if (this.windowZoomLevel <= 100) {
+                    $(".zoomable-sidebar").css({ transform: `scale(${scale})`, "transform-origin": "left top", width: `${1 / scale * 90}%` });
+                    $(".sidebar-optionals").css({ "margin-top": `-${(100 - this.windowZoomLevel) * 4}px`});
+                }
             });
         }
     }
@@ -1827,12 +1834,10 @@ export class DAAPlayer {
         this.refreshVersionsView();
     }
 
-    async appendWellClearConfigurationSelector(opt?: { selector?: string }): Promise<void> {
+    async appendWellClearConfigurationSelector(opt?: { selector?: string, attributeSelector?: string }): Promise<void> {
         opt = opt || {};
         this.wellClearConfigurationSelector = opt.selector || "sidebar-daidalus-configuration";
-        if (this.wellClearVersionSelector === "sidebar-daidalus-configuration") {
-            $(`.sidebar-config-optionals`).css({ display: "block" });
-        }
+        this.wellClearConfigurationAttributesSelector = opt.attributeSelector || "sidebar-daidalus-configuration-attributes";
         // update data structures
         await this.listConfigurations();
         // update the front-end
@@ -2152,17 +2157,21 @@ export class DAAPlayer {
         });
         $(`#${this.wellClearConfigurationSelector}-list`).remove();
         $(`#${this.wellClearConfigurationSelector}`).append(theHTML);
+        $(`#${this.wellClearConfigurationSelector}`).css({ display: "block" });
 
         const refreshConfigurationAttributesView = async (config: string) => {
             this.configInfo = await this.loadConfigFile(config);
             if (this.configInfo) {
-                const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
-                    fileName: config,
-                    attributes: this.configInfo.fileContent.split("\n"),
-                    id: this.wellClearConfigurationSelector
-                });
-                $(`#${this.wellClearConfigurationSelector}-attributes-list`).remove();
-                $(`#${this.wellClearConfigurationSelector}-attributes`).append(theAttributes);
+                if ($(`#${this.wellClearConfigurationAttributesSelector}`).length) {
+                    const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
+                        fileName: config,
+                        attributes: this.configInfo.fileContent.split("\n"),
+                        id: this.wellClearConfigurationAttributesSelector
+                    });
+                    $(`#${this.wellClearConfigurationAttributesSelector}-list`).remove();
+                    $(`#${this.wellClearConfigurationAttributesSelector}`).append(theAttributes);
+                    $(`.${this.wellClearConfigurationAttributesSelector}`).css({ display: "block" });
+                }
                 if (this.mode === "developerMode") {
                     this.clickDeveloperMode();
                 } else if (this.mode === "normalMode") {

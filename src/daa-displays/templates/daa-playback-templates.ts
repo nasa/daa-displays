@@ -135,7 +135,7 @@ export const daidalusConfigurationsTemplate: string = `
 </select>`;
 
 export const daidalusAttributesTemplate: string = `
-<select id={{id}}-attributes-list class="form-control" size="30" style="overflow:auto;margin-bottom:20px;">
+<select id={{id}}-list class="form-control" size="30" style="overflow:auto;margin-bottom:20px;">
     <option id="{{id}}-{{fileName}}">## Configuration {{fileName}}</option>
     {{#each attributes}}
     <option id="{{id}}-{{this}}">{{this}}</option>
@@ -159,41 +159,11 @@ export const sidePanelTemplate: string = `
                 </li>
             </ul>
 
-            <div id="single-view">
+            <div id="single-view" class="sidebar-optionals">
                 <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span class="sidebar-wind-optionals" style="display:none;"><b>Wind Settings</b></span>
+                    <span class="sidebar-daidalus-configuration-attributes" style="white-space:nowrap;"><b>Daidalus Parameters</b></span>
                 </h6>
-                <ul class="sidebar-wind-optionals zoomable-sidebar nav flex-column mb-2" style="display:none; width:90%; margin-left:16px; margin-right:18px;">
-                    <li class="nav-item" id="sidebar-wind-settings">
-                    </li>
-                </ul>
-
-                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span style="display:none;" class="sidebar-version-optionals"><b>Daidalus Version</b></span>
-                    <button id="{{id}}-refresh-daidalus-versions" class="btn btn-secondary btn-sm" type="button" style="display:none">
-                        <i class="fa fa-refresh" aria-hidden="true"></i>
-                    </button>
-                </h6>
-                <ul class="zoomable-sidebar sidebar-version-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
-                    <li class="nav-item" id="sidebar-daidalus-version">
-                    </li>
-                </ul>
-
-                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span style="display:none;" class="sidebar-config-optionals"><b>Daidalus Configuration</b></span>
-                    <button id="{{id}}-refresh-daidalus-configurations" class="btn btn-secondary btn-sm" type="button" style="display:none">
-                        <i class="fa fa-refresh" aria-hidden="true"></i>
-                    </button>
-                </h6>
-                <ul class="zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
-                    <li class="nav-item" id="sidebar-daidalus-configuration">
-                    </li>
-                </ul>
-
-                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span style="display:none;" class="sidebar-config-optionals"><b>Daidalus Parameters</b></span>
-                </h6>
-                <ul class="zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
+                <ul class="sidebar-daidalus-configuration-attributes zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
                     <li class="nav-item" id="sidebar-daidalus-configuration-attributes">
                     </li>
                 </ul>
