@@ -173,6 +173,17 @@ class SpeedBug {
         }
     }
     /**
+     * @function <a name="ResolutionBug_getWedgeAperture">getWedgeAperture</a>
+     * @desc Returns the current aperture of the resolution wedge.
+     * @param deg (real) Current aperture of the wedge (in degrees)
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    getWedgeAperture (): number {
+        return this.wedgeAperture;
+    }
+    /**
      * @function <a name="ResolutionBug_setColor">setColor</a>
      * @desc Sets the bug color.
      * @param color (string) Bug color
@@ -334,6 +345,10 @@ export class AltitudeTape {
     // utility function for drawing resolution bands
     protected draw_bands(): void {
         let theHTML = "";
+        // if wedge > 0 then band saturates red and notch is displayed on top
+        // otherwise bands are displayed as usual
+        const saturateRed: boolean = this.resolutionBug.getWedgeAperture() > 0
+            && this.bands && this.bands.RECOVERY && this.bands.RECOVERY.length > 0;
         Object.keys(this.bands).forEach(alert => {
             const segments: utils.FromTo[] = this.bands[alert];
             // console.log(segments);
@@ -356,8 +371,8 @@ export class AltitudeTape {
             // console.log(segs);
             theHTML += Handlebars.compile(templates.altitudeBandsTemplate)({
                 segments: segs,
-                color: utils.bandColors[alert].color,
-                dash: utils.bandColors[alert].style === "dash"
+                color: (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color,
+                dash: (saturateRed) ? false : utils.bandColors[alert].style === "dash"
             });
             // console.log(theHTML);
         });
@@ -586,6 +601,7 @@ export class AltitudeTape {
         this.bands.RECOVERY = normaliseAltitudeBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseAltitudeBand(bands.UNKNOWN);
         // console.log(this.id + "-altitude-bands", this.bands);
+        this.resolutionBug.refresh();
         this.draw_bands();
         return this;
     }
@@ -657,6 +673,7 @@ export class AltitudeTape {
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();
+        this.draw_bands();
     }
     setIndicatorColor (color: string): void {
         if (color) {

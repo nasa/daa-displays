@@ -59,9 +59,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
 
     // console.log(`Flight data`, flightData);
     if (bands) {
-        const compassStrokeWidth: number = (bands["Heading Bands"].RECOVERY) ? doubleStroke : singleStroke;
-
-        data.compass.setBands(bands["Heading Bands"], { strokeWidth: compassStrokeWidth });
+        data.compass.setBands(bands["Heading Bands"]);
         data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
         data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
         data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);

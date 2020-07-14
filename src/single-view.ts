@@ -64,9 +64,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
         // console.log(`Flight data`, flightData);
         if (bands) {
-            const compassStrokeWidth: number = (bands["Heading Bands"].RECOVERY) ? doubleStroke : singleStroke;
-
-            data.compass.setBands(bands["Heading Bands"], { strokeWidth: compassStrokeWidth });
+            data.compass.setBands(bands["Heading Bands"]);
             data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
             data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
             data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
@@ -230,7 +228,7 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left:
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 
 player.define("step", async () => {
     render({

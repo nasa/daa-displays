@@ -1416,6 +1416,10 @@ export class DAAPlayer {
         }
         return { knot, deg };    
     }
+    getSelectedWedgeAperture (): number {
+        const aperture: string = $(`#${this.id}-max-compass-wedge-aperture-input`).attr("value");
+        return +aperture;
+    }
     /**
      * @function <a name="play">play</a>
      * @description Starts the simulation run

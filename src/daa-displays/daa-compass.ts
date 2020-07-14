@@ -193,15 +193,26 @@ class ResolutionBug {
     /**
      * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
      * @desc Sets the maximum aperture of the resolution wedge.
-     * @param deg (real) Aperture of the wedge (in degrees)
+     * @param deg (real) Maximum aperture of the wedge (in degrees)
      * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
     setMaxWedgeAperture (deg: number | string): void {
         if (isFinite(+deg) && deg >= 0) {
-            this.maxWedgeAperture = + deg;
+            this.maxWedgeAperture = +deg;
         }
+    }
+    /**
+     * @function <a name="ResolutionBug_getWedgeAperture">getWedgeAperture</a>
+     * @desc Returns the current aperture of the resolution wedge.
+     * @param deg (real) Current aperture of the wedge (in degrees)
+     * @memberof module:ResolutionBug
+     * @instance
+     * @inner
+     */
+    getWedgeAperture (): number {
+        return this.wedgeAperture;
     }
     /**
      * @function <a name="ResolutionBug_setColor">setColor</a>
@@ -272,6 +283,11 @@ class ResolutionBug {
 }
 
 export class Compass {
+    static readonly units = {
+        deg: "deg",
+        rad: "rad"
+    };
+
     protected id: string;
     protected top: number;
     protected left: number;
@@ -481,6 +497,7 @@ export class Compass {
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();
+        this.draw_bands();
     }
     /**
      * @function <a name="setBands">setBands</a>
@@ -504,7 +521,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string, strokeWidth?: number }): Compass {
+    setBands(bands: utils.Bands, opt?: { units?: string }): Compass {
         opt = opt || {};
         const normaliseCompassBand = (b: utils.FromTo[]) => {
             // normaliseRange converts range in bands to positive degrees (e.g., -10..0 becomes 350..360), and range.from is always < range.to 
@@ -546,30 +563,35 @@ export class Compass {
         this.bands.RECOVERY = normaliseCompassBand(bands.RECOVERY);
         this.bands.UNKNOWN = normaliseCompassBand(bands.UNKNOWN);
         // console.log("danti-compass-bands", this.bands);
-        this.draw_bands(opt);
-        this.resolutionBug.refresh();
+        this.resolutionBug.refresh(); // NB: the resolution bug needs to be updated before drawing bands
+        this.draw_bands();
         return this;
     }
     /**
      * Utility function, draws resolution bands over the compass
      **/
-    protected draw_bands (opt?: { strokeWidth?: number }) {
+    protected draw_bands () {
         let theHTML = "";
-        opt = opt || {};
+        // if wedge > 0 then band saturates red and notch is displayed on top
+        // otherwise bands are displayed as usual
+        const saturateRed: boolean = this.resolutionBug.getWedgeAperture() > 0
+            && this.bands && this.bands.RECOVERY && this.bands.RECOVERY.length > 0;
+
         const drawArc = (ctx: CanvasRenderingContext2D, from: number, to: number, alert: string) => {
             ctx.beginPath();
-            if (utils.bandColors[alert].style === "dash") {
+            if (utils.bandColors[alert].style === "dash" && !saturateRed) {
                 ctx.setLineDash([4, 8]);
             } else {
                 ctx.setLineDash([]);
             }
             ctx.arc(this.centerX, this.centerY, this.radius, utils.deg2rad(from) - Math.PI / 2, utils.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
-            ctx.lineWidth = opt.strokeWidth || this.strokeWidth;
-            ctx.strokeStyle = utils.bandColors[alert].color;
+            ctx.lineWidth = (saturateRed) ? doubleStroke : singleStroke;
+            ctx.strokeStyle = (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color;
             ctx.stroke();
         }
         const ctx: CanvasRenderingContext2D = this.canvas.getContext("2d");
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
         Object.keys(this.bands).forEach(alert => {
             const arcs: utils.FromTo[] = this.bands[alert];
             let segs = [];
