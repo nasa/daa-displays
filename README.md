@@ -21,7 +21,7 @@ The following software is necessary to compile and execute DAA-Displays
 
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
-2. Open a terminal window and change directory to the daadisplays folder.
+2. Open a terminal window and change directory to the daa-displays folder.
 3. Run `make` in the terminal window.
    This command will download the dependencies and create a folder `dist/` with the distribution.
 
