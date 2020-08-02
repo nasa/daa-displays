@@ -6,7 +6,7 @@ for cockpit systems, and simulations tools supporting comparative analysis of co
 ![](src/images/danti.gif "")
 
 ## Latest version
-daa-displays-1.0.9
+daa-displays-1.0.10
 
 ## Functionalities
 - Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
@@ -21,12 +21,12 @@ The following software is necessary to compile and execute DAA-Displays
 
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
-2. Open a terminal window and change directory to the daadisplays folder.
+2. Open a terminal window and change directory to the `daa-displays` folder.
 3. Run `make` in the terminal window.
    This command will download the dependencies and create a folder `dist/` with the distribution.
 
 ## Use instructions
-1. Open a terminal in the daadisplays folder, and run the bash script `./restart.sh` in the terminal window. The script will launch the daa-server on port 8082. *(Please keep the terminal window open otherwise the execution of the server will be terminated.)*
+1. Open a terminal in the `daa-displays` folder, and run the bash script `./restart.sh` in the terminal window. The script will launch the daa-server on port 8082. *(Please keep the terminal window open otherwise the execution of the server will be terminated.)*
 2. Open Google Chrome at http://localhost:8082
 3. Launch one of the DAA Apps (`DANTi`, `single-view`, etc.) by clicking on the corresponding icon.
 4. Select a flight scenario, a configuration, and a DAA specification using the drop-down menus provided by the App. Click `Load Selected Scenario and Configuration` to initialize the simulation.
@@ -39,6 +39,9 @@ The `./restart.sh` script supports the following options:
 - `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires PVS and NASALib)
 - `-fast`                (Enables optimizations, including caching of simulation results)
 - `-port <port number>`  (The server will use the given port)
+
+## Publications
+Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://doi.org/10.1007/978-3-030-50995-8_9), Proceedings of the 14th International Conference on Tests and Proofs (TAP 2020), Lecture Notes in Computer Science, Vol. 12165, pp. 155-166, 2020 [[PDF](https://shemesh.larc.nasa.gov/people/cam/publications/TAP2020-MM.pdf)][[BibTex](https://shemesh.larc.nasa.gov/people/cam/publications/TAP2020-MM.bib)]
 
 ## Use Cases
 The following examples illustrate concrete applications of the daa-displays toolkit for the analysis of DAA functions in cockpit displays.
@@ -102,8 +105,6 @@ To reproduce the demonstration shown in the figure:
 1. Launch the `3D view` app (see *Use instructions* above).
 2. Select flight scenario `scenario_6` and click `Load Selected Scenario and Configuration`.
 3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario. Position the mouse in the view and use mouse wheel to zoom in/out, use the central mouse button to tilt/pan the view.
-
-
 
 
 ## Structure
