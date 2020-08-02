@@ -148,14 +148,14 @@ export declare interface ResolutionElement {
 
 export declare type Polygon = LatLonAlt[];
 
-export declare interface AircraftCountourElement {
+export declare interface AircraftGeofenceElement {
     ac: string,
     polygons: Polygon[]
 }
 
-export declare interface ContourElement {
+export declare interface GeofenceElement {
     time: number,
-    data: AircraftCountourElement[]
+    data: AircraftGeofenceElement[]
 } 
 
 export declare interface DaidalusBandsDescriptor {
@@ -175,7 +175,7 @@ export declare interface DaidalusBandsDescriptor {
     "Heading Resolution": ResolutionElement[],
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
-    "Contours": ContourElement[],
+    "Contours": GeofenceElement[],
     Monitors: MonitorElement[];
 }
 

@@ -1,5 +1,5 @@
 import { MonitorElement, MonitorData, ResolutionElement } from "src/daa-server/utils/daa-server";
-import { ContourElement } from "./utils/daa-server";
+import { GeofenceElement } from "./utils/daa-server";
 
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
@@ -114,7 +114,8 @@ export interface DAABandsData {
     "Heading Resolution": ResolutionElement,
     "Horizontal Speed Resolution": ResolutionElement,
     "Vertical Speed Resolution": ResolutionElement,
-    "Contours": ContourElement,
+    Contours: GeofenceElement,
+    "Protected Areas": GeofenceElement,
     Monitors: MonitorElement[]
 };
 

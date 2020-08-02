@@ -410,7 +410,6 @@ export class InteractiveMap {
         this.airspace.streetMode();
         return this;
     }
-
     addGeoFence (
         id: string, 
         perimeter: utils.LatLon[] | serverInterface.LatLon[], 
@@ -425,15 +424,51 @@ export class InteractiveMap {
         this.airspace.addGeoFencePolygon(id, perimeter, floor, opt);
         return this;
     }
+    addContour (
+        id: string, 
+        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        floor: { top: number | string, bottom: number | string },
+        opt?: { 
+            opacity?: number, 
+            color?: { r: number, g: number, b: number },
+            fontScale?: number,
+            showLabel?: boolean
+        }
+    ): InteractiveMap {
+        return this.addGeoFence("c-" + id, perimeter, floor, opt);
+    }
+    addProtectedArea (
+        id: string, 
+        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        floor: { top: number | string, bottom: number | string },
+        opt?: { 
+            opacity?: number, 
+            color?: { r: number, g: number, b: number },
+            fontScale?: number,
+            showLabel?: boolean
+        }
+    ): InteractiveMap {
+        return this.addGeoFence("pa-" + id, perimeter, floor, opt);
+    }
     removeGeoFence (id?: string): InteractiveMap {
         this.airspace.removeGeoFencePolygon(id);
         return this;
     }
     showGeoFence (flag: boolean): InteractiveMap {
-        if (flag) {
-            this.airspace.revealGeoFence();
-        } else { this.airspace.hideGeoFence(); }
+        this.showContours(flag);
+        this.showProtectedAreas(flag);
         return this;
     }
-
+    showProtectedAreas (flag: boolean): InteractiveMap {
+        if (flag) {
+            this.airspace.revealProtectedAreas();
+        } else { this.airspace.hideProtectedAreas(); }
+        return this;
+    }
+    showContours (flag: boolean): InteractiveMap {
+        if (flag) {
+            this.airspace.revealContours();
+        } else { this.airspace.hideContours(); }
+        return this;
+    }
 }

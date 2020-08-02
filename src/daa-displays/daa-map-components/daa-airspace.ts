@@ -193,13 +193,16 @@ export class DAA_Airspace {
     protected nmi: number;
     protected _ownship: DAA_Aircraft;
     protected _traffic: DAA_Aircraft[];
-    protected geofence: GeoFence;
+
+    protected protectedAreas: GeoFence; // protected areas
+    protected contours: GeoFence; // conflict areas
 
     // layers
     protected terrainLayer: WorldWind.RenderableLayer;
     protected streetLayer: WorldWind.RenderableLayer;
     protected atmosphereLayer: WorldWind.RenderableLayer;
-    protected geofenceLayer: WorldWind.RenderableLayer;
+    protected protectedAreasLayer: WorldWind.RenderableLayer;
+    protected contoursLayer: WorldWind.RenderableLayer;
     protected losLayer: WorldWind.RenderableLayer;
     protected trafficLayer: WorldWind.RenderableLayer;
     protected ownshipLayer: WorldWind.RenderableLayer;
@@ -208,7 +211,8 @@ export class DAA_Airspace {
     protected godsView: boolean;
     protected callSignVisible: boolean = false;
     protected trafficVisible: boolean = true;
-    protected geofenceVisible: boolean = false;
+    protected protectedAreasVisible: boolean = false;
+    protected contoursVisible: boolean = false;
     protected _3dview: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
@@ -270,10 +274,16 @@ export class DAA_Airspace {
         }
 
         // create geofence layer
-        this.geofenceLayer = new WorldWind.RenderableLayer(`GeoFence Layer`);
-        this.geofenceLayer.enabled = true;
-        this.wwd.addLayer(this.geofenceLayer);
-        this.geofence = new GeoFence(this.geofenceLayer);
+        this.protectedAreasLayer = new WorldWind.RenderableLayer(`Protected Areas Layer`);
+        this.protectedAreasLayer.enabled = true;
+        this.wwd.addLayer(this.protectedAreasLayer);
+        this.protectedAreas = new GeoFence(this.protectedAreasLayer);
+
+        // create contours layer
+        this.contoursLayer = new WorldWind.RenderableLayer(`Contours Layer`);
+        this.contoursLayer.enabled = true;
+        this.wwd.addLayer(this.contoursLayer);
+        this.contours = new GeoFence(this.contoursLayer);
 
         // create LoS layer
         this.losLayer = new WorldWind.RenderableLayer(`LoS Layer`); // This layer is used to render the conflict regions between this aircraft and the ownship
@@ -403,8 +413,11 @@ export class DAA_Airspace {
         if (this._ownship) {
             this._ownship.setScale(NMI);
         }
-        if (this.geofence) {
-            this.geofence.setScale(NMI);
+        if (this.protectedAreas) {
+            this.protectedAreas.setScale(NMI);
+        }
+        if (this.contours) {
+            this.contours.setScale(NMI);
         }
         this.redraw();
         return this;
@@ -428,8 +441,11 @@ export class DAA_Airspace {
         if (this._ownship) {
             this._ownship.setScale(NMI);
         }
-        if (this.geofence) {
-            this.geofence.setScale(NMI);
+        if (this.protectedAreas) {
+            this.protectedAreas.setScale(NMI);
+        }
+        if (this.contours) {
+            this.contours.setScale(NMI);
         }
         return this.redraw();
     }
@@ -653,10 +669,15 @@ export class DAA_Airspace {
                 }
             }
         }
-        if (this.geofenceVisible) {
-            this.revealGeoFence();
+        if (this.protectedAreasVisible) {
+            this.revealProtectedAreas();
         } else {
-            this.hideGeoFence();
+            this.hideProtectedAreas();
+        }
+        if (this.contoursVisible) {
+            this.revealContours();
+        } else {
+            this.hideContours();
         }
         this.redraw();
         return this;
@@ -753,9 +774,8 @@ export class DAA_Airspace {
         }
         return this.redraw();
     }
-
     addGeoFencePolygon (
-        id: string, 
+        id: string,
         perimeter: utils.LatLon[] | serverInterface.LatLon[], 
         floor: { top: number | string, bottom: number | string }, 
         opt?: {
@@ -765,33 +785,68 @@ export class DAA_Airspace {
             showLabel?: boolean
         }
     ) : DAA_Airspace {
-        if (this.geofence) {
-            this.geofence.addPolygon2D(id, perimeter, floor, opt);
+        if (id && id.startsWith("c-") && this.contours) {
+            this.contours.addPolygon2D(id, perimeter, floor, opt);
             this.redraw();
+        } else {
+            if (this.protectedAreas) {
+                this.protectedAreas.addPolygon2D(id, perimeter, floor, opt);
+                this.redraw();
+            }
         }
         return this;
     }
     removeGeoFencePolygon (id?: string) : DAA_Airspace {
-        if (this.geofence) {
-            this.geofence.removePolygon(id);
+        if (this.protectedAreas) {
+            this.protectedAreas.removePolygon(id);
+            this.redraw();
+        }
+        if (this.contours) {
+            this.contours.removePolygon(id);
+            this.redraw();
+        }
+        return this;
+    }
+    revealProtectedAreas (): DAA_Airspace {
+        this.protectedAreasVisible = true;
+        if (this.protectedAreas) {
+            this.protectedAreas.reveal();
+            this.redraw();
+        }
+        return this;
+    }
+    revealContours (): DAA_Airspace {
+        this.contoursVisible = true;
+        if (this.contours) {
+            this.contours.reveal();
             this.redraw();
         }
         return this;
     }
     revealGeoFence () : DAA_Airspace {
-        this.geofenceVisible = true;
-        if (this.geofence) {
-            this.geofence.reveal();
+        this.revealProtectedAreas();
+        this.revealContours();
+        return this;
+    }
+    hideProtectedAreas (): DAA_Airspace {
+        this.protectedAreasVisible = false;
+        if (this.protectedAreas) {
+            this.protectedAreas.hide();
+            this.redraw();
+        }
+        return this;
+    }
+    hideContours (): DAA_Airspace {
+        this.contoursVisible = false;
+        if (this.contours) {
+            this.contours.hide();
             this.redraw();
         }
         return this;
     }
     hideGeoFence () : DAA_Airspace {
-        this.geofenceVisible = false;
-        if (this.geofence) {
-            this.geofence.hide();
-            this.redraw();
-        }
+        this.hideProtectedAreas();
+        this.hideContours();
         return this;
     }
 }

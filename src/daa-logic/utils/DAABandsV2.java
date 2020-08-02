@@ -235,18 +235,7 @@ public class DAABandsV2 {
 			String res = "";
 			for (int i = 0; i < n; i++) {
 				List<Position> ply = polygons.get(i);
-				int m = ply.size();
-				String polygon = "";
-				for (int j = 0; j < m; j++) {
-					Position pi = ply.get(j);
-					LatLonAlt lla = getLatLonAlt(pi, po);
-					polygon += "\t\t{ \"lat\": \"" + Units.to("deg", lla.lat());
-					polygon += "\", \"lon\": \"" + Units.to("deg", lla.lon()); 
-					polygon += "\", \"alt\": \"" + Units.to("ft", lla.alt());
-					polygon += "\" }";
-					if (j < m - 1) { polygon += ",\n"; }
-				}
-				polygon = "\t[\n" + polygon + "\n\t]";
+				String polygon = printPolygon(ply, po);
 				if (i < n - 1) { polygon += ",\n"; }
 				res += polygon;
 			}
@@ -255,12 +244,31 @@ public class DAABandsV2 {
 		return "[ ]";
 	}
 
+	protected String printPolygon (List<Position> ply, Position po) {
+		String polygon = "";
+		if (ply != null) {
+			int m = ply.size();
+			for (int j = 0; j < m; j++) {
+				Position pi = ply.get(j);
+				LatLonAlt lla = getLatLonAlt(pi, po);
+				polygon += "\t\t{ \"lat\": \"" + Units.to("deg", lla.lat());
+				polygon += "\", \"lon\": \"" + Units.to("deg", lla.lon()); 
+				polygon += "\", \"alt\": \"" + Units.to("ft", lla.alt());
+				polygon += "\" }";
+				if (j < m - 1) { polygon += ",\n"; }
+			}
+			polygon = "\t[\n" + polygon + "\n\t]";
+			return polygon;
+		}
+		return "\t[]";
+	}
+
 	protected String jsonBands (
 		DAAMonitorsV2 monitors,
 		ArrayList<String> ownshipArray,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
-		ArrayList<String> contoursArray,
+		ArrayList<String> contoursArray, ArrayList<String> protectedAreasArray,
 		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
 	) {
 		String hs_units = daa.getUnitsOf("step_hs");
@@ -409,7 +417,7 @@ public class DAABandsV2 {
 		altResolution += " }";
 		resAltArray.add(altResolution);
 
-		// Contours are lists of polygons, and polygons are list of points.
+		// Contours and protected areas are lists of polygons, and polygons are list of points.
 		Position po = daa.getAircraftStateAt(0).getPosition();
 		String contours =  "{ \"time\": " + time;
 		contours += ",\n  \"data\": [ ";
@@ -425,6 +433,28 @@ public class DAABandsV2 {
 		}
 		contours += " ]}";
 		contoursArray.add(contours);
+
+		String protectedAreas =  "{ \"time\": " + time;
+		protectedAreas += ",\n  \"data\": [ ";
+		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
+			String ac_name = daa.getAircraftStateAt(ac).getId();
+
+			List<Position> ply_violation = new ArrayList<Position>();
+			daa.horizontalProtectedArea(ply_violation, ac, true, false);
+			List<Position> ply_conflict = new ArrayList<Position>();
+			daa.horizontalProtectedArea(ply_conflict, ac, false, false);
+			ArrayList<List<Position>> polygons = new ArrayList<List<Position>>();
+			polygons.add(ply_violation);
+			polygons.add(ply_conflict);
+
+			protectedAreas += "{ \"ac\": \"" + ac_name + "\",\n";
+			protectedAreas +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
+			if (ac < daa.lastTrafficIndex()) {
+				protectedAreas += ", ";
+			}
+		}
+		protectedAreas += " ]}";
+		protectedAreasArray.add(protectedAreas);
 
 		// monitors
 		monitors.check();
@@ -492,6 +522,7 @@ public class DAABandsV2 {
 		ArrayList<String> resAltArray = new ArrayList<String>();
 
 		ArrayList<String> contoursArray = new ArrayList<String>();
+		ArrayList<String> protectedAreasArray = new ArrayList<String>();
 
 		DAAMonitorsV2 monitors = new DAAMonitorsV2(daa);
 
@@ -510,7 +541,7 @@ public class DAABandsV2 {
 				ownshipArray, alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
-				contoursArray,
+				contoursArray, protectedAreasArray,
 				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
 			);
 		}
@@ -539,6 +570,8 @@ public class DAABandsV2 {
 		printWriter.println(",");
 
 		DAABandsV2.printArray(printWriter, contoursArray, "Contours");
+		printWriter.println(",");
+		DAABandsV2.printArray(printWriter, protectedAreasArray, "Protected Areas");
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");

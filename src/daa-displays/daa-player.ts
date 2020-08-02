@@ -1536,6 +1536,7 @@ export class DAAPlayer {
                         "Horizontal Speed Resolution": null,
                         "Vertical Speed Resolution": null,
                         Contours: null,
+                        "Protected Areas": null,
                         Monitors: []
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
@@ -1572,6 +1573,10 @@ export class DAAPlayer {
                             // copy contours
                             res.Contours = this._bands.Contours[step];
                         }
+                        if (this._bands["Protected Areas"] && step < this._bands["Protected Areas"].length) {
+                            // copy protected areas
+                            res["Protected Areas"] = this._bands["Protected Areas"][step];
+                        }
                         if (this._bands.Monitors) {
                             // copy monitors
                             res.Monitors = this._bands.Monitors;
@@ -1605,6 +1610,7 @@ export class DAAPlayer {
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
             Contours: null,
+            "Protected Areas": null,
             Monitors: []
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
@@ -1648,6 +1654,10 @@ export class DAAPlayer {
                 if (this._bands.Contours && this.simulationStep < this._bands.Contours.length) {
                     // copy contours
                     res.Contours = this._bands.Contours[this.simulationStep];
+                }
+                if (this._bands["Protected Areas"] && this.simulationStep < this._bands["Protected Areas"].length) {
+                    // copy protected areas
+                    res["Protected Areas"] = this._bands["Protected Areas"][this.simulationStep];
                 }
                 if (this._bands.Monitors) {
                     // copy monitors
@@ -2147,7 +2157,7 @@ export class DAAPlayer {
                 const selectedWellClear: string = this.getSelectedWellClearVersion();
                 const wind: { knot: string, deg: string } = this.getSelectedWindSettings();
                 const scenario: string = (wind && wind.knot) ? `${selectedScenario} (wind ${wind.deg}deg ${wind.knot}knot)` : selectedScenario;
-                this._plot[plotID].setOverheadLabel(`${scenario} - ${selectedWellClear.replace("WellClear", "DAIDALUS")} - ${selectedConfiguration}`);
+                this._plot[plotID].setOverheadLabel(`${selectedWellClear.replace("WellClear", "DAIDALUS")} - ${selectedConfiguration} - ${scenario}`);
             });
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());

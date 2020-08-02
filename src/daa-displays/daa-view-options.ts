@@ -3,7 +3,7 @@ import * as templates from './templates/daa-view-options-templates';
 import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
-export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours";
+export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "protected-areas";
 
 export class ViewOptions {
     protected id: string;
@@ -147,7 +147,11 @@ export class ViewOptions {
                 break;
             }
             case "contours": {
-                if (this.map) { this.map.showGeoFence(true); }
+                if (this.map) { this.map.showContours(true); }
+                break;
+            }
+            case "protected-areas": {
+                if (this.map) { this.map.showProtectedAreas(true); }
                 break;
             }
             default: // do nothing
@@ -177,7 +181,11 @@ export class ViewOptions {
                 break;
             }
             case "contours": {
-                if (this.map) { this.map.showGeoFence(false); }
+                if (this.map) { this.map.showContours(false); }
+                break;
+            }
+            case "protected-areas": {
+                if (this.map) { this.map.showProtectedAreas(false); }
                 break;
             }
             default: // do nothing
