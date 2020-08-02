@@ -186,7 +186,7 @@ public class DAABandsV2 {
 	boolean loadWind () {
 		if (daa != null) {
 			if (wind != null) {
-				System.out.println("Loading wind " + wind);
+				// System.out.println("Loading wind " + wind);
 				double deg = 0;
 				double knot = 0;
 				double fpm = 0;

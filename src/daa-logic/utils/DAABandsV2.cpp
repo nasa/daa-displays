@@ -602,7 +602,7 @@ public:
 
 	bool loadWind () {
 		if (!wind.empty()) {
-			std::cout << "Loading wind " << wind << std::endl;
+			// std::cout << "Loading wind " << wind << std::endl;
 			double deg = 0;
 			double knot = 0;
 			double fpm = 0;

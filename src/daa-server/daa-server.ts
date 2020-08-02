@@ -11,6 +11,8 @@ import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
 
+const VERBOSE: boolean = false;
+
 const helpMsg: string = `
   Usage: node daa-server.js [options]
   Options:
@@ -19,7 +21,6 @@ const helpMsg: string = `
     -fast                (Enables optimizations, including caching of simulation results)
     -port <port number>  (The server will use the given port)
 `;
-
 
 class DAAServer {
     pvsioPath: string = null;
@@ -111,7 +112,9 @@ class DAAServer {
                 if (content.time) {
                     content.time.server = { sent: new Date().toISOString() };
                 }
-                console.dir(content, { depth: null });
+                if (VERBOSE) {
+                    console.dir(content, { depth: null });
+                }
                 wsocket.send(JSON.stringify(content));
                 console.log(`${msg} sent`);
             }
@@ -469,7 +472,9 @@ class DAAServer {
                         console.error(`Error while reading scenario folder`, listError);
                     } finally {
                         content.data = JSON.stringify(daaFiles);
-                        console.dir(content.data, { depth: null });
+                        if (VERBOSE) {
+                            console.dir(content.data, { depth: null });
+                        }
                         this.trySend(wsocket, content, "daa file list");
                     }
                     break;
@@ -483,7 +488,9 @@ class DAAServer {
                         console.error(`Error while reading scenario folder`, listError);
                     } finally {
                         content.data = JSON.stringify(icFiles);
-                        console.dir(content.data, { depth: null });
+                        if (VERBOSE) {
+                            console.dir(content.data, { depth: null });
+                        }
                         this.trySend(wsocket, content, "ic file list");
                     }
                     break;
@@ -498,7 +505,9 @@ class DAAServer {
                         console.error(`Error while reading configuratios folder`, confError);
                     } finally {
                         content.data = JSON.stringify(confFiles);
-                        console.dir(content.data, { depth: null });
+                        if (VERBOSE) {
+                            console.dir(content.data, { depth: null });
+                        }
                         this.trySend(wsocket, content, "configurations file list");
                     }
                     break;
@@ -516,7 +525,9 @@ class DAAServer {
                         try {
                             const fileContent = fs.readFileSync(path.join(configurationsFolder, configName)).toLocaleString().trim();
                             // parse band parameters from the file content
-                            console.dir(fileContent, { depth: null });
+                            if (VERBOSE) {
+                                console.dir(fileContent, { depth: null });
+                            }
                             const min_hs: RegExpMatchArray = /\bmin_hs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
                             const max_hs: RegExpMatchArray = /\bmax_hs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
                             const min_gs: RegExpMatchArray = /\bmin_gs\b\s*=\s*([\-\d\.]+)\s*\[([\w\/]+)\]/.exec(fileContent);
@@ -547,7 +558,9 @@ class DAAServer {
                         } catch (loadConfFileError) {
                             console.error(`Error while reading configuratios file ${configName}`, loadConfFileError);
                         } finally {
-                            console.dir(content.data, { depth: null });
+                            if (VERBOSE) {
+                                console.dir(content.data, { depth: null });
+                            }
                             this.trySend(wsocket, content, `.conf file ${configName}`);
                         }
                     } else {
