@@ -3,7 +3,7 @@ import * as templates from './templates/daa-view-options-templates';
 import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
-export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "protected-areas";
+export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "hazard-zones";
 
 export class ViewOptions {
     protected id: string;
@@ -150,8 +150,8 @@ export class ViewOptions {
                 if (this.map) { this.map.showContours(true); }
                 break;
             }
-            case "protected-areas": {
-                if (this.map) { this.map.showProtectedAreas(true); }
+            case "hazard-zones": {
+                if (this.map) { this.map.showHazardZones(true); }
                 break;
             }
             default: // do nothing
@@ -184,8 +184,8 @@ export class ViewOptions {
                 if (this.map) { this.map.showContours(false); }
                 break;
             }
-            case "protected-areas": {
-                if (this.map) { this.map.showProtectedAreas(false); }
+            case "hazard-zones": {
+                if (this.map) { this.map.showHazardZones(false); }
                 break;
             }
             default: // do nothing

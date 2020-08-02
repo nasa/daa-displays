@@ -456,13 +456,13 @@ export class InteractiveMap {
     }
     showGeoFence (flag: boolean): InteractiveMap {
         this.showContours(flag);
-        this.showProtectedAreas(flag);
+        this.showHazardZones(flag);
         return this;
     }
-    showProtectedAreas (flag: boolean): InteractiveMap {
+    showHazardZones (flag: boolean): InteractiveMap {
         if (flag) {
-            this.airspace.revealProtectedAreas();
-        } else { this.airspace.hideProtectedAreas(); }
+            this.airspace.revealHazardZones();
+        } else { this.airspace.hideHazardZones(); }
         return this;
     }
     showContours (flag: boolean): InteractiveMap {

@@ -133,19 +133,19 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 }
             }
         }
-        // set protected areas
-        if (bands && bands["Protected Areas"] && bands["Protected Areas"].data) {
-            for (let i = 0; i < bands["Protected Areas"].data.length; i++) {
-                if (bands["Protected Areas"].data[i].polygons) {
-                    for (let j = 0; j < bands["Protected Areas"].data[i].polygons.length; j++) {
-                        const perimeter: serverInterface.LatLonAlt[] = bands["Protected Areas"].data[i].polygons[j];
+        // set hazard zones
+        if (bands && bands["Hazard Zones"] && bands["Hazard Zones"].data) {
+            for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
+                if (bands["Hazard Zones"].data[i].polygons) {
+                    for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
+                        const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
                         if (perimeter && perimeter.length) {
                             const floor: { top: number, bottom: number } = {
                                 top: +perimeter[0].alt + 20,
                                 bottom: +perimeter[0].alt - 20
                             }
                             // add geofence to the map
-                            data.map.addProtectedArea(`${bands["Protected Areas"].data[i].ac}-${i}-${j}`, perimeter, floor, {
+                            data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
                                 showLabel: false
                             });
                         }
@@ -243,7 +243,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "protected-areas"
+        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });

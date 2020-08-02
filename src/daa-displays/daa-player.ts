@@ -1536,7 +1536,7 @@ export class DAAPlayer {
                         "Horizontal Speed Resolution": null,
                         "Vertical Speed Resolution": null,
                         Contours: null,
-                        "Protected Areas": null,
+                        "Hazard Zones": null,
                         Monitors: []
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
@@ -1573,9 +1573,9 @@ export class DAAPlayer {
                             // copy contours
                             res.Contours = this._bands.Contours[step];
                         }
-                        if (this._bands["Protected Areas"] && step < this._bands["Protected Areas"].length) {
-                            // copy protected areas
-                            res["Protected Areas"] = this._bands["Protected Areas"][step];
+                        if (this._bands["Hazard Zones"] && step < this._bands["Hazard Zones"].length) {
+                            // copy hazard zones
+                            res["Hazard Zones"] = this._bands["Hazard Zones"][step];
                         }
                         if (this._bands.Monitors) {
                             // copy monitors
@@ -1610,7 +1610,7 @@ export class DAAPlayer {
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
             Contours: null,
-            "Protected Areas": null,
+            "Hazard Zones": null,
             Monitors: []
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
@@ -1655,9 +1655,9 @@ export class DAAPlayer {
                     // copy contours
                     res.Contours = this._bands.Contours[this.simulationStep];
                 }
-                if (this._bands["Protected Areas"] && this.simulationStep < this._bands["Protected Areas"].length) {
-                    // copy protected areas
-                    res["Protected Areas"] = this._bands["Protected Areas"][this.simulationStep];
+                if (this._bands["Hazard Zones"] && this.simulationStep < this._bands["Hazard Zones"].length) {
+                    // copy hazard zones
+                    res["Hazard Zones"] = this._bands["Hazard Zones"][this.simulationStep];
                 }
                 if (this._bands.Monitors) {
                     // copy monitors

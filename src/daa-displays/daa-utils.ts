@@ -115,7 +115,7 @@ export interface DAABandsData {
     "Horizontal Speed Resolution": ResolutionElement,
     "Vertical Speed Resolution": ResolutionElement,
     Contours: GeofenceElement,
-    "Protected Areas": GeofenceElement,
+    "Hazard Zones": GeofenceElement,
     Monitors: MonitorElement[]
 };
 

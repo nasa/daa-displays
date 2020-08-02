@@ -268,7 +268,7 @@ public class DAABandsV2 {
 		ArrayList<String> ownshipArray,
 		ArrayList<String> alertsArray, ArrayList<String> trkArray, ArrayList<String> gsArray, ArrayList<String> vsArray, ArrayList<String> altArray, 
 		ArrayList<String> resTrkArray, ArrayList<String> resGsArray, ArrayList<String> resVsArray, ArrayList<String> resAltArray, 
-		ArrayList<String> contoursArray, ArrayList<String> protectedAreasArray,
+		ArrayList<String> contoursArray, ArrayList<String> hazardZonesArray,
 		ArrayList<String> monitorM1Array, ArrayList<String> monitorM2Array, ArrayList<String> monitorM3Array, ArrayList<String> monitorM4Array 
 	) {
 		String hs_units = daa.getUnitsOf("step_hs");
@@ -417,7 +417,7 @@ public class DAABandsV2 {
 		altResolution += " }";
 		resAltArray.add(altResolution);
 
-		// Contours and protected areas are lists of polygons, and polygons are list of points.
+		// Contours and hazard zones are lists of polygons, and polygons are list of points.
 		Position po = daa.getAircraftStateAt(0).getPosition();
 		String contours =  "{ \"time\": " + time;
 		contours += ",\n  \"data\": [ ";
@@ -434,27 +434,27 @@ public class DAABandsV2 {
 		contours += " ]}";
 		contoursArray.add(contours);
 
-		String protectedAreas =  "{ \"time\": " + time;
-		protectedAreas += ",\n  \"data\": [ ";
+		String hazardZones =  "{ \"time\": " + time;
+		hazardZones += ",\n  \"data\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 
 			List<Position> ply_violation = new ArrayList<Position>();
-			daa.horizontalProtectedArea(ply_violation, ac, true, false);
+			daa.horizontalHazardZone(ply_violation, ac, true, false);
 			List<Position> ply_conflict = new ArrayList<Position>();
-			daa.horizontalProtectedArea(ply_conflict, ac, false, false);
+			daa.horizontalHazardZone(ply_conflict, ac, false, false);
 			ArrayList<List<Position>> polygons = new ArrayList<List<Position>>();
 			polygons.add(ply_violation);
 			polygons.add(ply_conflict);
 
-			protectedAreas += "{ \"ac\": \"" + ac_name + "\",\n";
-			protectedAreas +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
+			hazardZones += "{ \"ac\": \"" + ac_name + "\",\n";
+			hazardZones +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
-				protectedAreas += ", ";
+				hazardZones += ", ";
 			}
 		}
-		protectedAreas += " ]}";
-		protectedAreasArray.add(protectedAreas);
+		hazardZones += " ]}";
+		hazardZonesArray.add(hazardZones);
 
 		// monitors
 		monitors.check();
@@ -522,7 +522,7 @@ public class DAABandsV2 {
 		ArrayList<String> resAltArray = new ArrayList<String>();
 
 		ArrayList<String> contoursArray = new ArrayList<String>();
-		ArrayList<String> protectedAreasArray = new ArrayList<String>();
+		ArrayList<String> hazardZonesArray = new ArrayList<String>();
 
 		DAAMonitorsV2 monitors = new DAAMonitorsV2(daa);
 
@@ -541,7 +541,7 @@ public class DAABandsV2 {
 				ownshipArray, alertsArray, 
 				trkArray, gsArray, vsArray, altArray, 
 				resTrkArray, resGsArray, resVsArray, resAltArray, 
-				contoursArray, protectedAreasArray,
+				contoursArray, hazardZonesArray,
 				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
 			);
 		}
@@ -571,7 +571,7 @@ public class DAABandsV2 {
 
 		DAABandsV2.printArray(printWriter, contoursArray, "Contours");
 		printWriter.println(",");
-		DAABandsV2.printArray(printWriter, protectedAreasArray, "Protected Areas");
+		DAABandsV2.printArray(printWriter, hazardZonesArray, "Hazard Zones");
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");
