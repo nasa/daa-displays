@@ -425,7 +425,7 @@ async function createPlayer() {
         top: 48,
         left: 754,
         width: 344,
-        hidden: true
+        hidden: false
     });
     await player.activate({ developerMode: true });
 }

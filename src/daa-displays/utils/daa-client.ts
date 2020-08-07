@@ -1,3 +1,5 @@
+import { DaidalusBandsDescriptor } from "./daa-server";
+
 /**
  * Basic websocket client for interacting with the pvsio-web server
  * @author Paolo Masci
@@ -45,6 +47,23 @@ export class DAAClient {
     async send (token): Promise<any> {
         if (this.ws) {
             return new Promise((resolve, reject) => {
+                let desc: DaidalusBandsDescriptor = {
+                    Info: null,
+                    Ownship: null,
+                    Wind: null, // FROM
+                    Scenario: null,
+                    Alerts: null, // alerts over time
+                    "Heading Bands": null, // bands over time
+                    "Horizontal Speed Bands": null,
+                    "Vertical Speed Bands": null,
+                    "Altitude Bands": null,
+                    "Altitude Resolution": null,
+                    "Heading Resolution": null,
+                    "Horizontal Speed Resolution": null,
+                    "Vertical Speed Resolution": null,
+                    "Contours": null,
+                    Monitors: null
+                };
                 this.ws.onmessage = function (evt) {
                     const token = JSON.parse(evt.data);
                     if (token && token.time && token.time.client) {
@@ -53,7 +72,17 @@ export class DAAClient {
                         if (token.type.indexOf("_error") >= 0) {
                             console.error(token); // errors should always be reported in the browser console
                         }
-                        resolve(token);
+                        if (token && token.type === "exec") {
+                            // will receive DaidalusBandsDescriptor components
+                            const data: { key: string, val: any, idx: number, tot: number } = token.data;
+                            desc[data.key] = data.val;
+                            if (data.idx === data.tot - 1) {
+                                token.data = desc;
+                                resolve(token);
+                            }
+                        } else {
+                            resolve(token);
+                        }
                     } else {
                         console.warn("token does not include timestamp from client?", token);
                     }

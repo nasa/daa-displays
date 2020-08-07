@@ -226,7 +226,11 @@ export const developersControls: string = `
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">
     <div class="input-group-text" style="width:{{width}}px;">
       <input id="{{id}}-developer-mode-checkbox" type="checkbox" aria-label="Enable developer mode">
-      <span style="margin-left: 4px;">Developer mode</span>
+      <span style="margin-left:4px; margin-right:28px;">Developer mode</span>
+    </div>
+    <div class="input-group-text" style="width:{{width}}px;">
+      <input id="{{id}}-show-plots-checkbox" type="checkbox" checked="true" aria-label="Show plot diagrams">
+      <span style="margin-left:4px; margin-right:14px;">Show plot diagrams</span>
     </div>
   </div>
 </div>`;

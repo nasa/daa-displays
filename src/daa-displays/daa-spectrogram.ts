@@ -189,10 +189,20 @@ export class DAASpectrogram {
         } : { top: null, left: null };
         this.time = opt.time;
         this.overheadLabel = !!opt.overheadLabel;
-        this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2, top: this.top, left: this.left });
+        this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2, top: this.top, left: this.left, class: "daa-spectrogram" });
         const theHTML = this.compileHTML();
         $(this.div).html(theHTML);
         this.player = opt.player;
+    }
+    hide (): void {
+        if (this.div) {
+            $(this.div).css({ display: "none" });
+        }
+    }
+    reveal (): void {
+        if (this.div) {
+            $(this.div).css({ display: "block" });
+        }
     }
     protected installGotoHandler(step: number): void {
         if (this.player) {

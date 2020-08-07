@@ -601,6 +601,14 @@ export class DAAPlayer {
                 this.clickNormalMode();
             }
         });
+        $(`#${this.id}-show-plots-checkbox`).on("change", () => {
+            const isChecked = $(`#${this.id}-show-plots-checkbox`).prop("checked");
+            if (isChecked) {
+                this.clickShowPlots();
+            } else {
+                this.clickHidePlots();
+            }
+        });
     }
 
     /**
@@ -661,6 +669,16 @@ export class DAAPlayer {
         if (this.developerControls.normalMode) {
             this.developerControls.normalMode();
         }
+    }
+
+    clickShowPlots (): void {
+        $(`#${this.id}-show-plots-checkbox`).prop("checked", true);
+        $(`.daa-spectrogram`).css({ display: "block" });
+    }
+
+    clickHidePlots (): void {
+        $(`#${this.id}-show-plots-checkbox`).prop("checked", false);
+        $(`.daa-spectrogram`).css({ display: "none" });
     }
 
     /**
@@ -1165,10 +1183,10 @@ export class DAAPlayer {
         });
         try {
             if (res && res.data) {
-                const data: DaidalusBandsDescriptor = JSON.parse(res.data);
+                const data: DaidalusBandsDescriptor = res.data;
                 this._bands = data;
             }
-            console.log("WellClear data ready!", this._bands);
+            console.log("WellClear data ready!");//, this._bands);
             return {
                 err: res.err,
                 bands: (this._bands) ? this._bands : null

@@ -6,7 +6,7 @@ import * as path from 'path';
 import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
-import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile } from './utils/daa-server';
+import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile, DaidalusBandsDescriptor } from './utils/daa-server';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
@@ -300,8 +300,18 @@ class DAAServer {
                                 }
                                 try {
                                     const buf: Buffer = fs.readFileSync(path.join(outputFolder, bandsFile));
-                                    content.data = buf.toLocaleString();
-                                    this.trySend(wsocket, content, "daa bands");
+                                    const desc: DaidalusBandsDescriptor = JSON.parse(buf.toLocaleString());
+                                    // content.data = buf.toLocaleString();
+                                    const keys: string[] = Object.keys(desc);
+                                    for (let i = 0; i < keys.length; i++) {
+                                        content.data = {
+                                            key: keys[i],
+                                            val: desc[keys[i]],
+                                            idx: i,
+                                            tot: keys.length
+                                        };
+                                        this.trySend(wsocket, content, `daa bands (part ${i + 1} of ${keys.length}, ${keys[i]})`);
+                                    }
                                 } catch (readError) {
                                     console.error(`Error while reading daa bands file ${path.join(outputFolder, bandsFile)}`);
                                     this.trySend(wsocket, null, "daa bands");

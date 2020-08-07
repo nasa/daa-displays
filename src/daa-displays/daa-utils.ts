@@ -167,11 +167,12 @@ export function limit(min: number, max: number, name?: string): (val: number) =>
     };
 };
 
-export function createDiv(id: string, opt?: { zIndex?: number, top?: number, left?: number, parent?: string }): HTMLElement {
+export function createDiv(id: string, opt?: { zIndex?: number, top?: number, left?: number, parent?: string, class?: string }): HTMLElement {
     opt = opt || {};
     opt.zIndex = opt.zIndex || 0;
     const div: JQuery<HTMLElement> = $('<div></div>');//document.createElement("div");
     $(div).css("position", "absolute").css("height", "0px").css("width", "0px").attr("id", id).css("z-index", opt.zIndex);
+    if (opt.class) { $(div).addClass(opt.class); }
     if (opt.top) { $(div).css("top", opt.top + "px"); }
     if (opt.left) { $(div).css("left", opt.left + "px"); }
     const parentDIV: JQuery<HTMLElement> = (opt.parent && $(`#${opt.parent}`).length) ? $(`#${opt.parent}`) : $('BODY');
