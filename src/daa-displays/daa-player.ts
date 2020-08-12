@@ -844,7 +844,7 @@ export class DAAPlayer {
         await this.connectToServer();
         const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
-            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
+            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
         }
@@ -1165,7 +1165,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
-            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
+            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: { 
                 knot: (data.wind && data.wind.knot) ? data.wind.knot : "0",
@@ -1223,7 +1223,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
-            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
+            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
         }
