@@ -1,41 +1,41 @@
 /**
 
-Notices:
+   Notices:
 
-Copyright 2016 United States Government as represented by the
-Administrator of the National Aeronautics and Space Administration. No
-copyright is claimed in the United States under Title 17,
-U.S. Code. All Other Rights Reserved.
+   Copyright 2016 United States Government as represented by the
+   Administrator of the National Aeronautics and Space Administration. No
+   copyright is claimed in the United States under Title 17,
+   U.S. Code. All Other Rights Reserved.
 
-Disclaimers
+   Disclaimers
 
-No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY
-WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY,
-INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE
-WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM
-INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR
-FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO
-THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER,
-CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT
-OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY
-OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.
-FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES
-REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE,
-AND DISTRIBUTES IT "AS IS."
+   No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY
+   WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY,
+   INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE
+   WILL CONFORM TO SPECIFICATIONS, ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR FREEDOM FROM
+   INFRINGEMENT, ANY WARRANTY THAT THE SUBJECT SOFTWARE WILL BE ERROR
+   FREE, OR ANY WARRANTY THAT DOCUMENTATION, IF PROVIDED, WILL CONFORM TO
+   THE SUBJECT SOFTWARE. THIS AGREEMENT DOES NOT, IN ANY MANNER,
+   CONSTITUTE AN ENDORSEMENT BY GOVERNMENT AGENCY OR ANY PRIOR RECIPIENT
+   OF ANY RESULTS, RESULTING DESIGNS, HARDWARE, SOFTWARE PRODUCTS OR ANY
+   OTHER APPLICATIONS RESULTING FROM USE OF THE SUBJECT SOFTWARE.
+   FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES
+   REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE,
+   AND DISTRIBUTES IT "AS IS."
 
-Waiver and Indemnity: RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS
-AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND
-SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF
-THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES,
-EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM
-PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT
-SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED
-STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY
-PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE
-REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
-TERMINATION OF THIS AGREEMENT.
- **/
+   Waiver and Indemnity: RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS
+   AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND
+   SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF
+   THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES,
+   EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM
+   PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT
+   SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED
+   STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY
+   PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE
+   REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
+   TERMINATION OF THIS AGREEMENT.
+**/
 
 import java.util.ArrayList;
 
@@ -106,72 +106,68 @@ public class DAAMonitorsV2 {
     }
 
     
-    DAAMonitorsV2 (Daidalus daa) {
-        this.daa = daa;
+    DAAMonitorsV2 (Daidalus daidalus) {
+        daa = daidalus;
     }
 
     void check () {
-        this.computeResolutions();
-        this.computeCurrentRegions();
+        computeResolutions();
+        computeCurrentRegions();
     } 
 
     protected void computeResolutions () {
-        Boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		resolutionTrk = daa.horizontalDirectionResolution(preferredTrk);
-		regionTrk = daa.regionOfHorizontalDirection(resolutionTrk);
-		resolutionTrk_other = daa.horizontalDirectionResolution(!preferredTrk);
-		regionTrk_other = daa.regionOfHorizontalDirection(resolutionTrk_other);
+        boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
+	resolutionTrk = daa.horizontalDirectionResolution(preferredTrk);
+	regionTrk = daa.regionOfHorizontalDirection(resolutionTrk);
+	resolutionTrk_other = daa.horizontalDirectionResolution(!preferredTrk);
+	regionTrk_other = daa.regionOfHorizontalDirection(resolutionTrk_other);
 
-		Boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
-		resolutionGs = daa.horizontalSpeedResolution(preferredGs);
-		regionGs = daa.regionOfHorizontalSpeed(resolutionGs);
-		resolutionGs_other = daa.horizontalSpeedResolution(!preferredGs);
-		regionGs_other = daa.regionOfHorizontalSpeed(resolutionGs_other);
+	boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
+	resolutionGs = daa.horizontalSpeedResolution(preferredGs);
+	regionGs = daa.regionOfHorizontalSpeed(resolutionGs);
+	resolutionGs_other = daa.horizontalSpeedResolution(!preferredGs);
+	regionGs_other = daa.regionOfHorizontalSpeed(resolutionGs_other);
 
-        Boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
-		resolutionVs = daa.verticalSpeedResolution(preferredVs);
-		regionVs = daa.regionOfVerticalSpeed(resolutionVs);
-		resolutionVs_other = daa.verticalSpeedResolution(!preferredVs);
-		regionVs_other = daa.regionOfVerticalSpeed(resolutionVs_other);
+        boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
+	resolutionVs = daa.verticalSpeedResolution(preferredVs);
+	regionVs = daa.regionOfVerticalSpeed(resolutionVs);
+	resolutionVs_other = daa.verticalSpeedResolution(!preferredVs);
+	regionVs_other = daa.regionOfVerticalSpeed(resolutionVs_other);
 
-        Boolean preferredAlt = daa.preferredAltitudeUpOrDown();
-		resolutionAlt = daa.altitudeResolution(preferredAlt);
-		regionAlt = daa.regionOfAltitude(resolutionAlt);
+        boolean preferredAlt = daa.preferredAltitudeUpOrDown();
+	resolutionAlt = daa.altitudeResolution(preferredAlt);
+	regionAlt = daa.regionOfAltitude(resolutionAlt);
         resolutionAlt_other = daa.altitudeResolution(!preferredAlt);
-		regionAlt_other = daa.regionOfAltitude(resolutionAlt_other);
+	regionAlt_other = daa.regionOfAltitude(resolutionAlt_other);
     }
 
     protected void computeCurrentRegions () {
         double heading = daa.getOwnshipState().horizontalDirection();
         currentRegionTrk = daa.regionOfHorizontalDirection(heading);
-        // System.out.println("heading: " + heading + " region: " + currentRegionTrk);
 
         double hspeed = daa.getOwnshipState().horizontalSpeed();
         currentRegionGs = daa.regionOfHorizontalSpeed(hspeed);
-        // System.out.println("hspeed: " + hspeed + " region: " + currentRegionGs);
 
         double vspeed = daa.getOwnshipState().verticalSpeed();
         currentRegionVs = daa.regionOfVerticalSpeed(vspeed);
-        // System.out.println("vspeed: " + vspeed + " region: " + currentRegionVs);
 
         double alt = daa.getOwnshipState().altitude();
         currentRegionAlt = daa.regionOfAltitude(alt);
-        // System.out.println("alt: " + alt + " region: " + currentRegionAlt);
     }
 
     protected static String color2string (int color) {
         switch (color) {
-            case GREEN: return "green";
-            case YELLOW: return "yellow";
-            case RED: return "red";
-            default: return "grey";
+	case GREEN: return "green";
+	case YELLOW: return "yellow";
+	case RED: return "red";
+	default: return "grey";
         }
     }
 
     String getColor (int monitorID) { // monitor ID starts from 1
         int index = monitorID - 1;
         if (index < N_MONITORS) {
-            return DAAMonitorsV2.color2string(this.monitorColor[index]);
+            return DAAMonitorsV2.color2string(monitorColor[index]);
         }
         return DAAMonitorsV2.color2string(-1);
     }
@@ -199,8 +195,8 @@ public class DAAMonitorsV2 {
         String yellow_desc = "Property failure: resolution is finite and region is not NONE nor RECOVERY.";
         String red_desc = "Property failure: resolution is finite and region is UNKNOWN.";
         return "{ " 
-                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
-                + " }";
+	    + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
+	    + " }";
     }
     protected String labelM1 () {
         return "M1: Finite resolution ⇒ Region is NONE or RECOVERY";
@@ -236,7 +232,7 @@ public class DAAMonitorsV2 {
      */
     protected int checkM2_preferred (double resolution, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs);// || !Double.isNaN(resolutionAlt); M2 does not apply to altitude
+            boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk) || !Double.isNaN(resolutionGs) || !Double.isNaN(resolutionVs);// || !Double.isNaN(resolutionAlt); M2 does not apply to altitude
             if (Double.isNaN(resolution) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -245,7 +241,7 @@ public class DAAMonitorsV2 {
     }
     protected int checkM2_other (double resolution_, BandsRegion region) {
         if (region != BandsRegion.RECOVERY) {
-            Boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_other) || !Double.isNaN(resolutionGs_other) || !Double.isNaN(resolutionVs_other);// || !Double.isNaN(resolutionAlt_other); M2 does not apply to altitude
+            boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_other) || !Double.isNaN(resolutionGs_other) || !Double.isNaN(resolutionVs_other);// || !Double.isNaN(resolutionAlt_other); M2 does not apply to altitude
             if (Double.isNaN(resolution_) && exists_resolution_not_NaN) {
                 return YELLOW;
             }
@@ -256,8 +252,8 @@ public class DAAMonitorsV2 {
         String green_desc = "Consistent resolutions.";
         String yellow_desc = "Property failure: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
         return "{ " 
-                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
-                + " }";
+	    + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
+	    + " }";
     }
     protected String labelM2 () {
         return "M2: One resolution is NaN ⇒ All resolutions are NaN";
@@ -303,7 +299,6 @@ public class DAAMonitorsV2 {
                 } else {
                     int level = DAAMonitorsV2.bandsRegionToInt(currentRegion);
                     if (level < alert) {
-                        // System.out.println("current region: " + level + " " + currentRegion + " alert: " + alert);
                         return YELLOW;
                     }
                 }
@@ -316,8 +311,8 @@ public class DAAMonitorsV2 {
         String yellow_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
         String red_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
         return "{ " 
-                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
-                + " }";
+	    + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
+	    + " }";
     }
     protected String labelM3 () {
         return "M3: Band(current value) ≥ Alert(traffic)";
@@ -350,60 +345,60 @@ public class DAAMonitorsV2 {
         boolean none = false;
         boolean recovery = false;
         for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
-			BandsRegion b = daa.horizontalDirectionRegionAt(i);
+	    BandsRegion b = daa.horizontalDirectionRegionAt(i);
             if (b == BandsRegion.NONE) {
                 none = true;
             } else if (b == BandsRegion.RECOVERY) {
                 recovery = true;
             }
-		}
+	}
         return (none && recovery) ? YELLOW : GREEN;
     }
     protected int checkM4Hs () {
         boolean none = false;
         boolean recovery = false;
         for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
-			BandsRegion b = daa.horizontalSpeedRegionAt(i);
+	    BandsRegion b = daa.horizontalSpeedRegionAt(i);
             if (b == BandsRegion.NONE) {
                 none = true;
             } else if (b == BandsRegion.RECOVERY) {
                 recovery = true;
             }
-		}
+	}
         return (none && recovery) ? YELLOW : GREEN;
     }
     protected int checkM4Vs () {
         boolean none = false;
         boolean recovery = false;
         for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
-			BandsRegion b = daa.verticalSpeedRegionAt(i);
+	    BandsRegion b = daa.verticalSpeedRegionAt(i);
             if (b == BandsRegion.NONE) {
                 none = true;
             } else if (b == BandsRegion.RECOVERY) {
                 recovery = true;
             }
-		}
+	}
         return (none && recovery) ? YELLOW : GREEN;
     }
     protected int checkM4Alt () {
         boolean none = false;
         boolean recovery = false;
         for (int i = 0; i < daa.altitudeBandsLength(); i++) {
-			BandsRegion b = daa.altitudeRegionAt(i);
+	    BandsRegion b = daa.altitudeRegionAt(i);
             if (b == BandsRegion.NONE) {
                 none = true;
             } else if (b == BandsRegion.RECOVERY) {
                 recovery = true;
             }
-		}
+	}
         return (none && recovery) ? YELLOW : GREEN;
     }
     protected String legendM4 () {
         String green_desc = "Valid region colors.";
         String yellow_desc = "Property failure: NONE and RECOVERY appear in the same list of bands.";
         return "{ " 
-                + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
-                + " }";
+	    + "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
+	    + " }";
     }
     protected String labelM4 () {
         return "M4: It is never the case that NONE and RECOVERY appear in the same list of bands";
@@ -433,19 +428,19 @@ public class DAAMonitorsV2 {
     protected int monitorColor[] = new int[]{ -1, -1, -1, -1 };
     String getLegend (int monitorID) {
         if (monitorID <= N_MONITORS && monitorID > 0) {
-            if (monitorID == 1) { return this.legendM1(); }
-            if (monitorID == 2) { return this.legendM2(); }
-            if (monitorID == 3) { return this.legendM3(); }
-            if (monitorID == 4) { return this.legendM4(); }
+            if (monitorID == 1) { return legendM1(); }
+            if (monitorID == 2) { return legendM2(); }
+            if (monitorID == 3) { return legendM3(); }
+            if (monitorID == 4) { return legendM4(); }
         }
         return "unknown";
     }
     String getLabel (int monitorID) {
         if (monitorID <= N_MONITORS && monitorID > 0) {
-            if (monitorID == 1) { return this.labelM1(); }
-            if (monitorID == 2) { return this.labelM2(); }
-            if (monitorID == 3) { return this.labelM3(); }
-            if (monitorID == 4) { return this.labelM4(); }
+            if (monitorID == 1) { return labelM1(); }
+            if (monitorID == 2) { return labelM2(); }
+            if (monitorID == 3) { return labelM3(); }
+            if (monitorID == 4) { return labelM4(); }
         }
         return "unknown";
     }

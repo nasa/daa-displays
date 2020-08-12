@@ -1,78 +1,66 @@
-lite = # Lite installation and quiet
+all: npm dist daidalus compile install-dependencies
+	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
 
-all: compile install-dependencies
-	@echo "\033[0;32m ** To start DAA-Displays, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
 
 ts:
 	# generate javascript files
 	npm run build
 	# copy html files
-	cp src/index.html dist/
-	cp src/danti.html dist/
-	cp src/single.html dist/
-	cp src/split.html dist/
-	cp src/virtual-pilot.html dist/
-	cp src/gods.html dist/
-	cp src/3d.html dist/
+	rsync src/*.html dist/
 
-
-compile:
+npm:
 	@npm install
-	@echo "\033[0;32m ** Building dist folder for daa-displays **\033[0m"
 	# generate javascript files
 	npm run build
-	# copying remaining files
-	cp src/daa-test/*.html dist/daa-test/
-	cp src/restart.sh dist/
-	cp src/README.md dist/
-	cp -R src/LICENSES dist/
-	cp src/Makefile dist/
-	cp -R src/daa-logic dist/
-	cp -R src/daa-config dist/
-	cp -R src/daa-scenarios dist/
-	cp -R src/daa-output dist/
-	cp src/daa-server/daa-server.json dist/daa-server/
-	cp src/daa-server/package.json dist/daa-server
-	cp src/daa-server/start-server.sh dist/daa-server
-	cp -R src/daa-server/tileServer dist/daa-server
-	cp -R src/daa-displays/svgs dist/daa-displays/
-	cp -R src/daa-displays/ColladaModels dist/daa-displays/
-	cp -R src/daa-displays/css dist/daa-displays/
-	cp -R src/daa-displays/images dist/daa-displays
-	cp -R src/daa-displays/wwd dist/daa-displays/
-	cp -R src/contrib dist/contrib
-	cp src/index.html dist/
-	cp src/danti.html dist/
-	cp src/single.html dist/
-	cp src/split.html dist/
-	cp src/virtual-pilot.html dist/
-	cp src/gods.html dist/
-	cp src/3d.html dist/
-	cp src/package.json dist/
-	cp -R src/images dist
-	# compile java files
-	cd dist && make compile -e lite=$(lite) 
-	@echo "\033[0;32m Done! \033[0m"
+
+dist:
+	@echo "\033[0;32m** Copying dist folder **\033[0m"
+	rsync src/daa-test/*.html dist/daa-test/
+	rsync src/restart.sh src/kill.sh src/README.md src/Makefile src/*.html src/package.json dist/
+	rsync -a src/LICENSES dist/
+	rsync -a src/daa-logic dist/
+	rsync -a src/daa-config dist/
+	rsync -a src/daa-scenarios dist/
+	rsync -a src/daa-output dist/
+	rsync -a src/images dist/
+	rsync src/daa-server/daa-server.json src/daa-server/package.json src/daa-server/start-server.sh dist/daa-server/
+	rsync -a src/daa-server/tileServer dist/daa-server
+	rsync -a src/daa-displays/svgs dist/daa-displays/
+	rsync -a src/daa-displays/ColladaModels dist/daa-displays/
+	rsync -a src/daa-displays/css dist/daa-displays/
+	rsync -a src/daa-displays/images dist/daa-displays/
+	rsync -a src/daa-displays/wwd dist/daa-displays/
+	rsync -a src/contrib dist/
+	@echo "\033[0;32m** Done copying dist folder! **\033[0m"
+
+daidalus:
+	@echo "\033[0;32m** Making DAIDALUS submodules **\033[0m"
+	@cd daidalus-submodules; make
+	@echo "\033[0;32m** Done making DAIDALUS submodules! **\033[0m"
+
+compile:
+	@echo "\033[0;32m** Making Java and C++ applications **\033[0m"
+	cd dist && make compile 
+	@echo "\033[0;32mDone making Java and C++ applications! \033[0m"
 
 install-dependencies:
-	@echo "\033[0;32m ** Installing dependencies **\033[0m"
-	@cd dist && make install-dependencies -e lite=$(lite)
-	@echo "\033[0;32m Done! \033[0m"
-
-wrapper: compile install-dependencies
-	@cd dist/daa-logic && make wrapper
-	@echo "\033[0;32m ** To start DAA-Displays, type ./restart.sh in the command prompt and open Google Chrome at http://localhost:8082 **\033[0m"
+	@echo "\033[0;32m** Installing dependencies **\033[0m"
+	@cd dist && make install-dependencies 
+	@echo "\033[0;32mDone installing dependencies! \033[0m"
 
 clean:
-	@echo "\033[0;33m ** Cleaning dist folder **\033[0m"
+	@echo "\033[0;33m** Cleaning dist and daidalus-submodules folder **\033[0m"
 	cd dist && make clean
-	@echo "\033[0;33m Done! \033[0m"
+	cd daidalus-submodules; make clean
+	@echo "\033[0;33mDone cleaning! \033[0m"
 
 delete-dist:
-	@echo "\033[0;33m ** Removing dist folder, .class files, .jar files, and node_modules **\033[0m"
+	@echo "\033[0;33m** Removing dist folder, .class files, .jar files, and node_modules **\033[0m"
 	-@rm -r dist
 	-@rm -r node_modules
 	-@cd src && rm -r node_modules
 	-@cd src/daa-server && rm -r node_modules
 	-@cd src/daa-logic && make clean
-	@echo "\033[0;33m Done! \033[0m"
+	@echo "\033[0;33m Done removing dist folder! \033[0m"
+
+.PHONY: dist
