@@ -2183,7 +2183,7 @@ export class DAAPlayer {
         });
         $(`#${this.wellClearConfigurationSelector}-list`).remove();
         $(`#${this.wellClearConfigurationSelector}`).append(theHTML);
-        $(`#${this.wellClearConfigurationSelector}`).css({ display: "block" });
+        $(`#${this.wellClearConfigurationSelector}`).css({ display: "flex" });
 
         const refreshConfigurationAttributesView = async (config: string) => {
             this.configInfo = await this.loadConfigFile(config);
@@ -2196,7 +2196,7 @@ export class DAAPlayer {
                     });
                     $(`#${this.wellClearConfigurationAttributesSelector}-list`).remove();
                     $(`#${this.wellClearConfigurationAttributesSelector}`).append(theAttributes);
-                    $(`.${this.wellClearConfigurationAttributesSelector}`).css({ display: "block" });
+                    $(`.${this.wellClearConfigurationAttributesSelector}`).css({ display: "flex" });
                 }
                 if (this.mode === "developerMode") {
                     this.clickDeveloperMode();
