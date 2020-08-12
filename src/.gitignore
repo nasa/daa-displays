@@ -1,0 +1,4 @@
+package-lock.json
+*.class
+*.jar
+*.exe

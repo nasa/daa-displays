@@ -6,8 +6,9 @@ install-dependencies:
 	@cd daa-server && npm install
 
 compile:
-	cd daa-logic && make all 
-	cd contrib/virtual-pilot && make 
+	cd daa-logic && make 
+	cd contrib && make 
 
 clean:
 	cd daa-logic && make clean
+	cd contrib && make clean

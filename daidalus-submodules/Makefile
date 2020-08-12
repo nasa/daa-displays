@@ -1,4 +1,6 @@
-all:
+all: submodules compile
+
+compile:
 	@for f in *; do \
 	if [ -d "$$f" ]; then \
 		echo "\033[0;32m** Building $$f **\033[0m"; cd $$f/Java; make lib; cd ../C++; make lib; cd ../..; \
@@ -9,3 +11,6 @@ clean:
 	if [ -d "$$f" ]; then \
 		echo "\033[0;32m** Building $$f **\033[0m"; cd $$f/Java; make clean; cd ../C++; make clean; cd ../..; \
 	fi done
+
+submodules:
+	git submodule update --init --remote

@@ -1,36 +1,24 @@
-lite = # Lite installation and quiet
-
-# WellClear WELLCLEAR_VERSION to be used
-WELLCLEAR_VERSION = 2.0.e
-
-# definitions necessary for javac
-SRCS  = $(wildcard src/gov/nasa/larcfm/IO/*.java src/gov/nasa/larcfm/Util/*.java src/gov/nasa/larcfm/ACCoRD/*.java)
-OBJS  = $(SRCS:.java=.class)
 JAVAC = javac
 JAR   = jar
+DAIDALUS_DIR=../../../daidalus-submodules
 
-all: virtual-pilot #SimDaidalus #wrapper
+all: compile 
 
-virtual-pilot:
-	cd virtual-pilot && make
+VIRTUAL_PILOT = BatchSimDaidalus_2_3_1 SimDaidalus_2_3_1_wind
+define virtual-pilot-template
+virtual-pilot-$(1):
+	@echo "\033[0;32m** Building $(1)-2.x **\033[0m"
+	-cd virtual-pilot && $(JAVAC) -cp  $(DAIDALUS_DIR)/current/Java/lib/DAIDALUS2.jar $(1).java && cp -f $(DAIDALUS_DIR)/current/Java/lib/DAIDALUS2.jar ../$(1)-2.x.jar && echo "Main-Class: $(1)" > mf && $(JAR) umf mf ../$(1)-2.x.jar $(1).class && rm -f mf
+endef
+virtual-pilot-all = $(foreach code,$(VIRTUAL_PILOT),$(eval $(call virtual-pilot-template,$(code))))
+VIRTUAL_PILOT_TARGETS = $(foreach code,$(VIRTUAL_PILOT),virtual-pilot-$(code))
 
-wrapper:
-	@echo "\n\033[0;32m ** Building JAR file for Daidalus Wrapper **\033[0m"
-	-@cd ../daa-logic/utils && $(JAVAC) -cp ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src ../../contrib/SimDaidalus_2_3_1_wind.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	-$(JAR) cfe SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar SimDaidalus_2_3_1_wind *.class
-	-@cd ../daa-logic/WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src && $(JAR) uf ../../../../../contrib/SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	-unzip -vl SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar
-	-rm *.class
+compile: $(VIRTUAL_PILOT_TARGETS)
 
-SimDaidalus:
-	@echo "\n\033[0;32m ** Building JAR file for SimDaidalus **\033[0m"
-	-@cd ../daa-logic/utils && $(JAVAC) -cp ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src ../../contrib/SimDaidalus_2_3_1_wind.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/IO/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/Util/*.java ../WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src/gov/nasa/larcfm/ACCoRD/*.java
-	-$(JAR) cfe SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar SimDaidalus_2_3_1_wind *.class
-	-@cd ../daa-logic/WellClear-$(WELLCLEAR_VERSION)/DAIDALUS/Java/src && $(JAR) uf ../../../../../contrib/SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar gov/nasa/larcfm/IO/*.class gov/nasa/larcfm/Util/*.class gov/nasa/larcfm/ACCoRD/*.class
-	-unzip -vl SimDaidalus_2_3_1_wind-$(WELLCLEAR_VERSION).jar
-	-rm *.class
+# these final commands expand the templates
+$(call virtual-pilot-all)
 
 clean:
-	@echo "\n\033[0;33m ** Removing .class files in contrib **\033[0m"
-	-rm *.class
-	@echo "\n\033[0;33m Done!\033[0m"
+	@echo "\033[0;33m** Removing .class and *.jar files **\033[0m"
+	-rm -f *.jar
+	-cd virtual-pilot; rm -f *.class
