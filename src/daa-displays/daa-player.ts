@@ -144,6 +144,7 @@ export function safeSelector(str: string): string {
 }
 
 export class DAAPlayer {
+    static readonly prefix: string = "DAIDALUSv";
     static readonly VERSION: string = "2.0.0";
     static readonly timerJiffy: number = 8; // 8ms
     protected id: string;
@@ -842,7 +843,7 @@ export class DAAPlayer {
     }): Promise<string[]> {
         await this.connectToServer();
         const msg: ExecMsg = {
-            daaLogic: data.alertingLogic ||  "WellClear-2.0.e.jar",
+            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
@@ -1146,7 +1147,7 @@ export class DAAPlayer {
     /**
      * @function <a name="java">java</a>
      * @description Sends a java evaluation request to the server
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "WellClear-2.0.f.jar" (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.1.jar" (Base path is daa-logic/)
      * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
      * @param scenarioName Flight scenario, e.g., "H1.daa"
      * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
@@ -1163,7 +1164,7 @@ export class DAAPlayer {
         bands: DaidalusBandsDescriptor
     }> {
         const msg: ExecMsg = {
-            daaLogic: data.alertingLogic ||  "WellClear-2.0.f.jar",
+            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
             daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_a.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: { 
@@ -1204,7 +1205,7 @@ export class DAAPlayer {
     /**
      * @function <a name="javaLoS">javaLoS</a>
      * @description Computes conflict regions using the java implementation of well-clear
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "WellClear-2.0.f.jar" (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.1.jar" (Base path is daa-logic/)
      * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
      * @param scenarioName Flight scenario, e.g., "H1.daa"
      * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
@@ -1385,14 +1386,7 @@ export class DAAPlayer {
 
     getSelectedWellClearVersion(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
-        if (sel) {
-            const components: string[] = sel.split("-");
-            if (components && components.length > 2) {
-                return `WellClear-${components.slice(-2).join("-")}`;
-            }
-            return `WellClear-${sel.split("-").slice(-1)}`;
-        }
-        return null;
+        return sel;
     }
     getSelectedLoSVersion(): string {
         if (this.selectedAppType === this.appTypes[1]) {
@@ -2175,7 +2169,7 @@ export class DAAPlayer {
                 const selectedWellClear: string = this.getSelectedWellClearVersion();
                 const wind: { knot: string, deg: string } = this.getSelectedWindSettings();
                 const scenario: string = (wind && wind.knot) ? `${selectedScenario} (wind ${wind.deg}deg ${wind.knot}knot)` : selectedScenario;
-                this._plot[plotID].setOverheadLabel(`${selectedWellClear.replace("WellClear", "DAIDALUS")} - ${selectedConfiguration} - ${scenario}`);
+                this._plot[plotID].setOverheadLabel(`${selectedWellClear} - ${selectedConfiguration} - ${scenario}`);
             });
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
