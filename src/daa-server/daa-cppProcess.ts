@@ -59,8 +59,8 @@ export class CppProcess {
 		opt = opt || {};
 		if (desc) {
 			const daaFolder: string = desc.daaFolder
-			const daaLogic: string = desc.daaLogic || "WellClear-2.0.f.jar";
-			const daaConfig = desc.daaConfig || "1.x/WC_SC_228_nom_a.conf";
+			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.1.jar";
+			const daaConfig = desc.daaConfig || "2.x/DO_365A_no_SUM.conf";
 			const daaScenario = desc.daaScenario || "H1.daa";
 			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
 			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })

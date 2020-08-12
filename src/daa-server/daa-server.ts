@@ -589,11 +589,11 @@ class DAAServer {
                                     return fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory() === false;
                                 });
                                 const javaFiles: string[] = allFiles.filter((name: string) => {
-                                    return name.startsWith("WellClear-") && name.endsWith(".jar");
+                                    return name.startsWith("DAIDALUSv") && name.endsWith(".jar");
                                 });
                                 wellclearVersions = (javaFiles) ? wellclearVersions.concat(javaFiles) : wellclearVersions;
                                 const cppFiles: string[] = allFiles.filter((name: string) => {
-                                    return name.startsWith("WellClear-") && name.endsWith(".exe");
+                                    return name.startsWith("DAIDALUSv") && name.endsWith(".exe");
                                 });
                                 wellclearVersions = (cppFiles) ? wellclearVersions.concat(cppFiles) : wellclearVersions;
 
