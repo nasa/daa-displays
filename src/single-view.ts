@@ -266,7 +266,6 @@ player.define("init", async () => {
     });
     viewOptions.applyCurrentViewOptions();
     player.updateMonitors();
-    player.selectConfiguration("2.x./DO_365A_no_SUM");
     developerMode();
 });
 async function developerMode (): Promise<void> {
