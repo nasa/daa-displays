@@ -207,10 +207,10 @@ export class DAASpectrogram {
     protected installGotoHandler(step: number): void {
         if (this.player) {
             const stepID = `${this.id}-step-${step}`;
-            $(`#${stepID}`).on("click", () => {
+            $(`#${stepID}`).on("click", async () => {
                 // @ts-ignore
                 $('[data-toggle="tooltip"]').tooltip('hide');
-                this.player.gotoControl(step, { updateInputs: true });
+                await this.player.gotoControl(step, { updateInputs: true });
             });
             $(`#${stepID}`).css("cursor", "pointer");
         }
@@ -501,8 +501,8 @@ export class DAASpectrogram {
                 $(selector).attr("data-title", `<div>${desc.tooltip}</div>`);
             }
             // install gotohandler
-            $(selector).on("click", () => {
-                this.player.gotoControl(desc.step, { updateInputs: true });
+            $(selector).on("click", async () => {
+                await this.player.gotoControl(desc.step, { updateInputs: true });
             });
             // @ts-ignore -- method tooltip is added by bootstrap
             $(selector).tooltip();

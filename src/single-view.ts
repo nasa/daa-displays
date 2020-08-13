@@ -266,6 +266,7 @@ player.define("init", async () => {
     });
     viewOptions.applyCurrentViewOptions();
     player.updateMonitors();
+    player.selectConfiguration("2.x./DO_365A_no_SUM");
     developerMode();
 });
 async function developerMode (): Promise<void> {
@@ -377,6 +378,7 @@ async function createPlayer() {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
     await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
     await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
+    player.selectConfiguration("DO_365A_no_SUM");
     await player.appendMonitorPanel();
     // handlers can be defined only after creating the monitor panel
     for (let i = 0; i < 3; i++) {

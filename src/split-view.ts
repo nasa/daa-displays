@@ -478,6 +478,7 @@ async function createPlayer() {
     await splitView.appendWindSettings({ fromToSelectorVisible: true });
     await splitView.appendWellClearVersionSelector();
     await splitView.appendWellClearConfigurationSelector();
+    splitView.selectConfiguration("DO_365A_no_SUM");
     splitView.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp-left", "daa-disp-right" ]

@@ -398,7 +398,7 @@ export class DAAPlayer {
                 } catch (stepError) {
                     console.error("Init function has thrown a runtime exception: ", stepError);
                 }
-                this.gotoControl(0);
+                await this.gotoControl(0);
                 // this.simulationStep = 0;
                 // $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
             },
@@ -1383,11 +1383,26 @@ export class DAAPlayer {
     getSelectedConfiguration(): string {
         return $(`#${this.wellClearConfigurationSelector}-list option:selected`).text();
     }
+    selectConfiguration(configName: string): boolean {
+        if (configName) {
+            $(`#${this.wellClearConfigurationSelector}-list option:contains("${configName}")`).prop("selected", true);
+            return this.getSelectedConfiguration().includes(configName);
+        }
+        return false;
+    }
 
     getSelectedWellClearVersion(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
         return sel;
     }
+    selectWellClearVersion(versionName: string): boolean {
+        if (versionName) {
+            $(`#${this.wellClearVersionSelector}-list option:contains("${versionName}")`).prop("selected", true);
+            return this.getSelectedWellClearVersion().includes(versionName);
+        }
+        return false;
+    }
+
     getSelectedLoSVersion(): string {
         if (this.selectedAppType === this.appTypes[1]) {
             const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
@@ -1449,8 +1464,8 @@ export class DAAPlayer {
         // return this.setInterval(this.step, this.ms);
         if (!this._timer_active) {
             if (this.simulationStep < this._simulationLength) {
-                this.setInterval(() => {
-                    this.stepControl(this.simulationStep);
+                this.setInterval(async () => {
+                    await this.stepControl(this.simulationStep);
                 }, this.ms);
             } else {
                 this.clearInterval();

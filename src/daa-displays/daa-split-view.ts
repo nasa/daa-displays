@@ -131,7 +131,7 @@ export class DAASplitView extends DAAPlayer {
             $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
             if (this.players) {
                 if (this.players.left) {
-                    this.players.left.gotoControl(this.simulationStep); // right player is bridged
+                    await this.players.left.gotoControl(this.simulationStep); // right player is bridged
                 }
             }
         };
@@ -315,7 +315,7 @@ export class DAASplitView extends DAAPlayer {
             // send players the control command
             if (this.players) { 
                 if (this.players.left) { 
-                    this.players.left.gotoControl(this.simulationStep); // right player is bridged
+                    await this.players.left.gotoControl(this.simulationStep); // right player is bridged
                 }
                 if (this["diff"]) {
                     this["diff"]();
@@ -391,6 +391,21 @@ export class DAASplitView extends DAAPlayer {
                 }); 
             }
         }
+    }
+
+    // @overrides
+    selectConfiguration(configName: string): boolean {
+        if (configName && this.players) {
+            let success: boolean = true;
+            if (this.players.left) {
+                success = success && this.players.left.selectConfiguration(configName); 
+            }
+            if (this.players.right) { 
+                success = success && this.players.right.selectConfiguration(configName); 
+            }
+            return success;
+        }
+        return false;
     }
 
     // @overrides
