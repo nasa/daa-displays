@@ -95,7 +95,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, LLAPosition } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -217,6 +217,7 @@ export class DAAPlayer {
     protected wellClearConfigurationAttributesSelector: string = "sidebar-daidalus-configuration-attributes";
     protected windSettingsSelector: string = "sidebar-wind-settings";
     protected monitorDomSelector: string = "daa-monitors";
+    protected flightDataDomSelector: string = "daa-traffic";
     protected configInfo: ConfigFile;
     protected daaMonitors: { id: number, name: string, color: string }[] = [];
 
@@ -1914,6 +1915,15 @@ export class DAAPlayer {
         }
     }
 
+    async appendTrafficPanel(domSelector?: string): Promise<void> {
+        domSelector = domSelector || "daa-traffic";
+        this.flightDataDomSelector = domSelector;
+        const theHTML: string = Handlebars.compile(monitorTemplates.flightDataPanelTemplate)({
+            id: this.flightDataDomSelector
+        });
+        $(`#${this.flightDataDomSelector}`).append(theHTML);
+    }
+
     protected appendMonitors(monitors: { id: number, name: string, color: string }[], opt?: { installHandlers?: boolean }): void {
         if (monitors) {
             opt = opt || {};
@@ -1940,7 +1950,7 @@ export class DAAPlayer {
         }
     }
 
-    removeMonitors(): void {
+    protected removeMonitors(): void {
         $(`#${this.monitorDomSelector}-list`).remove();
     }
 
@@ -1949,6 +1959,27 @@ export class DAAPlayer {
         if (this._bands && this._bands.Monitors) {
             this.appendMonitors(this._bands.Monitors, { installHandlers: true });
         }
+    }
+
+    protected removeFlightData(): void {
+        $(`#${this.flightDataDomSelector}-list`).remove();
+    }
+
+    protected appendFlightData (flightData: LLAData): void {
+        if (flightData) {
+            const theHTML: string = Handlebars.compile(monitorTemplates.flightDataTemplate)({
+                id: this.flightDataDomSelector,
+                flight: flightData,
+                currentTime: this.getCurrentSimulationTime()
+            });
+            $(`#${this.flightDataDomSelector}`).append(theHTML);
+        }
+    }
+
+    displayFlightData (): void {
+        this.removeFlightData();
+        const flightData: LLAData = this.getCurrentFlightData();
+        this.appendFlightData(flightData);
     }
 
     /**

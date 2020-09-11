@@ -47,6 +47,7 @@ const player: DAAPlayer = new DAAPlayer();
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
+    player.displayFlightData();
     if (flightData && flightData.ownship) {
         data.map.setPosition(flightData.ownship.s);
 
@@ -379,6 +380,7 @@ async function createPlayer() {
     await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
     player.selectConfiguration("DO_365A_no_SUM");
     await player.appendMonitorPanel();
+    await player.appendTrafficPanel();
     // handlers can be defined only after creating the monitor panel
     for (let i = 0; i < 3; i++) {
         const monitorID: number = i + 1;
