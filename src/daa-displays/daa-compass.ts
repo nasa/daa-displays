@@ -199,7 +199,7 @@ class ResolutionBug {
      * @inner
      */
     setMaxWedgeAperture (deg: number | string): void {
-        if (isFinite(+deg) && deg >= 0) {
+        if (isFinite(+deg) && +deg >= 0) {
             this.maxWedgeAperture = +deg;
         }
     }

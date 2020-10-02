@@ -266,6 +266,7 @@ player.define("init", async () => {
         wind: player.getSelectedWindSettings()
     });
     viewOptions.applyCurrentViewOptions();
+    player.applyCurrentResolutionOptions();
     player.updateMonitors();
     developerMode();
 });

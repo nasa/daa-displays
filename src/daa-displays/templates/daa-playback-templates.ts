@@ -242,6 +242,9 @@ export const resolutionControls: string = `
             <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-max-compass-wedge-aperture-checkbox" class="max-compass-wedge-aperture">
+                        </div>
                         <div class="input-group-prepend">
                             <span class="btn-sm max-compass-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Heading Wedge</span>
                         </div>
@@ -252,6 +255,9 @@ export const resolutionControls: string = `
             <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-max-airspeed-wedge-aperture-checkbox" class="max-airspeed-wedge-aperture">
+                        </div>
                         <div class="input-group-prepend">
                             <span class="btn-sm max-airspeed-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Horizontal Speed Notch</span>
                         </div>
@@ -262,6 +268,9 @@ export const resolutionControls: string = `
             <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-max-vspeed-wedge-aperture-checkbox" class="max-vspeed-wedge-aperture">
+                        </div>
                         <div class="input-group-prepend">
                             <span class="btn-sm max-vspeed-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Vertical Speed Notch</span>
                         </div>
@@ -272,6 +281,9 @@ export const resolutionControls: string = `
             <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-max-altitude-wedge-aperture-checkbox" class="max-altitude-wedge-aperture">
+                        </div>
                         <div class="input-group-prepend">
                             <span class="btn-sm max-altitude-wedge-aperture" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Max Altitude Notch</span>
                         </div>

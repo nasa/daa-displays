@@ -190,6 +190,7 @@ player.define("init", async () => {
         wind: player.getSelectedWindSettings()
     });
     viewOptions.applyCurrentViewOptions();
+    player.applyCurrentResolutionOptions();
 });
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", () => {

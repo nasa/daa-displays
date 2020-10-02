@@ -614,6 +614,15 @@ export class DAAPlayer {
     }
 
     /**
+     * utility function, applies current resolution options by triggering the handlers associated to each option
+     */
+    applyCurrentResolutionOptions (): void {
+        $(`#${this.id}-max-compass-wedge-aperture-input`).trigger("input");
+        $(`#${this.id}-max-airspeed-wedge-aperture-input`).trigger("input");
+        $(`#${this.id}-max-altitude-wedge-aperture-input`).trigger("input");
+        $(`#${this.id}-max-vspeed-wedge-aperture-input`).trigger("input");
+    }
+    /**
      * utility function, renders the DOM elements necessary for the configuration of conflict resolutions elements
      */
     appendResolutionControls (handlers: { [key: string]: InputHandler }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
@@ -631,29 +640,42 @@ export class DAAPlayer {
         utils.createDiv(`${this.id}-resolution-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-resolution-controls`).html(theHTML);
         // install handlers
+        const hdl = (id: string, handlerName: string) => {
+            const isChecked: boolean = $(`#${id}-checkbox`).is(":checked");
+            if (isChecked && handlers && handlers[handlerName]) {
+                const val: string = <string> $(`#${id}-input`).val();
+                handlers[handlerName](val);
+            } else {
+                handlers[handlerName]("0");
+            }
+        }
+
         $(`#${this.id}-max-compass-wedge-aperture-input`).on("input", () => {
-            const maxAperture: string = <string> $(`#${this.id}-max-compass-wedge-aperture-input`).val();
-            if (handlers && handlers["setCompassWedgeAperture"]) {
-                handlers["setCompassWedgeAperture"](maxAperture);
-            }
+            hdl(`${this.id}-max-compass-wedge-aperture`, "setCompassWedgeAperture");
         });
+        $(`#${this.id}-max-compass-wedge-aperture-checkbox`).on("input", () => {
+            hdl(`${this.id}-max-compass-wedge-aperture`, "setCompassWedgeAperture");
+        });
+
         $(`#${this.id}-max-airspeed-wedge-aperture-input`).on("input", () => {
-            const maxAperture: string = <string> $(`#${this.id}-max-airspeed-wedge-aperture-input`).val();
-            if (handlers && handlers["setAirspeedWedgeAperture"]) {
-                handlers["setAirspeedWedgeAperture"](maxAperture);
-            }
+            hdl(`${this.id}-max-airspeed-wedge-aperture`, "setAirspeedWedgeAperture");
         });
+        $(`#${this.id}-max-airspeed-wedge-aperture-checkbox`).on("input", () => {
+            hdl(`${this.id}-max-airspeed-wedge-aperture`, "setAirspeedWedgeAperture");
+        });
+
         $(`#${this.id}-max-altitude-wedge-aperture-input`).on("input", () => {
-            const maxAperture: string = <string> $(`#${this.id}-max-altitude-wedge-aperture-input`).val();
-            if (handlers && handlers["setAltitudeWedgeAperture"]) {
-                handlers["setAltitudeWedgeAperture"](maxAperture);
-            }
+            hdl(`${this.id}-max-altitude-wedge-aperture`, "setAltitudeWedgeAperture");
         });
+        $(`#${this.id}-max-altitude-wedge-aperture-checkbox`).on("input", () => {
+            hdl(`${this.id}-max-altitude-wedge-aperture`, "setAltitudeWedgeAperture");
+        });
+
         $(`#${this.id}-max-vspeed-wedge-aperture-input`).on("input", () => {
-            const maxAperture: string = <string> $(`#${this.id}-max-vspeed-wedge-aperture-input`).val();
-            if (handlers && handlers["setVerticalSpeedWedgeAperture"]) {
-                handlers["setVerticalSpeedWedgeAperture"](maxAperture);
-            }
+            hdl(`${this.id}-max-vspeed-wedge-aperture`, "setVerticalSpeedWedgeAperture");
+        });
+        $(`#${this.id}-max-vspeed-wedge-aperture-checkbox`).on("input", () => {
+            hdl(`${this.id}-max-vspeed-wedge-aperture`, "setVerticalSpeedWedgeAperture");
         });
     }
 

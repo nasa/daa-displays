@@ -151,8 +151,8 @@ class SpeedBug {
      * @inner
      */
     setMaxWedgeAperture (deg: number | string): void {
-        if (isFinite(+deg) && deg >= 0) {
-            this.maxWedgeAperture = + deg;
+        if (isFinite(+deg) && +deg >= 0) {
+            this.maxWedgeAperture = +deg;
         }
     }
     /**

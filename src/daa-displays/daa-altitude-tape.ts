@@ -168,8 +168,8 @@ class SpeedBug {
      * @inner
      */
     setMaxWedgeAperture (val: number | string): void {
-        if (isFinite(+val) && val >= 0) {
-            this.maxWedgeAperture = + val;
+        if (isFinite(+val) && +val >= 0) {
+            this.maxWedgeAperture = +val;
         }
     }
     /**
