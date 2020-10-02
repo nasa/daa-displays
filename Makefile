@@ -1,4 +1,4 @@
-all: npm dist daidalus compile install-dependencies
+all: npm dist daidalus compile install-dependencies resolutions
 	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
 
 
@@ -47,6 +47,10 @@ install-dependencies:
 	@echo "\033[0;32m** Installing dependencies **\033[0m"
 	@cd dist && make install-dependencies 
 	@echo "\033[0;32mDone installing dependencies! \033[0m"
+
+resolutions:
+	npm install -no-save npm-force-resolutions
+	node node_modules/npm-force-resolutions/index.js
 
 clean:
 	@echo "\033[0;33m** Cleaning dist and daidalus-submodules folder **\033[0m"
