@@ -1,5 +1,4 @@
-import { MonitorElement, MonitorData, ResolutionElement } from "src/daa-server/utils/daa-server";
-import { GeofenceElement } from "./utils/daa-server";
+import { MonitorElement, ResolutionElement, GeofenceElement, MetricsElement } from "./utils/daa-server";
 
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
@@ -116,7 +115,8 @@ export interface DAABandsData {
     "Vertical Speed Resolution": ResolutionElement,
     Contours: GeofenceElement,
     "Hazard Zones": GeofenceElement,
-    Monitors: MonitorElement[]
+    Monitors: MonitorElement[],
+    Metrics: MetricsElement
 };
 
 // y axis identifies the direction of the aircraft

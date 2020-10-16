@@ -95,7 +95,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, LLAPosition } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -1524,6 +1524,11 @@ export class DAAPlayer {
         return null;
     }
 
+    getCurrentMetrics (): MetricsElement {
+        const bands: utils.DAABandsData = this.getCurrentBands();
+        return bands?.Metrics;
+    }
+
     getFlightData (enc?: string): LLAData[] {
         if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
             return Object.keys(this._scenarios[this._selectedScenario].lla).map((key: string) => {
@@ -1587,7 +1592,8 @@ export class DAAPlayer {
                         "Vertical Speed Resolution": null,
                         Contours: null,
                         "Hazard Zones": null,
-                        Monitors: []
+                        Monitors: [],
+                        Metrics: null
                     };
                     const bandNames: string[] = utils.BAND_NAMES;
                     for (const b in bandNames) {
@@ -1638,6 +1644,9 @@ export class DAAPlayer {
                         if (this._bands.Ownship && step < this._bands.Ownship.length) {
                             res.Ownship = this._bands.Ownship[step];
                         }
+                        if (this._bands.Metrics && step < this._bands.Metrics.length) {
+                            res.Metrics = this._bands.Metrics[step];
+                        }
                     }
                     ans.push(res);
                 }
@@ -1661,7 +1670,8 @@ export class DAAPlayer {
             "Vertical Speed Resolution": null,
             Contours: null,
             "Hazard Zones": null,
-            Monitors: []
+            Monitors: [],
+            Metrics: null
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
@@ -1716,6 +1726,10 @@ export class DAAPlayer {
                 if (this._bands.Wind) {
                     // copy wind
                     res.Wind = this._bands.Wind;
+                }
+                if (this._bands.Metrics && this.simulationStep < this._bands.Metrics.length) {
+                    // copy Metrics
+                    res.Metrics = this._bands.Metrics[this.simulationStep];
                 }
             }
         }
@@ -1987,7 +2001,7 @@ export class DAAPlayer {
         $(`#${this.flightDataDomSelector}-list`).remove();
     }
 
-    protected appendFlightData (flightData: LLAData): void {
+    protected appendFlightData (flightData: FlightData): void {
         if (flightData) {
             const theHTML: string = Handlebars.compile(monitorTemplates.flightDataTemplate)({
                 id: this.flightDataDomSelector,
@@ -2000,7 +2014,16 @@ export class DAAPlayer {
 
     displayFlightData (): void {
         this.removeFlightData();
-        const flightData: LLAData = this.getCurrentFlightData();
+        const flightInfo: LLAData = this.getCurrentFlightData();
+        const metricsInfo: MetricsElement = this.getCurrentMetrics();
+        const flightData: FlightData = flightInfo;
+        if (flightData && flightData.traffic && metricsInfo && metricsInfo.metrics) {
+            for (let i = 0; i < flightData.traffic.length; i++) {
+                if (i < metricsInfo.metrics.length) {
+                    flightData.traffic[i].metrics = metricsInfo.metrics[i]?.data;
+                }           
+            }
+        }
         this.appendFlightData(flightData);
     }
 

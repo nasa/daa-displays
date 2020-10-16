@@ -42,6 +42,15 @@ export const flightDataTemplate = `
         <div id="flight-name-{{id}}">{{id}}</div>
         <div style="padding-left:10px;" id="flight-position-{{id}}">lat: {{s.lat}}, lon: {{s.lon}}, alt: {{s.alt}}</div>
         <div style="padding-left:10px;" id="flight-velocity-{{id}}">x: {{v.x}}, y: {{v.y}}, z: {{v.z}}</div>
+        {{#each metrics}}
+            <div style="padding-left:10px;" id="flight-{{@key}}-{{id}}">{{@key}}:
+                {{#if this.hor.val}} {{this.hor.val}}{{this.hor.units}}{{/if}}
+                {{#if this.ver.val}} {{this.ver.val}}{{this.ver.units}}{{/if}}
+                {{#if this.hor.time.val}} {{this.hor.time.val}}{{this.hor.time.units}}{{/if}}
+                {{#if this.hor.distance.val}} {{this.hor.distance.val}}{{this.hor.distance.units}}{{/if}}
+                {{#if this.val}} {{this.val}}{{this.units}}{{/if}}
+            </div>
+        {{/each}}
     </div>
 {{/each}}
 </div>`;

@@ -80,6 +80,14 @@ export declare interface LLAData {
     traffic: LLAPosition[];
 }
 
+export declare interface LLAPositionMetrics extends LLAPosition {
+    metrics?: DaidalusMetrics
+}
+
+export declare interface FlightData extends LLAData {
+    traffic: LLAPositionMetrics[];
+}
+
 // export declare interface DAAScenario {
 //     ownship: DAAData;
 //     traffic: DAAData[];
@@ -158,6 +166,38 @@ export declare interface GeofenceElement {
     data: AircraftGeofenceElement[]
 } 
 
+export declare interface ValUnits {
+    val: string, 
+    units: string
+}
+export declare interface Metric {
+    hor: ValUnits, 
+    ver: ValUnits
+}
+export declare interface CPOAMetric {
+    hor: { 
+        time: ValUnits, 
+        distance: ValUnits
+    }
+}
+export declare interface DaidalusMetrics {
+    Separation: Metric, 
+    MissDistance: Metric,
+    ClosureRate: Metric, 
+    CPOA: CPOAMetric, 
+    TCOA: ValUnits, 
+    TAUMOD: ValUnits
+}
+export declare interface AircraftMetrics {
+    ac: string,
+    data: DaidalusMetrics
+}
+
+export declare interface MetricsElement {
+    time: number,
+    metrics: AircraftMetrics[]
+}
+
 export declare interface DaidalusBandsDescriptor {
     Info: {
         version: string, // well clear version
@@ -176,7 +216,8 @@ export declare interface DaidalusBandsDescriptor {
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
     "Contours": GeofenceElement[],
-    Monitors: MonitorElement[];
+    Monitors: MonitorElement[],
+    Metrics: MetricsElement[]
 }
 
 export declare interface DAALosSector {

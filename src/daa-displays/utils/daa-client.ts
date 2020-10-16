@@ -62,7 +62,8 @@ export class DAAClient {
                     "Horizontal Speed Resolution": null,
                     "Vertical Speed Resolution": null,
                     "Contours": null,
-                    Monitors: null
+                    Monitors: null,
+                    Metrics: null
                 };
                 this.ws.onmessage = function (evt) {
                     const token = JSON.parse(evt.data);
