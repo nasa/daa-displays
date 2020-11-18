@@ -35,6 +35,7 @@ dist:
 
 daidalus:
 	@echo "\033[0;32m** Making DAIDALUS submodules **\033[0m"
+	git submodule update --init --remote
 	@cd daidalus-submodules; make
 	@echo "\033[0;32m** Done making DAIDALUS submodules! **\033[0m"
 

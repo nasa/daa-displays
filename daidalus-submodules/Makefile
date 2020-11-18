@@ -1,4 +1,4 @@
-all: submodules compile
+all: compile
 
 compile:
 	@for f in *; do \
