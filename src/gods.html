@@ -1,4 +1,4 @@
-<!--
+<<!--
  * ## Notices
  * Copyright 2019 United States Government as represented by the Administrator 
  * of the National Aeronautics and Space Administration. All Rights Reserved.
@@ -39,29 +39,31 @@
         <link rel="stylesheet" href="daa-displays/css/daa-displays.css">
     </head>
     <body>
-
-        <div id="daa-cockpit" style="position:absolute; left:25%;">
-            <div id="daa-display-left" style="position:absolute; margin-top:64px; margin-left:-10px;">
-                <div id="daidalus-version-left" style="height:30px;width:400px;"></div>
-                <div id="daidalus-configuration-left" style="height:30px;width:400px;"></div>
-                <div id="daa-disp-left"></div>
+        <div class="zoomable">
+            <div style="position:absolute; margin-top:64px; margin-left:-10px;">
+                <div id="daidalus-version" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
+                <div id="daidalus-configuration" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
+                <div id="daidalus-wind" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
+                <div id="daa-cockpit" style="position:absolute; margin-top:10px;">
+                    <div id="daa-disp"></div>
+                    <div id="daa-disp-hidden" style="display:none;"></div>
+                    <!-- <div id="daidalus-configuration-attributes" style="width:650px; margin-left:1140px;"></div> -->
+                    <div id="daa-traffic" style="position:absolute; left:1140px; background-color:slategrey; width:650px; border:solid black 1px; border-radius: 4px; top:4px; height:600px; overflow-y:auto;"></div>
+                    <div id="daa-monitors" style="position:absolute; left:1140px; background-color:slategrey; width:650px; border:solid black 1px; border-radius: 4px; top:608px;"></div>
+                </div>
+                <div id="activation-controls" style="position:absolute; top:940px; width:80%;">
+                </div>
+                <div id="simulation-controls" style="position:absolute; top:1000px; width:80%;">
+                </div>
+                <div id="simulation-plot" style="position:absolute; top:1140px; height:200px; width:1020px;">
+                </div>
             </div>
-            <div id="daa-display-right" style="position:absolute; margin-top:64px; margin-left:1190px;">
-                <div id="daidalus-version-right" style="height:30px; width:400px;"></div>
-                <div id="daidalus-configuration-right" style="height:30px; width:400px;"></div>
-                <div id="daa-disp-right"></div>
-            </div>
-        </div>
-        <div id="activation-controls" style="position:absolute; top:1020px; width:80%; margin-left:454px; left:25%;">
-        </div>
-        <div id="simulation-controls" style="position:absolute; top:1124px; left:25%; padding-left:454px; width:80%;">
-        </div>
-        <div id="simulation-plot" style="position:absolute; top:1260px; left:25%; height:200px; width:1020px;">
         </div>
 
         <script src="node_modules/jquery/dist/jquery.min.js"></script>
         <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="node_modules/handlebars/dist/handlebars.min.js"></script>
-        <script src="node_modules/requirejs/require.js" data-main="gods-view.js"></script>
+        <script src="node_modules/requirejs/require.js" data-main="gods-view-single.js"></script>
+
     </body>
 </html>
