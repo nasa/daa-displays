@@ -208,6 +208,12 @@ export class DAA_Airspace {
     protected ownshipLayer: WorldWind.RenderableLayer;
     protected textLayer: WorldWind.RenderableLayer;
 
+    protected controlLayers: {
+        view: WorldWind.RenderableLayer,
+        compass: WorldWind.RenderableLayer,
+        coords: WorldWind.RenderableLayer
+    };
+
     protected godsView: boolean;
     protected callSignVisible: boolean = false;
     protected trafficVisible: boolean = true;
@@ -333,13 +339,20 @@ export class DAA_Airspace {
             this.wwd.addLayer(this.atmosphereLayer);
         }
 
-        // show coordinates
         if (this.godsView) {
-            this.wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(this.wwd));
+            // Controls for god's view
+            this.controlLayers = {
+                compass: new WorldWind.CompassLayer(),
+                view: new WorldWind.ViewControlsLayer(this.wwd),
+                coords: new WorldWind.CoordinatesDisplayLayer(this.wwd)
+            }
+            this.controlLayers.compass.enabled = true;
+            this.controlLayers.view.enabled = true;
+            this.controlLayers.coords.enabled = true;
+            for (let i in this.controlLayers) {
+                this.wwd.addLayer(this.controlLayers[i]);
+            }
         }
-
-        // this.wwd.addLayer(new WorldWind.CompassLayer());
-        // this.wwd.addLayer(new WorldWind.ViewControlsLayer(this.wwd));
 
         // Center the view on the ownship.
         this.wwd.navigator.lookAtLocation.latitude = +opt.ownship.lat;

@@ -246,10 +246,15 @@ export declare class Sector {
 }
 export declare class AtmosphereLayer extends RenderableLayer {
 }
+export declare class CompassLayer extends RenderableLayer {
+}
 export declare class CoordinatesDisplayLayer extends RenderableLayer {
     constructor (worldWindow: WorldWindow);
     doRender (dc: DrawContext): void;
     eyeText: GeographicText;
+}
+export declare class ViewControlsLayer extends RenderableLayer {
+    constructor (worldWindow: WorldWindow);
 }
 export declare class GeographicMesh extends AbstractMesh {
     constructor(positions: Position[], attributes: ShapeAttributes);

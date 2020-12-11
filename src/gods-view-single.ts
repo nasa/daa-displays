@@ -75,7 +75,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         const vspeed: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
         const alt: number = +flightData.ownship.s.alt;
 
-        data.compass.setCompass(flightData.ownship.v);
+        if (!godsView) {
+            data.compass.setCompass(flightData.ownship.v);
+        }
         data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
         data.verticalSpeedTape.setVerticalSpeed(vspeed);
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
@@ -252,11 +254,11 @@ function plotMonitor (desc: { data: MonitorElement, monitorID: number }) {
 // interactive map
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp", godsView });
 // wind indicator
-const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
+const wind: WindIndicator = new WindIndicator("wind", { top: (godsView? 772 : 690), left: (godsView ? 20 : 195) }, { parent: "daa-disp"});
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp-hidden", maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
+const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp-hidden", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [

@@ -122,12 +122,12 @@ public class DAA2Json {
 		Vect3 si = intruder.get_s(); // projected position of the intruder
 		Velocity vi = intruder.get_v(); // projected velocity of the intruder
 
-		// --- the following shows how to perform inverse transformation
+		// --- the following computations show how to perform inverse transformation for lla and velocity
 		Position po = ownship.getPosition(); // ownship position in lat lon
 		EuclideanProjection eprj = Projection.createProjection(po);
 		LatLonAlt lla = eprj.inverse(si);
 		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
-		Velocity vx = eprj.inverseVelocity(si, vi, true);
+		Velocity vx = eprj.inverseVelocity(si, vi, true); // this should be the same as vi
 			
 		String lat = llaFlag ? f.FmPrecision(Units.to("deg", px.lat()) + latOffset, precision16)
 			: f.FmPrecision(Units.to("deg", px.lat()), precision16);
@@ -141,7 +141,7 @@ public class DAA2Json {
 			+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
 			+ "\"v\": { " 
 			+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-			+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+			+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", "
 			+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
 			+ " }";
     }
