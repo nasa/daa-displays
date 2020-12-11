@@ -59,6 +59,14 @@ import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class DAA2Json {
 
+	// the following frag and offset are introduced to avoid a region 
+	// in the atlantic ocean where worldwind is unable to render maps at certain zoom levels
+	// (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
+	protected boolean llaFlag = false;
+	protected static final double latOffset = 37.0298687;
+    protected static final double lonOffset = -76.3452218;
+	protected static final double latlonThreshold = 0.3;
+
     protected boolean VERBOSE = true;
 
     protected Daidalus daa = null;
@@ -70,166 +78,208 @@ public class DAA2Json {
     // 1 degree longitude is ~69 miles and ~60nmi
     // 1 nautical mile is 1.15078 miles
 
-    public DAA2Json (Daidalus daidalus) {
-	daa = daidalus;
+    public DAA2Json (Daidalus daidalus) { daa = daidalus; }
+
+	protected void adjustThreshold (String input, Daidalus daidalus) {
+		DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		while (!walker.atEnd()) {
+			walker.readState(daidalus);
+			TrafficState ownship = daidalus.getOwnshipState();
+			if (isBelowLLAThreshold(ownship, ownship)) {
+				llaFlag = true;
+				System.out.println("LLA flag is TRUE");
+				return;
+			}
+			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
+				TrafficState traffic = daidalus.getAircraftStateAt(idx);
+				if (isBelowLLAThreshold(ownship, traffic)) {
+					llaFlag = true;
+					System.out.println("LLA flag is TRUE");
+					return;
+				}
+			}
+		}
+		System.out.println("LLA flag is FALSE");
+		llaFlag = false;
+	}
+	protected boolean isBelowLLAThreshold(TrafficState ownship, TrafficState intruder) {
+		// current intruder position
+		Vect3 si = intruder.get_s(); // projected position of the intruder
+		Velocity vi = intruder.get_v(); // projected velocity of the intruder
+
+		Position po = ownship.getPosition(); // ownship position in lat lon
+		EuclideanProjection eprj = Projection.createProjection(po);
+		LatLonAlt lla = eprj.inverse(si);
+		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
+
+		return Math.abs(Units.to("deg", px.lat())) < DAA2Json.latlonThreshold 
+			&& Math.abs(Units.to("deg", px.lon())) < DAA2Json.latlonThreshold;
     }
 
-    public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
-	// current intruder position
-	Vect3 si = intruder.get_s(); // projected position of the intruder
-	Velocity vi = intruder.get_v(); // projected velocity of the intruder
 
-	// --- the following shows how to perform inverse transformation
-	Position po = ownship.getPosition(); // ownship position in lat lon
-	EuclideanProjection eprj = Projection.createProjection(po);
-	LatLonAlt lla = eprj.inverse(si);
-	Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
-	Velocity vx = eprj.inverseVelocity(si, vi, true);
-		
-	return "{ "
-	    + "\"id\": \"" + intruder.getId() + "\", " 
-	    + "\"s\": { "
-	    + "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
-	    + "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
-	    + "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
-	    + "\"v\": { " 
-	    + "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-	    + "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
-	    + "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
-	    + " }";
+    public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
+		// current intruder position
+		Vect3 si = intruder.get_s(); // projected position of the intruder
+		Velocity vi = intruder.get_v(); // projected velocity of the intruder
+
+		// --- the following shows how to perform inverse transformation
+		Position po = ownship.getPosition(); // ownship position in lat lon
+		EuclideanProjection eprj = Projection.createProjection(po);
+		LatLonAlt lla = eprj.inverse(si);
+		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
+		Velocity vx = eprj.inverseVelocity(si, vi, true);
+			
+		String lat = llaFlag ? f.FmPrecision(Units.to("deg", px.lat()) + latOffset, precision16)
+			: f.FmPrecision(Units.to("deg", px.lat()), precision16);
+		String lon = llaFlag ? f.FmPrecision(Units.to("deg", px.lon()) + lonOffset, precision16)
+			: f.FmPrecision(Units.to("deg", px.lon()), precision16);
+		return "{ "
+			+ "\"id\": \"" + intruder.getId() + "\", " 
+			+ "\"s\": { "
+			+ "\"lat\": \"" + lat + "\", " 
+			+ "\"lon\": \"" + lon + "\", " 
+			+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
+			+ "\"v\": { " 
+			+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+			+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+			+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
+			+ " }";
     }
 
     public String printDAA(TrafficState ownship, TrafficState intruder, double time) {
-	// current intruder position
-	Vect3 si = intruder.get_s(); // projected position of the intruder
-	Velocity vi = intruder.get_v(); // projected velocity of the intruder
+		// current intruder position
+		Vect3 si = intruder.get_s(); // projected position of the intruder
+		Velocity vi = intruder.get_v(); // projected velocity of the intruder
 
-	// --- the following shows how to perform inverse transformation
-	Position po = ownship.getPosition(); // ownship position in lat lon
-	EuclideanProjection eprj = Projection.createProjection(po);
-	LatLonAlt lla = eprj.inverse(si);
-	Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
-	Velocity vx = eprj.inverseVelocity(si, vi, true);
-		
-	return "{ "
-	    + "\"name\": \"" + intruder.getId() + "\", " 
-	    + "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
-	    + "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
-	    + "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
-	    + "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
-	    + "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-	    + "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
-	    + "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
-	    + " }";
+		// --- the following shows how to perform inverse transformation
+		Position po = ownship.getPosition(); // ownship position in lat lon
+		EuclideanProjection eprj = Projection.createProjection(po);
+		LatLonAlt lla = eprj.inverse(si);
+		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
+		Velocity vx = eprj.inverseVelocity(si, vi, true);
+			
+		return "{ "
+			+ "\"name\": \"" + intruder.getId() + "\", " 
+			+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
+			+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
+			+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
+			+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
+			+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+			+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+			+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
+			+ " }";
     }
 
     public static void printHelp () {
-	System.out.println("Usage: java -jar DAA2Json.jar <file.daa>\n");
+		System.out.println("Usage: java -jar DAA2Json.jar <file.daa>\n");
     }
 
     public static void main(String[] args) {
 
-	if (args == null || args.length == 0) {
-	    printHelp();
-	    return;
-	}
-
-	PrintWriter out = new PrintWriter(System.out);
-		
-	String scenario = null;
-	String output = null;
-
-	// Process args
-	int a = 0;
-	while (a < args.length && args[a].startsWith("-")) {
-	    if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-		// printHelpMsg();
-	    } else if (args[a].startsWith("--output") || args[a].startsWith("-output") || args[a].equals("-o")) {
-		output = args[++a];
-	    } else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
-		System.out.println(VERSION);
-                System.exit(0);
-            } else if (args[a].startsWith("-")) {
-		System.err.println("** Error: Invalid option (" + args[a] + ")");
-		System.exit(1);
-	    }
-	    a++;
-	}
-
-	String input = args[a];
-
-	File file = new File(input);
-	if (!file.exists() || !file.canRead()) {
-	    System.err.println("** Error: File " + input + " cannot be read");
-	    System.exit(1);
-	}
-	try {
-	    String name = file.getName();
-	    scenario = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
-	    if (output == null) {
-		output = scenario + ".json";
-	    }
-	    out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
-	    System.out.println("Writing output file " + output);
-	} catch (Exception e) {
-	    System.err.println("** Error: " + e);
-	    System.exit(1);
-	}
-
-	// create daidalus
-	Daidalus daidalus = new Daidalus();
-	DAA2Json daa2json = new DAA2Json(daidalus);
-
-	out.println("{\n\t\"scenarioName\": \"" + scenario + "\",");
-
-	String lla = "\t\"lla\": {\n"; // position array, grouped by aircraft type
-	String daa = "\t\"daa\": [\n"; // position array, as in the original daa file
-	String steps = "\t\"steps\": [ "; // time array
-	// Process input file using DaidalusFileWalker
-	DaidalusFileWalker walker = new DaidalusFileWalker(input);
-	int i = 0;
-	while (!walker.atEnd()) {
-	    double time = walker.getTime();
-	    walker.readState(daidalus);
-	    steps += "\"" + f.FmPrecision(time, precision16) + "\""; // time at step i
-	    lla += "\t\t\"" + f.FmPrecision(time, precision16) + "\": {\n"; // time at step i
-	    // print ownship state
-	    TrafficState ownship = daidalus.getOwnshipState();
-	    lla += "\t\t\t\"ownship\": " + daa2json.printLLA(ownship, ownship, time) + ",\n";
-	    lla += "\t\t\t\"traffic\": [\n";
-	    // print traffic state
-	    int nTraffic = 0;
-	    for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
-		TrafficState traffic = daidalus.getAircraftStateAt(idx);
-		daa += "\t\t" + daa2json.printDAA(ownship, traffic, time);
-		if (idx < daidalus.lastTrafficIndex()) {
-		    daa += ",\n";
+		if (args == null || args.length == 0) {
+			printHelp();
+			return;
 		}
-		if (traffic.getId() != ownship.getId()) {
-		    nTraffic++;
-		    lla += "\t\t\t\t" + daa2json.printLLA(ownship, traffic, time);
-		    if (nTraffic < daidalus.lastTrafficIndex()) {
-			lla += ",\n";
-		    }
+
+		PrintWriter out = new PrintWriter(System.out);
+			
+		String scenario = null;
+		String output = null;
+
+		// Process args
+		int a = 0;
+		while (a < args.length && args[a].startsWith("-")) {
+			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
+			// printHelpMsg();
+			} else if (args[a].startsWith("--output") || args[a].startsWith("-output") || args[a].equals("-o")) {
+				output = args[++a];
+			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
+				System.out.println(VERSION);
+				System.exit(0);
+			} else if (args[a].startsWith("-")) {
+				System.err.println("** Error: Invalid option (" + args[a] + ")");
+				System.exit(1);
+			}
+			a++;
 		}
-	    }
-	    lla += "\n\t\t\t]\n\t\t}";
-	    if (!walker.atEnd()) {
-		lla += ",\n";
-		daa += ",\n";
-		steps += ", ";
-	    }
-	    i++;
-	}
-	lla += "\n\t";
-	steps += "]";
 
-	out.println("\t\"length\": " + i + ", ");
-	out.println(daa + "],");
-	out.println(lla + "},");
-	out.println(steps);
-	out.println("}");
+		String input = args[a];
 
-	out.close();
+		File file = new File(input);
+		if (!file.exists() || !file.canRead()) {
+			System.err.println("** Error: File " + input + " cannot be read");
+			System.exit(1);
+		}
+		try {
+			String name = file.getName();
+			scenario = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
+			if (output == null) {
+				output = scenario + ".json";
+			}
+			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
+			System.out.println("Writing output file " + output);
+		} catch (Exception e) {
+			System.err.println("** Error: " + e);
+			System.exit(1);
+		}
+
+		// create daidalus
+		Daidalus daidalus = new Daidalus();
+		DAA2Json daa2json = new DAA2Json(daidalus);
+
+		out.println("{\n\t\"scenarioName\": \"" + scenario + "\",");
+
+		String lla = "\t\"lla\": {\n"; // position array, grouped by aircraft type
+		String daa = "\t\"daa\": [\n"; // position array, as in the original daa file
+		String steps = "\t\"steps\": [ "; // time array
+
+		daa2json.adjustThreshold(input, daidalus);
+
+		// Process input file using DaidalusFileWalker
+		DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		int i = 0;
+		while (!walker.atEnd()) {
+			double time = walker.getTime();
+			walker.readState(daidalus);
+			steps += "\"" + f.FmPrecision(time, precision16) + "\""; // time at step i
+			lla += "\t\t\"" + f.FmPrecision(time, precision16) + "\": {\n"; // time at step i
+			// print ownship state
+			TrafficState ownship = daidalus.getOwnshipState();
+			lla += "\t\t\t\"ownship\": " + daa2json.printLLA(ownship, ownship, time) + ",\n";
+			lla += "\t\t\t\"traffic\": [\n";
+			// print traffic state
+			int nTraffic = 0;
+			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
+				TrafficState traffic = daidalus.getAircraftStateAt(idx);
+				daa += "\t\t" + daa2json.printDAA(ownship, traffic, time);
+				if (idx < daidalus.lastTrafficIndex()) {
+					daa += ",\n";
+				}
+				if (traffic.getId() != ownship.getId()) {
+					nTraffic++;
+					lla += "\t\t\t\t" + daa2json.printLLA(ownship, traffic, time);
+					if (nTraffic < daidalus.lastTrafficIndex()) {
+						lla += ",\n";
+					}
+				}
+			}
+			lla += "\n\t\t\t]\n\t\t}";
+			if (!walker.atEnd()) {
+				lla += ",\n";
+				daa += ",\n";
+				steps += ", ";
+			}
+			i++;
+		}
+		lla += "\n\t";
+		steps += "]";
+
+		out.println("\t\"length\": " + i + ", ");
+		out.println(daa + "],");
+		out.println(lla + "},");
+		out.println(steps);
+		out.println("}");
+
+		out.close();
     }
 }
