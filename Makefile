@@ -41,7 +41,7 @@ daidalus:
 
 compile:
 	@echo "\033[0;32m** Making Java and C++ applications **\033[0m"
-	cd dist && make compile 
+	cd dist && make clean compile 
 	@echo "\033[0;32mDone making Java and C++ applications! \033[0m"
 
 install-dependencies:
