@@ -4,8 +4,6 @@ JAVAC = javac
 JAR   = jar
 CPP   = c++
 
-current=v2.0.w
-
 all: compile
 
 which-daidalus:
@@ -46,7 +44,7 @@ CODEV2 = DAA2XYZ DAA2Json DAA2PVSV2
 define codev2-template
 codev2-$(1):
 	@echo "\033[0;32m** Building $(1)-2.x **\033[0m"
-	-cd utils && $(JAVAC) -cp  $(DAIDALUS_DIR)/$(current)/Java/lib/DAIDALUS2.jar $(1).java && cp -f $(DAIDALUS_DIR)/$(current)/Java/lib/DAIDALUS2.jar ../$(1)-2.x.jar && echo "Main-Class: $(1)" > mf && $(JAR) umf mf ../$(1)-2.x.jar $(1).class && rm -f mf
+	-cd utils && $(JAVAC) -cp  $(DAIDALUS_DIR)/development/Java/lib/DAIDALUS2.jar $(1).java && cp -f $(DAIDALUS_DIR)/development/Java/lib/DAIDALUS2.jar ../$(1)-2.x.jar && echo "Main-Class: $(1)" > mf && $(JAR) umf mf ../$(1)-2.x.jar $(1).class && rm -f mf
 endef
 codev2-all = $(foreach code,$(CODEV2),$(eval $(call codev2-template,$(code))))
 COMPILE_CODEV2_TARGETS = $(foreach code,$(CODEV2),codev2-$(code))
