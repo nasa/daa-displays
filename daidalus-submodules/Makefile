@@ -1,6 +1,6 @@
 all: compile
 
-releases := $(shell cat releases | sed -e "s:\#[^\n]*::g")
+releases := $(shell cat releases | sed -e "s:\#.*::g")
 
 releases:
 	@echo $(releases)
