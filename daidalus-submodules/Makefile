@@ -1,6 +1,9 @@
 all: compile
 
-releases := $(shell cat releases)
+releases := $(shell cat releases | sed -e "s:\#[^\n]*::g")
+
+releases:
+	@echo $(releases)
 
 compile:
 	@for f in $(releases); do \
@@ -26,4 +29,4 @@ submodules:
 	git submodule update --init --remote
 
 
-.PHONY: all compile clean submodules
+.PHONY: all compile clean submodules releases
