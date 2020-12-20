@@ -3,7 +3,7 @@ all: compile
 releases := $(shell cat releases | sed -e "s:\#.*::g")
 
 releases:
-	@echo $(releases)
+	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
 
 compile:
 	@for f in $(releases); do \
