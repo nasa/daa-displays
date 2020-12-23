@@ -1,6 +1,6 @@
-versions := $(shell cat ../../daidalus-submodules/releases | sed -e "s:\#.*::g")
+releasefile := $(if $(shell test -f "releases" && echo "YES"),releases,../../daidalus-submodules/releases)
 
-#versions := $(shell cd ../..;ls -1d daidalus-submodules/v* | sed -e "s:daidalus-submodules/v::g")
+releases := $(shell cat $(releasefile) | sed -e "s:\#.*::g")
 
 version1 = $(findstring v1.,$(1))
 
@@ -11,27 +11,30 @@ CPP   = c++
 all: compile
 
 releases:
-	@echo "DAA-Displays includes the following DAIDALUS releases:$(versions)"
+	@if [ -f releases ]; then \
+		echo "*** Warning: Using local file 'dist/daa-logic/releases'"; \
+	fi
+	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
 
 DAIDALUS_DIR=../../../daidalus-submodules
 
 # compilation templates
 
-COMPILE_JAVA_TARGETS = $(foreach ver,$(versions),compile-java-$(ver))
+COMPILE_JAVA_TARGETS = $(foreach ver,$(releases),compile-java-$(ver))
 define compile-java-template
 compile-java-$(1):
 	@echo "\033[0;32m** Building DAIDALUS$(1).jar **\033[0m"
 	cd utils; $(JAVAC) -cp $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java) && cp -f $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) ../DAIDALUS$(1).jar && echo "Main-Class: $(if $(call version1,$(1)),DAABands,DAABandsV2)" > mf && $(JAR) umf mf ../DAIDALUS$(1).jar $(if $(call version1,$(1)),DAABands.class,DAABandsV2.class DAAMonitorsV2.class) && rm -f mf
 endef
-compile-java-all = $(foreach ver,$(versions),$(eval $(call compile-java-template,$(ver))))
+compile-java-all = $(foreach ver,$(releases),$(eval $(call compile-java-template,$(ver))))
 
-COMPILE_CPP_TARGETS = $(foreach ver,$(versions),compile-cpp-$(ver))
+COMPILE_CPP_TARGETS = $(foreach ver,$(releases),compile-cpp-$(ver))
 define compile-cpp-template
 compile-cpp-$(1): 
 	@echo "\033[0;32m** Building DAIDALUS$(1).exe **\033[0m"
 	cd utils; $(CPP) $(if $(call version1,$(1)),DAABands.cpp,DAABandsV2.cpp) -std=c++11 -I$(DAIDALUS_DIR)/$(1)/C++/include $(DAIDALUS_DIR)/$(1)/C++/lib/$(if $(call version1,$(1)),DAIDALUS.a,DAIDALUS2.a) -o ../DAIDALUS$(1).exe
 endef
-compile-cpp-all = $(foreach ver,$(versions),$(eval $(call compile-cpp-template,$(ver))))
+compile-cpp-all = $(foreach ver,$(releases),$(eval $(call compile-cpp-template,$(ver))))
 
 CODEV1 = DAA2PVS
 define codev1-template
