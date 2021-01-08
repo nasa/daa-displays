@@ -1,7 +1,12 @@
 all: compile
 
+releases := $(shell cat releases | sed -e "s:\#.*::g")
+
+releases:
+	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
+
 compile:
-	@for f in *; do \
+	@for f in $(releases); do \
 	if [ -d "$$f" ]; then \
 	  if [ -d "$$f/Java" -a -f "$$f/Java/Makefile" ]; then \
 	    echo "\033[0;32m** Building $$f/Java **\033[0m"; cd $$f/Java; make lib; cd ../C++; make lib; cd ..; \
@@ -11,7 +16,7 @@ compile:
 	fi fi done
 
 clean:
-	@for f in *; do \
+	@for f in $(releases); do \
 	if [ -d "$$f" ]; then \
 	  if [ -d "$$f/Java" -a -f "$$f/Java/Makefile" ]; then \
 	    echo "\033[0;32m** Cleaning $$f/Java **\033[0m"; cd $$f/Java; make clean; cd ..; \
@@ -23,3 +28,5 @@ clean:
 submodules:
 	git submodule update --init --remote
 
+
+.PHONY: all compile clean submodules releases
