@@ -20,8 +20,7 @@
 		"express": "^4.16.4",
 		"handlebars": "^4.7.6",
 		"jquery": "^3.5.1",
-		"node": "^12.12.2",
-		"npm-force-resolutions": "0.0.3"
+		"node": "^12.12.2"
 	},
 	"devDependencies": {
 		"@types/express": "^4.16.1",
@@ -29,15 +28,13 @@
 		"@types/jquery": "^3.3.38",
 		"@types/node": "^12.12.2",
 		"@types/ws": "^6.0.1",
+		"electron": "^9.3.1",
 		"jasmine": "^3.4.0",
-		"minimist": "^1.2.5",
 		"ts-node": "^8.3.0",
 		"tslint": "^6.1.0",
 		"typescript": "^3.5.3"
 	},
-	"resolutions": {
-		"minimist": "^1.2.5"
-	},
+	"resolutions": {},
 	"_obsolete_dep_": {
 		"jasmine-ts": "^0.3.0"
 	}
