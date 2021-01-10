@@ -35,7 +35,7 @@
    PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE
    REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
    TERMINATION OF THIS AGREEMENT.
-**/
+ **/
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,8 +43,8 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.List;
 
+import gov.nasa.larcfm.ACCoRD.Alerter;
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
@@ -57,50 +57,55 @@ import gov.nasa.larcfm.Util.LatLonAlt;
 import gov.nasa.larcfm.Util.Projection;
 import gov.nasa.larcfm.Util.EuclideanProjection;
 import gov.nasa.larcfm.ACCoRD.Detection3D;
+import gov.nasa.larcfm.ACCoRD.RecoveryInformation;
 import gov.nasa.larcfm.ACCoRD.WCV_tvar;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class DAABandsV2 {
 
-    protected String tool_name = "DAABandsV2";
+	protected String tool_name = "DAABandsV2";
 
-    Daidalus daa = null;
+	protected Daidalus daa = null;
 
-    protected String daaConfig = null;
-    protected String scenario = null;
-    protected String ofname = null; // output file name
-    protected String ifname = null; // input file name
+	protected String daaConfig = null;
+	protected String scenario = null;
+	protected String ofname = null; // output file name
+	protected String ifname = null; // input file name
 
-    protected String wind = null;
+	protected String wind = null;
 
-    PrintWriter printWriter = null;
+	protected PrintWriter printWriter = null;
 
-    DAABandsV2 () {
+	protected DAABandsV2 () {
 		/* Create Daidalus object and setting the configuration parameters */
 		daa = new Daidalus();
-    }
+	}
 
-    String getScenario() {
+	protected String getScenario() {
 		return scenario;
-    }
-    String getConfigFileName() {
+	}
+
+	protected String getConfigFileName() {
 		return daaConfig;
-    }
-    String getDaaConfig () {
+	}
+
+	protected String getDaaConfig () {
 		if (daaConfig != null) {
 			return daaConfig.split("/")[ daaConfig.split("/").length - 1 ];
 		}
 		return null;
-    }
-    String getOutputFileName() {
-		return ofname;
-    }
-    String getInputFileName() {
-		return ifname;
-    }
+	}
 
-    protected void printHelpMsg() {
+	protected String getOutputFileName() {
+		return ofname;
+	}
+
+	protected String getInputFileName() {
+		return ifname;
+	}
+
+	protected void printHelpMsg() {
 		System.out.println("Version: DAIDALUS " + getVersion());
 		System.out.println("Generates a file that can be rendered in daa-displays");
 		System.out.println("Usage:");
@@ -113,12 +118,12 @@ public class DAABandsV2 {
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.exit(0);
-    }
+	}
 
-    /**
-     * Returns the list of monitors in json format
-     */
-    String printMonitorList() {
+	/**
+	 * Returns the list of monitors in json format
+	 */
+	protected String printMonitorList() {
 		DAAMonitorsV2 monitors = new DAAMonitorsV2(null);
 		int n = monitors.getSize();
 		String res = "";
@@ -127,23 +132,23 @@ public class DAABandsV2 {
 			if (i < n - 1) { res += ", "; }
 		}
 		return "[ " + res + " ]";
-    }
+	}
 
-    protected static void printArray(PrintWriter out, List<String> info, String label) {
+	protected static void printArray(PrintWriter out, List<String> info, String label) {
 		out.println("\"" + label + "\": [");
 		int n = info.size();
 		for (int i = 0; i < n; i++) {
 			out.print(info.get(i));
 			if (i < n - 1) {
-			out.println(",");
+				out.println(",");
 			} else {
-			out.println("");
+				out.println("");
 			}
 		}
 		out.println("]");
-    }
+	}
 
-    protected static void printMonitors (PrintWriter out, DAAMonitorsV2 monitors, List<List<String>> info) {
+	protected static void printMonitors (PrintWriter out, DAAMonitorsV2 monitors, List<List<String>> info) {
 		out.println("[ ");
 		int len = monitors.getSize();
 		for (int i = 0; i < len; i++) {
@@ -157,34 +162,34 @@ public class DAABandsV2 {
 			out.println("\"legend\": " + legend + ",\n");
 			DAABandsV2.printArray(out, info.get(i), "results");
 			if (i < len - 1) {
-			out.println("}, ");
+				out.println("}, ");
 			} else {
-			out.println("} ");
+				out.println("} ");
 			}
 		}
 		out.println(" ]");
-    }
+	}
 
-    boolean loadDaaConfig () {
+	protected boolean loadDaaConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
-			boolean paramLoaded = daa.loadFromFile(daaConfig);
-			if (paramLoaded) {
-				System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
-				return true;
+				boolean paramLoaded = daa.loadFromFile(daaConfig);
+				if (paramLoaded) {
+					System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
+					return true;
+				} else {
+					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default DAIDALUS configuration.");
+				}
 			} else {
-				System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default DAIDALUS configuration.");
-			}
-			} else {
-			System.err.println("** Warning: Configuration file not specified. Using default DAIDALUS configuration.");
+				System.err.println("** Warning: Configuration file not specified. Using default DAIDALUS configuration.");
 			}
 		} else {
 			System.err.println("** Error: Daidalus is not initialized.");
 		}
 		return false;
-    }
+	}
 
-    boolean loadWind () {
+	protected boolean loadWind () {
 		if (daa != null) {
 			if (wind != null) {
 				double deg = 0;
@@ -206,136 +211,169 @@ public class DAABandsV2 {
 			System.err.println("** Error: Daidalus is not initialized.");
 		}
 		return false;
-    }
-	
-    protected String jsonHeader () {
-		return "\"Info\": "
-			+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + getDaaConfig() + "\" },\n"
-			+ "\"Scenario\": \"" + scenario + "\",\n"
-			+ "\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindVelocityFrom().compassAngle()) 
-			+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
-    }
+	}
 
-    /**
-     * Utility function, returns LLA coordinates of a point in space
-     * @param pi Position of the intruder
-     * @param po Position of the ownship
-     */
-    protected LatLonAlt getLatLonAlt (Position pi, Position po) {
+	protected String jsonHeader () {
+		return "\"Info\": "
+				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + getDaaConfig() + "\" },\n"
+				+ "\"Scenario\": \"" + scenario + "\",\n"
+				+ "\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindVelocityFrom().compassAngle()) 
+				+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
+	}
+
+	/**
+	 * Utility function, returns LLA coordinates of a point in space
+	 * @param pi Position of the intruder
+	 * @param po Position of the ownship
+	 */
+	protected LatLonAlt getLatLonAlt (Position pi, Position po) {
 		if (pi.isLatLon()) {
 			return pi.lla();
 		}
 		EuclideanProjection eprj = Projection.createProjection(po);
 		return eprj.inverse(pi.vect3());
-    }
+	}
 
-    protected String printPolygons (List<List<Position>> polygons, Position po) {
+	protected String printPolygons (List<List<Position>> polygons, Position po) {
 		if (polygons != null) {
 			int n = polygons.size();
 			String res = "";
 			for (int i = 0; i < n; i++) {
-			List<Position> ply = polygons.get(i);
-			String polygon = printPolygon(ply, po);
-			if (i < n - 1) { polygon += ",\n"; }
-			res += polygon;
+				List<Position> ply = polygons.get(i);
+				String polygon = printPolygon(ply, po);
+				if (i < n - 1) { polygon += ",\n"; }
+				res += polygon;
 			}
 			return "[ \n" + res + "]";
 		}
 		return "[ ]";
-    }
+	}
 
-    protected String printPolygon (List<Position> ply, Position po) {
+	protected String printPolygon (List<Position> ply, Position po) {
 		String polygon = "";
 		if (ply != null) {
 			int m = ply.size();
 			for (int j = 0; j < m; j++) {
-			Position pi = ply.get(j);
-			LatLonAlt lla = getLatLonAlt(pi, po);
-			polygon += "\t\t{ \"lat\": \"" + Units.to("deg", lla.lat());
-			polygon += "\", \"lon\": \"" + Units.to("deg", lla.lon()); 
-			polygon += "\", \"alt\": \"" + Units.to("ft", lla.alt());
-			polygon += "\" }";
-			if (j < m - 1) { polygon += ",\n"; }
+				Position pi = ply.get(j);
+				LatLonAlt lla = getLatLonAlt(pi, po);
+				polygon += "\t\t{ \"lat\": \"" + Units.to("deg", lla.lat());
+				polygon += "\", \"lon\": \"" + Units.to("deg", lla.lon()); 
+				polygon += "\", \"alt\": \"" + Units.to("ft", lla.alt());
+				polygon += "\" }";
+				if (j < m - 1) { polygon += ",\n"; }
 			}
 			polygon = "\t[\n" + polygon + "\n\t]";
 			return polygon;
 		}
 		return "\t[]";
-    }
+	}
 
-    protected String jsonBands (
-		DAAMonitorsV2 monitors,
-		List<String> ownshipArray, List<String> alertsArray, List<String> metricsArray, 
-		List<String> trkArray, List<String> gsArray, List<String> vsArray, List<String> altArray, 
-		List<String> resTrkArray, List<String> resGsArray, List<String> resVsArray, List<String> resAltArray, 
-		List<String> contoursArray, List<String> hazardZonesArray,
-		List<String> monitorM1Array, List<String> monitorM2Array, List<String> monitorM3Array, List<String> monitorM4Array 
-	) {
+	protected String jsonBands (
+			DAAMonitorsV2 monitors,
+			List<String> ownshipArray, List<String> alertsArray, List<String> metricsArray, 
+			List<String> trkArray, List<String> gsArray, List<String> vsArray, List<String> altArray, 
+			List<String> resTrkArray, List<String> resGsArray, List<String> resVsArray, List<String> resAltArray, 
+			List<String> contoursArray, List<String> hazardZonesArray,
+			List<String> monitorM1Array, List<String> monitorM2Array, List<String> monitorM3Array, List<String> monitorM4Array 
+			) {
 		String hs_units = daa.getUnitsOf("step_hs");
 		String vs_units = daa.getUnitsOf("step_vs");
 		String alt_units = daa.getUnitsOf("step_alt");
-		String hdir_units = daa.getUnitsOf("step_hdir");
+		String hdir_units = "deg";
 		String hrec_units = daa.getUnitsOf("min_horizontal_recovery");
 		String vrec_units = daa.getUnitsOf("min_vertical_recovery");
+		String time_units = "s";
 
 		// load wind settings at each time step --- wind is not persistent in DAIDALUS
 		loadWind();
 
 		// ownship
 		String time = f.FmPrecision(daa.getCurrentTime());
+		Velocity avo = daa.getOwnshipState().getAirVelocity();
+		Velocity gvo = daa.getOwnshipState().getGroundVelocity();
 		String own = "{ \"time\": " + time; 
-		own += ", \"heading\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalDirection(hdir_units) + "\"";
+		own += ", \"ownship\": \""+ daa.getOwnshipState().getId()+"\"";
+		own += ", \"heading\": { \"val\": \"" + f.FmPrecision(avo.compassAngle(hdir_units)) + "\"";
+		own += ", \"internal\": \"" + f.FmPrecision(avo.compassAngle()) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"airspeed\": { \"val\": \"" + daa.getAircraftStateAt(0).horizontalSpeed(hs_units) + "\"";
+		own += ", \"track\": { \"val\": \"" + f.FmPrecision(gvo.compassAngle(hdir_units)) + "\"";
+		own += ", \"internal\": \"" + f.FmPrecision(gvo.compassAngle()) + "\"";
+		own += ", \"units\": \"" + hdir_units + "\" }";
+		own += ", \"airspeed\": { \"val\": \"" + f.FmPrecision(avo.groundSpeed(hs_units)) + "\"";
+		own += ", \"internal\": \"" + f.FmPrecision(avo.gs()) + "\"";
+		own += ", \"units\": \"" + hs_units + "\" }";
+		own += ", \"groundspeed\": { \"val\": \"" + f.FmPrecision(gvo.groundSpeed(hs_units)) + "\"";
+		own += ", \"internal\": \"" + f.FmPrecision(gvo.gs()) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
 		own += " }";
 		ownshipArray.add(own);
 
 		// traffic alerts
 		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
-		String tmp = "";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
+			int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac);
+			Alerter alerter = daa.getAlerterAt(alerter_idx);
 			int alert = daa.alertLevel(ac);
 			String ac_name = daa.getAircraftStateAt(ac).getId();
-			if (tmp != "") { tmp += ", "; }
-			tmp += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + alert + "\" }";
+			if (ac > 1) { alerts += ", "; }
+			alerts += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + f.Fmi(alert) + "\", \"alerter\": \"" + 
+					alerter.getId() + "\" }";
 		}
-		alerts += tmp;
 		alerts += " ]}";
 		alertsArray.add(alerts);
 
-		// metrics
-		String metrics = "{ \"time\": " + time + ", \"metrics\": [ ";
-		String met = "";
-		int corrective_level = daa.correctiveAlertLevel(1);
-		Detection3D detector = daa.getAlerterAt(1).getDetector(corrective_level).get();
+		// Traffic aircraft
+		String traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-			int alert = daa.alertLevel(ac);
-			String ac_name = daa.getAircraftStateAt(ac).getId();
+			int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac);
+			Velocity avi = daa.getAircraftStateAt(ac).getAirVelocity();
+			Velocity gvi = daa.getAircraftStateAt(ac).getGroundVelocity();
 			String hsep = f.FmPrecision(daa.currentHorizontalSeparation(ac, hrec_units));
+			String hsepi = f.FmPrecision(daa.currentHorizontalSeparation(ac));
 			String vsep = f.FmPrecision(daa.currentVerticalSeparation(ac, vrec_units));
-			String hcr = f.FmPrecision(daa.horizontalClosureRate(ac, hs_units));
-			String vcr = f.FmPrecision(daa.verticalClosureRate(ac, vs_units));
+			String vsepi = f.FmPrecision(daa.currentVerticalSeparation(ac));
 			String hmiss = f.FmPrecision(daa.predictedHorizontalMissDistance(ac, hrec_units));
+			String hmissi = f.FmPrecision(daa.predictedHorizontalMissDistance(ac));
 			String vmiss = f.FmPrecision(daa.predictedVerticalMissDistance(ac, vrec_units));
-			String tcpoa = f.FmPrecision(daa.timeToHorizontalClosestPointOfApproach(ac));
-			String dcpoa = f.FmPrecision(daa.distanceAtHorizontalClosestPointOfApproach(ac, hrec_units));
+			String vmissi = f.FmPrecision(daa.predictedVerticalMissDistance(ac));
+			String hcr = f.FmPrecision(daa.horizontalClosureRate(ac, hs_units));
+			String hcri = f.FmPrecision(daa.horizontalClosureRate(ac));
+			String vcr = f.FmPrecision(daa.verticalClosureRate(ac, vs_units));
+			String vcri = f.FmPrecision(daa.verticalClosureRate(ac));
+			String tcpa = f.FmPrecision(daa.timeToHorizontalClosestPointOfApproach(ac));
 			String tcoa = f.FmPrecision(daa.timeToCoAltitude(ac));
-			String taumod = (detector instanceof WCV_tvar) ? f.FmPrecision(daa.modifiedTau(ac, ((WCV_tvar)detector).getDTHR())) : "NaN";
-			if (met != "") { met += ", "; }
-			met += "{ \"ac\": \"" + ac_name + "\",";
-			met += " \"data\": {";
-			met += " \"Separation\": { \"hor\": { \"val\": \"" + hsep + "\", \"units\": \"" + hrec_units + "\" }, \"ver\": { \"val\": \"" + vsep + "\", \"units\": \"" + vrec_units + "\" }},";
-			met += " \"MissDistance\": { \"hor\": { \"val\": \"" + hmiss + "\", \"units\": \"" + hrec_units + "\" }, \"ver\": { \"val\": \"" + vmiss + "\", \"units\": \"" + vrec_units + "\" }},";
-			met += " \"ClosureRate\": { \"hor\": { \"val\": \"" + hcr + "\", \"units\": \"" + hs_units + "\" }, \"ver\": { \"val\": \"" + vcr + "\", \"units\": \"" + vs_units + "\" }},";
-			met += " \"CPOA\": { \"hor\": { \"time\": { \"val\": \"" + tcpoa + "\", \"units\": \"" + "sec" + "\" }, \"distance\": { \"val\": \"" + dcpoa + "\", \"units\": \"" + hrec_units + "\" }}},";
-			met += " \"TCOA\": { \"val\": \"" + tcoa + "\", \"units\": \"" + "sec" + "\" },";
-			met += " \"TAUMOD\": { \"val\": \"" + taumod + "\", \"units\": \"" + "sec" + "\" }";
-			met += " } }";
+			Alerter alerter = daa.getAlerterAt(alerter_idx);
+			int corrective_level = daa.correctiveAlertLevel(alerter_idx);
+			Detection3D detector = alerter.getDetector(corrective_level).get();
+			String taumod = (detector instanceof WCV_tvar) ? f.FmPrecision(daa.modifiedTau(ac,((WCV_tvar)detector).getDTHR())) : "NaN";
+			if (ac > 1) { traffic += ", "; }
+			traffic += "{ \"traffic\": \"" + daa.getAircraftStateAt(ac).getId() + "\",";
+			traffic += ", \"heading\": { \"val\": \"" + f.FmPrecision(avi.compassAngle(hdir_units)) + "\"";
+			traffic += ", \"internal\": \"" + f.FmPrecision(avi.compassAngle()) + "\"";
+			traffic += ", \"units\": \"" + hdir_units + "\" }";
+			traffic += ", \"track\": { \"val\": \"" + f.FmPrecision(gvi.compassAngle(hdir_units)) + "\"";
+			traffic += ", \"internal\": \"" + f.FmPrecision(gvi.compassAngle()) + "\"";
+			traffic += ", \"units\": \"" + hdir_units + "\" }";
+			traffic += ", \"airspeed\": { \"val\": \"" + f.FmPrecision(avi.groundSpeed(hs_units)) + "\"";
+			traffic += ", \"internal\": \"" + f.FmPrecision(avi.gs()) + "\"";
+			traffic += ", \"units\": \"" + hs_units + "\" }";
+			traffic += ", \"groundspeed\": { \"val\": \"" + f.FmPrecision(gvi.groundSpeed(hs_units)) + "\"";
+			traffic += ", \"internal\": \"" + f.FmPrecision(gvi.gs()) + "\"";
+			traffic += ", \"units\": \"" + hs_units + "\" }";
+			traffic += ", \"metrics\": {";
+			traffic += " \"separation\": { \"horizontal\": { \"val\": \"" + hsep + "\", \"internal\": \"" + hsepi +"\", \"units\": \"" + hrec_units + "\" }";
+			traffic += ", \"vertical\": { \"val\": \"" + vsep + "\", \"internal\": \"" + vsepi + "\", \"units\": \"" + vrec_units + "\" }}";
+			traffic += ", \"missdistance\": { \"horizontal\": { \"val\": \"" + hmiss + "\", \"internal\": \"" + hmissi + "\", \"units\": \"" + hrec_units + "\" }";
+			traffic += ", \"vertical\": { \"val\": \"" + vmiss + "\", \"internal\": \"" + vmissi + "\", \"units\": \"" + vrec_units + "\" }}";
+			traffic += ", \"closurerate\": { \"horizontal\": { \"val\": \"" + hcr + "\", \"internal\": \"" + hcri + "\", \"units\": \"" + hs_units + "\" }";
+			traffic += ", \"vertical\": { \"val\": \"" + vcr + "\", \"internal\": \"" + vcri + "\", \"units\": \"" + vs_units + "\" }},";
+			traffic += ", \"tcpa\": { \"val\": " + tcpa + "\", \"units\": \"" + time_units + "\" }";
+			traffic += ", \"tcoa\": { \"val\": " + tcoa + "\", \"units\": \"" + time_units + "\" }";
+			traffic += ", \"taumod\": { \"val\": " + taumod + "\", \"units\": \"" + time_units + "\" }";
+			traffic += " } }";
 		}
-		metrics += met;
-		metrics += " ]}";
-		metricsArray.add(metrics);
+		traffic += " ]}";
+		metricsArray.add(traffic);
 
 		// bands
 		String trkBands = "{ \"time\": " + time;
@@ -343,7 +381,7 @@ public class DAABandsV2 {
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
 			trkBands += "{ \"range\": " + daa.horizontalDirectionIntervalAt(i, hdir_units);
 			trkBands += ", \"units\": \"" +  hdir_units + "\"";
-			trkBands += ", \"alert\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
+			trkBands += ", \"region\": \"" + daa.horizontalDirectionRegionAt(i) + "\" }";
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trkBands += ", "; }
 		}
 		trkBands += " ]}";
@@ -354,7 +392,7 @@ public class DAABandsV2 {
 		for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
 			gsBands += "{ \"range\": " + daa.horizontalSpeedIntervalAt(i, hs_units);
 			gsBands += ", \"units\": \"" + hs_units + "\"";
-			gsBands += ", \"alert\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
+			gsBands += ", \"region\": \"" + daa.horizontalSpeedRegionAt(i) + "\" }";
 			if (i < daa.horizontalSpeedBandsLength() - 1) { gsBands += ", "; }
 		}
 		gsBands += " ]}";
@@ -365,18 +403,18 @@ public class DAABandsV2 {
 		for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
 			vsBands += "{ \"range\": " + daa.verticalSpeedIntervalAt(i, vs_units);
 			vsBands += ", \"units\": \"" + vs_units + "\"";
-			vsBands += ", \"alert\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
+			vsBands += ", \"region\": \"" + daa.verticalSpeedRegionAt(i) + "\" }";
 			if (i < daa.verticalSpeedBandsLength() - 1) { vsBands += ", "; }
 		}
 		vsBands += " ]}";
 		vsArray.add(vsBands);
-			
+
 		String altBands = "{ \"time\": " + time;
 		altBands += ", \"bands\": [ ";
 		for (int i = 0; i < daa.altitudeBandsLength(); i++) {
 			altBands += "{ \"range\": " + daa.altitudeIntervalAt(i, alt_units);
 			altBands += ", \"units\": \"" + alt_units + "\"";
-			altBands += ", \"alert\": \"" + daa.altitudeRegionAt(i) + "\" }";
+			altBands += ", \"region\": \"" + daa.altitudeRegionAt(i) + "\" }";
 			if (i < daa.altitudeBandsLength() - 1) { altBands += ", "; }
 		}
 		altBands += " ]}";
@@ -394,10 +432,23 @@ public class DAABandsV2 {
 		TrafficState ownship = daa.getOwnshipState();
 		double currentTrk = ownship.horizontalDirection(hdir_units);
 		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
-		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredTrk + "\" }"; 
-		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + currentTrkRegion + "\" }";
+		boolean isConflict = !Double.isNaN(resTrkInternal);
+		RecoveryInformation recoveryInfo = daa.horizontalDirectionRecoveryInformation();
+		boolean isRecovery = recoveryInfo.recoveryBandsComputed();
+		boolean isSaturated = recoveryInfo.recoveryBandsSaturated();
+		String timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
+		String hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		String hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
+		String vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		String vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		String nFactor = f.Fmi(recoveryInfo.nFactor());
+		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", \"flags\": { \"conflict\": \"" + isConflict + ", \"recovery\": \"" + isRecovery + ", \"saturated\": \"" + isSaturated + "\", \"preferred-resolution\": \"" + preferredTrk + "\" }"; 
+		trkResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + ", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
+		trkResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": "+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
+		trkResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": "+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}"; 
+		trkResolution += ", \"ownship\": { \"val\": \"" + currentTrk + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + currentTrkRegion + "\" }";
 		trkResolution += " }";
 		resTrkArray.add(trkResolution);
 
@@ -411,10 +462,23 @@ public class DAABandsV2 {
 		BandsRegion resGsRegion_sec = daa.regionOfHorizontalSpeed(resGsInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentGs = ownship.horizontalSpeed(hs_units);
 		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); // we want to use internal units here, to minimize round-off errors
-		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
-		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + resGs_sec + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		gsResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredGs + "\" }"; 
-		gsResolution += ", \"ownship\": { \"val\": \"" + currentGs + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + currentGsRegion + "\" }"; 
+		isConflict = !Double.isNaN(resGsInternal);
+		recoveryInfo = daa.horizontalSpeedRecoveryInformation();
+		isRecovery = recoveryInfo.recoveryBandsComputed();
+		isSaturated = recoveryInfo.recoveryBandsSaturated();
+		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		nFactor = f.Fmi(recoveryInfo.nFactor());
+		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + resGs_sec + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", \"flags\": { \"conflict\": \"" + isConflict + ", \"recovery\": \"" + isRecovery + ", \"saturated\": \"" + isSaturated + "\", \"preferred-resolution\": \"" + preferredGs + "\" }"; 
+		gsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + ", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
+		gsResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": "+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
+		gsResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": "+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}"; 
+		gsResolution += ", \"ownship\": { \"val\": \"" + currentGs + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + currentGsRegion + "\" }"; 
 		gsResolution += " }";
 		resGsArray.add(gsResolution);
 
@@ -428,10 +492,23 @@ public class DAABandsV2 {
 		BandsRegion resVsRegion_sec = daa.regionOfVerticalSpeed(resVsInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentVs = ownship.verticalSpeed(vs_units);
 		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); // we want to use internal units here, to minimize round-off errors
-		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
-		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + resVs_sec + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		vsResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredVs + "\" }"; 
-		vsResolution += ", \"ownship\": { \"val\": \"" + currentVs + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + currentVsRegion + "\" }"; 
+		isConflict = !Double.isNaN(resVsInternal);
+		recoveryInfo = daa.verticalSpeedRecoveryInformation();
+		isRecovery = recoveryInfo.recoveryBandsComputed();
+		isSaturated = recoveryInfo.recoveryBandsSaturated();
+		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		nFactor = f.Fmi(recoveryInfo.nFactor());
+		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + resVs_sec + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", \"flags\": { \"conflict\": \"" + isConflict + ", \"recovery\": \"" + isRecovery + ", \"saturated\": \"" + isSaturated + "\", \"preferred-resolution\": \"" + preferredVs + "\" }"; 
+		vsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + ", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
+		vsResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": "+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
+		vsResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": "+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}"; 
+		vsResolution += ", \"ownship\": { \"val\": \"" + currentVs + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + currentVsRegion + "\" }"; 
 		vsResolution += " }";
 		resVsArray.add(vsResolution);
 
@@ -445,10 +522,23 @@ public class DAABandsV2 {
 		BandsRegion resAltRegion_sec = daa.regionOfAltitude(resAltInternal_sec); // we want to use internal units here, to minimize round-off errors
 		double currentAlt = ownship.altitude(alt_units);
 		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); // we want to use internal units here, to minimize round-off errors
-		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
-		altResolution += ", \"resolution-secondary\": { \"val\": \"" + resAlt_sec + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		altResolution += ", \"flags\": { \"preferred-resolution\": \"" + preferredAlt + "\" }"; 
-		altResolution += ", \"ownship\": { \"val\": \"" + currentAlt + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + currentAltRegion + "\" }";
+		isConflict = !Double.isNaN(resAltInternal);
+		recoveryInfo = daa.altitudeRecoveryInformation();
+		isRecovery = recoveryInfo.recoveryBandsComputed();
+		isSaturated = recoveryInfo.recoveryBandsSaturated();
+		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		nFactor = f.Fmi(recoveryInfo.nFactor());
+		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"resolution-secondary\": { \"val\": \"" + resAlt_sec + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", \"flags\": { \"conflict\": \"" + isConflict + ", \"recovery\": \"" + isRecovery + ", \"saturated\": \"" + isSaturated + "\", \"preferred-resolution\": \"" + preferredAlt + "\" }"; 
+		altResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + ", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
+		altResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": "+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
+		altResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": "+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}"; 
+		altResolution += ", \"ownship\": { \"val\": \"" + currentAlt + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + currentAltRegion + "\" }";
 		altResolution += " }";
 		resAltArray.add(altResolution);
 
@@ -463,7 +553,7 @@ public class DAABandsV2 {
 			contours += "{ \"ac\": \"" + ac_name + "\",\n";
 			contours +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
-			contours += ", ";
+				contours += ", ";
 			}
 		}
 		contours += " ]}";
@@ -485,7 +575,7 @@ public class DAABandsV2 {
 			hazardZones += "{ \"ac\": \"" + ac_name + "\",\n";
 			hazardZones +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
-			hazardZones += ", ";
+				hazardZones += ", ";
 			}
 		}
 		hazardZones += " ]}";
@@ -494,40 +584,40 @@ public class DAABandsV2 {
 		// monitors
 		monitors.check();
 		String monitorM1 = "{ \"time\": " + time
-			+ ", " + monitors.m1()
-			+ " }";
+				+ ", " + monitors.m1()
+				+ " }";
 		monitorM1Array.add(monitorM1);
 
 		String monitorM2 = "{ \"time\": " + time
-			+ ", " + monitors.m2()
-			+ " }";
+				+ ", " + monitors.m2()
+				+ " }";
 		monitorM2Array.add(monitorM2);
 
 		String monitorM3 = "{ \"time\": " + time
-			+ ", " + monitors.m3()
-			+ " }";
+				+ ", " + monitors.m3()
+				+ " }";
 		monitorM3Array.add(monitorM3);
 
 		String monitorM4 = "{ \"time\": " + time
-			+ ", " + monitors.m4()
-			+ " }";
+				+ ", " + monitors.m4()
+				+ " }";
 		monitorM4Array.add(monitorM4);
 
 		// config
 		String stats = "\"hs\": { \"min\": " + daa.getMinHorizontalSpeed(hs_units) 
-			+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
-			+ ", \"units\": \"" + hs_units + "\" },\n"
-			+ "\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
-			+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
-			+ ", \"units\": \"" + vs_units + "\" },\n"
-			+ "\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
-			+ ", \"max\": " + daa.getMaxAltitude(alt_units)
-			+ ", \"units\": \"" + alt_units + "\" },\n"
-			+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";
+		+ ", \"max\": " + daa.getMaxHorizontalSpeed(hs_units) 
+		+ ", \"units\": \"" + hs_units + "\" },\n"
+		+ "\"vs\": { \"min\": " + daa.getMinVerticalSpeed(vs_units)
+		+ ", \"max\": " + daa.getMaxVerticalSpeed(vs_units)
+		+ ", \"units\": \"" + vs_units + "\" },\n"
+		+ "\"alt\": { \"min\": " + daa.getMinAltitude(alt_units)
+		+ ", \"max\": " + daa.getMaxAltitude(alt_units)
+		+ ", \"units\": \"" + alt_units + "\" },\n"
+		+ "\"MostSevereAlertLevel\": \"" + daa.mostSevereAlertLevel(1) + "\"";
 		return stats;
-    }
-    
-    public void walkFile () {
+	}
+
+	public void walkFile () {
 		if (ifname == "" || ifname == null) {
 			System.err.println("** Error: Please specify a daa file");
 			System.exit(1);
@@ -573,13 +663,13 @@ public class DAABandsV2 {
 		while (!walker.atEnd()) {
 			walker.readState(daa);
 			jsonStats = jsonBands(
-				monitors,
-				ownshipArray, alertsArray, metricsArray,
-				trkArray, gsArray, vsArray, altArray, 
-				resTrkArray, resGsArray, resVsArray, resAltArray, 
-				contoursArray, hazardZonesArray,
-				monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
-			);
+					monitors,
+					ownshipArray, alertsArray, metricsArray,
+					trkArray, gsArray, vsArray, altArray, 
+					resTrkArray, resGsArray, resVsArray, resAltArray, 
+					contoursArray, hazardZonesArray,
+					monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array
+					);
 		}
 
 		printWriter.println(jsonStats + ",");
@@ -623,27 +713,27 @@ public class DAABandsV2 {
 		printWriter.println("}");
 
 		closePrintWriter();
-    }
+	}
 
-    static String getFileName (String fname) {
+	protected static String getFileName (String fname) {
 		if (fname != null && fname.contains("/")) {
 			String[] comp = fname.split("/");
 			return comp[comp.length - 1];
 		}
 		return fname;
-    }
+	}
 
-    static String removeExtension (String fname) {
+	protected static String removeExtension (String fname) {
 		return fname != null && fname.contains(".") ? 
-			fname.substring(0, fname.lastIndexOf('.')) 
-			: fname;
-    }
+				fname.substring(0, fname.lastIndexOf('.')) 
+				: fname;
+	}
 
-    String getVersion () {
+	protected String getVersion () {
 		return VERSION;
-    }
+	}
 
-    protected DAABandsV2 parseCliArgs (String[] args) {
+	protected DAABandsV2 parseCliArgs (String[] args) {
 		if (args != null && args.length == 0) {
 			printHelpMsg();
 			System.exit(0);
@@ -675,18 +765,18 @@ public class DAABandsV2 {
 			ofname = scenario + ".json";
 		}
 		return this;
-    }
+	}
 
-    public boolean inputFileReadable () {
+	public boolean inputFileReadable () {
 		String inputFile = getInputFileName();
 		File file = new File(inputFile);
 		if (!file.exists() || !file.canRead()) {
 			return false;
 		}
 		return true;
-    }
+	}
 
-    protected boolean createPrintWriter () {
+	protected boolean createPrintWriter () {
 		try {
 			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
 			System.out.println("Creating output file " + ofname);
@@ -695,20 +785,20 @@ public class DAABandsV2 {
 			return false;
 		}
 		return true;
-    }
-    protected boolean closePrintWriter () {
+	}
+	protected boolean closePrintWriter () {
 		if (printWriter != null) {
 			printWriter.close();
 			return true;
 		}
 		return false;
-    }
+	}
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
 		daaBands.loadDaaConfig();
 		daaBands.walkFile();
-    }
+	}
 
 }

@@ -31,7 +31,7 @@ dist:
 	rsync -a src/daa-displays/images dist/daa-displays/
 	rsync -a src/daa-displays/wwd dist/daa-displays/
 	rsync -a src/contrib dist/
-	rsync src/daa-tablet/*.html src/daa-tablet/*.json src/daa-tablet/Makefile dist/daa-tablet
+#	rsync src/daa-tablet/*.html src/daa-tablet/*.json src/daa-tablet/Makefile dist/daa-tablet
 	@echo "\033[0;32m** Done copying dist folder! **\033[0m"
 
 daidalus:
