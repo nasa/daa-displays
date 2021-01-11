@@ -122,7 +122,7 @@ function render(playerID: string, data: {
 
 function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
-        alerts: desc.bands?.Alerts.alerts,
+        alerts: desc.bands?.Alerts?.alerts,
         step: desc.step,
         time: desc.time
     });
