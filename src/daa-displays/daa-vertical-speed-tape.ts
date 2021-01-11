@@ -646,13 +646,13 @@ export class VerticalSpeedTape {
         if (info !== null && info !== undefined) {
             const d: number = (typeof info === "object") ? +info.resolution.val : info;
             const c: string = opt.resolutionBugColor ? opt.resolutionBugColor
-                                : (typeof info === "object") ? utils.bugColors[`${info.resolution.alert}`] : utils.bugColors["UNKNOWN"];
+                                : (typeof info === "object") ? utils.bugColors[`${info.resolution.region}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d / 100, {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
-                    (info.flags && info.flags["preferred-resolution"] === "true") ? "up" : "down"
-                    : "up",
+                    (info.flags && info.flags["preferred-resolution"]) ? "up" : "down"
+                        : "up",
                 wedgeAperture: opt.wedgeAperture
             }); // tape scale is 100xunits
             // if (typeof info === "object" && info.ownship && info.ownship.alert) {

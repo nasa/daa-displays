@@ -94,8 +94,8 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
-import { ExecMsg, LLAData, DaidalusBandsDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement } from './utils/daa-server';
+import { ExecMsg, LLAData, ScenarioDescriptor, BandElement } from '../daa-server/utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -158,7 +158,7 @@ export class DAAPlayer {
     protected precision: number;
     protected _displays: string[];
     protected _scenarios: { [ daaFileName: string ]: DAAScenario } = {};
-    protected _bands: DaidalusBandsDescriptor; // bands for the selected scenario
+    protected _bands: ScenarioDescriptor; // bands for the selected scenario
     protected _los: DAALosDescriptor;
     protected _selectedScenario: string;
     protected _selectedWellClear: string;
@@ -1184,7 +1184,7 @@ export class DAAPlayer {
         wind: { deg: string, knot: string }
     }): Promise<{
         err: string,
-        bands: DaidalusBandsDescriptor
+        bands: ScenarioDescriptor
     }> {
         const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
@@ -1207,7 +1207,7 @@ export class DAAPlayer {
         });
         try {
             if (res && res.data) {
-                const data: DaidalusBandsDescriptor = res.data;
+                const data: ScenarioDescriptor = res.data;
                 this._bands = data;
             }
             console.log("WellClear data ready!");//, this._bands);
@@ -1295,7 +1295,7 @@ export class DAAPlayer {
     }): Promise<{
         err: string,
         //scenario: .... 
-        bands: DaidalusBandsDescriptor
+        bands: ScenarioDescriptor
     }> {
         const msg: ExecMsg = {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
@@ -1524,9 +1524,25 @@ export class DAAPlayer {
         return null;
     }
 
-    getCurrentMetrics (): MetricsElement {
-        const bands: utils.DAABandsData = this.getCurrentBands();
-        return bands?.Metrics;
+    getCurrentTrafficMetrics (): AircraftMetrics[] {
+        const bands: ScenarioDataPoint = this.getCurrentBands();
+        const ans: AircraftMetrics[] = bands?.Metrics?.aircraft;
+        if (ans?.length) {
+            const alertsInfo: Alert[] = bands?.Alerts?.alerts;
+            for (let i = 0; i < alertsInfo?.length; i++) {
+                if (i < ans.length) {
+                    ans[i].alert = alertsInfo[i];
+                } else {
+                    console.warn(`[daa-player] Warning: alert data is given but aircraft data is missing`, alertsInfo[i]);
+                }
+            }
+        }
+        return ans;
+    }
+
+    getCurrentOwnshipMetrics (): AircraftMetrics {
+        const scenario: ScenarioDataPoint = this.getCurrentBands();
+        return scenario?.Ownship;
     }
 
     getFlightData (enc?: string): LLAData[] {
@@ -1571,166 +1587,187 @@ export class DAAPlayer {
         return null;
     }
 
-    getBandsData (): utils.DAABandsData[] {
-        const ans: utils.DAABandsData[] = [];
+    getBandsData (): ScenarioData {
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
-            //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
-            if (this._bands) {
-                for (let step = 0; step < this._simulationLength; step++) {
-                    // convert bands to the DAA format
-                    const res: utils.DAABandsData = {
-                        Ownship: { heading: { val: `0`, units: "deg" }, airspeed: { val: `0`, units: "knots" } },
-                        Wind: { deg: `0`, knot: `0` },
-                        Alerts: [],
-                        "Altitude Bands": {},
-                        "Heading Bands": {},
-                        "Horizontal Speed Bands": {},
-                        "Vertical Speed Bands": {},
-                        "Altitude Resolution": null,
-                        "Heading Resolution": null,
-                        "Horizontal Speed Resolution": null,
-                        "Vertical Speed Resolution": null,
-                        Contours: null,
-                        "Hazard Zones": null,
-                        Monitors: [],
-                        Metrics: null
-                    };
-                    const bandNames: string[] = utils.BAND_NAMES;
-                    for (const b in bandNames) {
-                        const band_or_resolution: string = bandNames[b];
-                        const data: BandElement = (this._bands[band_or_resolution] && step < this._bands[band_or_resolution].length) ? 
-                                                    this._bands[band_or_resolution][step] : null;
-                        if (data) {
-                            if (data.bands) {
-                                // bands info
-                                for (let i = 0; i < data.bands.length; i++) {
-                                    const info: DaidalusBand = data.bands[i];
-                                    if (info && info.range) {
-                                        const range: utils.FromTo = {
-                                            from: info.range[0],
-                                            to: info.range[1],
-                                            units: info.units
-                                        };
-                                        const alert: string = info.alert;
-                                        res[band_or_resolution][alert] = res[band_or_resolution][alert] || [];
-                                        res[band_or_resolution][alert].push(range);
-                                    }
-                                }
-                            } else if (data.resolution) {
-                                // resolution info
-                                res[band_or_resolution] = data;
-                            }
-                        }
-                        if (this._bands.Alerts && step < this._bands.Alerts.length) {
-                            // copy alerting info
-                            res.Alerts = this._bands.Alerts[step].alerts;
-                        }
-                        if (this._bands.Contours && step < this._bands.Contours.length) {
-                            // copy contours
-                            res.Contours = this._bands.Contours[step];
-                        }
-                        if (this._bands["Hazard Zones"] && step < this._bands["Hazard Zones"].length) {
-                            // copy hazard zones
-                            res["Hazard Zones"] = this._bands["Hazard Zones"][step];
-                        }
-                        if (this._bands.Monitors) {
-                            // copy monitors
-                            res.Monitors = this._bands.Monitors;
-                        }
-                        if (this._bands.Wind) {
-                            // copy wind
-                            res.Wind = this._bands.Wind;
-                        }
-                        if (this._bands.Ownship && step < this._bands.Ownship.length) {
-                            res.Ownship = this._bands.Ownship[step];
-                        }
-                        if (this._bands.Metrics && step < this._bands.Metrics.length) {
-                            res.Metrics = this._bands.Metrics[step];
-                        }
-                    }
-                    ans.push(res);
-                }
-            }
+            return this._bands;
+            // //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
+            // if (this._bands) {
+            //     for (let step = 0; step < this._simulationLength; step++) {
+            //         // convert bands to the DAA format
+            //         const res: utils.DAABandsData = {
+            //             Ownship: null,
+            //             Wind: { deg: `0`, knot: `0` },
+            //             Alerts: [],
+            //             "Altitude Bands": {},
+            //             "Heading Bands": {},
+            //             "Horizontal Speed Bands": {},
+            //             "Vertical Speed Bands": {},
+            //             "Altitude Resolution": null,
+            //             "Heading Resolution": null,
+            //             "Horizontal Speed Resolution": null,
+            //             "Vertical Speed Resolution": null,
+            //             Contours: null,
+            //             "Hazard Zones": null,
+            //             Monitors: [],
+            //             Metrics: null
+            //         };
+            //         const bandNames: string[] = utils.BAND_NAMES;
+            //         for (const b in bandNames) {
+            //             const band_or_resolution: string = bandNames[b];
+            //             const data: BandElement = (this._bands[band_or_resolution] && step < this._bands[band_or_resolution].length) ? 
+            //                                         this._bands[band_or_resolution][step] : null;
+            //             if (data) {
+            //                 if (data.bands) {
+            //                     // bands info
+            //                     for (let i = 0; i < data.bands.length; i++) {
+            //                         const info: DaidalusBand = data.bands[i];
+            //                         if (info && info.range) {
+            //                             const range: utils.FromTo = {
+            //                                 from: info.range[0],
+            //                                 to: info.range[1],
+            //                                 units: info.units
+            //                             };
+            //                             const region: string = info.region;
+            //                             res[band_or_resolution][region] = res[band_or_resolution][region] || [];
+            //                             res[band_or_resolution][region].push(range);
+            //                         }
+            //                     }
+            //                 } else if (data.resolution) {
+            //                     // resolution info
+            //                     res[band_or_resolution] = data;
+            //                 }
+            //             }
+            //             if (this._bands.Alerts && step < this._bands.Alerts.length) {
+            //                 // copy alerting info
+            //                 res.Alerts = this._bands.Alerts[step].alerts;
+            //             }
+            //             if (this._bands.Contours && step < this._bands.Contours.length) {
+            //                 // copy contours
+            //                 res.Contours = this._bands.Contours[step];
+            //             }
+            //             if (this._bands["Hazard Zones"] && step < this._bands["Hazard Zones"].length) {
+            //                 // copy hazard zones
+            //                 res["Hazard Zones"] = this._bands["Hazard Zones"][step];
+            //             }
+            //             if (this._bands.Monitors) {
+            //                 // copy monitors
+            //                 res.Monitors = this._bands.Monitors;
+            //             }
+            //             if (this._bands.Wind) {
+            //                 // copy wind
+            //                 res.Wind = this._bands.Wind;
+            //             }
+            //             if (this._bands.Ownship && step < this._bands.Ownship.length) {
+            //                 res.Ownship = this._bands.Ownship[step];
+            //             }
+            //             if (this._bands.Metrics && step < this._bands.Metrics.length) {
+            //                 res.Metrics = this._bands.Metrics[step];
+            //             }
+            //         }
+            //         ans.push(res);
+            //     }
+            // }
         }
-        return ans;
+        return null;
     }
-    // TODO: replace DAABandsData with DaidalusBandsDescriptor
-    getCurrentBands (): utils.DAABandsData {
-        const res: utils.DAABandsData = {
+
+    getCurrentBands (): ScenarioDataPoint {
+        const res: ScenarioDataPoint = {
             Wind: { deg: `0`, knot: `0` },
-            Ownship: { heading: { val: `0`, units: "deg" }, airspeed: { val: `0`, units: "knots" } },
-            Alerts: [],
-            "Altitude Bands": {},
-            "Heading Bands": {},
-            "Horizontal Speed Bands": {},
-            "Vertical Speed Bands": {},
+            Ownship: null,
+            Alerts: null,
+            "Altitude Bands": null,
+            "Heading Bands": null,
+            "Horizontal Speed Bands": null,
+            "Vertical Speed Bands": null,
             "Altitude Resolution": null,
             "Heading Resolution": null,
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
-            Contours: null,
+            "Contours": null,
             "Hazard Zones": null,
-            Monitors: [],
+            Monitors: null,
             Metrics: null
         };
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
-            //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
             if (this._bands) {
-                // convert bands to the DAA format
-                const bandNames: string[] = utils.BAND_NAMES;
-                for (const b in bandNames) {
-                    const band_or_resolution: string = bandNames[b];
-                    const data: BandElement = (this._bands[band_or_resolution] && this._bands[band_or_resolution].length > this.simulationStep) ? 
-                                                this._bands[band_or_resolution][this.simulationStep] : null;
-                    if (data) {
-                        if (data.bands) {
-                            // bands info
-                            for (let i = 0; i < data.bands.length; i++) {
-                                const info: DaidalusBand = data.bands[i];
-                                if (info && info.range) {
-                                    const range: utils.FromTo = {
-                                        from: info.range[0],
-                                        to: info.range[1],
-                                        units: info.units
-                                    };
-                                    const alert: string = info.alert;
-                                    res[band_or_resolution][alert] = res[band_or_resolution][alert] || [];
-                                    res[band_or_resolution][alert].push(range);
-                                }
+                for (let key in this._bands) {
+                    switch (key) {
+                        case "Monitors": {
+                            res[key] = this._bands[key];
+                            break;
+                        }
+                        case "Wind": {
+                            res[key] = this._bands[key];
+                            break
+                        }
+                        default: {
+                            if (this._bands[key] && this.simulationStep < this._bands[key].length) {
+                                // copy alerting info
+                                res[key] = this._bands[key][this.simulationStep];
                             }
-                        } else if (data.resolution) {
-                            // resolution info
-                            res[band_or_resolution] = data;
                         }
                     }
-                    if (this._bands.Alerts && this.simulationStep < this._bands.Alerts.length) {
-                        // copy alerting info
-                        res.Alerts = this._bands.Alerts[this.simulationStep].alerts;
-                    }
-                    if (this._bands.Ownship && this.simulationStep < this._bands.Ownship.length) {
-                        res.Ownship = this._bands.Ownship[this.simulationStep];
-                    }
                 }
-                if (this._bands.Contours && this.simulationStep < this._bands.Contours.length) {
-                    // copy contours
-                    res.Contours = this._bands.Contours[this.simulationStep];
-                }
-                if (this._bands["Hazard Zones"] && this.simulationStep < this._bands["Hazard Zones"].length) {
-                    // copy hazard zones
-                    res["Hazard Zones"] = this._bands["Hazard Zones"][this.simulationStep];
-                }
-                if (this._bands.Monitors) {
-                    // copy monitors
-                    res.Monitors = this._bands.Monitors;
-                }
-                if (this._bands.Wind) {
-                    // copy wind
-                    res.Wind = this._bands.Wind;
-                }
-                if (this._bands.Metrics && this.simulationStep < this._bands.Metrics.length) {
-                    // copy Metrics
-                    res.Metrics = this._bands.Metrics[this.simulationStep];
-                }
+
+                // // convert bands to the DAA format
+                // const bandNames: string[] = utils.BAND_NAMES;
+                // for (const b in bandNames) {
+                //     // const band_or_resolution: string = bandNames[b];
+                //     // const data: BandElement = (this._bands[band_or_resolution] && this._bands[band_or_resolution].length > this.simulationStep) ? 
+                //     //                             this._bands[band_or_resolution][this.simulationStep] : null;
+                //     // if (data) {
+                //     //     if (data.bands) {
+                //     //         // bands info
+                //     //         for (let i = 0; i < data.bands.length; i++) {
+                //     //             res[band_or_resolution] = res[band_or_resolution] || {};
+                //     //             const info: DaidalusBand = data.bands[i];
+                //     //             if (info && info.range) {
+                //     //                 const range: utils.FromTo = {
+                //     //                     from: info.range[0],
+                //     //                     to: info.range[1],
+                //     //                     units: info.units
+                //     //                 };
+                //     //                 const region: string = info.region;
+                //     //                 res[band_or_resolution][region] = res[band_or_resolution][region] || [];
+                //     //                 res[band_or_resolution][region].push(range);
+                //     //             }
+                //     //         }
+                //     //     } else if (data.resolution) {
+                //     //         // resolution info
+                //     //         res[band_or_resolution] = data;
+                //     //     }
+                //     // }
+
+                // }
+                // if (this._bands.Alerts && this.simulationStep < this._bands.Alerts.length) {
+                //     // copy alerting info
+                //     res.Alerts = this._bands.Alerts[this.simulationStep];
+                // }
+                // if (this._bands.Ownship && this.simulationStep < this._bands.Ownship.length) {
+                //     res.Ownship = this._bands.Ownship[this.simulationStep];
+                // }
+                // if (this._bands.Contours && this.simulationStep < this._bands.Contours.length) {
+                //     // copy contours
+                //     res.Contours = this._bands.Contours[this.simulationStep];
+                // }
+                // if (this._bands["Hazard Zones"] && this.simulationStep < this._bands["Hazard Zones"].length) {
+                //     // copy hazard zones
+                //     res["Hazard Zones"] = this._bands["Hazard Zones"][this.simulationStep];
+                // }
+                // if (this._bands.Metrics && this.simulationStep < this._bands.Metrics.length) {
+                //     // copy Metrics
+                //     res.Metrics = this._bands.Metrics[this.simulationStep];
+                // }
+
+                // if (this._bands.Monitors) {
+                //     // copy monitors
+                //     res.Monitors = this._bands.Monitors;
+                // }
+                // if (this._bands.Wind) {
+                //     // copy wind
+                //     res.Wind = this._bands.Wind;
+                // }
             }
         }
         return res;
@@ -1796,8 +1833,8 @@ export class DAAPlayer {
             this._timer_active = true;
             while (this._timer_active) {
                 let promises = [
-                    new Promise((resolve) => { setTimeout(resolve, this.ms); }),
-                    new Promise((resolve) => {
+                    new Promise<void>((resolve) => { setTimeout(resolve, this.ms); }),
+                    new Promise<void>((resolve) => {
                         fun();
                         resolve();
                     })
@@ -2008,23 +2045,30 @@ export class DAAPlayer {
                 flight: flightData,
                 currentTime: this.getCurrentSimulationTime()
             });
-            $(`#${this.flightDataDomSelector}`).append(theHTML);
+            $(`#${this.flightDataDomSelector} .aircraft-data`).html(theHTML);
+        }
+    }
+
+    protected appendEncounterData (data: { ownship: AircraftMetrics, traffic: AircraftMetrics[] }): void {
+        if (data) {
+            const theHTML: string = Handlebars.compile(monitorTemplates.encounterDataTemplate)({
+                id: this.flightDataDomSelector,
+                currentTime: this.getCurrentSimulationTime(),
+                ownship: data.ownship,
+                traffic: data.traffic
+            });
+            $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);
         }
     }
 
     displayFlightData (): void {
         this.removeFlightData();
         const flightInfo: LLAData = this.getCurrentFlightData();
-        const metricsInfo: MetricsElement = this.getCurrentMetrics();
+        const trafficMetrics: AircraftMetrics[] = this.getCurrentTrafficMetrics();
+        const ownshipMetrics: AircraftMetrics = this.getCurrentOwnshipMetrics();
         const flightData: FlightData = flightInfo;
-        if (flightData && flightData.traffic && metricsInfo && metricsInfo.metrics) {
-            for (let i = 0; i < flightData.traffic.length; i++) {
-                if (i < metricsInfo.metrics.length) {
-                    flightData.traffic[i].metrics = metricsInfo.metrics[i]?.data;
-                }           
-            }
-        }
         this.appendFlightData(flightData);
+        this.appendEncounterData({ ownship: ownshipMetrics, traffic: trafficMetrics });
     }
 
     /**

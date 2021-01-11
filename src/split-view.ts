@@ -36,7 +36,7 @@ import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
-import { LLAData } from './daa-displays/utils/daa-server';
+import { LLAData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
@@ -56,7 +56,7 @@ function render(playerID: string, data: {
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
 
-    const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
+    const bands: ScenarioDataPoint = splitView.getPlayer(playerID).getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
     const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
@@ -70,10 +70,10 @@ function render(playerID: string, data: {
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
     if (bands) {
-        data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
-        data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+        data.compass.setBands(utils.bandElement2Bands(bands["Heading Bands"]));
+        data.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]), AirspeedTape.units.knots);
+        data.verticalSpeedTape.setBands(utils.bandElement2Bands(bands["Vertical Speed Bands"]));
+        data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
         // set resolutions
         data.compass.setBug(bands["Heading Resolution"]);
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
@@ -102,7 +102,7 @@ function render(playerID: string, data: {
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -120,9 +120,9 @@ function render(playerID: string, data: {
     plot(playerID, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
-function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
+function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
-        alerts: desc.bands["Alerts"],
+        alerts: desc.bands?.Alerts.alerts,
         step: desc.step,
         time: desc.time
     });
@@ -222,43 +222,39 @@ splitView.getPlayer("right").define("step", async () => {
 });
 // -- plot
 splitView.getPlayer("right").define("plot", () => {
-    const bandsRight: utils.DAABandsData[] = splitView.getPlayer("right").getBandsData();
-    const bandsLeft: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
-    if (bandsRight) {
-        for (let step = 0; step < bandsRight.length; step++) {
-            splitView.getPlayer("right").setTimerJiffy("plot", () => {
-                const time: string = splitView.getTimeAt(step);
-                const lla: LLAData = flightData[step];
-                const hd: number = Compass.v2deg(lla.ownship.v);
-                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z;
-                const alt: number = +lla.ownship.s.alt;
-                plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight[step], step, time });
-                diff(bandsLeft[step], bandsRight[step], step, time); // 3.5ms
-            }, 8 * step);
-        }
+    for (let step = 0; step < flightData?.length; step++) {
+        const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands();
+        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands();    
+        splitView.getPlayer("right").setTimerJiffy("plot", () => {
+            const time: string = splitView.getTimeAt(step);
+            const lla: LLAData = flightData[step];
+            const hd: number = Compass.v2deg(lla.ownship.v);
+            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+            const vs: number = +lla.ownship.v.z;
+            const alt: number = +lla.ownship.s.alt;
+            plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight[step], step, time });
+            diff(bandsLeft, bandsRight, step, time); // 3.5ms
+        }, 8 * step);
     }
 });
 splitView.getPlayer("left").define("plot", () => {
-    const bandsData: utils.DAABandsData[] = splitView.getPlayer("left").getBandsData();
+    const bandsData: ScenarioData = splitView.getPlayer("left").getBandsData();
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
-    if (bandsData) {
-        for (let step = 0; step < bandsData.length; step++) {
-            splitView.getPlayer("left").setTimerJiffy("plot", () => {
-                const time: string = splitView.getTimeAt(step);
-                const lla: LLAData = flightData[step];
-                const hd: number = Compass.v2deg(lla.ownship.v);
-                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z;
-                const alt: number = +lla.ownship.s.alt;
-                plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
-            }, 8 * step);
-        }
+    for (let step = 0; step < bandsData?.Ownship?.length; step++) {
+        splitView.getPlayer("left").setTimerJiffy("plot", () => {
+            const time: string = splitView.getTimeAt(step);
+            const lla: LLAData = flightData[step];
+            const hd: number = Compass.v2deg(lla.ownship.v);
+            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+            const vs: number = +lla.ownship.v.z;
+            const alt: number = +lla.ownship.s.alt;
+            plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
+        }, 8 * step);
     }
 });
 // -- diff : returns true if alerts or bands are different
-function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, step?: number, time?: string): boolean {
+function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, step?: number, time?: string): boolean {
     step = (step !== undefined) ? step : splitView.getCurrentSimulationStep();
     time = (time !== undefined) ? time : splitView.getTimeAt(step);
     bandsLeft = (bandsLeft !== undefined) ? bandsLeft : splitView.getPlayer("left").getCurrentBands();
@@ -270,7 +266,7 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
         // if (diffAlerts) {
         let alertsR: string = "";
         if (bandsRight && bandsRight.Alerts) {
-            bandsRight.Alerts.forEach(alert => {
+            bandsRight.Alerts?.alerts?.forEach(alert => {
                 if (+alert.alert > 0) {
                     alertsR += `${alert.ac} [${alert.alert}]`;
                 }
@@ -278,7 +274,7 @@ function diff (bandsLeft?: utils.DAABandsData, bandsRight?: utils.DAABandsData, 
         }
         let alertsL: string = "";
         if (bandsLeft && bandsLeft.Alerts) {
-            bandsLeft.Alerts.forEach(alert => {
+            bandsLeft.Alerts?.alerts?.forEach(alert => {
                 if (+alert.alert > 0) {
                     alertsL += `${alert.ac} [${alert.alert}]`; 
                 }

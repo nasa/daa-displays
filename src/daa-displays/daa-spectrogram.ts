@@ -85,6 +85,7 @@ import * as templates from './templates/daa-spectrogram-templates';
 import { AlertElement } from '../daa-server/utils/daa-server';
 import { DAAPlayer } from './daa-player';
 import { stringify } from 'querystring';
+import { Alert, BandElement, BandRange, DaidalusBand, Region } from './utils/daa-server';
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data: { width: number, height: number, length: number }) {
@@ -114,7 +115,7 @@ function convert (val: number, unitsFrom: string, unitsTo: string): number {
 
 export interface BandsData {
     id: string;
-    bands: utils.Bands;
+    bands: BandElement;
     step: number;
     time: string;
     units?: string;
@@ -123,7 +124,7 @@ export interface BandsData {
 }
 export interface AlertsData {
     id: string;
-    alerts: utils.Alert[];
+    alerts: Alert[];
     step: number; 
     time: string;
 }
@@ -292,7 +293,7 @@ export class DAASpectrogram {
             $(this.div).html(theHTML);
         }
     }
-    plotAlerts(data: { alerts: utils.Alert[], step: number, time: string }): void {
+    plotAlerts(data: { alerts: Alert[], step: number, time: string }): void {
         if (data && data.alerts) {
             const stepID = `${this.id}-step-${data.step}`;
             const barWidth = this.width / this.length;
@@ -321,7 +322,7 @@ export class DAASpectrogram {
                 }
                 // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
                 for (let a = 0; a < data.alerts.length; a++) {
-                    const elem: utils.Alert = data.alerts[a];
+                    const elem: Alert = data.alerts[a];
                     if (elem && +elem.alert > 0) {
                         band_plot_data[elem.alert] = [];
                         band_plot_data[elem.alert].push({
@@ -377,41 +378,42 @@ export class DAASpectrogram {
      * @memberof module:DAASpectrogram
      * @instance
      */
-    plotBands (data: { bands: utils.Bands, step: number, time: string, units?: string, marker?: number, resolution?: number }): void {
+    plotBands (data: { bands: BandElement, step: number, time: string, units?: string, marker?: number, resolution?: number }): void {
         if (data && data.bands) {
             // this._timeseries.push(data.bands);
-            const band_plot_data: utils.Bands = {};
+            const band_plot_data = {};
             const yScaleFactor = this.height / (this.range.to - this.range.from);
             const barWidth = this.width / this.length;
             const stepID = `${this.id}-step-${data.step}`;
             const leftMargin = data.step * barWidth;
 
             if ($(`#${stepID}`).length === 0) { // profiler: 0.6ms (without optimisation 14.4ms)
-                const keys: string[] = Object.keys(data.bands);
-                let tooltipData: { band: string, range: { from: number, to: number }}[] = [];
-                for (let k = 0; k < keys.length; k++) {
-                    const band: string = keys[k];
-                    if (band !== "NONE") {
-                        band_plot_data[band] = [];
-                        const info: { from: number, to: number }[] = data.bands[band];
-                        for (let i = 0; i < info.length; i++) {
-                            const range: { from: number, to: number } = info[i];
-                            const from = convert(range.from, this.units.from, this.units.to);
-                            const to = convert(range.to, this.units.from, this.units.to);
-                            const height = to - from;
-                            tooltipData.push({ band, range });
-                            band_plot_data[band].push({
-                                from: from,
-                                to: to,
-                                color: utils.bandColors[band].color,
-                                dash: utils.bandColors[band].style === "dash",
-                                top: (this.range.to - to) * yScaleFactor,
-                                height: height * yScaleFactor,
-                                width: barWidth,
-                                units: this.units.to
-                            });
-                        }
+                const dbands: DaidalusBand[] = data?.bands?.bands;
+                const keys: string[] = Object.keys(dbands);
+                let tooltipData: { region: Region, range: { from: number, to: number }}[] = [];
+                for (let i = 0; i < dbands.length; i++) {
+                    const dband: DaidalusBand = dbands[i];
+                    const region: Region = dband.region;
+                    const range: BandRange = dband.range;
+
+                    if (region !== "NONE" && range) {
+                        band_plot_data[region] = [];
+                        const from = convert(range[0], this.units.from, this.units.to);
+                        const to = convert(range[1], this.units.from, this.units.to);
+                        const height = to - from;
+                        tooltipData.push({ region, range: { from: range[0], to: range[1] }});
+                        band_plot_data[region].push({
+                            from: from,
+                            to: to,
+                            color: utils.bandColors[region]?.color,
+                            dash: utils.bandColors[region]?.style === "dash",
+                            top: (this.range.to - to) * yScaleFactor,
+                            height: height * yScaleFactor,
+                            width: barWidth,
+                            units: this.units.to
+                        });
                     }
+                    
                 }
                 // sort tooltip data
                 tooltipData = tooltipData.sort((a, b) => { // profiler: 2.1ms
@@ -429,7 +431,7 @@ export class DAASpectrogram {
                     tooltip += `<br>Resolution: N\A`;
                 }
                 for (let i = 0; i < tooltipData.length; i++) {
-                    tooltip += `<br>${tooltipData[i].band}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
+                    tooltip += `<br>${tooltipData[i].region}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
                 }
                 
                 const lineHeight: number = 4;

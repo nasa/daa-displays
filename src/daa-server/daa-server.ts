@@ -6,7 +6,7 @@ import * as path from 'path';
 import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
-import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile, DaidalusBandsDescriptor } from './utils/daa-server';
+import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile, ScenarioDescriptor } from './utils/daa-server';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
@@ -300,7 +300,7 @@ class DAAServer {
                                 }
                                 try {
                                     const buf: Buffer = fs.readFileSync(path.join(outputFolder, bandsFile));
-                                    const desc: DaidalusBandsDescriptor = JSON.parse(buf.toLocaleString());
+                                    const desc: ScenarioDescriptor = JSON.parse(buf.toLocaleString());
                                     // content.data = buf.toLocaleString();
                                     const keys: string[] = Object.keys(desc);
                                     for (let i = 0; i < keys.length; i++) {

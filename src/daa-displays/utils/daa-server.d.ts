@@ -88,11 +88,6 @@ export declare interface FlightData extends LLAData {
     traffic: LLAPositionMetrics[];
 }
 
-// export declare interface DAAScenario {
-//     ownship: DAAData;
-//     traffic: DAAData[];
-// }
-
 export declare interface LbUb {
     lb: number,
     ub: number,
@@ -106,14 +101,16 @@ export declare interface BandRange {
 
 export declare interface DaidalusBand {
     range: BandRange;
-    alert: string;
+    region: Region;
     units: string;
 }
+
+export type Region = "NONE" | "FAR" | "MID" | "NEAR" | "RECOVERY" | "UNKNOWN";
 
 export declare interface DaidalusResolution {
     val: number;
     units: string;
-    alert: string;
+    region: Region;
 }
 
 export declare interface BandElement {
@@ -122,9 +119,15 @@ export declare interface BandElement {
     resolution?: DaidalusResolution
 }
 
+export declare interface Alert {
+    ac: string,
+    alert: string,
+    alerter: string
+}
+
 export declare interface AlertElement {
     time: number;
-    alerts: { ac: string; alert: string }[];
+    alerts: Alert[];
 }
 
 export declare interface MonitorData {
@@ -148,10 +151,19 @@ export declare interface MonitorElement {
 }
 
 export declare interface ResolutionElement {
-    resolution: { val: string, units: string, alert: string },
-    "resolution-secondary": { val: string, units: string, alert: string },
-    flags: { "preferred-resolution": "true" | "false" },
-    ownship: { val: string, units: string, alert: string }
+    time: number,
+    flags: { conflict: boolean, recovery: boolean, saturated: boolean, "preferred-resolution": boolean },
+    ownship: { val: string, units: string, region: Region },
+    recovery: { 
+        time: string, 
+        nfactor: string, 
+        distance: { 
+            horizontal: { val: string, internal: string, units: string },
+            vertical: { val: string, internal: string, units: string }
+        }
+    },
+    resolution: { val: string, units: string, region: Region },
+    "resolution-secondary": { val: string, units: string, region: Region }
 }
 
 export declare type Polygon = LatLonAlt[];
@@ -167,45 +179,47 @@ export declare interface GeofenceElement {
 } 
 
 export declare interface ValUnits {
-    val: string, 
+    val: string,
+    internal: string,
     units: string
 }
 export declare interface Metric {
-    hor: ValUnits, 
-    ver: ValUnits
-}
-export declare interface CPOAMetric {
-    hor: { 
-        time: ValUnits, 
-        distance: ValUnits
-    }
+    horizontal: ValUnits, 
+    vertical: ValUnits
 }
 export declare interface DaidalusMetrics {
-    Separation: Metric, 
-    MissDistance: Metric,
-    ClosureRate: Metric, 
-    CPOA: CPOAMetric, 
-    TCOA: ValUnits, 
-    TAUMOD: ValUnits
+    separation: Metric, 
+    missdistance: Metric,
+    closurerate: Metric, 
+    tcpa: ValUnits, 
+    tcoa: ValUnits, 
+    taumod: ValUnits
 }
 export declare interface AircraftMetrics {
-    ac: string,
-    data: DaidalusMetrics
+    traffic: string,
+    heading: { val: string, internal: string, units: string }, 
+    track: { val: string, internal: string, units: string },
+    airspeed: { val: string, internal: string, units: string },
+    groundspeed: { val: string, internal: string, units: string }, 
+    metrics: DaidalusMetrics,
+    alert?: Alert
 }
 
 export declare interface MetricsElement {
     time: number,
-    metrics: AircraftMetrics[]
+    aircraft: AircraftMetrics[]
 }
 
-export declare interface DaidalusBandsDescriptor {
-    Info: {
-        version: string, // well clear version
-        configuration: string // daidalus configuration file used to produce bands data
-    },
-    Ownship: { heading: { val: string, units: string }, airspeed: { val: string, units: string } }[],
-    Wind: { deg: string, knot: string }, // FROM
-    Scenario: string,
+// export declare interface OwnshipElement {
+//     heading: { val: string, internal: string, units: string }, 
+//     airspeed: { val: string, internal: string, units: string }
+// }
+
+export declare interface WindElement { deg: string, knot: string }
+
+export declare interface ScenarioData {
+    Ownship: AircraftMetrics[],
+    Wind: WindElement, // FROM
     Alerts: AlertElement[], // alerts over time
     "Heading Bands": BandElement[], // bands over time
     "Horizontal Speed Bands": BandElement[],
@@ -216,8 +230,33 @@ export declare interface DaidalusBandsDescriptor {
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
     "Contours": GeofenceElement[],
+    "Hazard Zones": GeofenceElement[],
     Monitors: MonitorElement[],
     Metrics: MetricsElement[]
+}
+export declare interface ScenarioDataPoint {
+    Ownship: AircraftMetrics,
+    Wind: WindElement, // FROM
+    Alerts: AlertElement,
+    "Heading Bands": BandElement,
+    "Horizontal Speed Bands": BandElement,
+    "Vertical Speed Bands": BandElement,
+    "Altitude Bands": BandElement,
+    "Altitude Resolution": ResolutionElement,
+    "Heading Resolution": ResolutionElement,
+    "Horizontal Speed Resolution": ResolutionElement,
+    "Vertical Speed Resolution": ResolutionElement,
+    "Contours": GeofenceElement,
+    "Hazard Zones": GeofenceElement,
+    Monitors: MonitorElement[],
+    Metrics: MetricsElement
+}
+export declare interface ScenarioDescriptor extends ScenarioData {
+    Info: {
+        version: string, // well clear version
+        configuration: string // daidalus configuration file used to produce bands data
+    },
+    Scenario: string
 }
 
 export declare interface DAALosSector {

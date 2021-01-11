@@ -35,17 +35,18 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { LLAData } from './daa-displays/utils/daa-server';
+import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
+import { Bands } from './daa-displays/daa-utils';
 
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
 
-    const bands: utils.DAABandsData = player.getCurrentBands();
+    const bands: ScenarioDataPoint = player.getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
     const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
@@ -59,16 +60,20 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
 
     // console.log(`Flight data`, flightData);
     if (bands) {
-        data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
-        data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
-        
+        const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
+        data.compass.setBands(compassBands);
+        const airspeedBands: Bands = utils.bandElement2Bands(bands["Horizontal Speed Bands"]);
+        data.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
+        const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
+        data.verticalSpeedTape.setBands(vspeedBands);
+        const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
+        data.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
+
         // set resolutions
         // show wedge only for recovery bands
-        if (bands["Heading Bands"] && bands["Heading Bands"].RECOVERY) {
+        if (compassBands.RECOVERY) {
             data.compass.setBug(bands["Heading Resolution"], {
-                wedgeConstraints: bands["Heading Bands"].RECOVERY,
+                wedgeConstraints: compassBands.RECOVERY,
                 resolutionBugColor: "green"
             });
         } else {
@@ -76,9 +81,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 wedgeAperture: 0
             });
         }
-        if (bands["Horizontal Speed Bands"] && bands["Horizontal Speed Bands"].RECOVERY) {
+        if (airspeedBands?.RECOVERY) {
             data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
-                wedgeConstraints: bands["Horizontal Speed Bands"].RECOVERY,
+                wedgeConstraints: airspeedBands.RECOVERY,
                 resolutionBugColor: "green"
             });
         } else {
@@ -86,9 +91,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 wedgeAperture: 0
             });
         }
-        if (bands["Altitude Bands"] && bands["Altitude Bands"].RECOVERY) {
+        if (altitudeBands?.RECOVERY) {
             data.altitudeTape.setBug(bands["Altitude Resolution"], {
-                wedgeConstraints: bands["Altitude Bands"].RECOVERY,
+                wedgeConstraints: altitudeBands.RECOVERY,
                 resolutionBugColor: "green"
             });
         } else {
@@ -96,9 +101,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 wedgeAperture: 0
             });
         }
-        if (bands["Vertical Speed Bands"] && bands["Vertical Speed Bands"].RECOVERY) {
+        if (vspeedBands?.RECOVERY) {
             data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
-                wedgeConstraints: bands["Vertical Speed Bands"].RECOVERY,
+                wedgeConstraints: vspeedBands.RECOVERY,
                 resolutionBugColor: "green"
             });
         } else {
@@ -108,7 +113,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -127,10 +132,10 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
-function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
+function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
-        alerts: desc.bands["Alerts"],
+        alerts: desc.bands?.Alerts?.alerts,
         step: desc.step,
         time: desc.time
     });
@@ -194,19 +199,17 @@ player.define("init", async () => {
 });
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", () => {
-    const bandsData: utils.DAABandsData[] = player.getBandsData();
     const flightData: LLAData[] = player.getFlightData();
-    if (bandsData) {
-        for (let step = 0; step < bandsData.length; step++) {
-            player.setTimerJiffy("plot", () => {
-                const lla: LLAData = flightData[step];
-                const hd: number = Compass.v2deg(lla.ownship.v);
-                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z / 100;
-                const alt: number = +lla.ownship.s.alt;
-                plot({ ownship: {hd, hs: gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
-            }, step);
-        }
+    for (let step = 0; step < flightData?.length; step++) {
+        const bandsData: ScenarioDataPoint = player.getCurrentBands();
+        player.setTimerJiffy("plot", () => {
+            const lla: LLAData = flightData[step];
+            const hd: number = Compass.v2deg(lla.ownship.v);
+            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+            const vs: number = +lla.ownship.v.z / 100;
+            const alt: number = +lla.ownship.s.alt;
+            plot({ ownship: {hd, hs: gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });
+        }, step);
     }
 });
 async function createPlayer() {

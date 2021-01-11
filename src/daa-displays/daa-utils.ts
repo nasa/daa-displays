@@ -1,4 +1,4 @@
-import { MonitorElement, ResolutionElement, GeofenceElement, MetricsElement } from "./utils/daa-server";
+import { BandElement, Region, DaidalusBand } from "./utils/daa-server";
 
 export const color = {
     RECOVERY: "#07dc0a", // DASHED green
@@ -85,7 +85,20 @@ export interface Bands {
     RECOVERY?: FromTo[],
     UNKNOWN?: FromTo[]
 };
-export interface Alert { ac: string; alert: string }
+export function bandElement2Bands (be: BandElement): Bands {
+    if (be && be.bands) {
+        const ans: Bands = {};
+        for (let i = 0; i < be.bands.length; i++) {
+            const band: DaidalusBand = be.bands[i];
+            const region: Region = band.region;
+            const range: FromTo = { from: band.range[0], to: band.range[1], units: band.units };
+            ans[region] = ans[region] || [];
+            ans[region].push(range);
+        }
+        return ans;
+    }
+    return {};
+}
 export interface Coords {
     top?: number, left?: number, width?: number, height?: number
 };
@@ -96,28 +109,25 @@ export const BAND_NAMES: string[] = [
 ];
 
 
-//import { AlertElement, BandElement } from '../daa-server/utils/daa-server';
-
-// export type DAAMonitors = MonitorElement[];
-
 // TODO: replace DAABandsData with DaidalusBandsDescriptor
-export interface DAABandsData {
-    Wind: { deg: string, knot: string }, // FROM
-    Ownship: { heading: { val: string, units: string }, airspeed: { val: string, units: string } },
-    Alerts: Alert[],
-    "Altitude Bands": Bands, // FIXME: use BandElement and get rid of Bands
-    "Heading Bands": Bands,
-    "Horizontal Speed Bands": Bands,
-    "Vertical Speed Bands": Bands,
-    "Altitude Resolution": ResolutionElement,
-    "Heading Resolution": ResolutionElement,
-    "Horizontal Speed Resolution": ResolutionElement,
-    "Vertical Speed Resolution": ResolutionElement,
-    Contours: GeofenceElement,
-    "Hazard Zones": GeofenceElement,
-    Monitors: MonitorElement[],
-    Metrics: MetricsElement
-};
+
+// export interface DAABandsData {
+//     Wind: WindElement, // FROM
+//     Ownship: MetricsElement[],
+//     Alerts: Alert[],
+//     "Altitude Bands": Bands, // FIXME: use BandElement and get rid of Bands
+//     "Heading Bands": Bands,
+//     "Horizontal Speed Bands": Bands,
+//     "Vertical Speed Bands": Bands,
+//     "Altitude Resolution": ResolutionElement,
+//     "Heading Resolution": ResolutionElement,
+//     "Horizontal Speed Resolution": ResolutionElement,
+//     "Vertical Speed Resolution": ResolutionElement,
+//     Contours: GeofenceElement,
+//     "Hazard Zones": GeofenceElement,
+//     Monitors: MonitorElement[],
+//     Metrics: MetricsElement
+// };
 
 // y axis identifies the direction of the aircraft
 export function v2rad(v3: Vector3D): number {

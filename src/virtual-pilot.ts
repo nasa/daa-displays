@@ -36,7 +36,7 @@ import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
-import { DAAScenario, LLAData } from './daa-displays/utils/daa-server';
+import { DAAScenario, LLAData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 // import { ViewOptions } from './daa-displays/daa-view-options';
@@ -53,15 +53,15 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     const alt: number = +flightData.ownship.s.alt;
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = splitView.getPlayer(playerID).getCurrentBands();
+    const bands: ScenarioDataPoint = splitView.getPlayer(playerID).getCurrentBands();
     if (bands) {
-        data.compass.setBands(bands["Heading Bands"]);
-        data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
-        data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-        data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+        data.compass.setBands(utils.bandElement2Bands(bands["Heading Bands"]));
+        data.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]), AirspeedTape.units.knots);
+        data.verticalSpeedTape.setBands(utils.bandElement2Bands(bands["Vertical Speed Bands"]));
+        data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -73,7 +73,7 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
     plot(playerID, bands, splitView.getCurrentSimulationStep(), splitView.getCurrentSimulationTime());
 }
 
-function plot (playerID: string, bands: utils.DAABandsData, step: number, time: string) {
+function plot (playerID: string, bands: ScenarioDataPoint, step: number, time: string) {
     const daaPlots: { id: string, name: string, units: string }[] = [
         { id: "heading-bands", units: "deg", name: "Heading Bands" },
         { id: "horizontal-speed-bands", units: "ft", name: "Horizontal Speed Bands" },
@@ -81,7 +81,7 @@ function plot (playerID: string, bands: utils.DAABandsData, step: number, time: 
         { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
     ];
     splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
-        alerts: bands["Alerts"],
+        alerts: bands?.Alerts?.alerts,
         step,
         time
     });

@@ -87,6 +87,7 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
 import * as utils from './daa-utils';
 import { DAAPlayer } from './daa-player';
 import { LLAData } from 'src/daa-server/utils/daa-server';
+import { ScenarioDataPoint } from './utils/daa-server';
     
 export class DAASplitView extends DAAPlayer {
     private players: { [key: string]: DAAPlayer };
@@ -161,7 +162,7 @@ export class DAASplitView extends DAAPlayer {
         console.error(`splitView.getCurrentFlightData() should not be used. Please use splitView.getPlayers(..).getCurrentFlightData()`);
         return null;
     }
-    getCurrentBands (): utils.DAABandsData {
+    getCurrentBands (): ScenarioDataPoint {
         console.error(`splitView.getCurrentBands() should not be used. Please use splitView.getPlayers(..).getCurrentBands()`);
         return null;
     }
@@ -238,14 +239,14 @@ export class DAASplitView extends DAAPlayer {
                         let promises = [];
                         opt.hideLoadingAnimation = true;
                         if (this.players.left) {
-                            promises.push(new Promise(async (resolve, reject) => {
+                            promises.push(new Promise<void>(async (resolve, reject) => {
                                 // await this.players.left.loadDaaFile(scenario, { scenarioData });
                                 await this.players.left.selectScenarioFile(scenario, opt);
                                 resolve();
                             }));
                         }
                         if (this.players.right) {
-                            promises.push(new Promise(async (resolve, reject) => {
+                            promises.push(new Promise<void>(async (resolve, reject) => {
                                 // await this.players.right.loadDaaFile(scenario, { scenarioData });
                                 await this.players.right.selectScenarioFile(scenario, opt);
                                 resolve();

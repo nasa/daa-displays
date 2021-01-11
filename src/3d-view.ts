@@ -34,7 +34,7 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { LLAData } from './daa-displays/utils/daa-server';
+import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
@@ -49,7 +49,7 @@ function render (data: { map: InteractiveMap }) {
     const vs: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
     // console.log(`Flight data`, flightData);
-    const bands: utils.DAABandsData = player.getCurrentBands();
+    const bands: ScenarioDataPoint = player.getCurrentBands();
     // if (bands) {
     //     data.compass.setBands(bands["Heading Bands"]);
     //     data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
@@ -57,7 +57,7 @@ function render (data: { map: InteractiveMap }) {
     //     data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     // }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands && bands.Alerts && bands.Alerts[index]) ? +bands.Alerts[index].alert : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -76,10 +76,10 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
-function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: utils.DAABandsData, step: number, time: string }) {
+function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
-        alerts: desc.bands["Alerts"],
+        alerts: desc.bands?.Alerts.alerts,
         step: desc.step,
         time: desc.time
     });
@@ -129,19 +129,17 @@ player.define("init", async () => {
     // viewOptions.applyCurrentViewOptions();
 });
 player.define("plot", () => {
-    const bandsData: utils.DAABandsData[] = player.getBandsData();
     const flightData: LLAData[] = player.getFlightData();
-    if (bandsData) {
-        for (let step = 0; step < bandsData.length; step++) {
-            player.setTimerJiffy("plot", () => {
-                const lla: LLAData = flightData[step];
-                const hd: number = Compass.v2deg(lla.ownship.v);
-                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-                const vs: number = +lla.ownship.v.z / 100;
-                const alt: number = +lla.ownship.s.alt;
-                plot({ ownship: {hd, gs, vs, alt }, bands: bandsData[step], step, time: player.getTimeAt(step) });
-            }, step);
-        }
+    for (let step = 0; step < flightData?.length; step++) {
+        const bandsData: ScenarioDataPoint = player.getCurrentBands();
+        player.setTimerJiffy("plot", () => {
+            const lla: LLAData = flightData[step];
+            const hd: number = Compass.v2deg(lla.ownship.v);
+            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+            const vs: number = +lla.ownship.v.z / 100;
+            const alt: number = +lla.ownship.s.alt;
+            plot({ ownship: {hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });
+        }, step);
     }
 });
 

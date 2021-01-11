@@ -1,4 +1,4 @@
-import { DaidalusBandsDescriptor } from "./daa-server";
+import { ScenarioDescriptor } from "./daa-server";
 
 /**
  * Basic websocket client for interacting with the pvsio-web server
@@ -47,7 +47,7 @@ export class DAAClient {
     async send (token): Promise<any> {
         if (this.ws) {
             return new Promise((resolve, reject) => {
-                let desc: DaidalusBandsDescriptor = {
+                let desc: ScenarioDescriptor = {
                     Info: null,
                     Ownship: null,
                     Wind: null, // FROM
@@ -62,6 +62,7 @@ export class DAAClient {
                     "Horizontal Speed Resolution": null,
                     "Vertical Speed Resolution": null,
                     "Contours": null,
+                    "Hazard Zones": null,
                     Monitors: null,
                     Metrics: null
                 };
