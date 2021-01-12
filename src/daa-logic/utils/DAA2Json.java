@@ -44,7 +44,6 @@ import java.io.PrintWriter;
 
 import gov.nasa.larcfm.ACCoRD.Daidalus;
 import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
-import gov.nasa.larcfm.ACCoRD.SUMData;
 import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.EuclideanProjection;
 import gov.nasa.larcfm.Util.LatLonAlt;
@@ -105,7 +104,6 @@ public class DAA2Json {
 	protected boolean isBelowLLAThreshold(TrafficState ownship, TrafficState intruder) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
-		Velocity vi = intruder.get_v(); // projected velocity of the intruder
 
 		Position po = ownship.getPosition(); // ownship position in lat lon
 		EuclideanProjection eprj = Projection.createProjection(po);

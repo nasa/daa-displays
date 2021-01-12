@@ -37,15 +37,8 @@
    TERMINATION OF THIS AGREEMENT.
  **/
 
-import java.util.ArrayList;
-
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
 import gov.nasa.larcfm.ACCoRD.Daidalus;
-import gov.nasa.larcfm.ACCoRD.DaidalusFileWalker;
-import gov.nasa.larcfm.Util.f;
-
-import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
-
 
 public class DAAMonitorsV2 {
 
