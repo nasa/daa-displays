@@ -23,11 +23,11 @@ export const monitorTemplate = `
 </div>`;
 
 export const flightDataPanelTemplate = `
-<div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
+<!-- <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
     <b>Aircraft Data</b>
     <div class="aircraft-data" style="text-align:left;"></div>
 </div>
-<br>
+<br> -->
 <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
     <b>Encounter Information</b>
     <div class="encounter-data" style="text-align:left;"></div>
@@ -63,6 +63,8 @@ export const encounterDataTemplate = `
 <div>Ownship</div>
     <div style="padding-left:10px;">
         <div>Identifier: {{ownship.ownship}}</div>
+	<div>sx: {{ownship.s.x}} m, sy: {{ownship.s.y}} m,  sz: {{ownship.s.z}} m</div>
+	<div>vx: {{ownship.v.x}} m/s, vy: {{ownship.v.y}} m/s,  vz: {{ownship.v.z}} m/s</div>
         <div>Heading: {{ownship.heading.val}} {{ownship.heading.units}} - Track: {{ownship.track.val}} {{track.units}}</div>
         <div>Air Speed: {{ownship.airspeed.val}} {{ownship.airspeed.units}} ({{ownship.airspeed.internal}} m/s) - Ground Speed: {{ownship.groundspeed.val}} {{ownship.groundspeed.units}} ({{ownship.groundspeed.internal}} m/s)</div>
         <div>Vertical Speed: {{ownship.verticalspeed.val}} {{ownship.verticalspeed.units}} ({{ownship.verticalspeed.internal}} m/s)</div>
@@ -74,6 +76,8 @@ export const encounterDataTemplate = `
 {{#each traffic}}
     <div style="{{#if @first}}{{else}}margin-top:10px;{{/if}}padding-left:10px;">
         <div>Identifier: {{traffic}}</div>
+	<div>sx: {{s.x}} m, sy: {{s.y}} m,  sz: {{s.z}} m</div>
+	<div>vx: {{v.x}} m/s, vy: {{v.y}} m/s,  vz: {{v.z}} m/s</div>
         <div>Alert Level: {{alert.alert}} - Alerter: {{alert.alerter}}</div>
         <div>Heading: {{heading.val}} {{heading.units}} - Track: {{track.val}} {{track.units}}</div>
         <div>Air Speed: {{airspeed.val}} {{airspeed.units}} ({{airspeed.internal}} m/s) - Ground Speed: {{groundspeed.val}} {{groundspeed.units}} ({{groundspeed.internal}} m/s)</div>

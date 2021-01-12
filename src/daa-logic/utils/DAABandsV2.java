@@ -52,6 +52,7 @@ import gov.nasa.larcfm.ACCoRD.TrafficState;
 import gov.nasa.larcfm.Util.f;
 import gov.nasa.larcfm.Util.Velocity;
 import gov.nasa.larcfm.Util.Units;
+import gov.nasa.larcfm.Util.Vect3;
 import gov.nasa.larcfm.Util.Position;
 import gov.nasa.larcfm.Util.LatLonAlt;
 import gov.nasa.larcfm.Util.Projection;
@@ -290,8 +291,12 @@ public class DAABandsV2 {
 		String time = fmt(daa.getCurrentTime());
 		Velocity avo = daa.getOwnshipState().getAirVelocity();
 		Velocity gvo = daa.getOwnshipState().getGroundVelocity();
+		Vect3 so = daa.getOwnshipState().get_s();
+		Vect3 vo = daa.getOwnshipState().get_v();
 		String own = "{ \"time\": " + time; 
 		own += ", \"ownship\": \""+ daa.getOwnshipState().getId()+"\"";
+		own += ", \"s\": { \"x\": \""+fmt(so.x)+"\", \"y\": \""+fmt(so.y)+"\", \"z\": \""+fmt(so.z)+"\" }";
+		own += ", \"v\": { \"x\": \""+fmt(vo.x)+"\", \"y\": \""+fmt(vo.y)+"\", \"z\": \""+fmt(vo.z)+"\" }";
 		own += ", \"heading\": { \"val\": \"" + fmt(avo.compassAngle(hdir_units)) + "\"";
 		own += ", \"internal\": \"" + fmt(avo.compassAngle()) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
@@ -349,7 +354,11 @@ public class DAABandsV2 {
 			Detection3D detector = alerter.getDetector(corrective_level).get();
 			String taumod = (detector instanceof WCV_tvar) ? fmt(daa.modifiedTau(ac,((WCV_tvar)detector).getDTHR())) : "NaN";
 			if (ac > 1) { traffic += ", "; }
+			Vect3 si = daa.getAircraftStateAt(ac).get_s();
+			Vect3 vi = daa.getAircraftStateAt(ac).get_v();
 			traffic += "{ \"traffic\": \"" + daa.getAircraftStateAt(ac).getId() + "\"";
+			traffic += ", \"s\": { \"x\": \""+fmt(si.x)+"\", \"y\": \""+fmt(si.y)+"\", \"z\": \""+fmt(si.z)+"\" }";
+			traffic += ", \"v\": { \"x\": \""+fmt(vi.x)+"\", \"y\": \""+fmt(vi.y)+"\", \"z\": \""+fmt(vi.z)+"\" }";
 			traffic += ", \"heading\": { \"val\": \"" + fmt(avi.compassAngle(hdir_units)) + "\"";
 			traffic += ", \"internal\": \"" + fmt(avi.compassAngle()) + "\"";
 			traffic += ", \"units\": \"" + hdir_units + "\" }";
