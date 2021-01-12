@@ -35,7 +35,7 @@ export const flightDataPanelTemplate = `
 
 export const flightDataTemplate = `
 <div class="container" id="{{id}}-list" style="color:white; margin-top:16px; white-space:nowrap;">
-<div id="flight-time-{{flight.ownship.id}}">Time: {{currentTime}}</div>
+<div id="flight-time-{{flight.ownship.id}}">Time: {{currentTime}} s</div>
 {{#if flight}}
 {{#if flight.ownship}}
     <div class="flight-data" style="margin-top:10px;" id="flight-{{flight.ownship.id}}">
@@ -57,7 +57,7 @@ export const flightDataTemplate = `
 export const encounterDataTemplate = `
 <div class="container" id="{{id}}-list" style="color:white; margin-top:16px; white-space:nowrap;">
 {{#if currentTime}}
-<div>Time: {{currentTime}}s</div>
+<div>Time: {{currentTime}} s</div>
 <!-- ownship -->
 {{#if ownship}}
 <div>Ownship</div>

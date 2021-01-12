@@ -35,7 +35,7 @@
    PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE
    REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
    TERMINATION OF THIS AGREEMENT.
-**/
+ **/
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -64,21 +64,21 @@ public class DAA2Json {
 	// (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
 	protected boolean llaFlag = false;
 	protected static final double latOffset = 37.0298687;
-    protected static final double lonOffset = -76.3452218;
+	protected static final double lonOffset = -76.3452218;
 	protected static final double latlonThreshold = 0.3;
 
-    protected boolean VERBOSE = true;
+	protected boolean VERBOSE = true;
 
-    protected Daidalus daa = null;
-    protected String daaConfig = null;
-    protected static final int precision16 = 16;
-    protected static final int precision2 = 2;
+	protected Daidalus daa = null;
+	protected String daaConfig = null;
+	protected static final int precision16 = 16;
+	protected static final int precision2 = 2;
 
-    // 1 degree latitude is 69 miles and 60nmi
-    // 1 degree longitude is ~69 miles and ~60nmi
-    // 1 nautical mile is 1.15078 miles
+	// 1 degree latitude is 69 miles and 60nmi
+	// 1 degree longitude is ~69 miles and ~60nmi
+	// 1 nautical mile is 1.15078 miles
 
-    public DAA2Json (Daidalus daidalus) { daa = daidalus; }
+	public DAA2Json (Daidalus daidalus) { daa = daidalus; }
 
 	protected void adjustThreshold (String input, Daidalus daidalus) {
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
@@ -113,11 +113,11 @@ public class DAA2Json {
 		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
 
 		return Math.abs(Units.to("deg", px.lat())) < DAA2Json.latlonThreshold 
-			&& Math.abs(Units.to("deg", px.lon())) < DAA2Json.latlonThreshold;
-    }
+				&& Math.abs(Units.to("deg", px.lon())) < DAA2Json.latlonThreshold;
+	}
 
 
-    public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
+	public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
 		Velocity vi = intruder.get_v(); // projected velocity of the intruder
@@ -128,25 +128,25 @@ public class DAA2Json {
 		LatLonAlt lla = eprj.inverse(si);
 		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
 		Velocity vx = eprj.inverseVelocity(si, vi, true); // this should be the same as vi
-			
-		String lat = llaFlag ? f.FmPrecision(Units.to("deg", px.lat()) + latOffset, precision16)
-			: f.FmPrecision(Units.to("deg", px.lat()), precision16);
-		String lon = llaFlag ? f.FmPrecision(Units.to("deg", px.lon()) + lonOffset, precision16)
-			: f.FmPrecision(Units.to("deg", px.lon()), precision16);
-		return "{ "
-			+ "\"id\": \"" + intruder.getId() + "\", " 
-			+ "\"s\": { "
-			+ "\"lat\": \"" + lat + "\", " 
-			+ "\"lon\": \"" + lon + "\", " 
-			+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
-			+ "\"v\": { " 
-			+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-			+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", "
-			+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
-			+ " }";
-    }
 
-    public String printDAA(TrafficState ownship, TrafficState intruder, double time) {
+		String lat = llaFlag ? f.FmPrecision(Units.to("deg", px.lat()) + latOffset, precision16)
+				: f.FmPrecision(Units.to("deg", px.lat()), precision16);
+		String lon = llaFlag ? f.FmPrecision(Units.to("deg", px.lon()) + lonOffset, precision16)
+				: f.FmPrecision(Units.to("deg", px.lon()), precision16);
+		return "{ "
+		+ "\"id\": \"" + intruder.getId() + "\", " 
+		+ "\"s\": { "
+		+ "\"lat\": \"" + lat + "\", " 
+		+ "\"lon\": \"" + lon + "\", " 
+		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
+		+ "\"v\": { " 
+		+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+		+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", "
+		+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
+		+ " }";
+	}
+
+	public String printDAA(TrafficState ownship, TrafficState intruder, double time) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
 		Velocity vi = intruder.get_v(); // projected velocity of the intruder
@@ -157,24 +157,24 @@ public class DAA2Json {
 		LatLonAlt lla = eprj.inverse(si);
 		Position px = Position.mkLatLonAlt(lla.lat(), lla.lon(), lla.alt());
 		Velocity vx = eprj.inverseVelocity(si, vi, true);
-			
+
 		return "{ "
-			+ "\"name\": \"" + intruder.getId() + "\", " 
-			+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
-			+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
-			+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
-			+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
-			+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-			+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
-			+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
-			+ " }";
-    }
+		+ "\"name\": \"" + intruder.getId() + "\", " 
+		+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
+		+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
+		+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
+		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
+		+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
+		+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
+		+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
+		+ " }";
+	}
 
-    public static void printHelp () {
+	public static void printHelp () {
 		System.out.println("Usage: java -jar DAA2Json.jar <file.daa>\n");
-    }
+	}
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 
 		if (args == null || args.length == 0) {
 			printHelp();
@@ -182,7 +182,7 @@ public class DAA2Json {
 		}
 
 		PrintWriter out = new PrintWriter(System.out);
-			
+
 		String scenario = null;
 		String output = null;
 
@@ -190,7 +190,7 @@ public class DAA2Json {
 		int a = 0;
 		while (a < args.length && args[a].startsWith("-")) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-			// printHelpMsg();
+				// printHelpMsg();
 			} else if (args[a].startsWith("--output") || args[a].startsWith("-output") || args[a].equals("-o")) {
 				output = args[++a];
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
@@ -281,5 +281,5 @@ public class DAA2Json {
 		out.println("}");
 
 		out.close();
-    }
+	}
 }
