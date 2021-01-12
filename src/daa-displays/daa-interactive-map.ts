@@ -254,11 +254,11 @@ export class InteractiveMap {
             // look for the name of the city in the list of known destinations (array cities)
             pos = cities[pos];
         }
-        if (typeof pos === "object" && pos && pos.lat && pos.lon) {
+        if (typeof pos === "object") {
             this.pos = {
-                lat: (typeof pos.lat === "string")? +pos.lat : pos.lat, 
-                lon: (typeof pos.lon === "string")? +pos.lon : pos.lon, 
-                alt: (typeof pos.alt === "string")? +pos.alt : pos.alt 
+                lat: +pos?.lat, 
+                lon: +pos?.lon, 
+                alt: +pos?.alt 
             };
             this.airspace.goTo({ lat: this.pos.lat, lon: this.pos.lon });
         } else {
@@ -280,11 +280,11 @@ export class InteractiveMap {
             // look for the name of the city in the list of known destinations (array cities)
             pos = cities[pos];
         }
-        if (typeof pos === "object" && pos && pos.lat && pos.lon) {
+        if (typeof pos === "object") {
             this.pos = {
-                lat: (typeof pos.lat === "string") ? +pos.lat : pos.lat,
-                lon: (typeof pos.lon === "string") ? +pos.lon : pos.lon,
-                alt: (typeof pos.alt === "string") ? +pos.alt : pos.alt
+                lat: +pos?.lat,
+                lon: +pos?.lon,
+                alt: +pos?.alt
             };
             this.airspace.setOwnshipPosition(this.pos);
         } else {
@@ -295,9 +295,9 @@ export class InteractiveMap {
     setOwnshipVelocity(v: utils.Vector3D | serverInterface.Vector3D): InteractiveMap {
         if (v) {
             const vel: utils.Vector3D = {
-                x: (typeof v.x === "string") ? +v.x : v.x,
-                y: (typeof v.y === "string") ? +v.y : v.y,
-                z: (typeof v.z === "string") ? +v.z : v.z
+                x: +v?.x,
+                y: +v?.y,
+                z: +v?.z
             }
             this.airspace.setOwnshipVelocity(vel);
         } else {
