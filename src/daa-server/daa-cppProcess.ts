@@ -114,7 +114,15 @@ export class CppProcess {
 					console.error(`stderr: ${stderr}`);  
 				}
 				console.info(`stdout: ${stdout}`);
-				resolve(stdout.trim());
+				console.info(`stdout: ${stdout}`);
+				const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
+				console.log(`Daidalus version: ${match[1]}`);
+				if (match && match[1]) {
+					resolve(match[1]);
+				} else {
+					console.warn("Unable to identify Daildalus version");
+					resolve("xx.yy.zz");
+				}
 			});
 		});
 	}

@@ -87,13 +87,20 @@ export class JavaProcess {
 				console.info(`Executing ${cmd}`);
 				exec(cmd, (error, stdout, stderr) => {
 					if (error) {
-					console.error(`exec error: ${error}`);
-					return;
+						console.error(`exec error: ${error}`);
+						return;
 					} else if (stderr) {
 						console.error(`stderr: ${stderr}`);  
 					}
 					console.info(`stdout: ${stdout}`);
-					resolve(stdout);
+					const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
+					console.log(`Daidalus version: ${match[1]}`);
+					if (match && match[1]) {
+						resolve(match[1]);
+					} else {
+						console.warn("Unable to identify Daildalus version");
+						resolve("xx.yy.zz");
+					}
 				});
 			});
 		}
