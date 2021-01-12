@@ -73,7 +73,7 @@ public class DAABandsV2 {
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
 	protected int    precision = 2; // Precision of printed outputs
-	
+
 	protected String wind = null;
 
 	protected PrintWriter printWriter = null;
@@ -304,6 +304,9 @@ public class DAABandsV2 {
 		own += ", \"groundspeed\": { \"val\": \"" + fmt(gvo.groundSpeed(hs_units)) + "\"";
 		own += ", \"internal\": \"" + fmt(gvo.gs()) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
+		own += ", \"verticalspeed\": { \"val\": \"" + fmt(avo.verticalSpeed(vs_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(avo.vs()) + "\"";
+		own += ", \"units\": \"" + vs_units + "\" }";
 		own += " }";
 		ownshipArray.add(own);
 
@@ -359,6 +362,9 @@ public class DAABandsV2 {
 			traffic += ", \"groundspeed\": { \"val\": \"" + fmt(gvi.groundSpeed(hs_units)) + "\"";
 			traffic += ", \"internal\": \"" + fmt(gvi.gs()) + "\"";
 			traffic += ", \"units\": \"" + hs_units + "\" }";
+			traffic += ", \"verticalspeed\": { \"val\": \"" + fmt(avi.verticalSpeed(vs_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(avi.vs()) + "\"";
+			traffic += ", \"units\": \"" + vs_units + "\" }";
 			traffic += ", \"metrics\": {";
 			traffic += " \"separation\": { \"horizontal\": { \"val\": \"" + hsep + "\", \"internal\": \"" + hsepi +"\", \"units\": \"" + hrec_units + "\" }";
 			traffic += ", \"vertical\": { \"val\": \"" + vsep + "\", \"internal\": \"" + vsepi + "\", \"units\": \"" + vrec_units + "\" }}";
@@ -731,7 +737,7 @@ public class DAABandsV2 {
 	protected String getVersion () {
 		return VERSION;
 	}
-	
+
 	protected String fmt(double val) {
 		return f.FmPrecision(val,precision);
 	}

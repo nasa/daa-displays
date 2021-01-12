@@ -65,7 +65,7 @@ export const encounterDataTemplate = `
         <div>Identifier: {{ownship.ownship}}</div>
         <div>Heading: {{ownship.heading.val}} {{ownship.heading.units}} - Track: {{ownship.track.val}} {{track.units}}</div>
         <div>Air Speed: {{ownship.airspeed.val}} {{ownship.airspeed.units}} ({{ownship.airspeed.internal}} m/s) - Ground Speed: {{ownship.groundspeed.val}} {{ownship.groundspeed.units}} ({{ownship.groundspeed.internal}} m/s)</div>
-        <div>Vertical Speed: ???</div>
+        <div>Vertical Speed: {{ownship.verticalspeed.val}} {{ownship.verticalspeed.units}} ({{ownship.verticalspeed.internal}} m/s)</div>
     </div>
 {{/if}}
 <!-- traffic -->
@@ -77,7 +77,7 @@ export const encounterDataTemplate = `
         <div>Alert Level: {{alert.alert}} - Alerter: {{alert.alerter}}</div>
         <div>Heading: {{heading.val}} {{heading.units}} - Track: {{track.val}} {{track.units}}</div>
         <div>Air Speed: {{airspeed.val}} {{airspeed.units}} ({{airspeed.internal}} m/s) - Ground Speed: {{groundspeed.val}} {{groundspeed.units}} ({{groundspeed.internal}} m/s)</div>
-        <div>Vertical Speed: ???</div>
+        <div>Vertical Speed: {{verticalspeed.val}} {{verticalspeed.units}} ({{verticalspeed.internal}} m/s)</div>
         <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} ({{metrics.separation.horizontal.internal}} m)</div>
         <div>Vertical Separation: {{metrics.separation.vertical.val}} {{metrics.separation.vertical.units}} ({{metrics.separation.vertical.internal}} m)</div>
         <div>Horizontal Closure Rate: {{metrics.closurerate.horizontal.val}} {{metrics.closurerate.horizontal.units}} ({{metrics.closurerate.horizontal.internal}} m/s)</div>
