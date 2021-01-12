@@ -72,6 +72,7 @@ public class DAABandsV2 {
 	protected String scenario = null;
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
+	protected int    precision = 2; // Precision of printed outputs
 
 	protected String wind = null;
 
@@ -113,6 +114,7 @@ public class DAABandsV2 {
 		System.out.println("Options:");
 		System.out.println("  --help\n\tPrint this message");
 		System.out.println("  --version\n\tPrint DAIDALUS version");
+		System.out.println("  --precision <n>\n\tPrecision of output values");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
 		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
@@ -284,27 +286,27 @@ public class DAABandsV2 {
 		String vrec_units = daa.getUnitsOf("min_vertical_recovery");
 		String time_units = "s";
 
-		// load wind settings at each time step --- wind is not persistent in DAIDALUS
-		loadWind();
-
 		// ownship
-		String time = f.FmPrecision(daa.getCurrentTime());
+		String time = fmt(daa.getCurrentTime());
 		Velocity avo = daa.getOwnshipState().getAirVelocity();
 		Velocity gvo = daa.getOwnshipState().getGroundVelocity();
 		String own = "{ \"time\": " + time; 
 		own += ", \"ownship\": \""+ daa.getOwnshipState().getId()+"\"";
-		own += ", \"heading\": { \"val\": \"" + f.FmPrecision(avo.compassAngle(hdir_units)) + "\"";
-		own += ", \"internal\": \"" + f.FmPrecision(avo.compassAngle()) + "\"";
+		own += ", \"heading\": { \"val\": \"" + fmt(avo.compassAngle(hdir_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(avo.compassAngle()) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"track\": { \"val\": \"" + f.FmPrecision(gvo.compassAngle(hdir_units)) + "\"";
-		own += ", \"internal\": \"" + f.FmPrecision(gvo.compassAngle()) + "\"";
+		own += ", \"track\": { \"val\": \"" + fmt(gvo.compassAngle(hdir_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(gvo.compassAngle()) + "\"";
 		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"airspeed\": { \"val\": \"" + f.FmPrecision(avo.groundSpeed(hs_units)) + "\"";
-		own += ", \"internal\": \"" + f.FmPrecision(avo.gs()) + "\"";
+		own += ", \"airspeed\": { \"val\": \"" + fmt(avo.groundSpeed(hs_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(avo.gs()) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
-		own += ", \"groundspeed\": { \"val\": \"" + f.FmPrecision(gvo.groundSpeed(hs_units)) + "\"";
-		own += ", \"internal\": \"" + f.FmPrecision(gvo.gs()) + "\"";
+		own += ", \"groundspeed\": { \"val\": \"" + fmt(gvo.groundSpeed(hs_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(gvo.gs()) + "\"";
 		own += ", \"units\": \"" + hs_units + "\" }";
+		own += ", \"verticalspeed\": { \"val\": \"" + fmt(avo.verticalSpeed(vs_units)) + "\"";
+		own += ", \"internal\": \"" + fmt(avo.vs()) + "\"";
+		own += ", \"units\": \"" + vs_units + "\" }";
 		own += " }";
 		ownshipArray.add(own);
 
@@ -328,38 +330,41 @@ public class DAABandsV2 {
 			int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac);
 			Velocity avi = daa.getAircraftStateAt(ac).getAirVelocity();
 			Velocity gvi = daa.getAircraftStateAt(ac).getGroundVelocity();
-			String hsep = f.FmPrecision(daa.currentHorizontalSeparation(ac, hrec_units));
-			String hsepi = f.FmPrecision(daa.currentHorizontalSeparation(ac));
-			String vsep = f.FmPrecision(daa.currentVerticalSeparation(ac, vrec_units));
-			String vsepi = f.FmPrecision(daa.currentVerticalSeparation(ac));
-			String hmiss = f.FmPrecision(daa.predictedHorizontalMissDistance(ac, hrec_units));
-			String hmissi = f.FmPrecision(daa.predictedHorizontalMissDistance(ac));
-			String vmiss = f.FmPrecision(daa.predictedVerticalMissDistance(ac, vrec_units));
-			String vmissi = f.FmPrecision(daa.predictedVerticalMissDistance(ac));
-			String hcr = f.FmPrecision(daa.horizontalClosureRate(ac, hs_units));
-			String hcri = f.FmPrecision(daa.horizontalClosureRate(ac));
-			String vcr = f.FmPrecision(daa.verticalClosureRate(ac, vs_units));
-			String vcri = f.FmPrecision(daa.verticalClosureRate(ac));
-			String tcpa = f.FmPrecision(daa.timeToHorizontalClosestPointOfApproach(ac));
-			String tcoa = f.FmPrecision(daa.timeToCoAltitude(ac));
+			String hsep = fmt(daa.currentHorizontalSeparation(ac, hrec_units));
+			String hsepi = fmt(daa.currentHorizontalSeparation(ac));
+			String vsep = fmt(daa.currentVerticalSeparation(ac, vrec_units));
+			String vsepi = fmt(daa.currentVerticalSeparation(ac));
+			String hmiss = fmt(daa.predictedHorizontalMissDistance(ac, hrec_units));
+			String hmissi = fmt(daa.predictedHorizontalMissDistance(ac));
+			String vmiss = fmt(daa.predictedVerticalMissDistance(ac, vrec_units));
+			String vmissi = fmt(daa.predictedVerticalMissDistance(ac));
+			String hcr = fmt(daa.horizontalClosureRate(ac, hs_units));
+			String hcri = fmt(daa.horizontalClosureRate(ac));
+			String vcr = fmt(daa.verticalClosureRate(ac, vs_units));
+			String vcri = fmt(daa.verticalClosureRate(ac));
+			String tcpa = fmt(daa.timeToHorizontalClosestPointOfApproach(ac));
+			String tcoa = fmt(daa.timeToCoAltitude(ac));
 			Alerter alerter = daa.getAlerterAt(alerter_idx);
 			int corrective_level = daa.correctiveAlertLevel(alerter_idx);
 			Detection3D detector = alerter.getDetector(corrective_level).get();
-			String taumod = (detector instanceof WCV_tvar) ? f.FmPrecision(daa.modifiedTau(ac,((WCV_tvar)detector).getDTHR())) : "NaN";
+			String taumod = (detector instanceof WCV_tvar) ? fmt(daa.modifiedTau(ac,((WCV_tvar)detector).getDTHR())) : "NaN";
 			if (ac > 1) { traffic += ", "; }
 			traffic += "{ \"traffic\": \"" + daa.getAircraftStateAt(ac).getId() + "\"";
-			traffic += ", \"heading\": { \"val\": \"" + f.FmPrecision(avi.compassAngle(hdir_units)) + "\"";
-			traffic += ", \"internal\": \"" + f.FmPrecision(avi.compassAngle()) + "\"";
+			traffic += ", \"heading\": { \"val\": \"" + fmt(avi.compassAngle(hdir_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(avi.compassAngle()) + "\"";
 			traffic += ", \"units\": \"" + hdir_units + "\" }";
-			traffic += ", \"track\": { \"val\": \"" + f.FmPrecision(gvi.compassAngle(hdir_units)) + "\"";
-			traffic += ", \"internal\": \"" + f.FmPrecision(gvi.compassAngle()) + "\"";
+			traffic += ", \"track\": { \"val\": \"" + fmt(gvi.compassAngle(hdir_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(gvi.compassAngle()) + "\"";
 			traffic += ", \"units\": \"" + hdir_units + "\" }";
-			traffic += ", \"airspeed\": { \"val\": \"" + f.FmPrecision(avi.groundSpeed(hs_units)) + "\"";
-			traffic += ", \"internal\": \"" + f.FmPrecision(avi.gs()) + "\"";
+			traffic += ", \"airspeed\": { \"val\": \"" + fmt(avi.groundSpeed(hs_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(avi.gs()) + "\"";
 			traffic += ", \"units\": \"" + hs_units + "\" }";
-			traffic += ", \"groundspeed\": { \"val\": \"" + f.FmPrecision(gvi.groundSpeed(hs_units)) + "\"";
-			traffic += ", \"internal\": \"" + f.FmPrecision(gvi.gs()) + "\"";
+			traffic += ", \"groundspeed\": { \"val\": \"" + fmt(gvi.groundSpeed(hs_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(gvi.gs()) + "\"";
 			traffic += ", \"units\": \"" + hs_units + "\" }";
+			traffic += ", \"verticalspeed\": { \"val\": \"" + fmt(avi.verticalSpeed(vs_units)) + "\"";
+			traffic += ", \"internal\": \"" + fmt(avi.vs()) + "\"";
+			traffic += ", \"units\": \"" + vs_units + "\" }";
 			traffic += ", \"metrics\": {";
 			traffic += " \"separation\": { \"horizontal\": { \"val\": \"" + hsep + "\", \"internal\": \"" + hsepi +"\", \"units\": \"" + hrec_units + "\" }";
 			traffic += ", \"vertical\": { \"val\": \"" + vsep + "\", \"internal\": \"" + vsepi + "\", \"units\": \"" + vrec_units + "\" }}";
@@ -436,11 +441,11 @@ public class DAABandsV2 {
 		RecoveryInformation recoveryInfo = daa.horizontalDirectionRecoveryInformation();
 		boolean isRecovery = recoveryInfo.recoveryBandsComputed();
 		boolean isSaturated = recoveryInfo.recoveryBandsSaturated();
-		String timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
-		String hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
-		String hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
-		String vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
-		String vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		String timeToRecovery = fmt(recoveryInfo.timeToRecovery());
+		String hDistanceAtRecovery = fmt(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		String hDistanceAtRecoveryi = fmt(recoveryInfo.recoveryHorizontalDistance());
+		String vDistanceAtRecovery = fmt(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		String vDistanceAtRecoveryi = fmt(recoveryInfo.recoveryVerticalDistance());
 		String nFactor = f.Fmi(recoveryInfo.nFactor());
 		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
 		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
@@ -466,11 +471,11 @@ public class DAABandsV2 {
 		recoveryInfo = daa.horizontalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
-		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
-		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
-		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
-		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
-		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = fmt(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = fmt(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = fmt(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = fmt(recoveryInfo.recoveryVerticalDistance());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
 		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + resGs_sec + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
@@ -496,11 +501,11 @@ public class DAABandsV2 {
 		recoveryInfo = daa.verticalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
-		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
-		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
-		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
-		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
-		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = fmt(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = fmt(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = fmt(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = fmt(recoveryInfo.recoveryVerticalDistance());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
 		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + resVs_sec + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
@@ -526,11 +531,11 @@ public class DAABandsV2 {
 		recoveryInfo = daa.altitudeRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
-		timeToRecovery = f.FmPrecision(recoveryInfo.timeToRecovery());
-		hDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance(hrec_units));
-		hDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryHorizontalDistance());
-		vDistanceAtRecovery = f.FmPrecision(recoveryInfo.recoveryVerticalDistance(vrec_units));
-		vDistanceAtRecoveryi = f.FmPrecision(recoveryInfo.recoveryVerticalDistance());
+		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
+		hDistanceAtRecovery = fmt(recoveryInfo.recoveryHorizontalDistance(hrec_units));
+		hDistanceAtRecoveryi = fmt(recoveryInfo.recoveryHorizontalDistance());
+		vDistanceAtRecovery = fmt(recoveryInfo.recoveryVerticalDistance(vrec_units));
+		vDistanceAtRecoveryi = fmt(recoveryInfo.recoveryVerticalDistance());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
 		altResolution += ", \"resolution-secondary\": { \"val\": \"" + resAlt_sec + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
@@ -733,6 +738,10 @@ public class DAABandsV2 {
 		return VERSION;
 	}
 
+	protected String fmt(double val) {
+		return f.FmPrecision(val,precision);
+	}
+
 	protected DAABandsV2 parseCliArgs (String[] args) {
 		if (args != null && args.length == 0) {
 			printHelpMsg();
@@ -748,6 +757,8 @@ public class DAABandsV2 {
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(getVersion());
 				System.exit(0);
+			} else if (a < args.length - 1 && (args[a].startsWith("--prec") || args[a].startsWith("-prec") || args[a].equals("-p"))) {
+				precision = Integer.parseInt(args[++a]);
 			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
 				daaConfig = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
@@ -798,6 +809,7 @@ public class DAABandsV2 {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
 		daaBands.loadDaaConfig();
+		daaBands.loadWind();
 		daaBands.walkFile();
 	}
 
