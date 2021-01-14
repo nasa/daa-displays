@@ -74,7 +74,16 @@ public class DAABandsV2 {
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
 	protected int    precision = 2; // Precision of printed outputs
-
+	
+	/* Units are loaded from configuration file */
+	protected String hs_units = "m/s";
+	protected String vs_units = "m/s";
+	protected String alt_units = "m";
+	protected String hdir_units = "deg";
+	protected String hrec_units = "m";
+	protected String vrec_units = "m";
+	protected String time_units = "s";
+	
 	protected String wind = null;
 
 	protected PrintWriter printWriter = null;
@@ -173,12 +182,17 @@ public class DAABandsV2 {
 		out.println(" ]");
 	}
 
-	protected boolean loadDaaConfig () {
+	protected boolean loadDAAConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
 				boolean paramLoaded = daa.loadFromFile(daaConfig);
 				if (paramLoaded) {
 					System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
+					hs_units = daa.getUnitsOf("step_hs");
+					vs_units = daa.getUnitsOf("step_vs");
+					alt_units = daa.getUnitsOf("step_alt");
+					hrec_units = daa.getUnitsOf("min_horizontal_recovery");
+					vrec_units = daa.getUnitsOf("min_vertical_recovery");
 					return true;
 				} else {
 					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default DAIDALUS configuration.");
@@ -271,6 +285,77 @@ public class DAABandsV2 {
 		return "\t[]";
 	}
 
+	String jsonValUnits(String label, double val, String units, double internal) {
+		String json = "";
+		json += "\""+label+"\": { ";
+		json += "\"val\": \"" + fmt(val) + "\"";
+		json += ", \"units\": \"" + units + "\"";
+		json += ", \"internal\": \"" + fmt(internal) + "\"";
+		json += " }";
+		return json;
+	}
+
+	String jsonVect3(String label, Vect3 v) {
+		String json = "";
+		json += "\""+label+"\": { ";
+		json += "\"x\": \"" + fmt(v.x) + "\"";
+		json += ", \"y\": \"" + fmt(v.y) + "\"";
+		json += ", \"z\": \"" + fmt(v.z) + "\"";
+		json += " }";
+		return json;
+	}
+
+	protected String jsonAircraftState(TrafficState ac) {
+		Velocity av = ac.getAirVelocity();
+		Velocity gv = ac.getGroundVelocity();
+		String json = "{ ";
+		json += "\"id\": \""+ ac.getId()+"\"";
+		json += ", "+jsonVect3("s",ac.get_s());
+		json += ", "+jsonVect3("v",ac.get_v());
+		json += ", "+jsonValUnits("altitude",ac.altitude(alt_units),alt_units,ac.altitude());
+		json += ", "+jsonValUnits("heading",av.compassAngle(hdir_units),hdir_units,av.compassAngle());
+		json += ", "+jsonValUnits("track",gv.compassAngle(hdir_units),hdir_units,gv.compassAngle());
+		json += ", "+jsonValUnits("airspeed",av.groundSpeed(hs_units),hs_units,av.gs());
+		json += ", "+jsonValUnits("groundspeed",gv.groundSpeed(hs_units),hs_units,gv.gs());
+		json += ", "+jsonValUnits("verticalspeed",ac.verticalSpeed(vs_units),vs_units,ac.verticalSpeed());
+		json += " }";
+		return json;
+	}
+
+	protected String jsonAircraftMetrics(int ac_idx) {
+		int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac_idx);
+		double hsep = daa.currentHorizontalSeparation(ac_idx, hrec_units);
+		double hsepi = daa.currentHorizontalSeparation(ac_idx);
+		double vsep = daa.currentVerticalSeparation(ac_idx, vrec_units);
+		double vsepi = daa.currentVerticalSeparation(ac_idx);
+		double hmiss = daa.predictedHorizontalMissDistance(ac_idx, hrec_units);
+		double hmissi = daa.predictedHorizontalMissDistance(ac_idx);
+		double vmiss = daa.predictedVerticalMissDistance(ac_idx, vrec_units);
+		double vmissi = daa.predictedVerticalMissDistance(ac_idx);
+		double hcr = daa.horizontalClosureRate(ac_idx, hs_units);
+		double hcri = daa.horizontalClosureRate(ac_idx);
+		double vcr = daa.verticalClosureRate(ac_idx, vs_units);
+		double vcri = daa.verticalClosureRate(ac_idx);
+		double tcpa = daa.timeToHorizontalClosestPointOfApproach(ac_idx);
+		double tcoa = daa.timeToCoAltitude(ac_idx);
+		Alerter alerter = daa.getAlerterAt(alerter_idx);
+		int corrective_level = daa.correctiveAlertLevel(alerter_idx);
+		Detection3D detector = alerter.getDetector(corrective_level).get();
+		double taumod = (detector instanceof WCV_tvar) ? daa.modifiedTau(ac_idx,((WCV_tvar)detector).getDTHR()) : Double.NaN;
+		String json = "{ ";
+		json += "\"separation\": { "+jsonValUnits("horizontal",hsep,hrec_units,hsepi) + 
+				", "+jsonValUnits("vertical",vsep,vrec_units,vsepi) + " }";
+		json += ", \"missdistance\": { "+jsonValUnits("horizontal",hmiss,hrec_units,hmissi) + 
+				", "+jsonValUnits("vertical",vmiss,vrec_units,vmissi) + " }";
+		json += ", \"closurerate\": { "+jsonValUnits("horizontal",hcr,hs_units,hcri) + 
+				", "+jsonValUnits("vertical",vcr,vs_units,vcri) + " }";
+		json += ", "+jsonValUnits("tcpa",tcpa,time_units,tcpa);
+		json += ", "+jsonValUnits("tcoa",tcoa,time_units,tcoa);
+		json += ", "+jsonValUnits("taumod",taumod,time_units,taumod);
+		json += " }";
+		return json;
+	}
+
 	protected String jsonBands (
 			DAAMonitorsV2 monitors,
 			List<String> ownshipArray, List<String> alertsArray, List<String> metricsArray, 
@@ -279,13 +364,6 @@ public class DAABandsV2 {
 			List<String> contoursArray, List<String> hazardZonesArray,
 			List<String> monitorM1Array, List<String> monitorM2Array, List<String> monitorM3Array, List<String> monitorM4Array 
 			) {
-		String hs_units = daa.getUnitsOf("step_hs");
-		String vs_units = daa.getUnitsOf("step_vs");
-		String alt_units = daa.getUnitsOf("step_alt");
-		String hdir_units = "deg";
-		String hrec_units = daa.getUnitsOf("min_horizontal_recovery");
-		String vrec_units = daa.getUnitsOf("min_vertical_recovery");
-		String time_units = "s";
 
 		// ownship
 		String time = fmt(daa.getCurrentTime());
@@ -294,24 +372,7 @@ public class DAABandsV2 {
 		Vect3 so = daa.getOwnshipState().get_s();
 		Vect3 vo = daa.getOwnshipState().get_v();
 		String own = "{ \"time\": " + time; 
-		own += ", \"ownship\": \""+ daa.getOwnshipState().getId()+"\"";
-		own += ", \"s\": { \"x\": \""+fmt(so.x)+"\", \"y\": \""+fmt(so.y)+"\", \"z\": \""+fmt(so.z)+"\" }";
-		own += ", \"v\": { \"x\": \""+fmt(vo.x)+"\", \"y\": \""+fmt(vo.y)+"\", \"z\": \""+fmt(vo.z)+"\" }";
-		own += ", \"heading\": { \"val\": \"" + fmt(avo.compassAngle(hdir_units)) + "\"";
-		own += ", \"internal\": \"" + fmt(avo.compassAngle()) + "\"";
-		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"track\": { \"val\": \"" + fmt(gvo.compassAngle(hdir_units)) + "\"";
-		own += ", \"internal\": \"" + fmt(gvo.compassAngle()) + "\"";
-		own += ", \"units\": \"" + hdir_units + "\" }";
-		own += ", \"airspeed\": { \"val\": \"" + fmt(avo.groundSpeed(hs_units)) + "\"";
-		own += ", \"internal\": \"" + fmt(avo.gs()) + "\"";
-		own += ", \"units\": \"" + hs_units + "\" }";
-		own += ", \"groundspeed\": { \"val\": \"" + fmt(gvo.groundSpeed(hs_units)) + "\"";
-		own += ", \"internal\": \"" + fmt(gvo.gs()) + "\"";
-		own += ", \"units\": \"" + hs_units + "\" }";
-		own += ", \"verticalspeed\": { \"val\": \"" + fmt(avo.verticalSpeed(vs_units)) + "\"";
-		own += ", \"internal\": \"" + fmt(avo.vs()) + "\"";
-		own += ", \"units\": \"" + vs_units + "\" }";
+		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState());
 		own += " }";
 		ownshipArray.add(own);
 
@@ -332,59 +393,10 @@ public class DAABandsV2 {
 		// Traffic aircraft
 		String traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-			int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac);
-			Velocity avi = daa.getAircraftStateAt(ac).getAirVelocity();
-			Velocity gvi = daa.getAircraftStateAt(ac).getGroundVelocity();
-			String hsep = fmt(daa.currentHorizontalSeparation(ac, hrec_units));
-			String hsepi = fmt(daa.currentHorizontalSeparation(ac));
-			String vsep = fmt(daa.currentVerticalSeparation(ac, vrec_units));
-			String vsepi = fmt(daa.currentVerticalSeparation(ac));
-			String hmiss = fmt(daa.predictedHorizontalMissDistance(ac, hrec_units));
-			String hmissi = fmt(daa.predictedHorizontalMissDistance(ac));
-			String vmiss = fmt(daa.predictedVerticalMissDistance(ac, vrec_units));
-			String vmissi = fmt(daa.predictedVerticalMissDistance(ac));
-			String hcr = fmt(daa.horizontalClosureRate(ac, hs_units));
-			String hcri = fmt(daa.horizontalClosureRate(ac));
-			String vcr = fmt(daa.verticalClosureRate(ac, vs_units));
-			String vcri = fmt(daa.verticalClosureRate(ac));
-			String tcpa = fmt(daa.timeToHorizontalClosestPointOfApproach(ac));
-			String tcoa = fmt(daa.timeToCoAltitude(ac));
-			Alerter alerter = daa.getAlerterAt(alerter_idx);
-			int corrective_level = daa.correctiveAlertLevel(alerter_idx);
-			Detection3D detector = alerter.getDetector(corrective_level).get();
-			String taumod = (detector instanceof WCV_tvar) ? fmt(daa.modifiedTau(ac,((WCV_tvar)detector).getDTHR())) : "NaN";
 			if (ac > 1) { traffic += ", "; }
-			Vect3 si = daa.getAircraftStateAt(ac).get_s();
-			Vect3 vi = daa.getAircraftStateAt(ac).get_v();
-			traffic += "{ \"traffic\": \"" + daa.getAircraftStateAt(ac).getId() + "\"";
-			traffic += ", \"s\": { \"x\": \""+fmt(si.x)+"\", \"y\": \""+fmt(si.y)+"\", \"z\": \""+fmt(si.z)+"\" }";
-			traffic += ", \"v\": { \"x\": \""+fmt(vi.x)+"\", \"y\": \""+fmt(vi.y)+"\", \"z\": \""+fmt(vi.z)+"\" }";
-			traffic += ", \"heading\": { \"val\": \"" + fmt(avi.compassAngle(hdir_units)) + "\"";
-			traffic += ", \"internal\": \"" + fmt(avi.compassAngle()) + "\"";
-			traffic += ", \"units\": \"" + hdir_units + "\" }";
-			traffic += ", \"track\": { \"val\": \"" + fmt(gvi.compassAngle(hdir_units)) + "\"";
-			traffic += ", \"internal\": \"" + fmt(gvi.compassAngle()) + "\"";
-			traffic += ", \"units\": \"" + hdir_units + "\" }";
-			traffic += ", \"airspeed\": { \"val\": \"" + fmt(avi.groundSpeed(hs_units)) + "\"";
-			traffic += ", \"internal\": \"" + fmt(avi.gs()) + "\"";
-			traffic += ", \"units\": \"" + hs_units + "\" }";
-			traffic += ", \"groundspeed\": { \"val\": \"" + fmt(gvi.groundSpeed(hs_units)) + "\"";
-			traffic += ", \"internal\": \"" + fmt(gvi.gs()) + "\"";
-			traffic += ", \"units\": \"" + hs_units + "\" }";
-			traffic += ", \"verticalspeed\": { \"val\": \"" + fmt(avi.verticalSpeed(vs_units)) + "\"";
-			traffic += ", \"internal\": \"" + fmt(avi.vs()) + "\"";
-			traffic += ", \"units\": \"" + vs_units + "\" }";
-			traffic += ", \"metrics\": {";
-			traffic += " \"separation\": { \"horizontal\": { \"val\": \"" + hsep + "\", \"internal\": \"" + hsepi +"\", \"units\": \"" + hrec_units + "\" }";
-			traffic += ", \"vertical\": { \"val\": \"" + vsep + "\", \"internal\": \"" + vsepi + "\", \"units\": \"" + vrec_units + "\" }}";
-			traffic += ", \"missdistance\": { \"horizontal\": { \"val\": \"" + hmiss + "\", \"internal\": \"" + hmissi + "\", \"units\": \"" + hrec_units + "\" }";
-			traffic += ", \"vertical\": { \"val\": \"" + vmiss + "\", \"internal\": \"" + vmissi + "\", \"units\": \"" + vrec_units + "\" }}";
-			traffic += ", \"closurerate\": { \"horizontal\": { \"val\": \"" + hcr + "\", \"internal\": \"" + hcri + "\", \"units\": \"" + hs_units + "\" }";
-			traffic += ", \"vertical\": { \"val\": \"" + vcr + "\", \"internal\": \"" + vcri + "\", \"units\": \"" + vs_units + "\" }}";
-			traffic += ", \"tcpa\": { \"val\": \"" + tcpa + "\", \"units\": \"" + time_units + "\" }";
-			traffic += ", \"tcoa\": { \"val\": \"" + tcoa + "\", \"units\": \"" + time_units + "\" }";
-			traffic += ", \"taumod\": { \"val\": \"" + taumod + "\", \"units\": \"" + time_units + "\" }";
-			traffic += " } }";
+			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac));
+			traffic += ", \"metrics\": " + jsonAircraftMetrics(ac);
+			traffic += " }";
 		}
 		traffic += " ]}";
 		metricsArray.add(traffic);
@@ -817,7 +829,7 @@ public class DAABandsV2 {
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
-		daaBands.loadDaaConfig();
+		daaBands.loadDAAConfig();
 		daaBands.loadWind();
 		daaBands.walkFile();
 	}

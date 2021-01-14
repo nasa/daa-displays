@@ -22,17 +22,20 @@ export const monitorTemplate = `
 {{/each}}
 </div>`;
 
+// This section is not needed anymore [CAM]
+// <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
+//    <b>Aircraft Data</b>
+//    <div class="aircraft-data" style="text-align:left;"></div>
+// </div>
+// <br> 
+
 export const flightDataPanelTemplate = `
-<!-- <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
-    <b>Aircraft Data</b>
-    <div class="aircraft-data" style="text-align:left;"></div>
-</div>
-<br> -->
 <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
     <b>Encounter Information</b>
     <div class="encounter-data" style="text-align:left;"></div>
 </div>`;
 
+// This template is not needed anymore [CAM]
 export const flightDataTemplate = `
 <div class="container" id="{{id}}-list" style="color:white; margin-top:16px; white-space:nowrap;">
 <div id="flight-time-{{flight.ownship.id}}">Time: {{currentTime}} s</div>
@@ -62,12 +65,13 @@ export const encounterDataTemplate = `
 {{#if ownship}}
 <div>Ownship</div>
     <div style="padding-left:10px;">
-        <div>Identifier: {{ownship.ownship}}</div>
-	<div>sx: {{ownship.s.x}} m, sy: {{ownship.s.y}} m,  sz: {{ownship.s.z}} m</div>
-	<div>vx: {{ownship.v.x}} m/s, vy: {{ownship.v.y}} m/s,  vz: {{ownship.v.z}} m/s</div>
-        <div>Heading: {{ownship.heading.val}} {{ownship.heading.units}} - Track: {{ownship.track.val}} {{track.units}}</div>
-        <div>Air Speed: {{ownship.airspeed.val}} {{ownship.airspeed.units}} ({{ownship.airspeed.internal}} m/s) - Ground Speed: {{ownship.groundspeed.val}} {{ownship.groundspeed.units}} ({{ownship.groundspeed.internal}} m/s)</div>
-        <div>Vertical Speed: {{ownship.verticalspeed.val}} {{ownship.verticalspeed.units}} ({{ownship.verticalspeed.internal}} m/s)</div>
+        <div>Identifier: {{ownship.acstate.id}}</div>
+	    <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
+        <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
+        <div>Altitude: {{ownship.acstate.altitude.val}} {{ownship.acstate.altitude.units}} ({{ownship.acstate.altitude.val}} m) </div>
+        <div>Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
+        <div>Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} ({{ownship.acstate.airspeed.internal}} m/s) - Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} ({{ownship.acstate.groundspeed.internal}} m/s)</div>
+        <div>Vertical Speed: {{ownship.acstate.verticalspeed.val}} {{ownship.acstate.verticalspeed.units}} ({{ownship.acstate.verticalspeed.internal}} m/s)</div>
     </div>
 {{/if}}
 <!-- traffic -->
@@ -75,13 +79,14 @@ export const encounterDataTemplate = `
 <div style="margin-top:10px;">Traffic</div>
 {{#each traffic}}
     <div style="{{#if @first}}{{else}}margin-top:10px;{{/if}}padding-left:10px;">
-        <div>Identifier: {{traffic}}</div>
-	<div>sx: {{s.x}} m, sy: {{s.y}} m,  sz: {{s.z}} m</div>
-	<div>vx: {{v.x}} m/s, vy: {{v.y}} m/s,  vz: {{v.z}} m/s</div>
+        <div>Identifier: {{acstate.id}}</div>
+	    <div>sx: {{acstate.s.x}} m, sy: {{acstate.s.y}} m,  sz: {{acstate.s.z}} m</div>
+        <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
+        <div>Altitude: {{acstate.altitude.val}} {{acstate.altitude.units}} ({{acstate.altitude.val}} m)</div>
+        <div>Heading: {{acstate.heading.val}} {{acstate.heading.units}} - Track: {{acstate.track.val}} {{acstate.track.units}}</div>
+        <div>Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} ({{acstate.airspeed.internal}} m/s) - Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} ({{acstate.groundspeed.internal}} m/s)</div>
         <div>Alert Level: {{alert.alert}} - Alerter: {{alert.alerter}}</div>
-        <div>Heading: {{heading.val}} {{heading.units}} - Track: {{track.val}} {{track.units}}</div>
-        <div>Air Speed: {{airspeed.val}} {{airspeed.units}} ({{airspeed.internal}} m/s) - Ground Speed: {{groundspeed.val}} {{groundspeed.units}} ({{groundspeed.internal}} m/s)</div>
-        <div>Vertical Speed: {{verticalspeed.val}} {{verticalspeed.units}} ({{verticalspeed.internal}} m/s)</div>
+        <div>Vertical Speed: {{acstate.verticalspeed.val}} {{acstate.verticalspeed.units}} ({{acstate.verticalspeed.internal}} m/s)</div>
         <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} ({{metrics.separation.horizontal.internal}} m)</div>
         <div>Vertical Separation: {{metrics.separation.vertical.val}} {{metrics.separation.vertical.units}} ({{metrics.separation.vertical.internal}} m)</div>
         <div>Horizontal Closure Rate: {{metrics.closurerate.horizontal.val}} {{metrics.closurerate.horizontal.units}} ({{metrics.closurerate.horizontal.internal}} m/s)</div>

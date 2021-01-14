@@ -183,10 +183,12 @@ export declare interface ValUnits {
     internal: string,
     units: string
 }
+
 export declare interface Metric {
     horizontal: ValUnits, 
     vertical: ValUnits
 }
+
 export declare interface DaidalusMetrics {
     separation: Metric, 
     missdistance: Metric,
@@ -195,12 +197,26 @@ export declare interface DaidalusMetrics {
     tcoa: ValUnits, 
     taumod: ValUnits
 }
+
+export declare interface AircraftState {
+    id : string,
+    s : Vector3D,
+    v : Vector3D,
+    altitude : ValUnits,
+    heading: ValUnits, 
+    track: ValUnits,
+    airspeed: ValUnits,
+    groundspeed: ValUnits,
+    verticalspeed: ValUnits
+}
+
+export declare interface OwnshipState {
+    time: number,   
+    acstate: AircraftState
+}
+
 export declare interface AircraftMetrics {
-    traffic: string,
-    heading: { val: string, internal: string, units: string }, 
-    track: { val: string, internal: string, units: string },
-    airspeed: { val: string, internal: string, units: string },
-    groundspeed: { val: string, internal: string, units: string }, 
+    acstate: AircraftState,
     metrics: DaidalusMetrics,
     alert?: Alert
 }
@@ -218,7 +234,7 @@ export declare interface MetricsElement {
 export declare interface WindElement { deg: string, knot: string }
 
 export declare interface ScenarioData {
-    Ownship: AircraftMetrics[],
+    Ownship: OwnshipState[],
     Wind: WindElement, // FROM
     Alerts: AlertElement[], // alerts over time
     "Heading Bands": BandElement[], // bands over time
@@ -235,7 +251,7 @@ export declare interface ScenarioData {
     Metrics: MetricsElement[]
 }
 export declare interface ScenarioDataPoint {
-    Ownship: AircraftMetrics,
+    Ownship: OwnshipState,
     Wind: WindElement, // FROM
     Alerts: AlertElement,
     "Heading Bands": BandElement,

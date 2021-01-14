@@ -71,8 +71,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         const bands: ScenarioDataPoint = player.getCurrentBands();
         if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
-        const heading: number = (bands && bands.Ownship && bands.Ownship.heading) ? +bands.Ownship.heading.val : Compass.v2deg(flightData.ownship.v);
-        const airspeed: number = (bands && bands.Ownship && bands.Ownship.airspeed) ? +bands.Ownship.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+        const heading: number = (bands && bands.Ownship && bands.Ownship.acstate.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+        const airspeed: number = (bands && bands.Ownship && bands.Ownship.acstate.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
         const vspeed: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
         const alt: number = +flightData.ownship.s.alt;
 

@@ -95,7 +95,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, ScenarioDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState } from './utils/daa-server';
 
 
 export declare interface DAAPlaybackHandlers {
@@ -1540,7 +1540,7 @@ export class DAAPlayer {
         return ans;
     }
 
-    getCurrentOwnshipMetrics (): AircraftMetrics {
+    getCurrentOwnshipState (): OwnshipState {
         const scenario: ScenarioDataPoint = this.getCurrentBands();
         return scenario?.Ownship;
     }
@@ -2049,7 +2049,7 @@ export class DAAPlayer {
         }
     }
 
-    protected appendEncounterData (data: { ownship: AircraftMetrics, traffic: AircraftMetrics[] }): void {
+    protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[] }): void {
         if (data) {
             const theHTML: string = Handlebars.compile(monitorTemplates.encounterDataTemplate)({
                 id: this.flightDataDomSelector,
@@ -2065,10 +2065,10 @@ export class DAAPlayer {
         this.removeFlightData();
         const flightInfo: LLAData = this.getCurrentFlightData();
         const trafficMetrics: AircraftMetrics[] = this.getCurrentTrafficMetrics();
-        const ownshipMetrics: AircraftMetrics = this.getCurrentOwnshipMetrics();
+        const ownshipState: OwnshipState = this.getCurrentOwnshipState();
         const flightData: FlightData = flightInfo;
         this.appendFlightData(flightData);
-        this.appendEncounterData({ ownship: ownshipMetrics, traffic: trafficMetrics });
+        this.appendEncounterData({ ownship: ownshipState, traffic: trafficMetrics });
     }
 
     /**
