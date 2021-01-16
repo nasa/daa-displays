@@ -11,4 +11,5 @@ compile:
 
 clean:
 	cd daa-logic && make clean
+	cd daa-scenarios && make clean
 	cd contrib && make clean

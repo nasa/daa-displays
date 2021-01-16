@@ -101,9 +101,10 @@ public class DAABandsV2 {
 		return daaConfig;
 	}
 
-	protected String getDaaConfig () {
+	protected String getConfig () {
 		if (daaConfig != null) {
-			return daaConfig.split("/")[ daaConfig.split("/").length - 1 ];
+			String[] qid = daaConfig.split("/");
+			return qid[qid.length - 1 ];
 		}
 		return null;
 	}
@@ -182,7 +183,7 @@ public class DAABandsV2 {
 		out.println(" ]");
 	}
 
-	protected boolean loadDAAConfig () {
+	protected boolean loadConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
 				boolean paramLoaded = daa.loadFromFile(daaConfig);
@@ -231,11 +232,16 @@ public class DAABandsV2 {
 	}
 
 	protected String jsonHeader () {
-		return "\"Info\": "
-				+ "{ \"version\": " + "\"" + getVersion() + "\", \"configuration\": " + "\"" + getDaaConfig() + "\" },\n"
-				+ "\"Scenario\": \"" + scenario + "\",\n"
-				+ "\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindVelocityFrom().compassAngle()) 
-				+ "\", \"knot\": \"" + Units.to("knot", daa.getWindVelocityFrom().gs()) + "\" },";
+		String json = "";
+		json += "\"Info\": { \"version\": \"" + getVersion() + "\""; 
+		json +=	", \"configuration\": \"" + getConfig()+ "\" },\n";
+		json += "\"Scenario\": \"" + scenario + "\",\n";
+		Velocity wind = daa.getWindVelocityFrom();
+		json += "\"Wind\": { \"deg\": \"" + wind.compassAngle("deg") + "\""; 
+		json += ", \"knot\": \"" + wind.groundSpeed("knot")+"\"";
+		//json += ", \"enabled\": \"" + wind.isZero() + "\"";
+		json += " },";
+		return json;
 	}
 
 	/**
@@ -367,10 +373,6 @@ public class DAABandsV2 {
 
 		// ownship
 		String time = fmt(daa.getCurrentTime());
-		Velocity avo = daa.getOwnshipState().getAirVelocity();
-		Velocity gvo = daa.getOwnshipState().getGroundVelocity();
-		Vect3 so = daa.getOwnshipState().get_s();
-		Vect3 vo = daa.getOwnshipState().get_v();
 		String own = "{ \"time\": " + time; 
 		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState());
 		own += " }";
@@ -829,7 +831,7 @@ public class DAABandsV2 {
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
-		daaBands.loadDAAConfig();
+		daaBands.loadConfig();
 		daaBands.loadWind();
 		daaBands.walkFile();
 	}

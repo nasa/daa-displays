@@ -56,16 +56,16 @@ resolutions:
 
 clean:
 	@echo "\033[0;33m** Cleaning dist and daidalus-submodules folder **\033[0m"
-	cd dist && make clean
 	cd daidalus-submodules; make clean
+	test ! -d dist || ( cd dist && make clean )
 	@echo "\033[0;33mDone cleaning! \033[0m"
 
 delete-dist:
 	@echo "\033[0;33m** Removing dist folder, .class files, .jar files, and node_modules **\033[0m"
-	-@rm -r dist
-	-@rm -r node_modules
-	-@cd src && rm -r node_modules
-	-@cd src/daa-server && rm -r node_modules
+	-@rm -rf dist
+	-@rm -rf node_modules
+	-@cd src && rm -rf node_modules
+	-@cd src/daa-server && rm -rf node_modules
 	-@cd src/daa-logic && make clean
 	@echo "\033[0;33m Done removing dist folder! \033[0m"
 

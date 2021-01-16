@@ -866,8 +866,8 @@ export class DAAPlayer {
     }): Promise<string[]> {
         await this.connectToServer();
         const msg: ExecMsg = {
-            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
-            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
+            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.2.jar",
+            daaConfig: data.alertingConfig || "2.x/DO_365B_no_SUM.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
         }
@@ -1170,8 +1170,8 @@ export class DAAPlayer {
     /**
      * @function <a name="java">java</a>
      * @description Sends a java evaluation request to the server
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.1.jar" (Base path is daa-logic/)
-     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.2.jar" (Base path is daa-logic/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "2.x/DO_365B_no_SUM.conf" (Base path is daa-logic/)
      * @param scenarioName Flight scenario, e.g., "H1.daa"
      * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
      * @memberof module:DAAPlaybackPlayer
@@ -1187,8 +1187,8 @@ export class DAAPlayer {
         bands: ScenarioDescriptor
     }> {
         const msg: ExecMsg = {
-            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.1.jar",
-            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
+            daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.2.jar",
+            daaConfig: data.alertingConfig || "2.x/DO_365B_no_SUM.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: { 
                 knot: (data.wind && data.wind.knot) ? data.wind.knot : "0",
@@ -1228,8 +1228,8 @@ export class DAAPlayer {
     /**
      * @function <a name="javaLoS">javaLoS</a>
      * @description Computes conflict regions using the java implementation of well-clear
-     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.1.jar" (Base path is daa-logic/)
-     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "1.x/WC_SC_228_nom_a.conf" (Base path is daa-logic/)
+     * @param alertingLogic Executable for the WellClear alerting logic, e.g., "DAIDALUSv2.0.2.jar" (Base path is daa-logic/)
+     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., "2.x/DO_365B_no_SUM.conf" (Base path is daa-logic/)
      * @param scenarioName Flight scenario, e.g., "H1.daa"
      * @param wind Wind configuration, e.g., { knot: 20, deg: 10 }
      * @memberof module:DAAPlaybackPlayer
@@ -1246,7 +1246,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.losLogic ||  "LoSRegion-1.0.1.jar",
-            daaConfig: data.alertingConfig || "2.x/DO_365A_no_SUM.conf",
+            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
         }
@@ -1299,7 +1299,7 @@ export class DAAPlayer {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
-            daaConfig: data.alertingConfig || "WC_SC_228_nom_b.conf",
+            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
             scenarioName: data.scenario || "H1.ic",
             wind: data.wind || { knot: "0", deg: "0" }
         }
