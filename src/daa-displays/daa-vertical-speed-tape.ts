@@ -651,7 +651,7 @@ export class VerticalSpeedTape {
             this.resolutionBug.setValue(d / 100, {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
-                    (info.flags && info.flags["preferred-resolution"]) ? "up" : "down"
+                    (info.flags && info.flags["preferred"]) ? "up" : "down"
                         : "up",
                 wedgeAperture: opt.wedgeAperture
             }); // tape scale is 100xunits

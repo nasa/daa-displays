@@ -150,18 +150,27 @@ export declare interface MonitorElement {
     results: MonitorData[]
 }
 
+export declare interface ResolutionFlags {
+  conflict : boolean;
+  recovery : boolean;
+  saturated : boolean;
+  preferred : boolean;
+}
+
+export declare interface RecoveryElement {
+    time: string; 
+    nfactor: string; 
+    distance: { 
+        horizontal: ValUnits;
+        vertical: ValUnits;
+    }
+}
+
 export declare interface ResolutionElement {
     time: number,
-    flags: { conflict: boolean, recovery: boolean, saturated: boolean, "preferred-resolution": boolean },
+    flags: ResolutionFlags,
     ownship: { val: string, units: string, region: Region },
-    recovery: { 
-        time: string, 
-        nfactor: string, 
-        distance: { 
-            horizontal: { val: string, internal: string, units: string },
-            vertical: { val: string, internal: string, units: string }
-        }
-    },
+    recovery: RecoveryElement
     resolution: { val: string, units: string, region: Region },
     "resolution-secondary": { val: string, units: string, region: Region }
 }

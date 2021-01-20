@@ -330,7 +330,7 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
             let resolutionL: ResolutionElement = bandsLeft[resInfo];
             if (resolutionR && resolutionL) {
                 // check direction
-                if (resolutionR.flags["preferred-resolution"] === resolutionL.flags["preferred-resolution"]) {
+                if (resolutionR.flags["preferred"] === resolutionL.flags["preferred"]) {
                     // if same direction, check that the numeric value of the preferred resolutions differ less than epsilon
                     const epsilon: number = 10e-5;
                     const ok: boolean =
@@ -342,8 +342,8 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
                         plotL += `<br>Resolution: ${resolutionL.resolution.val}`;
                     }
                 } else {
-                    plotR += `<br>Resolution: ${resolutionR.flags["preferred-resolution"]}`;
-                    plotL += `<br>Resolution: ${resolutionL.flags["preferred-resolution"]}`;
+                    plotR += `<br>Resolution: ${resolutionR.flags["preferred"]}`;
+                    plotL += `<br>Resolution: ${resolutionL.flags["preferred"]}`;
                 }
             }
 

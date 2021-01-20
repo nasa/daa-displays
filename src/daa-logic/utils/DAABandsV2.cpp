@@ -737,7 +737,7 @@ public:
     BandsRegion::Region currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection());
     trkResolution += ", \"resolution\": { \"val\": \"" + printDouble(resTrk) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + BandsRegion::to_string(resTrkRegion) + "\" }"; // resolution can be number, NaN or infinity
     trkResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resTrk_sec) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + BandsRegion::to_string(resTrkRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
-    trkResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredTrk) + "\" }";
+    trkResolution += ", \"flags\": { \"preferred\": \"" + printBool(preferredTrk) + "\" }";
     trkResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentTrk) + "\", \"units\": \"" + hdir_units + "\", \"alert\": \"" + BandsRegion::to_string(currentTrkRegion) + "\" }";
     trkResolution += " }";
     resTrkArray->push_back(trkResolution);
@@ -754,7 +754,7 @@ public:
     BandsRegion::Region currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed());
     gsResolution += ", \"resolution\": { \"val\": \"" + printDouble(resGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + BandsRegion::to_string(resGsRegion) + "\" }"; // resolution can be number, NaN or infinity
     gsResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resGs_sec) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + BandsRegion::to_string(resGsRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
-    gsResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredGs) + "\" }";
+    gsResolution += ", \"flags\": { \"preferred\": \"" + printBool(preferredGs) + "\" }";
     gsResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentGs) + "\", \"units\": \"" + hs_units + "\", \"alert\": \"" + BandsRegion::to_string(currentGsRegion) + "\" }";
     gsResolution += " }";
     resGsArray->push_back(gsResolution);
@@ -771,7 +771,7 @@ public:
     BandsRegion::Region currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed());
     vsResolution += ", \"resolution\": { \"val\": \"" + printDouble(resVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + BandsRegion::to_string(resVsRegion) + "\" }"; // resolution can be number, NaN or infinity
     vsResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resVs_sec) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + BandsRegion::to_string(resVsRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
-    vsResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredVs) + "\" }";
+    vsResolution += ", \"flags\": { \"preferred\": \"" + printBool(preferredVs) + "\" }";
     vsResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentVs) + "\", \"units\": \"" + vs_units + "\", \"alert\": \"" + BandsRegion::to_string(currentVsRegion) + "\" }";
     vsResolution += " }";
     resVsArray->push_back(vsResolution);
@@ -788,7 +788,7 @@ public:
     BandsRegion::Region currentAltRegion = daa.regionOfAltitude(ownship.altitude());
     altResolution += ", \"resolution\": { \"val\": \"" + printDouble(resAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + BandsRegion::to_string(resAltRegion) + "\" }"; // resolution can be number, NaN or infinity
     altResolution += ", \"resolution-secondary\": { \"val\": \"" + printDouble(resAlt_sec) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + BandsRegion::to_string(resAltRegion_sec) + "\" }"; // resolution can be number, NaN or infinity
-    altResolution += ", \"flags\": { \"preferred-resolution\": \"" + printBool(preferredAlt) + "\" }";
+    altResolution += ", \"flags\": { \"preferred\": \"" + printBool(preferredAlt) + "\" }";
     altResolution += ", \"ownship\": { \"val\": \"" + printDouble(currentAlt) + "\", \"units\": \"" + alt_units + "\", \"alert\": \"" + BandsRegion::to_string(currentAltRegion) + "\" }";
     altResolution += " }";
     resAltArray->push_back(altResolution);

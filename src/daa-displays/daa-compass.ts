@@ -478,7 +478,7 @@ export class Compass {
             this.resolutionBug.setValue(d, {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
-                    (info.flags && info.flags["preferred-resolution"]) ? "right" : "left"
+                    (info.flags && info.flags["preferred"]) ? "right" : "left"
                         : "right",
                 wedgeAperture: opt.wedgeAperture
             });

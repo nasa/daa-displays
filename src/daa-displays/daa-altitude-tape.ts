@@ -653,7 +653,7 @@ export class AltitudeTape {
             this.resolutionBug.setValue(d, {
                 wedgeConstraints: opt.wedgeConstraints,
                 wedgeTurning: (typeof info === "object") ? 
-                    (info.flags && info.flags["preferred-resolution"]) ? "up" : "down"
+                    (info.flags && info.flags["preferred"]) ? "up" : "down"
                         : "up",
                 wedgeAperture: opt.wedgeAperture
             });
