@@ -193,6 +193,7 @@ async function createPlayer() {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
     await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
     await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
+    await player.selectConfiguration("DO_365A_no_SUM");
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

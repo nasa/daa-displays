@@ -1,7 +1,16 @@
 import { ScenarioDescriptor } from "./daa-server";
-
+export interface Token {
+    type: string,
+    id?: string,
+    time?: { client: { sent: string } };
+    data?: {
+        command?: string,
+        [key: string]: any
+    }
+}
 /**
  * Basic websocket client for interacting with the pvsio-web server
+ * TODO: use Backbone to create callbacks instead of forcing an active wait on send
  * @author Paolo Masci
  * @date Dec 2018
  */
@@ -44,7 +53,7 @@ export class DAAClient {
             };
         });
     }
-    async send (token): Promise<any> {
+    async send (token: Token): Promise<any> {
         if (this.ws) {
             return new Promise((resolve, reject) => {
                 let desc: ScenarioDescriptor = {

@@ -1406,10 +1406,15 @@ export class DAAPlayer {
     getSelectedConfiguration(): string {
         return $(`#${this.wellClearConfigurationSelector}-list option:selected`).text();
     }
-    selectConfiguration(configName: string): boolean {
+    async selectConfiguration(configName: string): Promise<boolean> {
         if (configName) {
+            const prev: string = this.getSelectedConfiguration();
             $(`#${this.wellClearConfigurationSelector}-list option:contains("${configName}")`).prop("selected", true);
-            return this.getSelectedConfiguration().includes(configName);
+            const selected: string = this.getSelectedConfiguration();
+            if (prev !== selected) {
+                await this.refreshConfigurationAttributesView(selected);   
+            }
+            return selected?.includes(configName);
         }
         return false;
     }
@@ -2320,12 +2325,28 @@ export class DAAPlayer {
         $(`#${this.wellClearConfigurationSelector}`).append(theHTML);
         $(`#${this.wellClearConfigurationSelector}`).css({ display: "flex" });
 
-        const refreshConfigurationAttributesView = async (config: string) => {
-            this.configInfo = await this.loadConfigFile(config);
+        const selectedConfig: string = this.getSelectedConfiguration();
+        await this.refreshConfigurationAttributesView(selectedConfig);
+
+        // update simulation when configuration changes
+        $(`#${this.wellClearConfigurationSelector}-list`).on("change", async () => {
+            this.disableSimulationControls();
+            this.revealActivationPanel();
+            const selectedConfig: string = this.getSelectedConfiguration();
+            // console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
+            await this.refreshConfigurationAttributesView(selectedConfig);
+            // await this.reloadScenarioFile();
+            // this.refreshSimulationPlots();
+        });
+    }
+
+    protected async refreshConfigurationAttributesView (selected: string): Promise<void> {
+        if (selected) {
+            this.configInfo = await this.loadConfigFile(selected);
             if (this.configInfo) {
-                if ($(`#${this.wellClearConfigurationAttributesSelector}`).length) {
+                if ($(`#${this.wellClearConfigurationAttributesSelector}`)[0]) {
                     const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
-                        fileName: config,
+                        fileName: selected,
                         attributes: this.configInfo.fileContent.split("\n"),
                         id: this.wellClearConfigurationAttributesSelector
                     });
@@ -2340,19 +2361,6 @@ export class DAAPlayer {
                 }
             }
         }
-        const selectedConfig: string = this.getSelectedConfiguration();
-        await refreshConfigurationAttributesView(selectedConfig);
-
-        // update simulation when configuration changes
-        $(`#${this.wellClearConfigurationSelector}-list`).on("change", async () => {
-            this.disableSimulationControls();
-            this.revealActivationPanel();
-            const selectedConfig: string = this.getSelectedConfiguration();
-            // console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
-            await refreshConfigurationAttributesView(selectedConfig);
-            // await this.reloadScenarioFile();
-            // this.refreshSimulationPlots();
-        });
     }
 
     protected refreshVersionsView(): DAAPlayer {

@@ -395,14 +395,14 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    selectConfiguration(configName: string): boolean {
+    async selectConfiguration(configName: string): Promise<boolean> {
         if (configName && this.players) {
             let success: boolean = true;
             if (this.players.left) {
-                success = success && this.players.left.selectConfiguration(configName); 
+                success = success && await this.players.left.selectConfiguration(configName); 
             }
             if (this.players.right) { 
-                success = success && this.players.right.selectConfiguration(configName); 
+                success = success && await this.players.right.selectConfiguration(configName); 
             }
             return success;
         }
