@@ -54,7 +54,12 @@ export class GeoFence {
     static readonly maxLabelFontSize: number = 32;
     protected NMI: number = 5;
 
-    static readonly defaultColor: { r: number, g: number, b: number } = { r: 1, g: 0, b: 0 }; // default color is red, as in Temporary Flight Restriction (TFR) areas
+    static readonly geofenceColors = {
+        red: { r: 1, g: 0, b: 0 },
+        yellow: { r: 1, g: 1, b: 0 },
+        lightyellow: { r: 1, g: 1, b: 0.6 }
+    };
+    static readonly defaultColor: { r: number, g: number, b: number } = GeoFence.geofenceColors.red; // default color is red, as in Temporary Flight Restriction (TFR) areas
     protected color: { r: number, g: number, b: number } = GeoFence.defaultColor;
 
     static readonly defaultOpacity: number = 0.2;

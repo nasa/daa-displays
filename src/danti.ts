@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { colors, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAAPlayer } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -148,7 +148,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                         }
                         // add geofence to the map
                         data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
-                            showLabel: false
+                            showLabel: false,
+                            color: colors.lightyellow
                         });
                     }
                 }

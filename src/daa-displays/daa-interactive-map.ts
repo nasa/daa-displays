@@ -94,6 +94,7 @@ import * as utils from './daa-utils';
 import * as templates from './templates/daa-map-templates';
 import * as serverInterface from './utils/daa-server'
 import { cities, DAA_Airspace } from './daa-map-components/daa-airspace';
+import { GeoFence } from './daa-map-components/daa-geofence';
 
 export interface DAA_AircraftDescriptor {
     s: utils.LatLonAlt | serverInterface.LatLonAlt;
@@ -101,6 +102,8 @@ export interface DAA_AircraftDescriptor {
     symbol: string;
     callSign: string;
 }
+
+export const colors = GeoFence.geofenceColors;
 
 export class InteractiveMap {
     id: string;
