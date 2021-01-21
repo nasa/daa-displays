@@ -263,7 +263,7 @@ export const developersControls: string = `
 </div>`;
 
 export const resolutionControls: string = `
-<div id="{{id}}" class="resolution-controls" style="position:absolute;">
+<div id="{{id}}" class="resolution-controls" style="position:absolute; width:0px; height:0px;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
         <div class="container-fluid" style="padding:0px;">
             <div class="row">

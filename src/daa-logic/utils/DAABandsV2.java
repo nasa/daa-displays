@@ -472,7 +472,7 @@ public class DAABandsV2 {
 		String nFactor = f.Fmi(recoveryInfo.nFactor());
 		trkResolution += ", \"resolution\": { \"val\": \"" + resTrk + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
 		trkResolution += ", \"resolution-secondary\": { \"val\": \"" + resTrk_sec + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred-resolution\": " + preferredTrk + " }"; 
+		trkResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredTrk + " }"; 
 		trkResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
 		trkResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": \""+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
 		trkResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": \""+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}}"; 
@@ -502,7 +502,7 @@ public class DAABandsV2 {
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		gsResolution += ", \"resolution\": { \"val\": \"" + resGs + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
 		gsResolution += ", \"resolution-secondary\": { \"val\": \"" + resGs_sec + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		gsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred-resolution\": " + preferredGs + " }"; 
+		gsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredGs + " }"; 
 		gsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
 		gsResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": \""+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
 		gsResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": \""+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}}"; 
@@ -532,7 +532,7 @@ public class DAABandsV2 {
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		vsResolution += ", \"resolution\": { \"val\": \"" + resVs + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
 		vsResolution += ", \"resolution-secondary\": { \"val\": \"" + resVs_sec + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		vsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred-resolution\": " + preferredVs + " }"; 
+		vsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredVs + " }"; 
 		vsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
 		vsResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": \""+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
 		vsResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": \""+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}}"; 
@@ -562,7 +562,7 @@ public class DAABandsV2 {
 		nFactor = f.Fmi(recoveryInfo.nFactor());
 		altResolution += ", \"resolution\": { \"val\": \"" + resAlt + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
 		altResolution += ", \"resolution-secondary\": { \"val\": \"" + resAlt_sec + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
-		altResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred-resolution\": " + preferredAlt + " }"; 
+		altResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredAlt + " }"; 
 		altResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor + "\", \"distance\": {";
 		altResolution += " \"horizontal\": { \"val\": \""+ hDistanceAtRecovery + "\", \"internal\": \""+ hDistanceAtRecoveryi + "\", \"units\": \"" + hrec_units + "\" }"; 
 		altResolution += ", \"vertical\": { \"val\": \""+ vDistanceAtRecovery + "\", \"internal\": \""+ vDistanceAtRecoveryi + "\", \"units\": \"" + vrec_units + "\" }}}"; 
