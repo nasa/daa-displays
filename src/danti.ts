@@ -122,7 +122,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     });
     data.map.setTraffic(traffic);
-    plot({ ownship: { hs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
+    // plot({ ownship: { hs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
 const daaPlots: { id: string, name: string, units: string }[] = [
@@ -213,51 +213,51 @@ player.define("plot", () => {
     }
 });
 async function createPlayer() {
-    player.appendSimulationPlot({
-        id: "alerts",
-        width: 1100,
-        label: "Alerts",
-        range: { from: 1, to: 3 },
-        parent: "simulation-plot"
-    }, {
-        overheadLabel: true
-    });
-    player.appendSimulationPlot({
-        id: "heading-bands",
-        top: 150,
-        width: 1100,
-        label: "Heading Bands",
-        range: { from: 0, to: 360 },
-        units: "[deg]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "horizontal-speed-bands",
-        top: 300,
-        width: 1100,
-        label: "Horizontal Speed Bands",
-        range: { from: 0, to: 1000 },
-        units: "[knot]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "vertical-speed-bands",
-        top: 450,
-        width: 1100,
-        label: "Vertical Speed Bands",
-        range: { from: -10000, to: 10000 },
-        units: "[fpm]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "altitude-bands",
-        top: 600,
-        width: 1100,
-        label: "Altitude Bands",
-        range: { from: -200, to: 60000 },
-        units: "[ft]",
-        parent: "simulation-plot"
-    });
+    // player.appendSimulationPlot({
+    //     id: "alerts",
+    //     width: 1100,
+    //     label: "Alerts",
+    //     range: { from: 1, to: 3 },
+    //     parent: "simulation-plot"
+    // }, {
+    //     overheadLabel: true
+    // });
+    // player.appendSimulationPlot({
+    //     id: "heading-bands",
+    //     top: 150,
+    //     width: 1100,
+    //     label: "Heading Bands",
+    //     range: { from: 0, to: 360 },
+    //     units: "[deg]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "horizontal-speed-bands",
+    //     top: 300,
+    //     width: 1100,
+    //     label: "Horizontal Speed Bands",
+    //     range: { from: 0, to: 1000 },
+    //     units: "[knot]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "vertical-speed-bands",
+    //     top: 450,
+    //     width: 1100,
+    //     label: "Vertical Speed Bands",
+    //     range: { from: -10000, to: 10000 },
+    //     units: "[fpm]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "altitude-bands",
+    //     top: 600,
+    //     width: 1100,
+    //     label: "Altitude Bands",
+    //     range: { from: -200, to: 60000 },
+    //     units: "[ft]",
+    //     parent: "simulation-plot"
+    // });
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
@@ -269,10 +269,10 @@ async function createPlayer() {
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
     });
-    player.appendPlotControls({
-        parent: "simulation-controls",
-        top: 47
-    });
+    // player.appendPlotControls({
+    //     parent: "simulation-controls",
+    //     top: 47
+    // });
     player.appendActivationPanel({
         parent: "activation-controls"
     });
