@@ -32,11 +32,10 @@ import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
-import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
-import { LLAData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
@@ -93,7 +92,27 @@ function render(playerID: string, data: {
                             bottom: +perimeter[0].alt - 20
                         }
                         // add geofence to the map
-                        data.map.addGeoFence(`c-${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                        data.map.addContour(`c-${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                            showLabel: false
+                        });
+                    }
+                }
+            }
+        }
+    }
+    // set hazard zones
+    if (bands && bands["Hazard Zones"] && bands["Hazard Zones"].data) {
+        for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
+            if (bands["Hazard Zones"].data[i].polygons) {
+                for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
+                    const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
+                    if (perimeter && perimeter.length) {
+                        const floor: { top: number, bottom: number } = {
+                            top: +perimeter[0].alt + 20,
+                            bottom: +perimeter[0].alt - 20
+                        }
+                        // add geofence to the map
+                        data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
                             showLabel: false
                         });
                     }
@@ -163,7 +182,7 @@ const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { 
 // map view options
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { 
     labels: [
-        "nrthup", "call-sign", "terrain", "contours"
+        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp-left", compass: compass_left, map: map_left 
 });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
@@ -181,7 +200,7 @@ const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, 
 // map view options
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { 
     labels: [
-        "nrthup", "call-sign", "terrain", "contours"
+        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp-right", compass: compass_right, map: map_right 
 });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
