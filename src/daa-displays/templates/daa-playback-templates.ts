@@ -134,19 +134,31 @@ export const daidalusConfigurationsTemplate: string = `
     {{/each}}
 </select>`;
 
+// export const daidalusAttributesTemplate: string = `
+// <select id={{id}}-list class="form-control" size="30" style="overflow:auto;margin-bottom:20px;">
+//     <option id="{{id}}-{{fileName}}">## Configuration {{fileName}}</option>
+//     {{#each attributes}}
+//     <option id="{{../id}}-{{this}}">{{this}}</option>
+//     {{/each}}
+// </select>`;
+
 export const daidalusAttributesTemplate: string = `
-<select id={{id}}-list class="form-control" size="30" style="overflow:auto;margin-bottom:20px;">
-    <option id="{{id}}-{{fileName}}">## Configuration {{fileName}}</option>
+<div class="container" id="{{id}}-list" class="form-control" style="overflow:auto;margin-bottom:20px;">
+    <div class="row">
+        <div class="col-sm" style="white-space:nowrap; font-weight:bold;"># {{fileName}}</div>
+    </div>
     {{#each attributes}}
-    <option id="{{id}}-{{this}}">{{this}}</option>
+    <div class="row">
+        <div class="col-sm" style="white-space:nowrap;">{{this}}</div>
+    </div>
     {{/each}}
-</select>`;
+</div>`;
 
 export const sidePanelTemplate: string = `
 <div class="container-fluid">
 <div class="row">
     <nav id="sidebar-panel" class="col-md-2 d-none d-md-block bg-light sidebar">
-        <div id="sidebar-resize" style="float:right; width: 6px; cursor: col-resize; height: 100%; background-color: #272b2f;"></div>
+        <div id="sidebar-resize" style="float:right; width:6px; cursor:col-resize; height:100%; background-color:#272b2f;"></div>
         <div class="sidebar-sticky">
             <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                 <span><b>Scenarios</b></span> 
@@ -159,14 +171,29 @@ export const sidePanelTemplate: string = `
                 </li>
             </ul>
 
-            <div id="single-view" class="sidebar-optionals">
+            <div class="single-view sidebar-optionals">
                 <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span class="sidebar-daidalus-configuration-attributes" style="white-space:nowrap;"><b>Daidalus Parameters</b></span>
                 </h6>
-                <ul class="sidebar-daidalus-configuration-attributes zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="width:90%; display:none; margin-left:16px; margin-right:18px;">
-                    <li class="nav-item" id="sidebar-daidalus-configuration-attributes">
-                    </li>
-                </ul>
+                <div class="sidebar-daidalus-configuration-attributes zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style=" margin-left:16px; border:1px solid lightgray; border-radius:4px; width:90%;">
+                    <div class="nav-item" id="sidebar-daidalus-configuration-attributes">
+                    </div>
+                </div>
+            </div>
+            <div class="split-view sidebar-optionals" style="display:none;">
+                <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span class="sidebar-daidalus-configuration-attributes-left sidebar-daidalus-configuration-attributes-right" style="white-space:nowrap;"><b>Daidalus Parameters</b></span>
+                </h6>
+                <div class="container row zoomable-sidebar sidebar-daidalus-diff-configuration-attributes sidebar-config-optionals" style="padding:0; margin-left:16px; border:1px solid lightgray; border-radius:4px; width:90%;">
+                    <div class="sidebar-daidalus-configuration-attributes-left col-sm flex-column mb-2" style="overflow-x:auto; padding:0;">
+                        <div class="nav-item" id="sidebar-daidalus-configuration-attributes-left">
+                        </div>
+                    </div>
+                    <div class="sidebar-daidalus-configuration-attributes-right col-sm flex-column mb-2" style="overflow-x:auto; padding:0;">
+                        <div class="nav-item" id="sidebar-daidalus-configuration-attributes-right">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>

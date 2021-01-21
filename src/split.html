@@ -63,9 +63,17 @@
             </div>
         </div>
 
-        <script src="node_modules/jquery/dist/jquery.min.js"></script>
-        <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="node_modules/handlebars/dist/handlebars.min.js"></script>
+        <script src="jquery.js"></script>
+        <script src="bootstrap.bundle.js"></script>
+        <script src="handlebars.js"></script>
+        <script src="underscore.js"></script>
+        <script src="backbone.js"></script>
         <script src="node_modules/requirejs/require.js" data-main="split-view.js"></script>
+        <script>
+            // this is needed by require.js because backbone modifies $ and require.js picks by default the original $ imported with <script> 
+            define('jquery', function () {
+                return $; // Just return the jQuery loaded with `script`.
+            });
+        </script>
     </body>
 </html>

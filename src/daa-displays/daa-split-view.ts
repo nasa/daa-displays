@@ -84,8 +84,7 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  * REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
  * TERMINATION OF THIS AGREEMENT.
  **/
-import * as utils from './daa-utils';
-import { DAAPlayer } from './daa-player';
+import { DAAPlayer, DidSelectConfigurationData, PlayerEvents } from './daa-player';
 import { LLAData } from 'src/daa-server/utils/daa-server';
 import { ScenarioDataPoint } from './utils/daa-server';
     
@@ -123,6 +122,14 @@ export class DAASplitView extends DAAPlayer {
         // create aliases using the provided labels
         this.players[label.left] = this.players.left;
         this.players[label.right] = this.players.right;
+
+        // add event listeners for backbone events
+        this.players[label.left].on(PlayerEvents.DidSelectConfiguration, (evt: DidSelectConfigurationData) => {
+            console.log(evt);
+        });
+        this.players[label.right].on(PlayerEvents.DidSelectConfiguration, (evt: DidSelectConfigurationData) => {
+            console.log(evt);
+        });
 
         this.step = async (opt?: { preventIncrement?: boolean }) => {
             opt = opt || {};
@@ -379,16 +386,19 @@ export class DAASplitView extends DAAPlayer {
         opt = opt || {};
         // const selector: string = opt.selector || "sidebar-daidalus-configuration";
         // utils.createDiv(selector, { parent: opt.parent });
-        $("#single-view").css("display", "none"); // hide attributes on side panel
+        $("#sidebar-panel .single-view").css("display", "none"); // hide single-view attributes on side panel
+        $("#sidebar-panel .split-view").css("display", "block"); // show split-view attributes on side panel
         if (this.players) {
             if (this.players.left) {
                 await this.players.left.appendWellClearConfigurationSelector({
-                    selector: "daidalus-configuration-left"
+                    selector: "daidalus-configuration-left",
+                    attributeSelector: "sidebar-daidalus-configuration-attributes-left"
                 }); 
             }
             if (this.players.right) { 
                 await this.players.right.appendWellClearConfigurationSelector({
-                    selector: "daidalus-configuration-right"
+                    selector: "daidalus-configuration-right",
+                    attributeSelector: "sidebar-daidalus-configuration-attributes-right"
                 }); 
             }
         }
@@ -440,7 +450,7 @@ export class DAASplitView extends DAAPlayer {
     // @overrides
     appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
         super.appendPlotControls(opt);
-        $(`#${this.id}-plot`).unbind("click", this.plot);
+        $(`#${this.id}-plot`).off("click", this.plot);
         // override the plot handler
         $(`#${this.id}-plot`).on("click", async () => {
             if (this.players) {

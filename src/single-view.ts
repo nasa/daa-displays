@@ -388,7 +388,7 @@ async function createPlayer() {
     // handlers can be defined only after creating the monitor panel
     for (let i = 0; i < 3; i++) {
         const monitorID: number = i + 1;
-        player.on(`click.monitor-${monitorID}`, () => {
+        player.handle(`click.monitor-${monitorID}`, () => {
             const bandsData: ScenarioData = player.getBandsData();
             // const flightData: LLAData[] = player.getFlightData();
             if (i < bandsData?.Monitors?.length) {

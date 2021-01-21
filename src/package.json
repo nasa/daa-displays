@@ -13,6 +13,8 @@
 	"dependencies": {
 		"animate.css": "^3.7.0",
 		"bootstrap": "^4.3.1",
+		"backbone": "1.4.0",
+		"underscore": "1.12.0",
 		"font-awesome": "^4.7.0",
 		"handlebars": "^4.7.6",
 		"jquery": "^3.5.1",

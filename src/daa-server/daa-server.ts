@@ -774,6 +774,13 @@ class DAAServer {
             // console.log("received request for WMTSCapabilities.xml");
             res.sendFile(path.join(tileServerFolder, 'osm', 'WMTSCapabilities.xml'));
         });
+        // additional routing for external libraries
+        app.use(/(\/\w+\/[^\/]+)?\/handlebars\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/handlebars/dist/handlebars.min.js`)));
+        app.use(/(\/\w+\/[^\/]+)?\/jquery\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/jquery/dist/jquery.min.js`)));
+        app.use(/(\/\w+\/[^\/]+)?\/underscore\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/underscore/underscore-min.js`)));
+        app.use(/(\/\w+\/[^\/]+)?\/backbone\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/backbone/backbone.js`)));       
+        app.use(/(\/\w+\/[^\/]+)?\/bootstrap\.bundle\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/bootstrap/dist/js/bootstrap.bundle.min.js`)));
+
         // create http server
         this.httpServer = http.createServer(app);
         this.httpServer.listen(this.config.port, "0.0.0.0", async () => {

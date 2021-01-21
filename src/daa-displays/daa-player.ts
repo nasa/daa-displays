@@ -94,9 +94,18 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
-import { ExecMsg, LLAData, ScenarioDescriptor, BandElement } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DaidalusBand, DAALosDescriptor, ConfigFile, ConfigData, FlightData, MetricsElement, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState } from './utils/daa-server';
+import { ExecMsg, LLAData, ScenarioDescriptor } from '../daa-server/utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DAALosDescriptor, ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState } from './utils/daa-server';
 
+import * as Backbone from 'backbone';
+
+export const PlayerEvents = {
+    DidSelectConfiguration: "DidSelectConfiguration"
+};
+export interface DidSelectConfigurationData {
+    attributes: string[],
+    configName: string
+}
 
 export declare interface DAAPlaybackHandlers {
     init: () => Promise<void>;
@@ -143,11 +152,11 @@ export function safeSelector(str: string): string {
     return str;
 }
 
-export class DAAPlayer {
+export class DAAPlayer extends Backbone.Model {
     static readonly prefix: string = "DAIDALUSv";
     static readonly VERSION: string = "2.0.0";
     static readonly timerJiffy: number = 8; // 8ms
-    protected id: string;
+    id: string;
     protected simulationStep: number;
     init: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
     step: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
@@ -268,6 +277,7 @@ export class DAAPlayer {
      * @instance
      */
     constructor (id?: string) {
+        super();
         this.id = id || "daa-playback";
         this.ws = new DAAClient(); // this should only be used for serving files
         // this.fs = opt.fs;
@@ -489,7 +499,7 @@ export class DAAPlayer {
 
         // make side panel resizeable
         const min: number = 20;
-        $("#sidebar-resize").mousedown((e) => {
+        $("#sidebar-resize").on("mousedown", (e: JQuery.MouseDownEvent) => {
             e.preventDefault();
             $('html').css({ cursor: "col-resize" });
             $(document).on("mousemove", (e: JQuery.MouseMoveEvent) => {
@@ -503,7 +513,7 @@ export class DAAPlayer {
             });
         });
         $(document).on("mouseup", (e: JQuery.MouseUpEvent) => {
-            $(document).unbind("mousemove");
+            $(document).off("mousemove");
             $('html').css({ cursor: "default" });
             const marginLeft: string = $("#sidebar-panel").css("width");
             $(".zoomable").css({ "margin-left": marginLeft });
@@ -993,7 +1003,7 @@ export class DAAPlayer {
         return this;
     }
     /**
-     * @function <a name="on">on</a>
+     * @function <a name="handle">handle</a>
      * @description Utility function for defining handlers of player widgets, such as buttons and checkboxes. Events currently supported include:
      *              <li>"click.plot-monitor": defines the function executed when selecting a monitor from the monitor panel</li>
      * @param ename {String} Event name
@@ -1001,7 +1011,7 @@ export class DAAPlayer {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
-    on (ename: string, ebody: () => void): void {
+    handle (ename: string, ebody?: () => void): void {
         if (ename.startsWith("click.monitor-")) {
             const id: string = ename.replace("click.monitor-", "");
             if (id) {
@@ -2332,35 +2342,37 @@ export class DAAPlayer {
         $(`#${this.wellClearConfigurationSelector}-list`).on("change", async () => {
             this.disableSimulationControls();
             this.revealActivationPanel();
-            const selectedConfig: string = this.getSelectedConfiguration();
+            const configName: string = this.getSelectedConfiguration();
             // console.log(`new configuration selected for player ${this.id}: ${selectedConfig}`);
-            await this.refreshConfigurationAttributesView(selectedConfig);
-            // await this.reloadScenarioFile();
-            // this.refreshSimulationPlots();
+            const attributes: string[] = await this.refreshConfigurationAttributesView(configName);
+            // trigger backbone event
+            const bevt: DidSelectConfigurationData = { attributes, configName };
+            this.trigger(PlayerEvents.DidSelectConfiguration, bevt);
         });
     }
 
-    protected async refreshConfigurationAttributesView (selected: string): Promise<void> {
+    protected async refreshConfigurationAttributesView (selected: string): Promise<string[]> {
         if (selected) {
             this.configInfo = await this.loadConfigFile(selected);
-            if (this.configInfo) {
+            if (this.configInfo?.fileContent) {
+                const attributes: string[] = this.configInfo.fileContent.replace("# Daidalus Object", "").trim().split("\n"); 
                 if ($(`#${this.wellClearConfigurationAttributesSelector}`)[0]) {
                     const theAttributes: string = Handlebars.compile(templates.daidalusAttributesTemplate)({
                         fileName: selected,
-                        attributes: this.configInfo.fileContent.split("\n"),
+                        attributes,
                         id: this.wellClearConfigurationAttributesSelector
                     });
-                    $(`#${this.wellClearConfigurationAttributesSelector}-list`).remove();
-                    $(`#${this.wellClearConfigurationAttributesSelector}`).append(theAttributes);
-                    $(`.${this.wellClearConfigurationAttributesSelector}`).css({ display: "flex" });
+                    $(`#${this.wellClearConfigurationAttributesSelector}`).html(theAttributes);
                 }
                 if (this.mode === "developerMode") {
                     this.clickDeveloperMode();
                 } else if (this.mode === "normalMode") {
                     this.clickNormalMode();
                 }
+                return attributes;
             }
         }
+        return null;
     }
 
     protected refreshVersionsView(): DAAPlayer {
