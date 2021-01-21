@@ -333,7 +333,7 @@ player.define("plot", () => {
 async function createPlayer() {
     player.appendSimulationPlot({
         id: "alerts",
-        width: 1100,
+        width: 1790,
         label: "Alerts",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
@@ -343,7 +343,7 @@ async function createPlayer() {
     player.appendSimulationPlot({
         id: "heading-bands",
         top: 150,
-        width: 1100,
+        width: 1790,
         label: "Heading Bands",
         range: { from: 0, to: 360 },
         units: "[deg]",
@@ -352,7 +352,7 @@ async function createPlayer() {
     player.appendSimulationPlot({
         id: "horizontal-speed-bands",
         top: 300,
-        width: 1100,
+        width: 1790,
         label: "Horizontal Speed Bands",
         range: { from: 0, to: 1000 },
         units: "[knot]",
@@ -361,7 +361,7 @@ async function createPlayer() {
     player.appendSimulationPlot({
         id: "vertical-speed-bands",
         top: 450,
-        width: 1100,
+        width: 1790,
         label: "Vertical Speed Bands",
         range: { from: -10000, to: 10000 },
         units: "[fpm]",
@@ -370,7 +370,7 @@ async function createPlayer() {
     player.appendSimulationPlot({
         id: "altitude-bands",
         top: 600,
-        width: 1100,
+        width: 1790,
         label: "Altitude Bands",
         range: { from: -200, to: 60000 },
         units: "[ft]",
