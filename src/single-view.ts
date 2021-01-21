@@ -30,7 +30,7 @@
 import { AirspeedTape } from './daa-displays/daa-airspeed-tape';
 import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
-import { Compass, singleStroke, doubleStroke } from './daa-displays/daa-compass';
+import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 

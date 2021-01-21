@@ -30,7 +30,7 @@
 import { AirspeedTape } from './daa-displays/daa-airspeed-tape';
 import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
-import { Compass, singleStroke, doubleStroke } from './daa-displays/daa-compass';
+import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
@@ -38,6 +38,7 @@ import { DAAPlayer } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
+import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands } from './daa-displays/daa-utils';
 
@@ -112,6 +113,47 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             });
         }
     }
+    // set contours
+    data.map.removeGeoFence();
+    if (bands && bands.Contours && bands.Contours.data) {
+        for (let i = 0; i < bands.Contours.data.length; i++) {
+            if (bands.Contours.data[i].polygons) {
+                for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
+                    const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
+                    if (perimeter && perimeter.length) {
+                        const floor: { top: number, bottom: number } = {
+                            top: +perimeter[0].alt + 20,
+                            bottom: +perimeter[0].alt - 20
+                        }
+                        // add geofence to the map
+                        data.map.addContour(`${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                            showLabel: false
+                        });
+                    }
+                }
+            }
+        }
+    }
+    // set hazard zones
+    if (bands && bands["Hazard Zones"] && bands["Hazard Zones"].data) {
+        for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
+            if (bands["Hazard Zones"].data[i].polygons) {
+                for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
+                    const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
+                    if (perimeter && perimeter.length) {
+                        const floor: { top: number, bottom: number } = {
+                            top: +perimeter[0].alt + 20,
+                            bottom: +perimeter[0].alt - 20
+                        }
+                        // add geofence to the map
+                        data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
+                            showLabel: false
+                        });
+                    }
+                }
+            }
+        }
+    }
     const traffic = flightData.traffic.map((data, index) => {
         const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
         return {
@@ -174,7 +216,10 @@ const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { paren
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
 // map view options
-const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
+    labels: [
+        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+    ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
@@ -289,7 +334,7 @@ async function createPlayer() {
         setVerticalSpeedWedgeAperture: (aperture: string) => {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
-    }, { top: -110, left: 1140 });
+    }, { top: -64, left: 752 });
     await player.activate();
 }
 createPlayer();
