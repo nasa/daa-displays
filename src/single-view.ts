@@ -314,14 +314,14 @@ function normalMode () {
 player.define("plot", () => {
     const flightData: LLAData[] = player.getFlightData();
     for (let step = 0; step < flightData?.length; step++) {
-        const bandsData: ScenarioDataPoint = player.getCurrentBands();
+        const bandsData: ScenarioDataPoint = player.getCurrentBands(step);
         player.setTimerJiffy("plot", () => {
             const lla: LLAData = flightData[step];
             const hd: number = Compass.v2deg(lla.ownship.v);
             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
             const vs: number = +lla.ownship.v.z / 100;
             const alt: number = +lla.ownship.s.alt;
-            plot({ ownship: {hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });   
+            plot({ ownship: { hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });   
         }, step);
     }
     // const monitorID: number = 2;

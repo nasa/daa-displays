@@ -1686,7 +1686,7 @@ export class DAAPlayer extends Backbone.Model {
         return null;
     }
 
-    getCurrentBands (): ScenarioDataPoint {
+    getCurrentBands (step?: number): ScenarioDataPoint {
         const res: ScenarioDataPoint = {
             Wind: { deg: `0`, knot: `0` },
             Ownship: null,
@@ -1704,9 +1704,10 @@ export class DAAPlayer extends Backbone.Model {
             Monitors: null,
             Metrics: null
         };
+        step = (step === undefined) ? this.simulationStep : step;
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             if (this._bands) {
-                for (let key in this._bands) {
+                for (let key in res) {
                     switch (key) {
                         case "Monitors": {
                             res[key] = this._bands[key];
@@ -1717,72 +1718,12 @@ export class DAAPlayer extends Backbone.Model {
                             break
                         }
                         default: {
-                            if (this._bands[key] && this.simulationStep < this._bands[key].length) {
-                                // copy alerting info
-                                res[key] = this._bands[key][this.simulationStep];
+                            if (this._bands[key] && step < this._bands[key].length) {
+                                res[key] = this._bands[key][step];
                             }
                         }
                     }
                 }
-
-                // // convert bands to the DAA format
-                // const bandNames: string[] = utils.BAND_NAMES;
-                // for (const b in bandNames) {
-                //     // const band_or_resolution: string = bandNames[b];
-                //     // const data: BandElement = (this._bands[band_or_resolution] && this._bands[band_or_resolution].length > this.simulationStep) ? 
-                //     //                             this._bands[band_or_resolution][this.simulationStep] : null;
-                //     // if (data) {
-                //     //     if (data.bands) {
-                //     //         // bands info
-                //     //         for (let i = 0; i < data.bands.length; i++) {
-                //     //             res[band_or_resolution] = res[band_or_resolution] || {};
-                //     //             const info: DaidalusBand = data.bands[i];
-                //     //             if (info && info.range) {
-                //     //                 const range: utils.FromTo = {
-                //     //                     from: info.range[0],
-                //     //                     to: info.range[1],
-                //     //                     units: info.units
-                //     //                 };
-                //     //                 const region: string = info.region;
-                //     //                 res[band_or_resolution][region] = res[band_or_resolution][region] || [];
-                //     //                 res[band_or_resolution][region].push(range);
-                //     //             }
-                //     //         }
-                //     //     } else if (data.resolution) {
-                //     //         // resolution info
-                //     //         res[band_or_resolution] = data;
-                //     //     }
-                //     // }
-
-                // }
-                // if (this._bands.Alerts && this.simulationStep < this._bands.Alerts.length) {
-                //     // copy alerting info
-                //     res.Alerts = this._bands.Alerts[this.simulationStep];
-                // }
-                // if (this._bands.Ownship && this.simulationStep < this._bands.Ownship.length) {
-                //     res.Ownship = this._bands.Ownship[this.simulationStep];
-                // }
-                // if (this._bands.Contours && this.simulationStep < this._bands.Contours.length) {
-                //     // copy contours
-                //     res.Contours = this._bands.Contours[this.simulationStep];
-                // }
-                // if (this._bands["Hazard Zones"] && this.simulationStep < this._bands["Hazard Zones"].length) {
-                //     // copy hazard zones
-                //     res["Hazard Zones"] = this._bands["Hazard Zones"][this.simulationStep];
-                // }
-                // if (this._bands.Metrics && this.simulationStep < this._bands.Metrics.length) {
-                //     // copy Metrics
-                //     res.Metrics = this._bands.Metrics[this.simulationStep];
-                // }
-
-                // if (this._bands.Monitors) {
-                //     // copy monitors
-                //     res.Monitors = this._bands.Monitors;
-                // }
-                // if (this._bands.Wind) {
-                //     // copy wind
-                //     res.Wind = this._bands.Wind;
-                // }
             }
         }
         return res;
@@ -2280,7 +2221,9 @@ export class DAAPlayer extends Backbone.Model {
      */
     refreshSimulationPlots(): void {
         if (this._plot) {
-            Object.keys(this._plot).forEach((plotID: string) => {
+            const keys: string[] = Object.keys(this._plot);
+            for (let i = 0; i < keys.length; i++) {
+                const plotID: string = keys[i];
                 // update range
                 switch (plotID) {
                     case "horizontal-speed-bands": {
@@ -2320,7 +2263,7 @@ export class DAAPlayer extends Backbone.Model {
                 const wind: { knot: string, deg: string } = this.getSelectedWindSettings();
                 const scenario: string = (wind && wind.knot) ? `${selectedScenario} (wind ${wind.deg}deg ${wind.knot}knot)` : selectedScenario;
                 this._plot[plotID].setOverheadLabel(`${selectedWellClear} - ${selectedConfiguration} - ${scenario}`);
-            });
+            }
             // update DOM
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
         }

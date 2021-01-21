@@ -121,30 +121,34 @@ function render(playerID: string, data: {
 }
 
 function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
-    splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
-        alerts: desc.bands?.Alerts?.alerts,
-        step: desc.step,
-        time: desc.time
-    });
-    for (let i = 0; i < daaPlots.length; i++) {
-        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
-                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
-                                : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
-                                : null;
-        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
-                                : null;
-        splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
-            bands: desc.bands[daaPlots[i].name],
+    if (desc) {
+        splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
+            alerts: desc.bands?.Alerts?.alerts,
             step: desc.step,
-            time: desc.time,
-            units: daaPlots[i].units,
-            marker,
-            resolution
+            time: desc.time
         });
+        for (let i = 0; i < daaPlots.length; i++) {
+            const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
+                                    : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
+                                    : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
+                                    : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
+                                    : null;
+            const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
+                                    : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
+                                    : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
+                                    : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+                                    : null;
+            splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
+                bands: desc.bands[daaPlots[i].name],
+                step: desc.step,
+                time: desc.time,
+                units: daaPlots[i].units,
+                marker,
+                resolution
+            });
+        }
+    } else {
+        console.log("[split-view] Warning: trying to plot null descriptor");
     }
 }
 
@@ -224,8 +228,8 @@ splitView.getPlayer("right").define("step", async () => {
 splitView.getPlayer("right").define("plot", () => {
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
     for (let step = 0; step < flightData?.length; step++) {
-        const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands();
-        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands();    
+        const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands(step);
+        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands(step);
         splitView.getPlayer("right").setTimerJiffy("plot", () => {
             const time: string = splitView.getTimeAt(step);
             const lla: LLAData = flightData[step];
@@ -233,15 +237,16 @@ splitView.getPlayer("right").define("plot", () => {
             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
             const vs: number = +lla.ownship.v.z;
             const alt: number = +lla.ownship.s.alt;
-            plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight[step], step, time });
+            plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight, step, time });
             diff(bandsLeft, bandsRight, step, time); // 3.5ms
         }, 8 * step);
     }
 });
 splitView.getPlayer("left").define("plot", () => {
-    const bandsData: ScenarioData = splitView.getPlayer("left").getBandsData();
     const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
-    for (let step = 0; step < bandsData?.Ownship?.length; step++) {
+    for (let step = 0; step < flightData?.length; step++) {
+        // const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands(step);
+        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands(step);
         splitView.getPlayer("left").setTimerJiffy("plot", () => {
             const time: string = splitView.getTimeAt(step);
             const lla: LLAData = flightData[step];
@@ -249,7 +254,7 @@ splitView.getPlayer("left").define("plot", () => {
             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
             const vs: number = +lla.ownship.v.z;
             const alt: number = +lla.ownship.s.alt;
-            plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsData[step], step, time: splitView.getTimeAt(step) });
+            plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsLeft, step, time });
         }, 8 * step);
     }
 });
