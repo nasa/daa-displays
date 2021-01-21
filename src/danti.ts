@@ -148,8 +148,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                         }
                         // add geofence to the map
                         data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
-                            showLabel: false,
-                            color: colors.lightyellow
+                            showLabel: false
                         });
                     }
                 }

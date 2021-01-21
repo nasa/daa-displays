@@ -438,6 +438,8 @@ export class InteractiveMap {
             showLabel?: boolean
         }
     ): InteractiveMap {
+        opt = opt || {};
+        opt.color = opt.color || colors.darkyellow;
         return this.addGeoFence("c-" + id, perimeter, floor, opt);
     }
     addProtectedArea (
@@ -451,6 +453,9 @@ export class InteractiveMap {
             showLabel?: boolean
         }
     ): InteractiveMap {
+        opt = opt || {};
+        opt.color = opt.color || colors.lightyellow;
+        opt.opacity = opt.opacity || 0.05;
         return this.addGeoFence("pa-" + id, perimeter, floor, opt);
     }
     removeGeoFence (id?: string): InteractiveMap {
