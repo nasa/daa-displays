@@ -22,61 +22,73 @@ export const monitorTemplate = `
 {{/each}}
 </div>`;
 
-// This section is not needed anymore [CAM]
-// <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
-//    <b>Aircraft Data</b>
-//    <div class="aircraft-data" style="text-align:left;"></div>
-// </div>
-// <br> 
-
 export const flightDataPanelTemplate = `
 <div style="color:white; margin-top:6px; margin-left:16px; text-align:center;">
     <b>Encounter Information</b>
     <div class="encounter-data" style="text-align:left;"></div>
 </div>`;
 
-// This template is not needed anymore [CAM]
+// This template is used for DAIDALUS 1.x
 export const flightDataTemplate = `
 <div class="container" id="{{id}}-list" style="color:white; margin-top:16px; white-space:nowrap;">
-<div id="flight-time-{{flight.ownship.id}}">Time: {{currentTime}} s</div>
-{{#if flight}}
-{{#if flight.ownship}}
-    <div class="flight-data" style="margin-top:10px;" id="flight-{{flight.ownship.id}}">
-        <div id="flight-name-{{flight.ownship.id}}">{{flight.ownship.id}}</div>
-        <div style="padding-left:10px;" id="flight-position-{{flight.ownship.id}}">lat: {{flight.ownship.s.lat}}, lon: {{flight.ownship.s.lon}}, alt: {{flight.ownship.s.alt}}</div>
-        <div style="padding-left:10px;" id="flight-velocity-{{flight.ownship.id}}">x: {{flight.ownship.v.x}}, y: {{flight.ownship.v.y}}, z: {{flight.ownship.v.z}}</div>
-    </div>
+{{#if currentTime}}
+<div><b>Time</b>: {{currentTime}} s</div>
+{{#if ownship}}
+<div><b>Ownship</b></div>
+<div style="padding-left:10px;">
+    <div>Identifier: {{ownship.id}}</div>
+    <div>lat: {{ownship.s.lat}} deg, lon: {{ownship.s.lon}} deg, alt: {{ownship.s.alt}} ft</div>
+    <div>vx: {{ownship.v.x}} m/s, vy: {{ownship.v.y}} m/s, vz: {{ownship.v.z}} m/s</div>
+</div>
 {{/if}}
-{{#each flight.traffic}}
-    <div class="flight-data" style="margin-top:10px;" id="flight-{{id}}">
-        <div id="flight-name-{{id}}">{{id}}</div>
-        <div style="padding-left:10px;" id="flight-position-{{id}}">lat: {{s.lat}}, lon: {{s.lon}}, alt: {{s.alt}}</div>
-        <div style="padding-left:10px;" id="flight-velocity-{{id}}">x: {{v.x}}, y: {{v.y}}, z: {{v.z}}</div>
-    </div>
+{{#if traffic}}
+<div style="margin-top:10px;"><b>Traffic</b></div>
+{{#each traffic}}
+<div style="{{#if @first}}{{else}}margin-top:10px;{{/if}}padding-left:10px;">
+    <div>Identifier: {{id}}</div>
+    <div>lat: {{s.lat}} deg, lon: {{s.lon}} deg, alt: {{s.alt}} ft</div>
+    <div>vx: {{v.x}} m/s, vy: {{v.y}} m/s, vz: {{v.z}} m/s</div>
+</div>
 {{/each}}
+{{/if}}
 {{else}}<div style="text-align:center;">N/A</div>{{/if}}
 </div>`;
 
+// This template is used for DAIDALUS 2.x
 export const encounterDataTemplate = `
 <div class="container" id="{{id}}-list" style="color:white; margin-top:16px; white-space:nowrap;">
 {{#if currentTime}}
-<div>Time: {{currentTime}} s</div>
+<div><b>Time</b>: {{currentTime}} s</div>
 <!-- ownship -->
 {{#if ownship}}
-<div>Ownship</div>
-    <div style="padding-left:10px;">
-        <div>Identifier: {{ownship.acstate.id}}</div>
-	    <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
-        <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
-        <div>Altitude: {{ownship.acstate.altitude.val}} {{ownship.acstate.altitude.units}} ({{ownship.acstate.altitude.val}} m) </div>
-        <div>Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
-        <div>Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} ({{ownship.acstate.airspeed.internal}} m/s) - Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} ({{ownship.acstate.groundspeed.internal}} m/s)</div>
-        <div>Vertical Speed: {{ownship.acstate.verticalspeed.val}} {{ownship.acstate.verticalspeed.units}} ({{ownship.acstate.verticalspeed.internal}} m/s)</div>
-    </div>
+<div><b>Ownship</b></div>
+<div style="padding-left:10px;">
+    <div>Identifier: {{ownship.acstate.id}}</div>
+    <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
+    <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
+    <div>Altitude: {{ownship.acstate.altitude.val}} {{ownship.acstate.altitude.units}} {{#if ownship.acstate.altitude.internal}}({{ownship.acstate.altitude.internal}} {{ownship.acstate.altitude.internal_units}}){{/if}}</div>
+    <div>Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
+    <div>Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} {{#if ownship.acstate.airspeed.internal}}({{ownship.acstate.airspeed.internal}} {{ownship.acstate.airspeed.internal_units}}){{/if}} - Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} {{#if ownship.acstate.groundspeed.internal}}({{ownship.acstate.groundspeed.internal}} {{ownship.acstate.groundspeed.internal_units}}){{/if}}</div>
+    <div>Vertical Speed: {{ownship.acstate.verticalspeed.val}} {{ownship.acstate.verticalspeed.units}} {{#if ownship.acstate.verticalspeed.internal}}({{ownship.acstate.verticalspeed.internal}} {{ownship.acstate.verticalspeed.internal_units}}){{/if}}</div>
+</div>
 {{/if}}
+<!-- Resolutions -->
+{{#each resolutions}}
+<div style="margin-top:10px;"><b>{{@key}}</b></div>
+<div style="padding-left:10px;">
+    <div>Conflict: {{flags.conflict}} - Recovery: {{flags.recovery}} - Saturated: {{flags.saturated}}</div>
+    <div>Ownship Region: {{ownship.region}}</div>
+    <div>Recovery N-Factor: {{recovery.nfactor}}</div>
+    <div>Horizontal Recovery Separation: {{#if recovery.distance.horizontal}}{{recovery.distance.horizontal.val}} {{recovery.distance.horizontal.units}} {{#if recovery.distance.horizontal.internal}}({{recovery.distance.horizontal.internal}} {{recovery.distance.horizontal.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>
+    <div>Vertical Recovery Separation: {{#if recovery.distance.vertical}}{{recovery.distance.vertical.val}} {{recovery.distance.vertical.units}} {{#if recovery.distance.vertical.internal}}({{recovery.distance.vertical.internal}} {{recovery.distance.vertical.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>
+    <div>Preferred Direction: {{flags.preferred}}</div>
+    <div>Preferred Resolution ({{preferred_resolution.region}}): {{preferred_resolution.val}} {{preferred_resolution.units}}</div>
+    <div>Other Resolution ({{other_resolution.region}}): {{other_resolution.val}} {{other_resolution.units}}</div>
+</div>
+{{/each}}
 <!-- traffic -->
 {{#if traffic}}
-<div style="margin-top:10px;">Traffic</div>
+<div style="margin-top:10px;"><b>Traffic</b></div>
 {{#each traffic}}
     <div style="{{#if @first}}{{else}}margin-top:10px;{{/if}}padding-left:10px;">
         <div>Identifier: {{acstate.id}}</div>
@@ -84,15 +96,15 @@ export const encounterDataTemplate = `
         <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
         <div>Altitude: {{acstate.altitude.val}} {{acstate.altitude.units}} ({{acstate.altitude.val}} m)</div>
         <div>Heading: {{acstate.heading.val}} {{acstate.heading.units}} - Track: {{acstate.track.val}} {{acstate.track.units}}</div>
-        <div>Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} ({{acstate.airspeed.internal}} m/s) - Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} ({{acstate.groundspeed.internal}} m/s)</div>
-        <div>Alert Level: {{alert.alert}} - Alerter: {{alert.alerter}}</div>
-        <div>Vertical Speed: {{acstate.verticalspeed.val}} {{acstate.verticalspeed.units}} ({{acstate.verticalspeed.internal}} m/s)</div>
-        <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} ({{metrics.separation.horizontal.internal}} m)</div>
-        <div>Vertical Separation: {{metrics.separation.vertical.val}} {{metrics.separation.vertical.units}} ({{metrics.separation.vertical.internal}} m)</div>
-        <div>Horizontal Closure Rate: {{metrics.closurerate.horizontal.val}} {{metrics.closurerate.horizontal.units}} ({{metrics.closurerate.horizontal.internal}} m/s)</div>
-        <div>Vertical Closure Rate: {{metrics.closurerate.vertical.val}} {{metrics.closurerate.vertical.units}} ({{metrics.closurerate.vertical.internal}} m/s)</div>
-        <div>Horizontal Miss Distance: {{metrics.missdistance.horizontal.val}} {{metrics.missdistance.horizontal.units}} ({{metrics.missdistance.horizontal.internal}} m/s)</div>
-        <div>Vertical Miss Distance: {{metrics.missdistance.vertical.val}} {{metrics.missdistance.vertical.units}} ({{metrics.missdistance.vertical.internal}} m/s)</div>
+        <div>Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} {{#if acstate.airspeed.internal}}({{acstate.airspeed.internal}} m/s){{/if}} - Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} {{#if acstate.groundspeed.internal}}({{acstate.groundspeed.internal}} m/s){{/if}}</div>
+        <div>Alert Level: {{alert.alert_level}} - Alerter: {{alert.alerter}}</div>
+        <div>Vertical Speed: {{acstate.verticalspeed.val}} {{acstate.verticalspeed.units}} {{#if acstate.verticalspeed.internal}}({{acstate.verticalspeed.internal}} m/s){{/if}}</div>
+        <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} {{#if metrics.separation.horizontal.internal}}({{metrics.separation.horizontal.internal}} m){{/if}}</div>
+        <div>Vertical Separation: {{metrics.separation.vertical.val}} {{metrics.separation.vertical.units}} {{#if metrics.separation.vertical.internal}}({{metrics.separation.vertical.internal}} m){{/if}}</div>
+        <div>Horizontal Closure Rate: {{metrics.closurerate.horizontal.val}} {{metrics.closurerate.horizontal.units}} {{#if metrics.closurerate.horizontal.internal}}({{metrics.closurerate.horizontal.internal}} m/s){{/if}}</div>
+        <div>Vertical Closure Rate: {{metrics.closurerate.vertical.val}} {{metrics.closurerate.vertical.units}} {{#if metrics.closurerate.vertical.internal}}({{metrics.closurerate.vertical.internal}} m/s){{/if}}</div>
+        <div>Horizontal Miss Distance: {{metrics.missdistance.horizontal.val}} {{metrics.missdistance.horizontal.units}} {{#if metrics.missdistance.horizontal.internal}}({{metrics.missdistance.horizontal.internal}} m/s){{/if}}</div>
+        <div>Vertical Miss Distance: {{metrics.missdistance.vertical.val}} {{metrics.missdistance.vertical.units}} {{#if metrics.missdistance.vertical.internal}}({{metrics.missdistance.vertical.internal}} m/s){{/if}}</div>
         <div>Time to Horizontal Closest Point of Approach: {{metrics.tcpa.val}} {{metrics.tcpa.units}}</div>
         <div>Time to Co-Altitude: {{metrics.tcoa.val}} {{metrics.tcoa.units}}</div>
         <div>Modified Tau: {{metrics.taumod.val}} {{metrics.taumod.units}}</div>
@@ -101,13 +113,3 @@ export const encounterDataTemplate = `
 {{/if}}
 {{else}}<div style="text-align:center;">N/A</div>{{/if}}
 </div>`;
-
-// {{#each metrics}}
-// <div style="padding-left:10px;" id="flight-{{@key}}-{{id}}">{{@key}}:
-//     {{#if this.hor.val}} {{this.hor.val}}{{this.hor.units}}{{/if}}
-//     {{#if this.ver.val}} {{this.ver.val}}{{this.ver.units}}{{/if}}
-//     {{#if this.hor.time.val}} {{this.hor.time.val}}{{this.hor.time.units}}{{/if}}
-//     {{#if this.hor.distance.val}} {{this.hor.distance.val}}{{this.hor.distance.units}}{{/if}}
-//     {{#if this.val}} {{this.val}}{{this.units}}{{/if}}
-// </div>
-// {{/each}}

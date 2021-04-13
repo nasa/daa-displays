@@ -240,10 +240,10 @@ public class DAABands {
 			String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 			String tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-				int alert = daa.alerting(ac);
+				int alert_level = daa.alerting(ac);
 				String ac_name = daa.getAircraftState(ac).getId();
 				if (tmp != "") { tmp += ", "; }
-				tmp += "{ \"ac\": \"" + ac_name + "\", \"alert\": \"" + alert + "\" }";
+				tmp += "{ \"ac\": \"" + ac_name + "\", \"alert_level\": \"" + alert_level + "\" }";
 			}
 			alerts += tmp;
 			alerts += " ]}";
@@ -254,7 +254,7 @@ public class DAABands {
 			for (int i = 0; i < kb.trackLength(); i++) {
 				trk += "{ \"range\": " + kb.track(i,"deg");
 				trk += ", \"units\": \"deg\"";
-				trk += ", \"alert\": \"" + kb.trackRegion(i) + "\" }";
+				trk += ", \"region\": \"" + kb.trackRegion(i) + "\" }";
 				if (i < kb.trackLength() - 1) { trk += ", "; }
 			}
 			trk += " ]}";
@@ -265,7 +265,7 @@ public class DAABands {
 			for (int i = 0; i < kb.groundSpeedLength(); i++) {
 				gs += "{ \"range\": " + kb.groundSpeed(i, hdir_units);
 				gs += ", \"units\": \"" + hdir_units + "\"";
-				gs += ", \"alert\": \"" + kb.groundSpeedRegion(i) + "\" }";
+				gs += ", \"region\": \"" + kb.groundSpeedRegion(i) + "\" }";
 				if (i < kb.groundSpeedLength() - 1) { gs += ", "; }
 			}
 			gs += " ]}";
@@ -276,7 +276,7 @@ public class DAABands {
 			for (int i = 0; i < kb.verticalSpeedLength(); i++) {
 				vs += "{ \"range\": " + kb.verticalSpeed(i, vs_units);
 				vs += ", \"units\": \"" + vs_units + "\"";
-				vs += ", \"alert\": \"" + kb.verticalSpeedRegion(i) + "\" }";
+				vs += ", \"region\": \"" + kb.verticalSpeedRegion(i) + "\" }";
 				if (i < kb.verticalSpeedLength() - 1) { vs += ", "; }
 			}
 			vs += " ]}";
@@ -287,7 +287,7 @@ public class DAABands {
 			for (int i = 0; i < kb.altitudeLength(); i++) {
 				alt += "{ \"range\": " + kb.altitude(i, alt_units);
 				alt += ", \"units\": \"" + alt_units + "\"";
-				alt += ", \"alert\": \"" + kb.altitudeRegion(i) + "\" }";
+				alt += ", \"region\": \"" + kb.altitudeRegion(i) + "\" }";
 				if (i < kb.altitudeLength() - 1) { alt += ", "; }
 			}
 			alt += " ]}";

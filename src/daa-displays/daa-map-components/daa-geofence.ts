@@ -58,10 +58,11 @@ export class GeoFence {
         red: { r: 1, g: 0, b: 0 },
         yellow: { r: 1, g: 1, b: 0 },
         lightyellow: { r: 1, g: 1, b: 0.6 },
-        darkyellow: { r: 1, g: 0.5, b: 0 }
+        darkyellow: { r: 1, g: 0.5, b: 0 },
+        daayellow: utils.hex2rgb(utils.bandColors.MID.color, { normalize: true })
     };
-    static readonly defaultColor: { r: number, g: number, b: number } = GeoFence.geofenceColors.red; // default color is red, as in Temporary Flight Restriction (TFR) areas
-    protected color: { r: number, g: number, b: number } = GeoFence.defaultColor;
+    static readonly defaultColor: utils.RGBColor = GeoFence.geofenceColors.red; // default color is red, as in Temporary Flight Restriction (TFR) areas
+    protected color: utils.RGBColor = GeoFence.defaultColor;
 
     static readonly defaultOpacity: number = 0.2;
     protected opacity: number = GeoFence.defaultOpacity;

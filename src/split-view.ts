@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
-import { DAASplitView } from './daa-displays/daa-split-view';
+import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
@@ -74,7 +74,7 @@ function render(playerID: string, data: {
         data.verticalSpeedTape.setBands(utils.bandElement2Bands(bands["Vertical Speed Bands"]));
         data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
         // set resolutions
-        data.compass.setBug(bands["Heading Resolution"]);
+        data.compass.setBug(bands["Horizontal Direction Resolution"]);
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);
         data.altitudeTape.setBug(bands["Altitude Resolution"]);
         data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"]);
@@ -121,12 +121,12 @@ function render(playerID: string, data: {
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert]
+            symbol: daaSymbols[alert_level]
         }
     }); 
     data.map.setTraffic(traffic);
@@ -152,10 +152,10 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
                                     : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                     : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                     : null;
-            const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
-                                    : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
-                                    : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
-                                    : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+            const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution.val
+                                    : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution.val
+                                    : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution.val
+                                    : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution.val
                                     : null;
             splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
                 bands: desc.bands[daaPlots[i].name],
@@ -291,16 +291,16 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
         let alertsR: string = "";
         if (bandsRight && bandsRight.Alerts) {
             bandsRight.Alerts?.alerts?.forEach(alert => {
-                if (+alert.alert > 0) {
-                    alertsR += `${alert.ac} [${alert.alert}]`;
+                if (+alert.alert_level > 0) {
+                    alertsR += `${alert.ac} [${alert.alert_level}]`;
                 }
             });
         }
         let alertsL: string = "";
         if (bandsLeft && bandsLeft.Alerts) {
             bandsLeft.Alerts?.alerts?.forEach(alert => {
-                if (+alert.alert > 0) {
-                    alertsL += `${alert.ac} [${alert.alert}]`; 
+                if (+alert.alert_level > 0) {
+                    alertsL += `${alert.ac} [${alert.alert_level}]`; 
                 }
             });
         }
@@ -358,12 +358,12 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
                     // if same direction, check that the numeric value of the preferred resolutions differ less than epsilon
                     const epsilon: number = 10e-5;
                     const ok: boolean =
-                        (isNaN(+resolutionL.resolution.val) && isNaN(+resolutionR.resolution.val))
-                            || (!isFinite(+resolutionL.resolution.val) && !isFinite(+resolutionR.resolution.val) && Math.sign(+resolutionL.resolution.val) === Math.sign(+resolutionR.resolution.val))
-                            || Math.abs(+resolutionL.resolution.val - +resolutionR.resolution.val) <= epsilon;
+                        (isNaN(+resolutionL.preferred_resolution.val) && isNaN(+resolutionR.preferred_resolution.val))
+                            || (!isFinite(+resolutionL.preferred_resolution.val) && !isFinite(+resolutionR.preferred_resolution.val) && Math.sign(+resolutionL.preferred_resolution.val) === Math.sign(+resolutionR.preferred_resolution.val))
+                            || Math.abs(+resolutionL.preferred_resolution.val - +resolutionR.preferred_resolution.val) <= epsilon;
                     if (!ok) {
-                        plotR += `<br>Resolution: ${resolutionR.resolution.val}`;
-                        plotL += `<br>Resolution: ${resolutionL.resolution.val}`;
+                        plotR += `<br>Resolution: ${resolutionR.preferred_resolution.val}`;
+                        plotL += `<br>Resolution: ${resolutionL.preferred_resolution.val}`;
                     }
                 } else {
                     plotR += `<br>Resolution: ${resolutionR.flags["preferred"]}`;
@@ -491,7 +491,7 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape_right.showValueBox();
 }
 
-async function createPlayer() {
+async function createPlayer(args: SplitConfig) {
     splitView.appendNavbar();
     splitView.appendSidePanelView();
     await splitView.appendScenarioSelector();
@@ -564,5 +564,24 @@ async function createPlayer() {
         parent: "activation-controls"
     });
     await splitView.activate({ developerMode: true });
+
+    // auto-load scenario+config if they are specified in the browser
+    if (args) {
+        if (args.scenario) {
+            splitView.selectScenario(args.scenario);
+        }
+        if (args.configLeft) {
+            await splitView.getPlayer("left").selectConfiguration(args.configLeft);
+        }
+        if (args.configRight) {
+            await splitView.getPlayer("right").selectConfiguration(args.configRight);
+        }
+        await splitView.loadSelectedScenario();
+    }
+    
 }
-createPlayer();
+const args: SplitConfig = parseSplitConfigInBrowser();
+if (args) {
+    console.log(args);
+}
+createPlayer(args);

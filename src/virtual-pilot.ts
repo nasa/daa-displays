@@ -61,12 +61,12 @@ function render(playerID: string, data: { map: InteractiveMap, compass: Compass,
         data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert]
+            symbol: daaSymbols[alert_level]
         }
     }); 
     data.map.setTraffic(traffic);

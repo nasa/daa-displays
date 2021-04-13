@@ -3,7 +3,7 @@ import * as templates from './templates/daa-view-options-templates';
 import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
-export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "hazard-zones";
+export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "hazard-zones" | ""; // "" means empty slot
 
 export class ViewOptions {
     protected id: string;
@@ -88,27 +88,35 @@ export class ViewOptions {
         return this;
     }
     protected checkInput (inputName: ViewOptionLabels): ViewOptions {
-        const inputID: number = this.labels.indexOf(inputName);
-        $(`#${this.id}-checkbox-${inputID}`).prop("checked", true);
-        this.updateBackground();
+        if (inputName) {
+            const inputID: number = this.labels.indexOf(inputName);
+            $(`#${this.id}-checkbox-${inputID}`).prop("checked", true);
+            this.updateBackground();
+        }
         return this;
     }
     protected uncheckInput (inputName: ViewOptionLabels): ViewOptions {
-        const inputID: number = this.labels.indexOf(inputName);
-        $(`#${this.id}-checkbox-${inputID}`).prop("checked", false);
-        this.updateBackground();
+        if (inputName) {
+            const inputID: number = this.labels.indexOf(inputName);
+            $(`#${this.id}-checkbox-${inputID}`).prop("checked", false);
+            this.updateBackground();
+        }
         return this;
     }
     protected disableInput (inputName: ViewOptionLabels): ViewOptions {
-        const inputID: number = this.labels.indexOf(inputName);
-        $(`#${this.id}-checkbox-${inputID}`).prop("disabled", true);
-        this.updateBackground();
+        if (inputName) {
+            const inputID: number = this.labels.indexOf(inputName);
+            $(`#${this.id}-checkbox-${inputID}`).prop("disabled", true);
+            this.updateBackground();
+        }
         return this;
     }
     protected enableInput (inputName: ViewOptionLabels): ViewOptions {
-        const inputID: number = this.labels.indexOf(inputName);
-        $(`#${this.id}-checkbox-${inputID}`).prop("disabled", false);
-        this.updateBackground();
+        if (inputName) {
+            const inputID: number = this.labels.indexOf(inputName);
+            $(`#${this.id}-checkbox-${inputID}`).prop("disabled", false);
+            this.updateBackground();
+        }
         return this;
     }
     protected updateBackground (): ViewOptions {

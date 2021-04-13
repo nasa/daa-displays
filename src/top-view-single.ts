@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
-import { DAAPlayer } from './daa-displays/daa-player';
+import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
@@ -96,12 +96,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             // set resolutions
             // show wedge only for recovery bands
             if (compassBands.RECOVERY) {
-                data.compass.setBug(bands["Heading Resolution"], {
+                data.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeConstraints: compassBands.RECOVERY,
                     resolutionBugColor: "green"
                 });
             } else {
-                data.compass.setBug(bands["Heading Resolution"], {
+                data.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeAperture: 0
                 });
             }
@@ -178,12 +178,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         }
         const traffic = flightData.traffic.map((data, index) => {
-            const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
             return {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
-                symbol: daaSymbols[alert]
+                symbol: daaSymbols[alert_level]
             }
         });
         data.map.setTraffic(traffic);
@@ -192,9 +192,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             wind.setAngleFrom(bands.Wind.deg);
             wind.setMagnitude(bands.Wind.knot);
         }
-        const step: number = player.getCurrentSimulationStep();
-        const time: string = player.getCurrentSimulationTime();
-        plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
+        // const step: number = player.getCurrentSimulationStep();
+        // const time: string = player.getCurrentSimulationTime();
+        // plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
     }
 }
 
@@ -218,10 +218,10 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
-        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution.val
                                 : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
@@ -267,7 +267,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+        "", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp-hidden", maxWedgeAperture: 50 });
@@ -354,52 +354,52 @@ player.define("plot", () => {
     //     monitorID
     // });
 });
-async function createPlayer() {
-    player.appendSimulationPlot({
-        id: "alerts",
-        width: 1100,
-        label: "Alerts",
-        range: { from: 1, to: 3 },
-        parent: "simulation-plot"
-    }, {
-        overheadLabel: true
-    });
-    player.appendSimulationPlot({
-        id: "heading-bands",
-        top: 150,
-        width: 1100,
-        label: "Heading Bands",
-        range: { from: 0, to: 360 },
-        units: "[deg]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "horizontal-speed-bands",
-        top: 300,
-        width: 1100,
-        label: "Horizontal Speed Bands",
-        range: { from: 0, to: 1000 },
-        units: "[knot]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "vertical-speed-bands",
-        top: 450,
-        width: 1100,
-        label: "Vertical Speed Bands",
-        range: { from: -10000, to: 10000 },
-        units: "[fpm]",
-        parent: "simulation-plot"
-    });
-    player.appendSimulationPlot({
-        id: "altitude-bands",
-        top: 600,
-        width: 1100,
-        label: "Altitude Bands",
-        range: { from: -200, to: 60000 },
-        units: "[ft]",
-        parent: "simulation-plot"
-    });
+async function createPlayer(args: DaaConfig): Promise<void> {
+    // player.appendSimulationPlot({
+    //     id: "alerts",
+    //     width: 1100,
+    //     label: "Alerts",
+    //     range: { from: 1, to: 3 },
+    //     parent: "simulation-plot"
+    // }, {
+    //     overheadLabel: true
+    // });
+    // player.appendSimulationPlot({
+    //     id: "heading-bands",
+    //     top: 150,
+    //     width: 1100,
+    //     label: "Heading Bands",
+    //     range: { from: 0, to: 360 },
+    //     units: "[deg]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "horizontal-speed-bands",
+    //     top: 300,
+    //     width: 1100,
+    //     label: "Horizontal Speed Bands",
+    //     range: { from: 0, to: 1000 },
+    //     units: "[knot]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "vertical-speed-bands",
+    //     top: 450,
+    //     width: 1100,
+    //     label: "Vertical Speed Bands",
+    //     range: { from: -10000, to: 10000 },
+    //     units: "[fpm]",
+    //     parent: "simulation-plot"
+    // });
+    // player.appendSimulationPlot({
+    //     id: "altitude-bands",
+    //     top: 600,
+    //     width: 1100,
+    //     label: "Altitude Bands",
+    //     range: { from: -200, to: 60000 },
+    //     units: "[ft]",
+    //     parent: "simulation-plot"
+    // });
     player.appendNavbar();
     player.appendSidePanelView();
     await player.appendScenarioSelector();
@@ -410,27 +410,27 @@ async function createPlayer() {
     await player.appendMonitorPanel();
     await player.appendTrafficPanel();
     // handlers can be defined only after creating the monitor panel
-    for (let i = 0; i < 3; i++) {
-        const monitorID: number = i + 1;
-        player.handle(`click.monitor-${monitorID}`, () => {
-            const bandsData: ScenarioDataPoint = player.getCurrentBands();
-            // const flightData: LLAData[] = player.getFlightData();
-            if (i < bandsData?.Monitors?.length) {
-                plotMonitor({
-                    data: bandsData.Monitors[i],
-                    monitorID
-                });
-            }
-        });
-    }
+    // for (let i = 0; i < 3; i++) {
+    //     const monitorID: number = i + 1;
+    //     player.handle(`click.monitor-${monitorID}`, () => {
+    //         const bandsData: ScenarioDataPoint = player.getCurrentBands();
+    //         // const flightData: LLAData[] = player.getFlightData();
+    //         if (i < bandsData?.Monitors?.length) {
+    //             plotMonitor({
+    //                 data: bandsData.Monitors[i],
+    //                 monitorID
+    //             });
+    //         }
+    //     });
+    // }
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
     });
-    player.appendPlotControls({
-        parent: "simulation-controls",
-        top: 47
-    });
+    // player.appendPlotControls({
+    //     parent: "simulation-controls",
+    //     top: 47
+    // });
     player.appendActivationPanel({
         parent: "activation-controls"
     });
@@ -448,16 +448,28 @@ async function createPlayer() {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
     }, { top: -110, left: 1140 });
-    player.appendDeveloperControls({
-        normalMode,
-        developerMode
-    }, {
-        parent: "simulation-controls",
-        top: 48,
-        left: 754,
-        width: 344,
-        hidden: false
-    });
-    await player.activate({ developerMode: true });
+    // player.appendDeveloperControls({
+    //     normalMode,
+    //     developerMode
+    // }, {
+    //     parent: "simulation-controls",
+    //     top: 48,
+    //     left: 754,
+    //     width: 344,
+    //     hidden: true
+    // });
+    // await player.activate({ developerMode: true });
+
+    // auto-load scenario+config if they are specified in the browser
+    if (args) {
+        if (args.scenario) { player.selectScenario(args.scenario); }
+        if (args.config) { await player.selectConfiguration(args.config); }
+        await player.loadSelectedScenario();
+    }
+    
 }
-createPlayer();
+const args: DaaConfig = parseDaaConfigInBrowser();
+if (args) {
+    console.log(args);
+}
+createPlayer(args);

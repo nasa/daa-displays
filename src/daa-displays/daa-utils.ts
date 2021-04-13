@@ -24,6 +24,16 @@ export const bandColorsDanti = {
     UNKNOWN: { style: "solid", color: "gray" }, // gray
     NONE: { style: "solid", color: "transparent" }
 };
+export interface RGBColor { r: number, g: number, b: number };
+export function hex2rgb (hex: string, opt?: { normalize?: boolean }): RGBColor {
+    let elems: string = hex || "000000";
+    elems = elems.startsWith("#") ? elems.substring(1, elems.length) : elems;
+	const r: string = (elems.length > 2) ? elems.substr(0, 2) : "00";
+	const g: string = (elems.length > 4) ? elems.substr(2, 2) : "00";
+    const b: string = (elems.length > 6) ? elems.substr(4, 2) : "00";
+    return opt?.normalize ? { r: parseInt(r, 16) / 255.0, g: parseInt(g, 16) / 255.0, b: parseInt(b) / 255.0 }
+        : { r: parseInt(r, 16), g: parseInt(g, 16), b: parseInt(b, 16) };
+}
 export const bugColors = {
     NONE: "white",
     FAR: "#ffc107", // DASHED YELLOW
@@ -105,7 +115,7 @@ export interface Coords {
 
 export const BAND_NAMES: string[] = [
     "Altitude Bands", "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands", 
-    "Altitude Resolution", "Heading Resolution", "Horizontal Speed Resolution", "Vertical Speed Resolution"
+    "Altitude Resolution", "Horizontal Direction Resolution", "Horizontal Speed Resolution", "Vertical Speed Resolution"
 ];
 
 
@@ -120,7 +130,7 @@ export const BAND_NAMES: string[] = [
 //     "Horizontal Speed Bands": Bands,
 //     "Vertical Speed Bands": Bands,
 //     "Altitude Resolution": ResolutionElement,
-//     "Heading Resolution": ResolutionElement,
+//     "Horizontal Direction Resolution": ResolutionElement,
 //     "Horizontal Speed Resolution": ResolutionElement,
 //     "Vertical Speed Resolution": ResolutionElement,
 //     Contours: GeofenceElement,

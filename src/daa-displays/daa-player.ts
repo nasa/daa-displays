@@ -95,17 +95,19 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, ScenarioDescriptor } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DAALosDescriptor, ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DAALosDescriptor, ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState, SaveScenarioRequest, LLAPosition } from './utils/daa-server';
 
 import * as Backbone from 'backbone';
 
 export const PlayerEvents = {
-    DidSelectConfiguration: "DidSelectConfiguration"
+    DidSelectConfiguration: "DidSelectConfiguration",
+    DidUploadScenarioFile: "DidUploadScenarioFile"
 };
 export interface DidSelectConfigurationData {
     attributes: string[],
     configName: string
-}
+};
+export type DidUploadScenarioFileData = SaveScenarioRequest;
 
 export declare interface DAAPlaybackHandlers {
     init: () => Promise<void>;
@@ -150,6 +152,29 @@ export function safeSelector(str: string): string {
         return str.replace(/\.|\/|\s/g, "-");
     }
     return str;
+}
+
+export interface DaaConfig {
+	scenario: string,
+	config: string
+}
+/**
+ * Parse arguments indicated in the browser address.
+ * Arguments are a search string indicating scenario + configuration
+ * e.g., http://localhost:8082/single?H1.daa+2.x/DO_365A_no_SUM.conf
+ */
+export function parseDaaConfigInBrowser (search?: string): DaaConfig {
+    search = search || window?.location?.search || "";
+    const args: string[] = search.split("+");
+    if (args && args.length > 1) {
+        args[0] = args[0].substring(1); // this is necessary to remove the ? at the beginning of the search string
+        const ans: DaaConfig = {
+            scenario: args[0].trim(),
+            config: args[1].trim()
+        };
+        return ans;
+    }
+    return null;
 }
 
 export class DAAPlayer extends Backbone.Model {
@@ -219,7 +244,7 @@ export class DAAPlayer extends Backbone.Model {
 
     protected _wellClearVersions: string[];
     protected _wellClearConfigurations: string[];
-    protected ws: DAAClient;
+    protected client: DAAClient;
 
     protected wellClearVersionSelector: string = "sidebar-daidalus-version";
     protected wellClearConfigurationSelector: string = "sidebar-daidalus-configuration";
@@ -279,7 +304,7 @@ export class DAAPlayer extends Backbone.Model {
     constructor (id?: string) {
         super();
         this.id = id || "daa-playback";
-        this.ws = new DAAClient(); // this should only be used for serving files
+        this.client = new DAAClient(); // this should only be used for serving files
         // this.fs = opt.fs;
         // // this.inputFileReader = null;
         // this.outputFileWriter = null;
@@ -323,7 +348,8 @@ export class DAAPlayer extends Backbone.Model {
                 return new Promise(async (resolve, reject) => {
                     const current_step: number = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
                     await this._handlers.pause();
-                    await this.gotoControl(current_step - 1); // note: this call is async
+                    const prev_step: number = current_step > 0 ? current_step - 1 : current_step;
+                    await this.gotoControl(prev_step); // note: this call is async
                     resolve();
                 });
             },
@@ -488,6 +514,25 @@ export class DAAPlayer extends Backbone.Model {
     }
 
     /**
+     * Uploads an external daa file to the server
+     * @param data fname is the scenario name, fileContent is the content of the scenario file
+     * @returns a string representing the JSON representation of the scenario.
+     */
+    async uploadDaaFile (data: { scenarioName: string, scenarioContent: string }): Promise<string> {
+        if (data && data.scenarioName && data.scenarioContent) {
+            console.log("[daa-player] Saving scenario file", data);
+            const res: WebSocketMessage<string> = await this.client.send({
+                type: "save-daa-file",
+                data
+            });
+            if (res && res.data) {
+                let scenarioData: string = res.data;
+                return scenarioData;
+            }
+        }
+        return null;
+    }
+    /**
      * utility function, renders the DOM elements necessary to select scenarios
      */
     appendSidePanelView(): DAAPlayer {
@@ -496,6 +541,24 @@ export class DAAPlayer extends Backbone.Model {
         });
         utils.createDiv(`${this.id}-scenario-selector`, { zIndex: 99 });
         $(`#${this.id}-scenario-selector`).html(theHTML);
+
+        // add handler for uploading external scenario files
+        $(`#${this.id}-external-scenario-file`).on("input", (evt: JQuery.ChangeEvent) => {
+            const file: File = evt?.currentTarget?.files[0];
+            const reader: FileReader = new FileReader();
+            reader.addEventListener("loadend", async (evt: ProgressEvent<FileReader>) => {
+                const scenarioContent: string = reader.result?.toString();
+                $(`#${this.id}-external-scenario-file-form`).trigger("reset");
+                const scenarioName: string = file.name;
+                const data: DidUploadScenarioFileData = {
+                    scenarioName,
+                    scenarioContent
+                };
+                const scenarioData: string = await this.uploadDaaFile(data);
+                await this.selectScenarioFile(scenarioName, { scenarioData, forceReload: true });
+            });
+            reader.readAsText(file);
+        });
 
         // make side panel resizeable
         const min: number = 20;
@@ -544,6 +607,18 @@ export class DAAPlayer extends Backbone.Model {
         $(`.sim-selector`).removeAttr("disabled");
     }
 
+    /**
+     * Updates the browser address by indicating scenario and configuration currently selected
+     * The execution of this function will not reload the page
+     */
+    protected refreshBrowserAddress (): void {
+        const scenario: string = this.getSelectedScenario();
+        const config: string = this.getSelectedConfiguration();
+        const search: string = `?${scenario}+${config}`;
+        const url: string = window.location.origin + window.location.pathname + search;
+        history.replaceState({}, document.title, url);
+    }
+
     revealActivationPanel (): void {
         $(`.activation-panel`).animate({ "opacity": "1" });
         $(`.load-scenario-btn`).removeAttr("disabled");
@@ -569,48 +644,68 @@ export class DAAPlayer extends Backbone.Model {
         this.disableSimulationControls();
         // on click...
         $(`.load-scenario-btn`).on("click", async () => {
-            $(`.load-scenario-btn`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
-            const scenario: string = this.getSelectedScenario();
-            if (scenario) {
-                await this.selectScenarioFile(scenario, { forceReload: true });
-            } else {
-                console.error("[daa-player] Warning: selected scenario is null");
-            }
-            this.hideActivationPanel();
-            $(`.load-scenario-btn`).html(`Load Selected Scenario and Configuration`);
-            this.enableSelectors();
-            this.enableSimulationControls();
+            this.refreshBrowserAddress();
+            await this.loadSelectedScenario();
         });
         this.activationControlsPresent = true;
+    }
+
+    async loadSelectedScenario (): Promise<void> {
+        $(`.load-scenario-btn`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
+        const scenario: string = this.getSelectedScenario();
+        if (scenario) {
+            await this.selectScenarioFile(scenario, { forceReload: true });
+        } else {
+            console.error("[daa-player] Warning: selected scenario is null");
+        }
+        this.hideActivationPanel();
+        $(`.load-scenario-btn`).html(`Load Selected Scenario and Configuration`);
+        this.enableSelectors();
+        this.enableSimulationControls();
     }
 
     /**
      * utility function, renders the DOM elements necessary for developers
      */
-    appendDeveloperControls (desc: { normalMode?: () => Promise<void> | void, developerMode?: () => Promise<void> | void }, opt?: { top?: number, left?: number, width?: number, parent?: string, hidden?: boolean }): void {
+    appendDeveloperControls (desc: { 
+        normalMode?: () => Promise<void> | void, 
+        developerMode?: () => Promise<void> | void 
+    }, opt?: { 
+        top?: number, 
+        left?: number, 
+        width?: number, 
+        parent?: string,
+        controls?: {
+            showDeveloper?: boolean,
+            showPlot?: boolean
+        } 
+        hidden?: boolean
+    }): void {
         opt = opt || {};
         desc = desc || {};
         opt.parent = opt.parent || this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
         opt.width = (isNaN(+opt.width)) ? 222 : opt.width;
+        opt.controls = opt.controls || {};
+        opt.controls.showDeveloper = opt.controls.showDeveloper === undefined ? true : !!opt.controls.showDeveloper;
+        opt.controls.showPlot = opt.controls.showPlot === undefined ? true : !!opt.controls.showPlot;
         const theHTML = Handlebars.compile(templates.developersControls)({
             id: this.id,
-            parent: opt.parent,
-            top: opt.top, left: opt.left, width: opt.width,
+            ...opt,
             display: opt.hidden ? "none" : "block"
         });
         utils.createDiv(`${this.id}-developers-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-developers-controls`).html(theHTML);
         this.developerControls = desc;
         // install handlers
-        $(`#${this.id}-developer-mode-checkbox`).on("change", () => {
+        $(`#${this.id}-developer-mode-checkbox`).on("change", async () => {
             const isChecked = $(`#${this.id}-developer-mode-checkbox`).prop("checked");
             this.mode = (isChecked) ? "developerMode" : "normalMode";
             if (isChecked) {
-                this.clickDeveloperMode();
+                await this.clickDeveloperMode();
             } else {
-                this.clickNormalMode();
+                await this.clickNormalMode();
             }
         });
         $(`#${this.id}-show-plots-checkbox`).on("change", () => {
@@ -689,19 +784,19 @@ export class DAAPlayer extends Backbone.Model {
         });
     }
 
-    clickDeveloperMode (): void {
+    async clickDeveloperMode (): Promise<void> {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", true);
         this.mode = "developerMode";
         if (this.developerControls.developerMode) {
-            this.developerControls.developerMode();
+            await this.developerControls.developerMode();
         }
     }
 
-    clickNormalMode (): void {
+    async clickNormalMode (): Promise<void> {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", false);
         this.mode = "normalMode";
         if (this.developerControls.normalMode) {
-            this.developerControls.normalMode();
+            await this.developerControls.normalMode();
         }
     }
 
@@ -732,9 +827,9 @@ export class DAAPlayer extends Backbone.Model {
         utils.createDiv(`${this.id}-spectrogram-controls`, { zIndex: 99, parent: opt.parent });
         $(`#${this.id}-spectrogram-controls`).html(theHTML);
         // install handlers
-        $(`#${this.id}-reset`).on("click", () => {
+        $(`#${this.id}-reset`).on("click", async () => {
             const selectedScenario: string = this.getSelectedScenario();
-            this.selectScenarioFile(selectedScenario, { softReload: true }); // async call
+            await this.selectScenarioFile(selectedScenario, { softReload: true }); // async call
         });
         $(`#${this.id}-plot`).on("click", async () => {
             await this.plot();
@@ -782,7 +877,7 @@ export class DAAPlayer extends Backbone.Model {
         if (!scenarioData) {
             await this.connectToServer();
             const data: LoadScenarioRequest = { scenarioName };
-            const res: WebSocketMessage<string> = await this.ws.send({
+            const res: WebSocketMessage<string> = await this.client.send({
                 type: "load-daa-file",
                 data
             });
@@ -801,17 +896,19 @@ export class DAAPlayer extends Backbone.Model {
 
     /**
      * Loads all daa files contained in folder daa-scenarios
+     * @param selected (optional) Name of the scenario file to be selected. If not specified, the first scenario in the list will be selected;
      * @returns Array of filenames
      */
-    async loadScenarioFiles (): Promise<string[]> {
+    async loadScenarioFiles (selected?: string): Promise<string[]> {
         const scenarioFiles: string[] = await this.listScenarioFiles();
         if (scenarioFiles && scenarioFiles.length > 0) {
+            selected = selected || scenarioFiles[0];
             for (let i = 0; i < scenarioFiles.length; i++) {
                 await this.loadDaaFile(scenarioFiles[i]);
             }
-            await this.selectScenarioFile(scenarioFiles[0]);
+            await this.selectScenarioFile(selected);
         } else {
-            console.warn(`Folder daa-scenarios is empty :/`);
+            console.warn(`[daa-player] Folder daa-scenarios is empty :/`);
         }
         return scenarioFiles;
     }
@@ -821,7 +918,7 @@ export class DAAPlayer extends Backbone.Model {
      */
     async listScenarioFiles (): Promise<string[]> {
         await this.connectToServer();
-        const res: WebSocketMessage<string> = await this.ws.send({
+        const res: WebSocketMessage<string> = await this.client.send({
             type: `list-${this.scenarioType}-files`
         });
         let daaFiles = null;
@@ -852,7 +949,7 @@ export class DAAPlayer extends Backbone.Model {
     async loadConfigFile (config: string): Promise<ConfigFile> {
         await this.connectToServer();
         const data: LoadConfigRequest = { config };
-        const res: WebSocketMessage<ConfigFile> = await this.ws.send({
+        const res: WebSocketMessage<ConfigFile> = await this.client.send({
             type: "load-config-file",
             data
         });
@@ -881,7 +978,7 @@ export class DAAPlayer extends Backbone.Model {
             scenarioName: data.scenario || "H1.daa",
             wind: data.wind || { knot: "0", deg: "0" }
         }
-        const res: WebSocketMessage<string> = await this.ws.send({
+        const res: WebSocketMessage<string> = await this.client.send({
             type: `list-monitors`,
             data: msg
         });
@@ -945,6 +1042,9 @@ export class DAAPlayer extends Backbone.Model {
                 $(`#${this.id}-goto-time-input`).val(this.simulationStep);
                 $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
                 $(`#${this.id}-selected-scenario`).html(scenario);
+                // make sure the selected scenario shows up as selected in the side panel
+                $(`#${this.id}-scenarios-list option`).prop("selected", false);
+                $(`#${this.id}-scenario-${safeSelector(this._selectedScenario)}`).prop("selected", true);
                 try {
                     if (opt.softReload) {
                         await this.gotoControl(0);
@@ -1131,8 +1231,8 @@ export class DAAPlayer extends Backbone.Model {
     async connectToServer (opt?: { href?: string }) {
         opt = opt || {};
         this.href = opt.href || document.location.href; //"localhost";
-        if (this.ws) {
-            await this.ws.connectToServer(this.href);
+        if (this.client) {
+            await this.client.connectToServer(this.href);
         } else {
             console.error("[daa-player] Warning: cannot connect to server, WebSocket is null");
         }
@@ -1372,7 +1472,7 @@ export class DAAPlayer extends Backbone.Model {
 
     async listVersions(): Promise<string[]> {
         await this.connectToServer();
-        const res = await this.ws.send({
+        const res = await this.client.send({
             type: `list-${this.selectedAppType}-versions`,
         });
         if (res && res.data) {
@@ -1388,7 +1488,7 @@ export class DAAPlayer extends Backbone.Model {
 
     async listConfigurations(): Promise<string[]> {
         await this.connectToServer();
-        const res = await this.ws.send({
+        const res = await this.client.send({
             type: "list-config-files"
         });
         if (res && res.data) {
@@ -1618,7 +1718,7 @@ export class DAAPlayer extends Backbone.Model {
             //             "Horizontal Speed Bands": {},
             //             "Vertical Speed Bands": {},
             //             "Altitude Resolution": null,
-            //             "Heading Resolution": null,
+            //             "Horizontal Direction Resolution": null,
             //             "Horizontal Speed Resolution": null,
             //             "Vertical Speed Resolution": null,
             //             Contours: null,
@@ -1696,7 +1796,7 @@ export class DAAPlayer extends Backbone.Model {
             "Horizontal Speed Bands": null,
             "Vertical Speed Bands": null,
             "Altitude Resolution": null,
-            "Heading Resolution": null,
+            "Horizontal Direction Resolution": null,
             "Horizontal Speed Resolution": null,
             "Vertical Speed Resolution": null,
             "Contours": null,
@@ -1837,7 +1937,6 @@ export class DAAPlayer extends Backbone.Model {
         $(`#${this.id}-status`).css("display", "none").text("");
     }
 
-
     async activate(opt?: { developerMode?: boolean }): Promise<void> {
         opt = opt || {};
         const scenarios = await this.listScenarioFiles();
@@ -1845,7 +1944,7 @@ export class DAAPlayer extends Backbone.Model {
             await this.selectScenarioFile(scenarios[0]);
         }
         if (opt.developerMode) {
-            this.clickDeveloperMode();
+            await this.clickDeveloperMode();
         }
     }
 
@@ -1990,28 +2089,88 @@ export class DAAPlayer extends Backbone.Model {
         }
     }
 
+    /**
+     * Utility function, clears the content of the data panel on the right-size of the view
+     */
     protected removeFlightData(): void {
         $(`#${this.flightDataDomSelector}-list`).remove();
     }
 
+    /**
+     * Internal function, updates encounter data in the data panel on the right-side of the view
+     * This function is to be used with DAIDALUS 1.x
+     */
     protected appendFlightData (flightData: FlightData): void {
         if (flightData) {
             const theHTML: string = Handlebars.compile(monitorTemplates.flightDataTemplate)({
                 id: this.flightDataDomSelector,
-                flight: flightData,
-                currentTime: this.getCurrentSimulationTime()
+                currentTime: this.getCurrentSimulationTime(),
+                ownship: {
+                    ...flightData.ownship,
+                    s: flightData.ownship?.s ? {
+                        lat: parseFloat(flightData.ownship.s.lat).toFixed(2),
+                        lon: parseFloat(flightData.ownship.s.lon).toFixed(2),
+                        alt: parseFloat(flightData.ownship.s.alt).toFixed(2)
+                    } : undefined,
+                    v: flightData.ownship?.v ? {
+                        x: parseFloat(flightData.ownship.v.x).toFixed(2),
+                        y: parseFloat(flightData.ownship.v.y).toFixed(2),
+                        z: parseFloat(flightData.ownship.v.z).toFixed(2)
+                    } : undefined
+                },
+                traffic: flightData.traffic?.map(data => {
+                    return {
+                        ...data,
+                        s: data.s ? {
+                            lat: parseFloat(data.s.lat).toFixed(2),
+                            lon: parseFloat(data.s.lon).toFixed(2),
+                            alt: parseFloat(data.s.alt).toFixed(2)
+                        } : undefined,
+                        v: data.v ? {
+                            x: parseFloat(data.v.x).toFixed(2),
+                            y: parseFloat(data.v.y).toFixed(2),
+                            z: parseFloat(data.v.z).toFixed(2)
+                        } : undefined    
+                    }
+                })
             });
-            $(`#${this.flightDataDomSelector} .aircraft-data`).html(theHTML);
+            $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);
         }
     }
 
-    protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[] }): void {
+    /**
+     * Internal function, updates encounter data in the data panel on the right-side of the view
+     * This function is to be used with DAIDALUS 2.x
+     */
+    protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[], bands: ScenarioDataPoint }): void {
         if (data) {
+            const mapResolution = (name: string, internalUnits: string) => {
+                return data?.bands ? {
+                    ...data.bands[name],
+                    recovery: {
+                        ...data.bands[name]?.recovery,
+                        distance: {
+                            horizontal: isNaN(+data.bands[name]?.recovery?.distance?.horizontal?.val) ? 
+                                undefined
+                                    : { ...data.bands[name]?.recovery?.distance?.horizontal, internalUnits },
+                            vertical: isNaN(+data.bands[name]?.recovery?.distance?.vertical?.val) ? 
+                                undefined 
+                                    : { ...data.bands[name]?.recovery?.distance?.vertical, internalUnits }
+                        }
+                    }
+                }: null;
+            };
             const theHTML: string = Handlebars.compile(monitorTemplates.encounterDataTemplate)({
                 id: this.flightDataDomSelector,
                 currentTime: this.getCurrentSimulationTime(),
-                ownship: data.ownship,
-                traffic: data.traffic
+                ownship: data?.ownship,
+                traffic: data?.traffic,
+                resolutions: {
+                    "Horizontal Direction Resolution": mapResolution("Horizontal Direction Resolution", "rad"),
+                    "Horizontal Speed Resolution": mapResolution("Horizontal Speed Resolution", "m/s"),
+                    "Vertical Speed Resolution": mapResolution("Vertical Speed Resolution", "m/s"),
+                    "Altitude Resolution": mapResolution("Altitude Resolution", "m")
+                }
             });
             $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);
         }
@@ -2022,9 +2181,13 @@ export class DAAPlayer extends Backbone.Model {
         const flightInfo: LLAData = this.getCurrentFlightData();
         const trafficMetrics: AircraftMetrics[] = this.getCurrentTrafficMetrics();
         const ownshipState: OwnshipState = this.getCurrentOwnshipState();
+        const bands: ScenarioDataPoint = this.getCurrentBands();
         const flightData: FlightData = flightInfo;
-        this.appendFlightData(flightData);
-        this.appendEncounterData({ ownship: ownshipState, traffic: trafficMetrics });
+        if (trafficMetrics) {
+            this.appendEncounterData({ ownship: ownshipState, traffic: trafficMetrics, bands });
+        } else {
+            this.appendFlightData(flightData);
+        }
     }
 
     /**
@@ -2148,10 +2311,10 @@ export class DAAPlayer extends Backbone.Model {
                 for (let i = 0; i < scenarios.length; i++) {
                     // event handler
                     $(`#${this.id}-scenario-${safeSelector(scenarios[i])}`).on("click", async () => {
-                        this._selectedScenario = scenarios[i];
-                        this.disableSimulationControls();
-                        this.revealActivationPanel();
-                        // await this.selectScenarioFile(scenarios[i]);
+                        this.selectScenario(scenarios[i]);
+                        // this._selectedScenario = scenarios[i];
+                        // this.disableSimulationControls();
+                        // this.revealActivationPanel();
                     });
                 }
             }
@@ -2161,6 +2324,22 @@ export class DAAPlayer extends Backbone.Model {
         } catch (error) {
             console.error("[daa-player] Warning: could not append scenario selector", error);
         }
+    }
+
+    /**
+     * Programmatically select a scenario in the user interface
+     * @param scenarioName 
+     */
+    selectScenario (scenarioName: string): boolean {
+        const elem: string = `#${this.id}-scenario-${safeSelector(scenarioName)}`;
+        if (elem && elem[0]) {
+            $(elem).prop("selected", true);
+            this._selectedScenario = scenarioName;
+            this.disableSimulationControls();
+            this.revealActivationPanel();
+            return true;
+        }
+        return false;
     }
 
     //-- refresh functions ------------
@@ -2308,9 +2487,9 @@ export class DAAPlayer extends Backbone.Model {
                     $(`#${this.wellClearConfigurationAttributesSelector}`).html(theAttributes);
                 }
                 if (this.mode === "developerMode") {
-                    this.clickDeveloperMode();
+                    await this.clickDeveloperMode();
                 } else if (this.mode === "normalMode") {
-                    this.clickNormalMode();
+                    await this.clickNormalMode();
                 }
                 return attributes;
             }

@@ -33,7 +33,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
-import { DAAPlayer } from './daa-displays/daa-player';
+import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
@@ -57,12 +57,12 @@ function render (data: { map: InteractiveMap }) {
     //     data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     // }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert]
+            symbol: daaSymbols[alert_level]
         }
     });
     data.map.setTraffic(traffic);
@@ -143,7 +143,7 @@ player.define("plot", () => {
     }
 });
 
-async function createPlayer() {
+async function createPlayer(args: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "alerts",
         width: 1100,
@@ -206,6 +206,17 @@ async function createPlayer() {
         parent: "activation-controls"
     });
     await player.activate();
+
+    // auto-load scenario+config if they are specified in the browser
+    if (args) {
+        if (args.scenario) { player.selectScenario(args.scenario); }
+        if (args.config) { await player.selectConfiguration(args.config); }
+        await player.loadSelectedScenario();
+    }
 }
-createPlayer();
+const args: DaaConfig = parseDaaConfigInBrowser();
+if (args) {
+    console.log(args);
+}
+createPlayer(args);
 

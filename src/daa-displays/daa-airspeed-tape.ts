@@ -665,9 +665,9 @@ export class AirspeedTape {
     }): void {
         opt = opt || {};
         if (info !== null && info !== undefined) {
-            const d: number = (typeof info === "object") ? +info.resolution.val : info;
+            const d: number = (typeof info === "object") ? +info.preferred_resolution.val : info;
             const c: string = opt.resolutionBugColor ? opt.resolutionBugColor
-                                : (typeof info === "object") ? utils.bugColors[`${info.resolution.region}`] : utils.bugColors["UNKNOWN"];
+                                : (typeof info === "object") ? utils.bugColors[`${info.preferred_resolution.region}`] : utils.bugColors["UNKNOWN"];
             this.resolutionBug.setColor(c);
             this.resolutionBug.setValue(d, {
                 wedgeConstraints: opt.wedgeConstraints,

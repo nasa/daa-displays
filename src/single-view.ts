@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
-import { DAAPlayer } from './daa-displays/daa-player';
+import { DaaConfig, parseDaaConfigInBrowser, DAAPlayer } from './daa-displays/daa-player';
 import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
@@ -55,8 +55,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         const bands: ScenarioDataPoint = player.getCurrentBands();
         if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
-        const heading: number = (bands && bands.Ownship && bands.Ownship.acstate.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
-        const airspeed: number = (bands && bands.Ownship && bands.Ownship.acstate.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+        const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+        const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
         const vspeed: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
         const alt: number = +flightData.ownship.s.alt;
 
@@ -78,12 +78,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             // set resolutions
             // show wedge only for recovery bands
             if (compassBands.RECOVERY) {
-                data.compass.setBug(bands["Heading Resolution"], {
+                data.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeConstraints: compassBands.RECOVERY,
                     resolutionBugColor: "green"
                 });
             } else {
-                data.compass.setBug(bands["Heading Resolution"], {
+                data.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeAperture: 0
                 });
             }
@@ -160,12 +160,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         }
         const traffic = flightData.traffic.map((data, index) => {
-            const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
             return {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
-                symbol: daaSymbols[alert]
+                symbol: daaSymbols[alert_level]
             }
         });
         data.map.setTraffic(traffic);
@@ -200,10 +200,10 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
-        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution.val
                                 : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
@@ -273,7 +273,7 @@ player.define("init", async () => {
     viewOptions.applyCurrentViewOptions();
     player.applyCurrentResolutionOptions();
     player.updateMonitors();
-    developerMode();
+    await developerMode();
 });
 async function developerMode (): Promise<void> {
     const configData: ConfigData = await player.loadSelectedConfiguration();
@@ -330,7 +330,7 @@ player.define("plot", () => {
     //     monitorID
     // });
 });
-async function createPlayer() {
+async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "alerts",
         width: 1790,
@@ -432,8 +432,21 @@ async function createPlayer() {
         top: 48,
         left: 754,
         width: 344,
-        hidden: false
+        controls: {
+            showDeveloper: false
+        }
     });
     await player.activate({ developerMode: true });
+
+    // auto-load scenario+config if they are specified in the browser
+    if (args) {
+        if (args.scenario) { player.selectScenario(args.scenario); }
+        if (args.config) { await player.selectConfiguration(args.config); }
+        await player.loadSelectedScenario();
+    }
 }
-createPlayer();
+const args: DaaConfig = parseDaaConfigInBrowser();
+if (args) {
+    console.log(args);
+}
+createPlayer(args);

@@ -84,10 +84,36 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  * REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
  * TERMINATION OF THIS AGREEMENT.
  **/
-import { DAAPlayer, DidSelectConfigurationData, PlayerEvents } from './daa-player';
+import { DAAPlayer, DidSelectConfigurationData, PlayerEvents, safeSelector } from './daa-player';
 import { LLAData } from 'src/daa-server/utils/daa-server';
 import { ScenarioDataPoint } from './utils/daa-server';
-    
+
+export interface SplitConfig {
+    scenario: string,
+    configLeft: string,
+    configRight: string
+}
+/**
+ * Parse arguments indicated in the browser address.
+ * Arguments are a search string indicating scenario + config_left + config_right
+ * e.g., http://localhost:8082/split?H1.daa+2.x/DO_365A_no_SUM.conf+2.x/CD3D.conf
+ */
+export function parseSplitConfigInBrowser (search?: string): SplitConfig {
+    search = search || window?.location?.search || "";
+    const args: string[] = search.split("+");
+    if (args && args.length > 2) {
+        // args[0] is scenario, args[1] is config left, args[2] is config right
+        args[0] = args[0].substring(1); // this is necessary to remove the ? at the beginning of the search string
+        const ans: SplitConfig = {
+            scenario: args[0],
+            configLeft: args[1], 
+            configRight: args[2]
+        };
+        return ans;
+    }
+    return null;
+}
+
 export class DAASplitView extends DAAPlayer {
     private players: { [key: string]: DAAPlayer };
 
@@ -212,6 +238,16 @@ export class DAASplitView extends DAAPlayer {
         }
     }
 
+    // @override
+    refreshBrowserAddress (): void {
+        const scenario: string = this.getSelectedScenario();
+        const leftConfig: string = this.players?.left?.getSelectedConfiguration();
+        const rightConfig: string = this.players?.right?.getSelectedConfiguration();
+        const search: string = `?${scenario}+${leftConfig}+${rightConfig}`;
+        const url: string = window.location.origin + window.location.pathname + search;
+        history.replaceState({}, document.title, url);
+    }
+
     // @overrides
     async selectScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
@@ -332,6 +368,19 @@ export class DAASplitView extends DAAPlayer {
         } else {
             this.clearInterval();
         }
+    }
+
+    // @override
+    selectScenario (scenarioName: string): boolean {
+        const elem: string = `#${this.id}-scenario-${safeSelector(scenarioName)}`;
+        if (elem && elem[0]) {
+            $(elem).prop("selected", true);
+            this._selectedScenario = scenarioName;
+            this.disableSimulationControls();
+            this.revealActivationPanel();
+            return true;
+        }
+        return false;
     }
 
     // @override

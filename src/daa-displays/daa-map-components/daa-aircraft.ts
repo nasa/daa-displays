@@ -681,10 +681,14 @@ export class DAA_Aircraft extends Aircraft {
             });
         }
         if (this.textLayer) {
-            this.renderablePosition.enabled = false;
-            this.textLayer.removeRenderable(this.renderablePosition);
-            this.renderableCallSign.enabled = false;
-            this.textLayer.removeRenderable(this.renderableCallSign);
+            if (this.renderablePosition) {
+                this.renderablePosition.enabled = false;
+                this.textLayer.removeRenderable(this.renderablePosition);
+            }
+            if (this.renderableCallSign) {
+                this.renderableCallSign.enabled = false;
+                this.textLayer.removeRenderable(this.renderableCallSign);
+            }
         }
         return this;
     }

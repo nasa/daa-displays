@@ -58,13 +58,13 @@ import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
 public class DAA2Json {
 
-	// the following frag and offset are introduced to avoid a region 
+	// the following flag and offset are introduced to avoid a region 
 	// in the atlantic ocean where worldwind is unable to render maps at certain zoom levels
 	// (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
 	protected boolean llaFlag = false;
-	protected static final double latOffset = 37.0298687;
-	protected static final double lonOffset = -76.3452218;
-	protected static final double latlonThreshold = 0.3;
+    public static final double latOffset = 37.0298687;
+	public static final double lonOffset = -76.3452218;
+	public static final double latlonThreshold = 0.3;
 
 	protected boolean VERBOSE = true;
 
@@ -115,7 +115,7 @@ public class DAA2Json {
 	}
 
 
-	public String printLLA(TrafficState ownship, TrafficState intruder, double time) {
+	public String printLLA(TrafficState ownship, TrafficState intruder) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
 		Velocity vi = intruder.get_v(); // projected velocity of the intruder
@@ -158,7 +158,7 @@ public class DAA2Json {
 
 		return "{ "
 		+ "\"name\": \"" + intruder.getId() + "\", " 
-		+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
+		    + "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
 		+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
 		+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
 		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
@@ -239,11 +239,11 @@ public class DAA2Json {
 		while (!walker.atEnd()) {
 			double time = walker.getTime();
 			walker.readState(daidalus);
-			steps += "\"" + f.FmPrecision(time, precision16) + "\""; // time at step i
+			steps += "\"" + f.FmPrecision(time, precision16) + "\""; // time at step i in seconds
 			lla += "\t\t\"" + f.FmPrecision(time, precision16) + "\": {\n"; // time at step i
 			// print ownship state
 			TrafficState ownship = daidalus.getOwnshipState();
-			lla += "\t\t\t\"ownship\": " + daa2json.printLLA(ownship, ownship, time) + ",\n";
+			lla += "\t\t\t\"ownship\": " + daa2json.printLLA(ownship, ownship) + ",\n";
 			lla += "\t\t\t\"traffic\": [\n";
 			// print traffic state
 			int nTraffic = 0;
@@ -255,7 +255,7 @@ public class DAA2Json {
 				}
 				if (traffic.getId() != ownship.getId()) {
 					nTraffic++;
-					lla += "\t\t\t\t" + daa2json.printLLA(ownship, traffic, time);
+					lla += "\t\t\t\t" + daa2json.printLLA(ownship, traffic);
 					if (nTraffic < daidalus.lastTrafficIndex()) {
 						lla += ",\n";
 					}

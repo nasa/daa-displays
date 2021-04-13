@@ -42,6 +42,12 @@ import gov.nasa.larcfm.ACCoRD.Daidalus;
 
 public class DAAMonitorsV2 {
 
+	// NB: You need to update the following items when adding new monitors: N_MONITORS, monitorColor, getLegend and getLabel
+	protected static final int N_MONITORS = 4;
+	public static final int GREEN = 0;
+	public static final int YELLOW = 1;
+	public static final int RED = 2;
+
 	protected static int bandsRegionToInt (BandsRegion b) {
 		if (b == BandsRegion.NONE) {
 			return 0;
@@ -61,11 +67,7 @@ public class DAAMonitorsV2 {
 		return -1;
 	}
 
-	public static final int GREEN = 0;
-	public static final int YELLOW = 1;
-	public static final int RED = 2;
-
-	protected Daidalus daa;
+	protected int monitorColor[];
 
 	// preferred resolutions
 	protected double resolutionTrk;
@@ -93,22 +95,43 @@ public class DAAMonitorsV2 {
 	protected BandsRegion currentRegionVs;
 	protected BandsRegion currentRegionAlt;
 
+	protected DAAMonitorsV2 () {
+		monitorColor = new int[]{ -1, -1, -1, -1 };
+		
+		resolutionTrk = Double.NaN;
+		regionTrk = BandsRegion.UNKNOWN;
+		resolutionGs = Double.NaN;
+		regionGs = BandsRegion.UNKNOWN;
+		resolutionVs = Double.NaN;
+		regionVs = BandsRegion.UNKNOWN;
+		resolutionAlt = Double.NaN;
+		regionAlt = BandsRegion.UNKNOWN;
 
-	int getSize() {
+		resolutionTrk_other = Double.NaN;
+		regionTrk_other = BandsRegion.UNKNOWN;
+		resolutionGs_other = Double.NaN;
+		regionGs_other = BandsRegion.UNKNOWN;
+		resolutionVs_other = Double.NaN;
+		regionVs_other = BandsRegion.UNKNOWN;
+		resolutionAlt_other = Double.NaN;
+		regionAlt_other = BandsRegion.UNKNOWN;
+
+		currentRegionTrk = BandsRegion.UNKNOWN;
+		currentRegionGs = BandsRegion.UNKNOWN;
+		currentRegionVs = BandsRegion.UNKNOWN;
+		currentRegionAlt = BandsRegion.UNKNOWN;
+	}
+
+	static int getSize() {
 		return N_MONITORS;
 	}
 
-
-	DAAMonitorsV2 (Daidalus daidalus) {
-		daa = daidalus;
-	}
-
-	void check () {
-		computeResolutions();
-		computeCurrentRegions();
+	void check (Daidalus daa) {
+		computeResolutions(daa);
+		computeCurrentRegions(daa);
 	} 
 
-	protected void computeResolutions () {
+	protected void computeResolutions (Daidalus daa) {
 		boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
 		resolutionTrk = daa.horizontalDirectionResolution(preferredTrk);
 		regionTrk = daa.regionOfHorizontalDirection(resolutionTrk);
@@ -134,7 +157,7 @@ public class DAAMonitorsV2 {
 		regionAlt_other = daa.regionOfAltitude(resolutionAlt_other);
 	}
 
-	protected void computeCurrentRegions () {
+	protected void computeCurrentRegions (Daidalus daa) {
 		double heading = daa.getOwnshipState().horizontalDirection();
 		currentRegionTrk = daa.regionOfHorizontalDirection(heading);
 
@@ -160,13 +183,10 @@ public class DAAMonitorsV2 {
 	String getColor (int monitorID) { // monitor ID starts from 1
 		int index = monitorID - 1;
 		if (index < N_MONITORS) {
-			return DAAMonitorsV2.color2string(monitorColor[index]);
+			return color2string(monitorColor[index]);
 		}
-		return DAAMonitorsV2.color2string(-1);
+		return color2string(-1);
 	}
-
-
-
 
 	/**
 	 * Monitor 1: valid finite resolutions
@@ -183,7 +203,8 @@ public class DAAMonitorsV2 {
 		}
 		return GREEN;
 	}
-	protected String legendM1 () {
+
+	protected static String legendM1 () {
 		String green_desc = "Valid finite resolution.";
 		String yellow_desc = "Property failure: resolution is finite and region is not NONE nor RECOVERY.";
 		String red_desc = "Property failure: resolution is finite and region is UNKNOWN.";
@@ -191,9 +212,11 @@ public class DAAMonitorsV2 {
 		+ "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
 		+ " }";
 	}
-	protected String labelM1 () {
+
+	protected static String labelM1 () {
 		return "M1: Finite resolution ⇒ Region is NONE or RECOVERY";
 	}
+
 	String m1 () {
 		int monitorIndex = 0;
 		int hr = checkM1(resolutionTrk, regionTrk);
@@ -209,13 +232,13 @@ public class DAAMonitorsV2 {
 		int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_other, Math.max(hsr_other, Math.max(vsr_other, ar_other)))))));
 		if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
-		return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
+		return "\"color\": " + "\"" + color2string(max_color) + "\""
 		+ ", \"details\":" 
 		+ " {"
-		+ " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_other)) + "\""
-		+ ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_other)) + "\""
-		+ ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_other)) + "\""
-		+ ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_other)) + "\""
+		+ " \"Heading\": " + "\"" + color2string(Math.max(hr, hr_other)) + "\""
+		+ ", \"Horizontal Speed\": " + "\"" + color2string(Math.max(hsr, hsr_other)) + "\""
+		+ ", \"Vertical Speed\": " + "\"" + color2string(Math.max(vsr, vsr_other)) + "\""
+		+ ", \"Altitude\": " + "\"" + color2string(Math.max(ar, ar_other)) + "\""
 		+ " }";
 	}
 
@@ -232,6 +255,7 @@ public class DAAMonitorsV2 {
 		}
 		return GREEN;
 	}
+
 	protected int checkM2_other (double resolution_, BandsRegion region) {
 		if (region != BandsRegion.RECOVERY) {
 			boolean exists_resolution_not_NaN = !Double.isNaN(resolutionTrk_other) || !Double.isNaN(resolutionGs_other) || !Double.isNaN(resolutionVs_other);// || !Double.isNaN(resolutionAlt_other); M2 does not apply to altitude
@@ -241,16 +265,19 @@ public class DAAMonitorsV2 {
 		}
 		return GREEN;
 	}
-	protected String legendM2 () {
+
+	protected static String legendM2 () {
 		String green_desc = "Consistent resolutions.";
 		String yellow_desc = "Property failure: one resolution is NaN and other resolutions are not NaN and region of current value is not RECOVERY.";
 		return "{ " 
 		+ "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
 		+ " }";
 	}
-	protected String labelM2 () {
+
+	protected static String labelM2 () {
 		return "M2: One resolution is NaN ⇒ All resolutions are NaN";
 	}
+
 	String m2 () {
 		int monitorIndex = 1;
 		int hr = checkM2_preferred(resolutionTrk, currentRegionTrk);
@@ -266,13 +293,13 @@ public class DAAMonitorsV2 {
 		int max_color = Math.max(hr, Math.max(hsr, Math.max(vsr, Math.max(ar, Math.max(hr_other, Math.max(hsr_other, Math.max(vsr_other, ar_other)))))));
 		if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
-		return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
+		return "\"color\": " + "\"" + color2string(max_color) + "\""
 		+ ", \"details\":" 
 		+ " {"
-		+ " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hr, hr_other)) + "\""
-		+ ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(hsr, hsr_other)) + "\""
-		+ ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(Math.max(vsr, vsr_other)) + "\""
-		+ ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(Math.max(ar, ar_other)) + "\""
+		+ " \"Heading\": " + "\"" + color2string(Math.max(hr, hr_other)) + "\""
+		+ ", \"Horizontal Speed\": " + "\"" + color2string(Math.max(hsr, hsr_other)) + "\""
+		+ ", \"Vertical Speed\": " + "\"" + color2string(Math.max(vsr, vsr_other)) + "\""
+		+ ", \"Altitude\": " + "\"" + color2string(Math.max(ar, ar_other)) + "\""
 		+ " }";
 	}
 
@@ -282,7 +309,7 @@ public class DAAMonitorsV2 {
 	 * - Traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN (red monitor)
 	 *   Color order is NONE < FAR < MID < NEAR < RECOVERY. 
 	 */
-	protected int checkM3 (BandsRegion currentRegion) {
+	protected int checkM3 (Daidalus daa, BandsRegion currentRegion) {
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			int alert = daa.alertLevel(ac);
 			int threshold = daa.getCorrectiveRegion().orderOfConflictRegion();
@@ -290,7 +317,7 @@ public class DAAMonitorsV2 {
 				if (currentRegion == BandsRegion.UNKNOWN) {
 					return RED;
 				} else {
-					int level = DAAMonitorsV2.bandsRegionToInt(currentRegion);
+					int level = bandsRegionToInt(currentRegion);
 					if (level < alert) {
 						return YELLOW;
 					}
@@ -299,7 +326,8 @@ public class DAAMonitorsV2 {
 		}
 		return GREEN;
 	}
-	protected String legendM3 () {
+
+	protected static String legendM3 () {
 		String green_desc = "Valid non-zero alerts.";
 		String yellow_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is lower than the traffic alert.";
 		String red_desc = "Property failure: traffic aircraft has a non-zero alert and the region of the current value (heading, speed) is UNKNOWN.";
@@ -307,26 +335,28 @@ public class DAAMonitorsV2 {
 		+ "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\", \"red\": \"" + red_desc + "\""
 		+ " }";
 	}
-	protected String labelM3 () {
+
+	protected static String labelM3 () {
 		return "M3: Band(current value) ≥ Alert(traffic)";
 	}
-	String m3 () {
+
+	String m3 (Daidalus daa) {
 		int monitorIndex = 2;
-		int hb = checkM3(currentRegionTrk);
-		int hsb = checkM3(currentRegionGs);
-		int vsb = checkM3(currentRegionVs);
+		int hb = checkM3(daa,currentRegionTrk);
+		int hsb = checkM3(daa,currentRegionGs);
+		int vsb = checkM3(daa,currentRegionVs);
 		int ab = GREEN;//checkM3(currentRegionAlt); // M2 does not apply to altitude
 
 		int max_color = Math.max(hb, Math.max(hsb, Math.max(vsb, ab)));
 		if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
-		return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
+		return "\"color\": " + "\"" + color2string(max_color) + "\""
 		+ ", \"details\":" 
 		+ " {"
-		+ " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(hb) + "\""
-		+ ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(hsb) + "\""
-		+ ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(vsb) + "\""
-		+ ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(ab) + "\""
+		+ " \"Heading\": " + "\"" + color2string(hb) + "\""
+		+ ", \"Horizontal Speed\": " + "\"" + color2string(hsb) + "\""
+		+ ", \"Vertical Speed\": " + "\"" + color2string(vsb) + "\""
+		+ ", \"Altitude\": " + "\"" + color2string(ab) + "\""
 		+ " }";
 	}
 
@@ -334,7 +364,7 @@ public class DAAMonitorsV2 {
 	 * Monitor 4: NONE and RECOVERY
 	 * NONE and RECOVERY appear in the same list of bands (yellow monitor)
 	 */
-	protected int checkM4Trk () {
+	protected int checkM4Trk (Daidalus daa) {
 		boolean none = false;
 		boolean recovery = false;
 		for (int i = 0; i < daa.horizontalDirectionBandsLength(); i++) {
@@ -347,7 +377,8 @@ public class DAAMonitorsV2 {
 		}
 		return (none && recovery) ? YELLOW : GREEN;
 	}
-	protected int checkM4Hs () {
+
+	protected int checkM4Hs (Daidalus daa) {
 		boolean none = false;
 		boolean recovery = false;
 		for (int i = 0; i < daa.horizontalSpeedBandsLength(); i++) {
@@ -360,7 +391,8 @@ public class DAAMonitorsV2 {
 		}
 		return (none && recovery) ? YELLOW : GREEN;
 	}
-	protected int checkM4Vs () {
+
+	protected int checkM4Vs (Daidalus daa) {
 		boolean none = false;
 		boolean recovery = false;
 		for (int i = 0; i < daa.verticalSpeedBandsLength(); i++) {
@@ -373,7 +405,8 @@ public class DAAMonitorsV2 {
 		}
 		return (none && recovery) ? YELLOW : GREEN;
 	}
-	protected int checkM4Alt () {
+
+	protected int checkM4Alt (Daidalus daa) {
 		boolean none = false;
 		boolean recovery = false;
 		for (int i = 0; i < daa.altitudeBandsLength(); i++) {
@@ -386,40 +419,40 @@ public class DAAMonitorsV2 {
 		}
 		return (none && recovery) ? YELLOW : GREEN;
 	}
-	protected String legendM4 () {
+
+	protected static String legendM4 () {
 		String green_desc = "Valid region colors.";
 		String yellow_desc = "Property failure: NONE and RECOVERY appear in the same list of bands.";
 		return "{ " 
 		+ "\"green\": \"" + green_desc + "\", \"yellow\": \"" + yellow_desc + "\""
 		+ " }";
 	}
-	protected String labelM4 () {
+
+	protected static String labelM4 () {
 		return "M4: It is never the case that NONE and RECOVERY appear in the same list of bands";
 	}
-	String m4 () {
+
+	String m4 (Daidalus daa) {
 		int monitorIndex = 3;
-		int hb = checkM4Trk();
-		int hsb = checkM4Hs();
-		int vsb = checkM4Vs();
-		int ab = checkM4Alt();
+		int hb = checkM4Trk(daa);
+		int hsb = checkM4Hs(daa);
+		int vsb = checkM4Vs(daa);
+		int ab = checkM4Alt(daa);
 
 		int max_color = Math.max(hb, Math.max(hsb, Math.max(vsb, ab)));
 		if (monitorColor[monitorIndex] < max_color) { monitorColor[monitorIndex] = max_color; }
 
-		return "\"color\": " + "\"" + DAAMonitorsV2.color2string(max_color) + "\""
+		return "\"color\": " + "\"" + color2string(max_color) + "\""
 		+ ", \"details\":" 
 		+ " {"
-		+ " \"Heading\": " + "\"" + DAAMonitorsV2.color2string(hb) + "\""
-		+ ", \"Horizontal Speed\": " + "\"" + DAAMonitorsV2.color2string(hsb) + "\""
-		+ ", \"Vertical Speed\": " + "\"" + DAAMonitorsV2.color2string(vsb) + "\""
-		+ ", \"Altitude\": " + "\"" + DAAMonitorsV2.color2string(ab) + "\""
+		+ " \"Heading\": " + "\"" + color2string(hb) + "\""
+		+ ", \"Horizontal Speed\": " + "\"" + color2string(hsb) + "\""
+		+ ", \"Vertical Speed\": " + "\"" + color2string(vsb) + "\""
+		+ ", \"Altitude\": " + "\"" + color2string(ab) + "\""
 		+ " }";
 	}
 
-	// NB: You need to update the following items when adding new monitors: N_MONITORS, monitorColor, getLegend and getLabel
-	protected final int N_MONITORS = 4;
-	protected int monitorColor[] = new int[]{ -1, -1, -1, -1 };
-	String getLegend (int monitorID) {
+	static String getLegend (int monitorID) {
 		if (monitorID <= N_MONITORS && monitorID > 0) {
 			if (monitorID == 1) { return legendM1(); }
 			if (monitorID == 2) { return legendM2(); }
@@ -428,7 +461,8 @@ public class DAAMonitorsV2 {
 		}
 		return "unknown";
 	}
-	String getLabel (int monitorID) {
+
+	static String getLabel (int monitorID) {
 		if (monitorID <= N_MONITORS && monitorID > 0) {
 			if (monitorID == 1) { return labelM1(); }
 			if (monitorID == 2) { return labelM2(); }

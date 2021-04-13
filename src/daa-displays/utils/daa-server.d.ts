@@ -25,6 +25,11 @@ export declare interface LoadScenarioRequest {
     scenarioName: string;
 }
 
+export declare interface SaveScenarioRequest {
+    scenarioName: string,
+    scenarioContent: string
+}
+
 export declare interface LoadConfigRequest {
     config: string;
 }
@@ -121,7 +126,7 @@ export declare interface BandElement {
 
 export declare interface Alert {
     ac: string,
-    alert: string,
+    alert_level: string,
     alerter: string
 }
 
@@ -171,8 +176,8 @@ export declare interface ResolutionElement {
     flags: ResolutionFlags,
     ownship: { val: string, units: string, region: Region },
     recovery: RecoveryElement
-    resolution: { val: string, units: string, region: Region },
-    "resolution-secondary": { val: string, units: string, region: Region }
+    preferred_resolution: { val: string, units: string, region: Region },
+    other_resolution: { val: string, units: string, region: Region }
 }
 
 export declare type Polygon = LatLonAlt[];
@@ -189,8 +194,9 @@ export declare interface GeofenceElement {
 
 export declare interface ValUnits {
     val: string,
-    internal: string,
-    units: string
+    units: string,
+    internal?: string,
+    internal_units?: string
 }
 
 export declare interface Metric {
@@ -251,7 +257,7 @@ export declare interface ScenarioData {
     "Vertical Speed Bands": BandElement[],
     "Altitude Bands": BandElement[],
     "Altitude Resolution": ResolutionElement[],
-    "Heading Resolution": ResolutionElement[],
+    "Horizontal Direction Resolution": ResolutionElement[],
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
     "Contours": GeofenceElement[],
@@ -268,7 +274,7 @@ export declare interface ScenarioDataPoint {
     "Vertical Speed Bands": BandElement,
     "Altitude Bands": BandElement,
     "Altitude Resolution": ResolutionElement,
-    "Heading Resolution": ResolutionElement,
+    "Horizontal Direction Resolution": ResolutionElement,
     "Horizontal Speed Resolution": ResolutionElement,
     "Vertical Speed Resolution": ResolutionElement,
     "Contours": GeofenceElement,

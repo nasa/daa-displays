@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { colors, InteractiveMap } from './daa-displays/daa-interactive-map';
-import { DAAPlayer } from './daa-displays/daa-player';
+import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
@@ -74,12 +74,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         // set resolutions
         // show wedge only for recovery bands
         if (compassBands.RECOVERY) {
-            data.compass.setBug(bands["Heading Resolution"], {
+            data.compass.setBug(bands["Horizontal Direction Resolution"], {
                 wedgeConstraints: compassBands.RECOVERY,
                 resolutionBugColor: "green"
             });
         } else {
-            data.compass.setBug(bands["Heading Resolution"], {
+            data.compass.setBug(bands["Horizontal Direction Resolution"], {
                 wedgeAperture: 0
             });
         }
@@ -156,12 +156,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert]
+            symbol: daaSymbols[alert_level]
         }
     });
     data.map.setTraffic(traffic);
@@ -194,15 +194,15 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
                                 : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                 : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                 : null;
-        const primary: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"].resolution) ? +desc.bands["Heading Resolution"].resolution.val
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].resolution) ? +desc.bands["Horizontal Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].resolution) ? +desc.bands["Vertical Speed Resolution"].resolution.val
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].resolution) ? +desc.bands["Altitude Resolution"].resolution.val
+        const primary: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution.val
                                 : null;
-        // const secondary: number = (daaPlots[i].id === "heading-bands" && desc.bands["Heading Resolution"] && desc.bands["Heading Resolution"]["resolution-secondary"]) ? +desc.bands["Heading Resolution"]["resolution-secondary"].val
-        //                         : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"]["resolution-secondary"]) ? +desc.bands["Horizontal Speed Resolution"]["resolution-secondary"].val
-        //                         : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"]["resolution-secondary"]) ? +desc.bands["Vertical Speed Resolution"]["resolution-secondary"].val
-        //                         : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"]["resolution-secondary"]) ? +desc.bands["Altitude Resolution"]["resolution-secondary"].val
+        // const secondary: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].other_resolution) ? +desc.bands["Horizontal Direction Resolution"].other_resolution.val
+        //                         : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].other_resolution) ? +desc.bands["Horizontal Speed Resolution"].other_resolution.val
+        //                         : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].other_resolution) ? +desc.bands["Vertical Speed Resolution"].other_resolution.val
+        //                         : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].other_resolution) ? +desc.bands["Altitude Resolution"].other_resolution.val
         //                         : null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
@@ -265,7 +265,7 @@ player.define("plot", () => {
         }, step);
     }
 });
-async function createPlayer() {
+async function createPlayer(args: DaaConfig): Promise<void> {
     // player.appendSimulationPlot({
     //     id: "alerts",
     //     width: 1100,
@@ -344,5 +344,16 @@ async function createPlayer() {
         }
     }, { top: -64, left: 752 });
     await player.activate();
+
+    // auto-load scenario+config if they are specified in the browser
+    if (args) {
+        if (args.scenario) { player.selectScenario(args.scenario); }
+        if (args.config) { await player.selectConfiguration(args.config); }
+        await player.loadSelectedScenario();
+    }
 }
-createPlayer();
+const args: DaaConfig = parseDaaConfigInBrowser();
+if (args) {
+    console.log(args);
+}
+createPlayer(args);

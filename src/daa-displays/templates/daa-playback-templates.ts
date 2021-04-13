@@ -160,13 +160,20 @@ export const sidePanelTemplate: string = `
     <nav id="sidebar-panel" class="col-md-2 d-none d-md-block bg-light sidebar">
         <div id="sidebar-resize" style="float:right; width:6px; cursor:col-resize; height:100%; background-color:#272b2f;"></div>
         <div class="sidebar-sticky">
-            <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span><b>Scenarios</b></span> 
-                <button id="{{id}}-refresh-scenarios" class="btn btn-secondary btn-sm" type="button" style="display:none">
-                    <i class="fa fa-refresh" aria-hidden="true"></i>
-                </button>
+            <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted" style="width:90%; transform:scale(1); transform-origin:top left;">
+                <span><b>Scenarios</b></span>
+                <div style="transform:scale(0.7); transform-origin:right; position:absolute; right:-16px; padding-bottom:10px;">
+                    <div class="input-group input-group-sm" style="width:112px;">
+                        <form id="{{id}}-external-scenario-file-form">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="{{id}}-external-scenario-file" accept=".daa,.txt">
+                                <label class="custom-file-label" for="{{id}}-external-scenario-file"><i class="fa fa-upload" aria-hidden="true"></i></label>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </h6>
-            <ul class="zoomable-sidebar nav flex-column mb-2" style="width:90%; margin-left:16px; margin-right:18px;">
+            <ul class="zoomable-sidebar nav flex-column mb-2" style="width:90%; margin-left:16px;">
                 <li class="nav-item" id="{{id}}-scenarios">
                 </li>
             </ul>
@@ -175,7 +182,7 @@ export const sidePanelTemplate: string = `
                 <h6 class="zoomable-sidebar sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                     <span class="sidebar-daidalus-configuration-attributes" style="white-space:nowrap;"><b>Daidalus Parameters</b></span>
                 </h6>
-                <div class="sidebar-daidalus-configuration-attributes zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style=" margin-left:16px; border:1px solid lightgray; border-radius:4px; width:90%;">
+                <div class="sidebar-daidalus-configuration-attributes zoomable-sidebar sidebar-config-optionals nav flex-column mb-2" style="margin-left:16px; border:1px solid lightgray; border-radius:4px; width:90%; overflow:auto;">
                     <div class="nav-item" id="sidebar-daidalus-configuration-attributes">
                     </div>
                 </div>
@@ -249,16 +256,16 @@ export const spectrogramControls: string = `
 </div>`;
 
 export const developersControls: string = `
-<div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px; display:{{display}};">
+<div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px; min-width:{{width}}px; display:{{display}};">
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">
-    <div class="input-group-text" style="width:{{width}}px;">
+    {{#if controls.showDeveloper}}<div class="input-group-text" style="width:{{width}}px;">
       <input id="{{id}}-developer-mode-checkbox" type="checkbox" aria-label="Enable developer mode">
       <span style="margin-left:4px; margin-right:28px;">Developer mode</span>
-    </div>
-    <div class="input-group-text" style="width:{{width}}px;">
+    </div>{{/if}}
+    {{#if controls.showPlot}}<div class="input-group-text" style="width:{{width}}px;">
       <input id="{{id}}-show-plots-checkbox" type="checkbox" checked="true" aria-label="Show plot diagrams">
       <span style="margin-left:4px; margin-right:14px;">Show plot diagrams</span>
-    </div>
+    </div>{{/if}}
   </div>
 </div>`;
 

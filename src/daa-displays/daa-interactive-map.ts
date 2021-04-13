@@ -235,6 +235,10 @@ export class InteractiveMap {
     /**
      * @function <a name="setZoomLevel">setZoomLevel</a>
      * @description Sets the zoom level of the map.
+     * NOTE: nasa-worldwind seems to have rendering problems for areas next to lat lon (0,0) when using high zoom levels
+     * (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
+     * As a workaround, the java code implemented in the server applies a virtual relocation of the scenario 
+     * (see commit https://github.com/nasa/daa-displays/commit/438dc96999bfa4d540edf84a94d8e13b935f088e)
      * @param NMI {real} Zoom level, given in nautical miles. The map is resized so that the diagonal size of the map corresponds to the provided NMI value.
      * @memberof module:InteractiveMap
      * @instance
@@ -454,7 +458,7 @@ export class InteractiveMap {
         }
     ): InteractiveMap {
         opt = opt || {};
-        opt.color = opt.color || colors.lightyellow;
+        opt.color = opt.color || colors.daayellow;
         opt.opacity = opt.opacity || 0.05;
         return this.addGeoFence("pa-" + id, perimeter, floor, opt);
     }

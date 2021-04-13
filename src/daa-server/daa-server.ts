@@ -6,7 +6,7 @@ import * as path from 'path';
 import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
-import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, LLAPosition, DAAScenario, DAADataXYZ, ConfigData, ConfigFile, ScenarioDescriptor } from './utils/daa-server';
+import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, ConfigFile, ScenarioDescriptor, SaveScenarioRequest } from './utils/daa-server';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
@@ -409,6 +409,39 @@ class DAAServer {
                     }
                     break;
                 }
+                case 'save-daa-file': {
+                    const data: SaveScenarioRequest = <SaveScenarioRequest> content.data;
+                    const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
+                    if (scenarioName) {
+                        const fileContent: string = data.scenarioContent;
+                        if (fileContent) {
+                            const outputFolder: string = "../daa-scenarios/";
+                            const fname: string = path.join(outputFolder, scenarioName); 
+                            try {
+                                // write the file in the scenario folder
+                                console.log(`[daa-server] Writing scenario file ${fname}`);
+                                fs.writeFileSync(fname, fileContent);
+                                // try to convert the file, to check if it's a valid daa file
+                                console.log(`[daa-server] Generatig JSON file...`);
+                                try {
+                                    await this.javaProcess.daa2json(scenarioName, `${scenarioName}.json`);
+                                    const jsonDaa: string = path.join(__dirname, outputFolder, `${scenarioName}.json`);
+                                    content.data = await fsUtils.readFile(jsonDaa);
+                                    this.trySend(wsocket, content, `scenario ${scenarioName}`);
+                                    console.log(`[daa-server] Done!`);
+                                } catch (conversionError) {
+                                    console.error(`[daa-server] Error: unable to convert file ${fname}`);
+                                    fs.unlinkSync(fname);
+                                    this.trySend(wsocket, null, `scenario ${scenarioName}`);    
+                                }
+                            } catch (writeError) {
+                                console.error(`[daa-server] Error: unable to write file ${fname}`);
+                                this.trySend(wsocket, null, `scenario ${scenarioName}`);
+                            }
+                        }
+                    }
+                    break;
+                }
                 case 'load-daa-file': {
                     const data: LoadScenarioRequest = <LoadScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
@@ -747,16 +780,28 @@ class DAAServer {
         app.get('/single-view', (req, res) => { // alias for single
             res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
         });
-        app.get('/airspace', (req, res) => {
-            res.sendFile(path.join(daaDisplaysRoot, 'gods.html'));
+        app.get('/top', (req, res) => {
+            res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
+        });
+        app.get('/top-view', (req, res) => { // alias for top
+            res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
         });
         app.get('/3d', (req, res) => {
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
-        app.get('/3D', (req, res) => {
+        app.get('/3d-view', (req, res) => { // alias for 3d
+            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        });
+        app.get('/3D', (req, res) => { // alias for 3d
+            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        });
+        app.get('/3D-view', (req, res) => { // alias for 3d
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
         app.get('/danti', (req, res) => {
+            res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
+        });
+        app.get('/danti-view', (req, res) => { // alias for danti
             res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
         });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');

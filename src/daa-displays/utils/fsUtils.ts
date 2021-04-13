@@ -45,18 +45,18 @@ export async function readDir(pvsContextFolder: string): Promise<string[]> {
 
 export async function readFile(path: string): Promise<string | null> {
 	try {
-		return await fs.readFileSync(path).toString('utf8');
+		return fs.readFileSync(path).toString('utf8');
 	} catch (fileReadError) {
 		console.error(fileReadError);
 	}
 	return null;
 }
 export async function writeFile(path: string, content: string): Promise<void> {
-	return await fs.writeFileSync(path, content);
+	return fs.writeFileSync(path, content);
 }
 
 export async function fileExists(path: string): Promise<boolean> {
-	return await fs.existsSync(path);
+	return fs.existsSync(path);
 }
 
 export function getFilename(fileName: string, opt?: { removeFileExtension?: boolean }): string {

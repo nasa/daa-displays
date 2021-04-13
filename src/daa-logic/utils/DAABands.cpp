@@ -204,11 +204,11 @@ class DAABands {
 			loadWind();
 
 			// ownship
-			std::string time = FmPrecision(daa.getCurrentTime());
+			std::string time = Fm8(daa.getCurrentTime());
 			std::string own = "{ \"time\": " + time; 
-			own += ", \"heading\": { \"val\": \"" + std::to_string(daa.getAircraftState(0).track(hdir_units)) + "\"";
+			own += ", \"heading\": { \"val\": \"" + Fm8(daa.getAircraftState(0).track(hdir_units)) + "\"";
 			own += ", \"units\": \"" + hdir_units + "\" }";
-			own += ", \"airspeed\": { \"val\": \"" + std::to_string(daa.getAircraftState(0).groundSpeed(hs_units)) + "\"";
+			own += ", \"airspeed\": { \"val\": \"" + Fm8(daa.getAircraftState(0).groundSpeed(hs_units)) + "\"";
 			own += ", \"units\": \"" + hs_units + "\" }";
 			own += " }";
 			ownshipArray->push_back(own);
@@ -217,11 +217,11 @@ class DAABands {
 			std::string alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
 			std::string tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) { // aircraft 0 is the ownship
-				int alert = daa.alerting(ac);
+				int alert_level = daa.alerting(ac);
 				std::string ac_name = daa.getAircraftState(ac).getId();
 				if (tmp != "") { tmp += ", "; }
 				tmp += "{ \"ac\": \"" + ac_name;
-				tmp += std::string("\", \"alert\": \"") + std::to_string(alert);
+				tmp += std::string("\", \"alert_level\": \"") + Fmi(alert_level);
 				tmp += "\" }";
 			}
 			alerts += tmp;
@@ -237,7 +237,7 @@ class DAABands {
 			for (int i = 0; i < bands.trackLength(); i++) {
 				trk += "{ \"range\": " + bands.track(i, hdir_units).toString();
 				trk += ", \"units\": \"" + hdir_units + "\"";
-				trk += ", \"alert\": \"" + BandsRegion::to_string(bands.trackRegion(i));
+				trk += ", \"region\": \"" + BandsRegion::to_string(bands.trackRegion(i));
 				trk += "\" }";
 				if (i < bands.trackLength() - 1) { trk += ", "; }
 			}
@@ -249,7 +249,7 @@ class DAABands {
 			for (int i = 0; i < bands.groundSpeedLength(); i++) {
 				gs += "{ \"range\": " + bands.groundSpeed(i, hs_units).toString();
 				gs += ", \"units\": \"" + hs_units + "\"";
-				gs += ", \"alert\": \"" + BandsRegion::to_string(bands.groundSpeedRegion(i));
+				gs += ", \"region\": \"" + BandsRegion::to_string(bands.groundSpeedRegion(i));
 				gs += "\" }";
 				if (i < bands.groundSpeedLength() - 1) { gs += ", "; }
 			}
@@ -261,7 +261,7 @@ class DAABands {
 			for (int i = 0; i < bands.verticalSpeedLength(); i++) {
 				vs += "{ \"range\": " + bands.verticalSpeed(i, vs_units).toString();
 				vs += ", \"units\": \"" + vs_units + "\"";
-				vs += ", \"alert\": \"" + BandsRegion::to_string(bands.verticalSpeedRegion(i));
+				vs += ", \"region\": \"" + BandsRegion::to_string(bands.verticalSpeedRegion(i));
 				vs += "\" }";
 				if (i < bands.verticalSpeedLength() - 1) { vs += ", "; }
 			}
@@ -273,7 +273,7 @@ class DAABands {
 			for (int i = 0; i < bands.altitudeLength(); i++) {
 				alt += "{ \"range\": " + bands.altitude(i, alt_units).toString();
 				alt += ", \"units\": \"" + alt_units + "\"";
-				alt += ", \"alert\": \"" + BandsRegion::to_string(bands.altitudeRegion(i));
+				alt += ", \"region\": \"" + BandsRegion::to_string(bands.altitudeRegion(i));
 				alt += "\" }";
 				if (i < bands.altitudeLength() - 1) { alt += ", "; }
 			}

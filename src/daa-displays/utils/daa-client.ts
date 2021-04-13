@@ -8,6 +8,7 @@ export interface Token {
         [key: string]: any
     }
 }
+
 /**
  * Basic websocket client for interacting with the pvsio-web server
  * TODO: use Backbone to create callbacks instead of forcing an active wait on send
@@ -15,8 +16,9 @@ export interface Token {
  * @date Dec 2018
  */
 export class DAAClient {
-    ws: WebSocket;
-    href: string;
+    protected ws: WebSocket;
+    protected href: string;
+    protected profilingEnabled: boolean = false;
     constructor () {
         this.ws = null;
     }
@@ -53,7 +55,17 @@ export class DAAClient {
             };
         });
     }
-    async send (token: Token): Promise<any> {
+    uuid (format?: string) {
+        let d: number = new Date().getTime();
+        format = format || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+        const uuid = format.replace(/[xy]/g, (c: string) => {
+            const r: number = ((d + Math.random() * 16) % 16) | 0;
+            d = Math.floor(d / 16);
+            return (c === 'x' ? r : (r & 0x7 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+    async send (request: Token): Promise<any> {
         if (this.ws) {
             return new Promise((resolve, reject) => {
                 let desc: ScenarioDescriptor = {
@@ -67,7 +79,7 @@ export class DAAClient {
                     "Vertical Speed Bands": null,
                     "Altitude Bands": null,
                     "Altitude Resolution": null,
-                    "Heading Resolution": null,
+                    "Horizontal Direction Resolution": null,
                     "Horizontal Speed Resolution": null,
                     "Vertical Speed Resolution": null,
                     "Contours": null,
@@ -75,47 +87,54 @@ export class DAAClient {
                     Monitors: null,
                     Metrics: null
                 };
-                this.ws.onmessage = function (evt) {
-                    const token = JSON.parse(evt.data);
-                    if (token && token.time && token.time.client) {
-                        const time = new Date().getTime() - token.time.client.sent;
-                        // console.log("Time to response", time, "ms");
-                        if (token.type.indexOf("_error") >= 0) {
-                            console.error(token); // errors should always be reported in the browser console
-                        }
-                        if (token && token.type === "exec") {
-                            // will receive DaidalusBandsDescriptor components
-                            const data: { key: string, val: any, idx: number, tot: number } = token.data;
-                            desc[data.key] = data.val;
-                            if (data.idx === data.tot - 1) {
-                                token.data = desc;
-                                resolve(token);
+                if (request && request.type) {
+                    request.id = request.id || this.uuid();
+                    if (this.profilingEnabled) {
+                        const time: string = new Date().toISOString();
+                        request.time = { client: { sent: time } };
+                    }
+                    // if (token.data && token.data.command && typeof token.data.command === "string") {
+                    //     // removing white space is useful to reduce the message size (e.g., to prevent stdin buffer overflow)
+                    //     token.data.command = token.data.command.split(",").map((str: string) => {
+                    //         return str.trim();
+                    //     }).join(",");
+                    // }
+                    this.ws.send(JSON.stringify(request));
+                    this.ws.onmessage = (evt): void => {
+                        const response: Token = JSON.parse(evt.data);
+                        if (response) {
+                            if (this.profilingEnabled && response.time?.client) {
+                                const time = new Date().getTime() - +response.time.client.sent;
+                                console.log("Time to response", time, "ms");
+                            }
+                            // sanity check
+                            if (response?.type === request?.type) {
+                                if (response && response.type === "exec") {
+                                    // will receive DaidalusBandsDescriptor components
+                                    const data: { key: string, val: any, idx: number, tot: number } = 
+                                        <{ key: string, val: any, idx: number, tot: number }> response.data;
+                                    desc[data.key] = data.val;
+                                    if (data.idx === data.tot - 1) {
+                                        response.data = desc;
+                                        resolve(response);
+                                    }
+                                } else {
+                                    resolve(response);
+                                }
+                            } else {
+                                console.warn(`[daa-client] Warning: mismatch between response type and request type`, request, response);
                             }
                         } else {
-                            resolve(token);
+                            console.warn("token does not include timestamp from client?", response);
                         }
-                    } else {
-                        console.warn("token does not include timestamp from client?", token);
-                    }
-                };
-                if (token && token.type) {
-                    const time: string = new Date().toISOString(); // TODO: replace with RFC4122 uuid
-                    token.id = token.id || time;
-                    token.time = { client: { sent: time } };
-                    if (token.data && token.data.command && typeof token.data.command === "string") {
-                        // removing white space is useful to reduce the message size (e.g., to prevent stdin buffer overflow)
-                        token.data.command = token.data.command.split(",").map((str: string) => {
-                            return str.trim();
-                        }).join(",");
-                    }
-                    this.ws.send(JSON.stringify(token));
+                    };
                 } else {
-                    console.error("Token type is undefined", token);
+                    console.error("Token type is undefined", request);
                 }    
             });
         }
         console.error("Cannot send, WebSocket closed :/");
-        return Promise.reject();
+        return Promise.resolve(null);
     }
     async startJasmineTestRunner(): Promise<void> {
         if (this.ws) {
