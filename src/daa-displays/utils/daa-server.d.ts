@@ -256,10 +256,10 @@ export declare interface ScenarioData {
     "Horizontal Speed Bands": BandElement[],
     "Vertical Speed Bands": BandElement[],
     "Altitude Bands": BandElement[],
-    "Altitude Resolution": ResolutionElement[],
     "Horizontal Direction Resolution": ResolutionElement[],
     "Horizontal Speed Resolution": ResolutionElement[],
     "Vertical Speed Resolution": ResolutionElement[],
+    "Altitude Resolution": ResolutionElement[],
     "Contours": GeofenceElement[],
     "Hazard Zones": GeofenceElement[],
     Monitors: MonitorElement[],
@@ -273,10 +273,10 @@ export declare interface ScenarioDataPoint {
     "Horizontal Speed Bands": BandElement,
     "Vertical Speed Bands": BandElement,
     "Altitude Bands": BandElement,
-    "Altitude Resolution": ResolutionElement,
     "Horizontal Direction Resolution": ResolutionElement,
     "Horizontal Speed Resolution": ResolutionElement,
     "Vertical Speed Resolution": ResolutionElement,
+    "Altitude Resolution": ResolutionElement,
     "Contours": GeofenceElement,
     "Hazard Zones": GeofenceElement,
     Monitors: MonitorElement[],
@@ -284,8 +284,8 @@ export declare interface ScenarioDataPoint {
 }
 export declare interface ScenarioDescriptor extends ScenarioData {
     Info: {
-        version: string, // well clear version
-        configuration: string // daidalus configuration file used to produce bands data
+        version: string, // DAIDALUS version
+        configuration: string // DAIDALUS configuration file used to produce bands data
     },
     Scenario: string
 }

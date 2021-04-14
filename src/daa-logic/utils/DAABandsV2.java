@@ -343,7 +343,7 @@ public class DAABandsV2 {
 	public String fmt(double val) {
 		return f.FmPrecision(val,precision);
 	}
-	
+
 	public static String getCompatibleInternalUnit(String unit) {
 		String internalunits[]  = {"m", "s", "rad", "m/s", "m/s^2", "rad/s"};
 		for (int i=0; i < 6; ++i) {
@@ -353,16 +353,18 @@ public class DAABandsV2 {
 		}
 		return "";
 	}
-	
+
 	public String jsonValUnits(String label, double val, String units) {
 		String json = "";
 		json += "\""+label+"\": { ";
 		json += "\"val\": \"" + fmt(Units.to(units,val)) + "\"";
 		json += ", \"units\": \"" + units + "\"";
-		json += ", \"internal\": \"" + fmt(val) + "\"";
-		String internalunit = getCompatibleInternalUnit(units);
-		if (!internalunit.isEmpty()) {
- 		  json += ", \"internal_units\": \"" + internalunit + "\"";
+		if (Units.getFactor(units) == 1.0) {
+			json += ", \"internal\": \"" + fmt(val) + "\"";
+			String internalunit = getCompatibleInternalUnit(units);
+			if (!internalunit.isEmpty()) {
+				json += ", \"internal_units\": \"" + internalunit + "\"";
+			}
 		}
 		json += " }";
 		return json;

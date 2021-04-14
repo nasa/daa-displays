@@ -78,6 +78,7 @@ export const encounterDataTemplate = `
 <div style="padding-left:10px;">
     <div>Conflict: {{flags.conflict}} - Recovery: {{flags.recovery}} - Saturated: {{flags.saturated}}</div>
     <div>Ownship Region: {{ownship.region}}</div>
+    <div>Time to Recovery: {{recovery.time}} s</div>
     <div>Recovery N-Factor: {{recovery.nfactor}}</div>
     <div>Horizontal Recovery Separation: {{#if recovery.distance.horizontal}}{{recovery.distance.horizontal.val}} {{recovery.distance.horizontal.units}} {{#if recovery.distance.horizontal.internal}}({{recovery.distance.horizontal.internal}} {{recovery.distance.horizontal.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>
     <div>Vertical Recovery Separation: {{#if recovery.distance.vertical}}{{recovery.distance.vertical.val}} {{recovery.distance.vertical.units}} {{#if recovery.distance.vertical.internal}}({{recovery.distance.vertical.internal}} {{recovery.distance.vertical.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>

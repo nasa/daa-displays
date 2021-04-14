@@ -374,10 +374,12 @@ public:
 		json += "\""+label+"\": { ";
 		json += "\"val\": \"" + fmt(Units::to(units,val)) + "\"";
 		json += ", \"units\": \"" + units + "\"";
-		json += ", \"internal\": \"" + fmt(val) + "\"";
-		std::string internalunit = getCompatibleInternalUnit(units);
-		if (internalunit.empty()) {
-			json += ", \"internal_units\": \"" + internalunit + "\"";
+		if (Units::getFactor(units) == 1.0) {
+			json += ", \"internal\": \"" + fmt(val) + "\"";
+			std::string internalunit = getCompatibleInternalUnit(units);
+			if (internalunit.empty()) {
+				json += ", \"internal_units\": \"" + internalunit + "\"";
+			}
 		}
 		json += " }";
 		return json;
@@ -696,15 +698,15 @@ public:
 
 		// config
 		std::string stats = "\"hs\": { \"min\": " + fmt(daa.getMinHorizontalSpeed(hs_units))
-												+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
-												+ ", \"units\": \"" + hs_units + "\" },\n"
-												+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
-												+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
-												+ ", \"units\": \"" + vs_units + "\" },\n"
-												+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
-												+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
-												+ ", \"units\": \"" + alt_units + "\" },\n"
-												+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
+																				+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
+																				+ ", \"units\": \"" + hs_units + "\" },\n"
+																				+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
+																				+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
+																				+ ", \"units\": \"" + vs_units + "\" },\n"
+																				+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
+																				+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
+																				+ ", \"units\": \"" + alt_units + "\" },\n"
+																				+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
 		return stats;
 	}
 
