@@ -1184,10 +1184,17 @@ export class DAAPlayer extends Backbone.Model {
         // find time in the current scenario
         if (this._scenarios && this._selectedScenario && this._scenarios[this._selectedScenario] && this._scenarios[this._selectedScenario].steps) {
             const steps: string[] = this._scenarios[this._selectedScenario].steps;
-            const candidates: string[] = steps.filter((tm: string) => {
+            // search exact match
+            let candidates: string[] = steps.filter((tm: string) => {
                 return tm === time || +tm === +time;
             });
-            if (candidates && candidates.length === 1) {
+            // if exact match is not available, search best match
+            if (candidates?.length === 0) {
+                candidates = steps.filter((tm: string) => {
+                    return `${tm}`.startsWith(time);
+                });
+            }
+            if (candidates && candidates.length > 0) {
                 const step: number = steps.indexOf(candidates[0]);
                 if (step >= 0) {
                     this.simulationStep = step;
