@@ -29,7 +29,7 @@
 		"@types/jquery": "^3.3.38",
 		"@types/node": "^12.12.2",
 		"@types/ws": "^6.0.1",
-		"electron": "^9.3.1",
+		"electron": "^9.4.0",
 		"jasmine": "^3.4.0",
 		"ts-node": "^8.3.0",
 		"tslint": "^6.1.0",
