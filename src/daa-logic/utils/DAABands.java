@@ -71,6 +71,18 @@ public class DAABands {
 		System.exit(0);
     }
     
+	public static String jsonInt(String label, int val) {
+		String json = "";
+		json += "\""+label+"\": "+f.Fmi(val);
+		return json;
+	}
+	
+	public static String jsonString(String label, String str) {
+		String json = "";
+		json += "\""+label+"\": \""+str+"\"";
+		return json;
+	}
+	
     static String region2str(BandsRegion r) {
 		switch (r) {
 			case NONE: return "0";
@@ -238,14 +250,21 @@ public class DAABands {
 			ownshipArray.add(own);
 
 			String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
-			String tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 				int alert_level = daa.alerting(ac);
 				String ac_name = daa.getAircraftState(ac).getId();
-				if (tmp != "") { tmp += ", "; }
-				tmp += "{ \"ac\": \"" + ac_name + "\", \"alert_level\": \"" + alert_level + "\" }";
+				if (ac > 1) { alerts += ", "; }
+				BandsRegion alert_region = BandsRegion.UNKNOWN;
+				if (alert_level == 0) {
+					alert_region = BandsRegion.NONE;
+				} else {
+					alert_region = daa.parameters.alertor.getLevel(alert_level).getRegion();
+				}
+				alerts += "{ " + jsonString("ac",ac_name) 
+				+ ", " + jsonInt("alert_level",alert_level) 
+				+ ", " + jsonString("alert_region",alert_region.toString())
+				+ "}";
 			}
-			alerts += tmp;
 			alerts += " ]}";
 			alertsArray.add(alerts);
 

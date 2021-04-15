@@ -115,6 +115,18 @@ class DAABands {
 			exit(0);
 		}
 
+		static std::string jsonInt(const std::string& label, int val) {
+			std::string json = "";
+			json += "\""+label+"\": "+Fmi(val);
+			return json;
+		}
+
+		static std::string jsonString(const std::string& label, const std::string& str) {
+			std::string json = "";
+			json += "\""+label+"\": \""+str+"\"";
+			return json;
+		}
+
 		std::string region2str (const BandsRegion::Region& r) const {
 			switch (r) {
 				case BandsRegion::Region::NONE: return "0";
@@ -215,16 +227,21 @@ class DAABands {
 
 			// traffic alerts
 			std::string alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
-			std::string tmp = "";
 			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) { // aircraft 0 is the ownship
 				int alert_level = daa.alerting(ac);
 				std::string ac_name = daa.getAircraftState(ac).getId();
-				if (tmp != "") { tmp += ", "; }
-				tmp += "{ \"ac\": \"" + ac_name;
-				tmp += std::string("\", \"alert_level\": \"") + Fmi(alert_level);
-				tmp += "\" }";
+				if (ac > 1) { alerts += ", "; }
+				BandsRegion::Region alert_region = BandsRegion::UNKNOWN;
+				if (alert_level == 0) {
+					alert_region = BandsRegion::NONE;
+				} else {
+					alert_region = daa.parameters.alertor.getLevel(alert_level).getRegion();
+				}
+				alerts += "{ " + jsonString("ac",ac_name)
+				+ ", " + jsonInt("alert_level",alert_level)
+				+ ", " + jsonString("alert_region",BandsRegion::to_string(alert_region))
+				+ "}";
 			}
-			alerts += tmp;
 			alerts += " ]}";
 			alertsArray->push_back(alerts);
 

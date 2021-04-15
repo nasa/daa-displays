@@ -142,6 +142,18 @@ public class DAABandsV2 {
 		System.exit(0);
 	}
 
+	public static String jsonInt(String label, int val) {
+		String json = "";
+		json += "\""+label+"\": "+f.Fmi(val);
+		return json;
+	}
+	
+	public static String jsonString(String label, String str) {
+		String json = "";
+		json += "\""+label+"\": \""+str+"\"";
+		return json;
+	}
+	
 	/**
 	 * Returns the list of monitors in json format
 	 */
@@ -453,8 +465,12 @@ public class DAABandsV2 {
 			int alert_level = daa.alertLevel(ac);
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 			if (ac > 1) { alerts += ", "; }
-			alerts += "{ \"ac\": \"" + ac_name + "\", \"alert_level\": \"" + f.Fmi(alert_level) + "\", \"alerter\": \"" + 
-					alerter.getId() + "\" }";
+			alerts += "{ " + jsonString("ac",ac_name) 
+					+ ", " + jsonInt("alert_level",alert_level) 
+					+ ", " + jsonString("alert_region",daa.regionOfAlertLevel(alerter_idx,alert_level).toString())
+					+ ", " + jsonString("alerter",alerter.getId())
+					+ ", " + jsonInt("alerter_idx",alerter_idx)
+					+ "}";
 		}
 		alerts += " ]}";
 		alertsArray.add(alerts);

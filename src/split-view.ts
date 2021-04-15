@@ -121,7 +121,7 @@ function render(playerID: string, data: {
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,
@@ -291,7 +291,7 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
         let alertsR: string = "";
         if (bandsRight && bandsRight.Alerts) {
             bandsRight.Alerts?.alerts?.forEach(alert => {
-                if (+alert.alert_level > 0) {
+                if (alert.alert_level > 0) {
                     alertsR += `${alert.ac} [${alert.alert_level}]`;
                 }
             });
@@ -299,7 +299,7 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
         let alertsL: string = "";
         if (bandsLeft && bandsLeft.Alerts) {
             bandsLeft.Alerts?.alerts?.forEach(alert => {
-                if (+alert.alert_level > 0) {
+                if (alert.alert_level > 0) {
                     alertsL += `${alert.ac} [${alert.alert_level}]`; 
                 }
             });

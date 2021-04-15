@@ -62,7 +62,7 @@ public class DAA2Json {
 	// in the atlantic ocean where worldwind is unable to render maps at certain zoom levels
 	// (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
 	protected boolean llaFlag = false;
-    public static final double latOffset = 37.0298687;
+	public static final double latOffset = 37.0298687;
 	public static final double lonOffset = -76.3452218;
 	public static final double latlonThreshold = 0.3;
 
@@ -86,14 +86,14 @@ public class DAA2Json {
 			TrafficState ownship = daidalus.getOwnshipState();
 			if (isBelowLLAThreshold(ownship, ownship)) {
 				llaFlag = true;
-				System.out.println("LLA flag is TRUE");
+				// System.out.println("LLA flag is TRUE");
 				return;
 			}
 			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
 				TrafficState traffic = daidalus.getAircraftStateAt(idx);
 				if (isBelowLLAThreshold(ownship, traffic)) {
 					llaFlag = true;
-					System.out.println("LLA flag is TRUE");
+					// System.out.println("LLA flag is TRUE");
 					return;
 				}
 			}
@@ -158,7 +158,7 @@ public class DAA2Json {
 
 		return "{ "
 		+ "\"name\": \"" + intruder.getId() + "\", " 
-		    + "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
+		+ "\"time\": \"" + f.FmPrecision(time, precision16) + "\", " 
 		+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
 		+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
 		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "

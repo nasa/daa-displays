@@ -57,7 +57,7 @@ function render (data: { map: InteractiveMap }) {
     //     data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
     // }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? +bands.Alerts.alerts[index].alert_level : 0;
+        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
         return {
             callSign: data.id,
             s: data.s,

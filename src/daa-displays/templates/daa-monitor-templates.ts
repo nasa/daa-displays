@@ -100,7 +100,7 @@ export const encounterDataTemplate = `
 	    <div>sx: {{acstate.s.x}} m, sy: {{acstate.s.y}} m,  sz: {{acstate.s.z}} m</div>
         <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
         <div>Altitude: {{printValUnits acstate.altitude}}</div>
-        <div>Alert Level: {{alert.alert_level}} - Alerter: {{alert.alerter}}</div>
+        <div>Alert Level: {{alert.alert_level}} ({{alert.alert_region}}){{#if alert.alerter}} - Alerter: {{alert.alerter}} ({{alert.alerter_idx}}){{/if}}</div>
         <div>{{#if acstate.wind}}Heading: {{printValUnits acstate.heading}} - {{/if}}Track: {{printValUnits acstate.track}}</div>
         <div>{{#if acstate.wind}}Air Speed: {{printValUnits acstate.airspeed}} - {{/if}}Ground Speed: {{printValUnits acstate.groundspeed}}</div>
         <div>Vertical Speed: {{printValUnits acstate.verticalspeed}}</div>

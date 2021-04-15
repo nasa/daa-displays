@@ -127,6 +127,18 @@ public:
 		return ifname;
 	}
 
+	static std::string jsonInt(const std::string& label, int val) {
+		std::string json = "";
+		json += "\""+label+"\": "+Fmi(val);
+		return json;
+	}
+
+	static std::string jsonString(const std::string& label, const std::string& str) {
+		std::string json = "";
+		json += "\""+label+"\": \""+str+"\"";
+		return json;
+	}
+
 	void printHelpMsg() const {
 		std::cout << "Version: DAIDALUS " << getVersion() << std::endl;
 		std::cout << "Generates a file that can be rendered in daa-displays" << std::endl;
@@ -463,8 +475,12 @@ public:
 			int alert_level = daa.alertLevel(ac);
 			std::string ac_name = daa.getAircraftStateAt(ac).getId();
 			if (ac > 1) { alerts += ", "; }
-			alerts += "{ \"ac\": \"" + ac_name + "\", \"alert_level\": \"" + Fmi(alert_level) + "\", \"alerter\": \"" +
-					alerter.getId() + "\" }";
+			alerts += "{ " + jsonString("ac",ac_name)
+							+ ", " + jsonInt("alert_level",alert_level)
+							+ ", " + jsonString("alert_region",BandsRegion::to_string(daa.regionOfAlertLevel(alerter_idx,alert_level)))
+							+ ", " + jsonString("alerter",alerter.getId())
+							+ ", " + jsonInt("alerter_idx",alerter_idx)
+							+ "}";
 		}
 		alerts += " ]}";
 		alertsArray.push_back(alerts);
@@ -694,15 +710,15 @@ public:
 
 		// config
 		std::string stats = "\"hs\": { \"min\": " + fmt(daa.getMinHorizontalSpeed(hs_units))
-																						+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
-																						+ ", \"units\": \"" + hs_units + "\" },\n"
-																						+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
-																						+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
-																						+ ", \"units\": \"" + vs_units + "\" },\n"
-																						+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
-																						+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
-																						+ ", \"units\": \"" + alt_units + "\" },\n"
-																						+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
+																								+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
+																								+ ", \"units\": \"" + hs_units + "\" },\n"
+																								+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
+																								+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
+																								+ ", \"units\": \"" + vs_units + "\" },\n"
+																								+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
+																								+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
+																								+ ", \"units\": \"" + alt_units + "\" },\n"
+																								+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
 		return stats;
 	}
 

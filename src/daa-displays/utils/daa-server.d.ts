@@ -126,8 +126,11 @@ export declare interface BandElement {
 
 export declare interface Alert {
     ac: string,
-    alert_level: string,
-    alerter: string
+    alert_level: number,
+    alert_region: string,
+    // Only in DAIDALUSv2
+    alerter?: string,
+    alerter_idx? : number
 }
 
 export declare interface AlertElement {

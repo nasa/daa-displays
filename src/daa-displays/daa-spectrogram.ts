@@ -323,13 +323,13 @@ export class DAASpectrogram {
                 // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
                 for (let a = 0; a < data.alerts.length; a++) {
                     const elem: Alert = data.alerts[a];
-                    if (elem && +elem.alert_level > 0) {
+                    if (elem && elem.alert_level > 0) {
                         band_plot_data[elem.alert_level] = [];
                         band_plot_data[elem.alert_level].push({
-                            from: +elem.alert_level - 1,
-                            to: +elem.alert_level,
+                            from: elem.alert_level - 1,
+                            to: elem.alert_level,
                             color: utils.alertingColors[elem.alert_level].color,
-                            top: (range.to - +elem.alert_level) * yScaleFactor,
+                            top: (range.to - elem.alert_level) * yScaleFactor,
                             height: yScaleFactor,
                             units: (typeof this.units === "string") ? this.units : this.units.to,
                             indicator: {
@@ -349,9 +349,9 @@ export class DAASpectrogram {
                     time: data.time,
                     bands: band_plot_data,
                     alerts: Object.keys(band_plot_data).length ? (data && data.alerts) ? 
-                        data.alerts.filter((elem: { ac: string; alert_level: string }) => {
-                            return +elem.alert_level > 0;
-                        }).map((elem: { ac: string; alert_level: string }) => {
+                        data.alerts.filter((elem: { ac: string; alert_level: number }) => {
+                            return elem.alert_level > 0;
+                        }).map((elem: { ac: string; alert_level: number }) => {
                             return `${elem.ac} (${alertTypes[elem.alert_level]})`;
                         }).join("\n") : "" : null,
                     top: this.top,
