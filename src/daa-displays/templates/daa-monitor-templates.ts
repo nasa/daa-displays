@@ -80,8 +80,8 @@ export const encounterDataTemplate = `
     <div>Ownship Region: {{ownship.region}}</div>
     {{#if direction}}
     <div>Preferred Direction: {{#if flags.preferred}}{{direction.up}}{{else}}{{direction.down}}{{/if}} ({{flags.preferred}})</div>
-    <div>Preferred Resolution ({{preferred_resolution.region}}): {{preferred_resolution.val}} {{preferred_resolution.units}}</div>
-    <div>Other Resolution ({{other_resolution.region}}): {{other_resolution.val}} {{other_resolution.units}}</div>
+    <div>Preferred Resolution ({{preferred_resolution.region}}): {{printValUnits preferred_resolution.valunit}}</div>
+    <div>Other Resolution ({{other_resolution.region}}): {{printValUnits other_resolution.valunit}}</div>
     {{/if}}
     {{#if recovery}}
     <div>Time to Recovery: {{recovery.time}} s</div>

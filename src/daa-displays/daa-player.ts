@@ -2152,7 +2152,11 @@ export class DAAPlayer extends Backbone.Model {
     protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[], bands: ScenarioDataPoint }): void {
         Handlebars.registerHelper("printValUnits", function(valunits:ValUnits) {
             var html = "";
-            html += valunits.val + " " + valunits.units;
+            html += valunits.val;
+            if (isNaN(+valunits.val)) {
+                return html;
+            } 
+            html += " " + valunits.units;
             if (valunits.internal) {
                 html += " ("+valunits.internal+" "+valunits.internal_units+")";
             }
@@ -2162,7 +2166,7 @@ export class DAAPlayer extends Backbone.Model {
             const mapResolution = (name: string, down: string, up: string) => {
                 return data?.bands ? {
                     ...data.bands[name],
-                    direction: isNaN(data.bands[name]?.preferred_resolution.val) ? undefined : { down, up },
+                    direction: isNaN(data.bands[name]?.preferred_resolution.valunit.val) ? undefined : { down, up },
                     recovery: data.bands[name]?.flags.recovery ? {
                         ...data.bands[name]?.recovery,
                     } : undefined

@@ -381,6 +381,14 @@ public class DAABandsV2 {
 		json += " }";
 		return json;
 	}
+	
+	public String jsonValueRegion(String label, double val, String units, BandsRegion region) {
+		String json = "\""+label+"\": {";
+		json += jsonValUnits("valunit",val,units);
+		json += ", "+jsonString("region",region.toString());
+		json += " }";
+		return json;
+	}
 
 	public String jsonVect3(String label, Vect3 v) {
 		String json = "";
@@ -429,7 +437,7 @@ public class DAABandsV2 {
 		json += " }";
 		return json;
 	}
-
+	
 	public String jsonBands (
 			DAAMonitorsV2 monitors,
 			List<String> ownshipArray, 
@@ -534,23 +542,21 @@ public class DAABandsV2 {
 		// resolutions
 		String trkResolution = "{ \"time\": " + time;
 		boolean preferredTrk = daa.preferredHorizontalDirectionRightOrLeft();
-		double resTrk = daa.horizontalDirectionResolution(preferredTrk, hdir_units);
-		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk, hdir_units);
-		double resTrkInternal = daa.horizontalDirectionResolution(preferredTrk);
-		double resTrkInternal_sec = daa.horizontalDirectionResolution(!preferredTrk);
-		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrkInternal); // we want to use internal units here, to minimize round-off errors
-		BandsRegion resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrkInternal_sec); // we want to use internal units here, to minimize round-off errors
+		double resTrk = daa.horizontalDirectionResolution(preferredTrk);
+		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk);
+		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrk); 
+		BandsRegion resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrk_sec); 
 		TrafficState ownship = daa.getOwnshipState();
 		double currentTrk = ownship.horizontalDirection(hdir_units);
 		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
-		boolean isConflict = !Double.isNaN(resTrkInternal);
+		boolean isConflict = !Double.isNaN(resTrk);
 		RecoveryInformation recoveryInfo = daa.horizontalDirectionRecoveryInformation();
 		boolean isRecovery = recoveryInfo.recoveryBandsComputed();
 		boolean isSaturated = recoveryInfo.recoveryBandsSaturated();
 		String timeToRecovery = fmt(recoveryInfo.timeToRecovery());
 		String nFactor = f.Fmi(recoveryInfo.nFactor());
-		trkResolution += ", \"preferred_resolution\": { \"val\": \"" + fmt(resTrk) + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion + "\" }"; // resolution can be number, NaN or infinity
-		trkResolution += ", \"other_resolution\": { \"val\": \"" + fmt(resTrk_sec) + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + resTrkRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		trkResolution += ", "+jsonValueRegion("preferred_resolution",resTrk,hdir_units,resTrkRegion);
+		trkResolution += ", "+jsonValueRegion("other_resolution",resTrk_sec,hdir_units,resTrkRegion_sec);
 		trkResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredTrk + " }"; 
 		trkResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		trkResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
@@ -561,22 +567,20 @@ public class DAABandsV2 {
 
 		String gsResolution = "{ \"time\": " + time;
 		boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
-		double resGs = daa.horizontalSpeedResolution(preferredGs, hs_units);
-		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs, hs_units);
-		double resGsInternal = daa.horizontalSpeedResolution(preferredGs);
-		double resGsInternal_sec = daa.horizontalSpeedResolution(!preferredGs);
-		BandsRegion resGsRegion = daa.regionOfHorizontalSpeed(resGsInternal); // we want to use internal units here, to minimize round-off errors
-		BandsRegion resGsRegion_sec = daa.regionOfHorizontalSpeed(resGsInternal_sec); // we want to use internal units here, to minimize round-off errors
+		double resGs = daa.horizontalSpeedResolution(preferredGs);
+		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs);
+		BandsRegion resGsRegion = daa.regionOfHorizontalSpeed(resGs); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resGsRegion_sec = daa.regionOfHorizontalSpeed(resGs_sec); // we want to use internal units here, to minimize round-off errors
 		double currentGs = ownship.horizontalSpeed(hs_units);
 		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); // we want to use internal units here, to minimize round-off errors
-		isConflict = !Double.isNaN(resGsInternal);
+		isConflict = !Double.isNaN(resGs);
 		recoveryInfo = daa.horizontalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
 		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
-		gsResolution += ", \"preferred_resolution\": { \"val\": \"" + fmt(resGs) + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion + "\" }"; // resolution can be number, NaN or infinity
-		gsResolution += ", \"other_resolution\": { \"val\": \"" + fmt(resGs_sec) + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + resGsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		gsResolution += ", "+jsonValueRegion("preferred_resolution",resGs,hs_units,resGsRegion);
+		gsResolution += ", "+jsonValueRegion("other_resolution",resGs_sec,hs_units,resGsRegion_sec);
 		gsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredGs + " }"; 
 		gsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		gsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
@@ -587,22 +591,20 @@ public class DAABandsV2 {
 
 		String vsResolution = "{ \"time\": " + time;
 		boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
-		double resVs = daa.verticalSpeedResolution(preferredVs, vs_units);
-		double resVs_sec = daa.verticalSpeedResolution(!preferredVs, vs_units);
-		double resVsInternal = daa.verticalSpeedResolution(preferredVs);
-		double resVsInternal_sec = daa.verticalSpeedResolution(!preferredVs);
-		BandsRegion resVsRegion = daa.regionOfVerticalSpeed(resVsInternal); // we want to use internal units here, to minimize round-off errors
-		BandsRegion resVsRegion_sec = daa.regionOfVerticalSpeed(resVsInternal_sec); // we want to use internal units here, to minimize round-off errors
+		double resVs = daa.verticalSpeedResolution(preferredVs);
+		double resVs_sec = daa.verticalSpeedResolution(!preferredVs);
+		BandsRegion resVsRegion = daa.regionOfVerticalSpeed(resVs); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resVsRegion_sec = daa.regionOfVerticalSpeed(resVs_sec); // we want to use internal units here, to minimize round-off errors
 		double currentVs = ownship.verticalSpeed(vs_units);
 		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); // we want to use internal units here, to minimize round-off errors
-		isConflict = !Double.isNaN(resVsInternal);
+		isConflict = !Double.isNaN(resVs);
 		recoveryInfo = daa.verticalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
 		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
-		vsResolution += ", \"preferred_resolution\": { \"val\": \"" + fmt(resVs) + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion + "\" }"; // resolution can be number, NaN or infinity
-		vsResolution += ", \"other_resolution\": { \"val\": \"" + fmt(resVs_sec) + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + resVsRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		vsResolution += ", "+jsonValueRegion("preferred_resolution",resVs,vs_units,resVsRegion);
+		vsResolution += ", "+jsonValueRegion("other_resolution",resVs_sec,vs_units,resVsRegion_sec);
 		vsResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredVs + " }"; 
 		vsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		vsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
@@ -613,22 +615,20 @@ public class DAABandsV2 {
 
 		String altResolution = "{ \"time\": " + time;
 		boolean preferredAlt = daa.preferredAltitudeUpOrDown();
-		double resAlt = daa.altitudeResolution(preferredAlt, alt_units);
-		double resAlt_sec = daa.altitudeResolution(!preferredAlt, alt_units);
-		double resAltInternal = daa.altitudeResolution(preferredAlt); 
-		double resAltInternal_sec = daa.altitudeResolution(!preferredAlt);
-		BandsRegion resAltRegion = daa.regionOfAltitude(resAltInternal); // we want to use internal units here, to minimize round-off errors
-		BandsRegion resAltRegion_sec = daa.regionOfAltitude(resAltInternal_sec); // we want to use internal units here, to minimize round-off errors
+		double resAlt = daa.altitudeResolution(preferredAlt);
+		double resAlt_sec = daa.altitudeResolution(!preferredAlt);
+		BandsRegion resAltRegion = daa.regionOfAltitude(resAlt); // we want to use internal units here, to minimize round-off errors
+		BandsRegion resAltRegion_sec = daa.regionOfAltitude(resAlt_sec); // we want to use internal units here, to minimize round-off errors
 		double currentAlt = ownship.altitude(alt_units);
 		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); // we want to use internal units here, to minimize round-off errors
-		isConflict = !Double.isNaN(resAltInternal);
+		isConflict = !Double.isNaN(resAlt);
 		recoveryInfo = daa.altitudeRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
 		isSaturated = recoveryInfo.recoveryBandsSaturated();
 		timeToRecovery = fmt(recoveryInfo.timeToRecovery());
 		nFactor = f.Fmi(recoveryInfo.nFactor());
-		altResolution += ", \"preferred_resolution\": { \"val\": \"" + fmt(resAlt) + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion + "\" }"; // resolution can be number, NaN or infinity
-		altResolution += ", \"other_resolution\": { \"val\": \"" + fmt(resAlt_sec) + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + resAltRegion_sec + "\" }"; // resolution can be number, NaN or infinity
+		altResolution += ", "+jsonValueRegion("preferred_resolution",resAlt,alt_units,resAltRegion);
+		altResolution += ", "+jsonValueRegion("other_resolution",resAlt_sec,alt_units,resAltRegion_sec);
 		altResolution += ", \"flags\": { \"conflict\": " + isConflict + ", \"recovery\": " + isRecovery + ", \"saturated\": " + isSaturated + ", \"preferred\": " + preferredAlt + " }"; 
 		altResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		altResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 

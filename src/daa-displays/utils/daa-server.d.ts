@@ -179,8 +179,8 @@ export declare interface ResolutionElement {
     flags: ResolutionFlags,
     ownship: { val: string, units: string, region: Region },
     recovery: RecoveryElement
-    preferred_resolution: { val: string, units: string, region: Region },
-    other_resolution: { val: string, units: string, region: Region }
+    preferred_resolution: { valunit: ValUnits, region: Region },
+    other_resolution: { valunit: ValUnits, region: Region }
 }
 
 export declare type Polygon = LatLonAlt[];
