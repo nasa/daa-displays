@@ -222,7 +222,8 @@ export declare interface AircraftState {
     track: ValUnits,
     airspeed: ValUnits,
     groundspeed: ValUnits,
-    verticalspeed: ValUnits
+    verticalspeed: ValUnits,
+    wind: boolean
 }
 
 export declare interface OwnshipState {

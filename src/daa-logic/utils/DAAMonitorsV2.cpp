@@ -121,19 +121,15 @@ void DAAMonitorsV2::computeResolutions (Daidalus& daa) {
 void DAAMonitorsV2::computeCurrentRegions (Daidalus& daa) {
 	double heading = daa.getOwnshipState().horizontalDirection();
 	currentRegionTrk = daa.regionOfHorizontalDirection(heading);
-	std::cout << "heading: " << heading << " region: " << currentRegionTrk << std::endl;
 
 	double hspeed = daa.getOwnshipState().horizontalSpeed();
 	currentRegionGs = daa.regionOfHorizontalSpeed(hspeed);
-	std::cout << "hspeed: " << hspeed << " region: " << currentRegionGs << std::endl;
 
 	double vspeed = daa.getOwnshipState().verticalSpeed();
 	currentRegionVs = daa.regionOfVerticalSpeed(vspeed);
-	std::cout << "vspeed: " << vspeed << " region: " << currentRegionVs << std::endl;
 
 	double alt = daa.getOwnshipState().altitude();
 	currentRegionAlt = daa.regionOfAltitude(alt);
-	std::cout << "alt: " << alt << " region: " << currentRegionAlt << std::endl;
 }
 
 std::string DAAMonitorsV2::color2string (int color) {
@@ -179,7 +175,6 @@ std::string DAAMonitorsV2::legendM1 () {
  * - If region is not RECOVERY and any resolution is NaN and other resolutions are not NaN (yellow monitor).
  */
 int DAAMonitorsV2::checkM2_preferred (double resolution, BandsRegion::Region region) const {
-	std::cout << resolution << std::endl;
 	if (region != BandsRegion::RECOVERY) {
 		bool exists_resolution_not_NaN = !std::isnan(resolutionTrk) || !std::isnan(resolutionGs) || !std::isnan(resolutionVs);// || !std::isnan(resolutionAlt); M2 does not apply to altitude
 		if (std::isnan(resolution) && exists_resolution_not_NaN) {
@@ -190,7 +185,6 @@ int DAAMonitorsV2::checkM2_preferred (double resolution, BandsRegion::Region reg
 }
 
 int DAAMonitorsV2::checkM2_other (double resolution_, BandsRegion::Region region) const {
-	std::cout << resolution_ << std::endl;
 	if (region != BandsRegion::RECOVERY) {
 		bool exists_resolution_not_NaN = !std::isnan(resolutionTrk_other) || !std::isnan(resolutionGs_other) || !std::isnan(resolutionVs_other);// || !std::isnan(resolutionAlt_other); M2 does not apply to altitude
 		if (std::isnan(resolution_) && exists_resolution_not_NaN) {
@@ -228,7 +222,6 @@ int DAAMonitorsV2::checkM3 (Daidalus& daa, BandsRegion::Region currentRegion) co
 			} else {
 				int level = bandsRegionToInt(currentRegion);
 				if (level < alert) {
-					std::cout << "current region: " << level << " " << currentRegion << " alert: " << alert << std::endl;
 					return YELLOW;
 				}
 			}

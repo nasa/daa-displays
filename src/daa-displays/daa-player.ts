@@ -2151,20 +2151,13 @@ export class DAAPlayer extends Backbone.Model {
      */
     protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[], bands: ScenarioDataPoint }): void {
         if (data) {
-            const mapResolution = (name: string, internalUnits: string) => {
+            const mapResolution = (name: string, down: string, up: string) => {
                 return data?.bands ? {
                     ...data.bands[name],
-                    recovery: {
+                    direction: isNaN(data.bands[name]?.preferred_resolution.val) ? undefined : { down, up },
+                    recovery: data.bands[name]?.flags.recovery ? {
                         ...data.bands[name]?.recovery,
-                        distance: {
-                            horizontal: isNaN(+data.bands[name]?.recovery?.distance?.horizontal?.val) ? 
-                                undefined
-                                    : { ...data.bands[name]?.recovery?.distance?.horizontal, internalUnits },
-                            vertical: isNaN(+data.bands[name]?.recovery?.distance?.vertical?.val) ? 
-                                undefined 
-                                    : { ...data.bands[name]?.recovery?.distance?.vertical, internalUnits }
-                        }
-                    }
+                    } : undefined
                 }: null;
             };
             const theHTML: string = Handlebars.compile(monitorTemplates.encounterDataTemplate)({
@@ -2173,10 +2166,10 @@ export class DAAPlayer extends Backbone.Model {
                 ownship: data?.ownship,
                 traffic: data?.traffic,
                 resolutions: {
-                    "Horizontal Direction Resolution": mapResolution("Horizontal Direction Resolution", "rad"),
-                    "Horizontal Speed Resolution": mapResolution("Horizontal Speed Resolution", "m/s"),
-                    "Vertical Speed Resolution": mapResolution("Vertical Speed Resolution", "m/s"),
-                    "Altitude Resolution": mapResolution("Altitude Resolution", "m")
+                    "Horizontal Direction Resolution": mapResolution("Horizontal Direction Resolution", "Left", "Right"),
+                    "Horizontal Speed Resolution": mapResolution("Horizontal Speed Resolution", "Down", "Up"),
+                    "Vertical Speed Resolution": mapResolution("Vertical Speed Resolution", "Down", "Up"),
+                    "Altitude Resolution": mapResolution("Altitude Resolution", "Down", "Up")
                 }
             });
             $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);

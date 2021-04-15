@@ -223,7 +223,6 @@ public:
 
 	bool loadWind () {
 		if (!wind.empty()) {
-			// std::cout << "Loading wind " << wind << std::endl;
 			double deg = 0;
 			double knot = 0;
 			double fpm = 0;
@@ -231,18 +230,14 @@ public:
 			std::smatch match_deg;
 			std::regex_match(wind, match_deg, re_deg);
 			if (match_deg.size() == 2) {
-				// std::cout << "match size: " << match_deg.size() << std::endl;
 				deg = std::stod(match_deg[1].str());
-				// std::cout << deg << std::endl;
 			}
 
 			const std::regex re_knot(".*\\bknot\\s*:\\s*(.*)");
 			std::smatch match_knot;
 			std::regex_match(wind, match_knot, re_knot);
 			if (match_knot.size() == 2) {
-				// std::cout << "match size: " << match_knot.size() << std::endl;
 				knot = std::stod(match_knot[1].str());
-				// std::cout << knot << std::endl;
 			}
 			Velocity windVelocity = Velocity::makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
 			daa.setWindVelocityFrom(windVelocity);
@@ -374,7 +369,7 @@ public:
 		json += "\""+label+"\": { ";
 		json += "\"val\": \"" + fmt(Units::to(units,val)) + "\"";
 		json += ", \"units\": \"" + units + "\"";
-		if (Units::getFactor(units) == 1.0) {
+		if (Units::getFactor(units) != 1.0) {
 			json += ", \"internal\": \"" + fmt(val) + "\"";
 			std::string internalunit = getCompatibleInternalUnit(units);
 			if (internalunit.empty()) {
@@ -395,7 +390,7 @@ public:
 		return json;
 	}
 
-	std::string jsonAircraftState(const TrafficState& ac) const {
+	std::string jsonAircraftState(const TrafficState& ac, bool wind) const {
 		Velocity av = ac.getAirVelocity();
 		Velocity gv = ac.getGroundVelocity();
 		std::string json = "{ ";
@@ -403,11 +398,12 @@ public:
 		json += ", "+jsonVect3("s",ac.get_s());
 		json += ", "+jsonVect3("v",ac.get_v());
 		json += ", "+jsonValUnits("altitude",ac.altitude(),alt_units);
-		json += ", "+jsonValUnits("heading",av.compassAngle(),hdir_units);
 		json += ", "+jsonValUnits("track",gv.compassAngle(),hdir_units);
-		json += ", "+jsonValUnits("airspeed",av.gs(),hs_units);
+		json += ", "+jsonValUnits("heading",av.compassAngle(),hdir_units);
 		json += ", "+jsonValUnits("groundspeed",gv.gs(),hs_units);
+		json += ", "+jsonValUnits("airspeed",av.gs(),hs_units);
 		json += ", "+jsonValUnits("verticalspeed",ac.verticalSpeed(),vs_units);
+		json += ", \"wind\": "+Fmb(wind);
 		json += " }";
 		return json;
 	}
@@ -455,7 +451,7 @@ public:
 		// ownship
 		std::string time = fmt(daa.getCurrentTime());
 		std::string own = "{ \"time\": " + time;
-		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState());
+		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState(), !daa.getWindVelocityTo().isZero());
 		own += " }";
 		ownshipArray.push_back(own);
 
@@ -477,7 +473,7 @@ public:
 		std::string traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			if (ac > 1) { traffic += ", "; }
-			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac));
+			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac), !daa.getWindVelocityTo().isZero());
 			traffic += ", \"metrics\": " + jsonAircraftMetrics(ac);
 			traffic += " }";
 		}
@@ -698,15 +694,15 @@ public:
 
 		// config
 		std::string stats = "\"hs\": { \"min\": " + fmt(daa.getMinHorizontalSpeed(hs_units))
-																				+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
-																				+ ", \"units\": \"" + hs_units + "\" },\n"
-																				+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
-																				+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
-																				+ ", \"units\": \"" + vs_units + "\" },\n"
-																				+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
-																				+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
-																				+ ", \"units\": \"" + alt_units + "\" },\n"
-																				+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
+																						+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
+																						+ ", \"units\": \"" + hs_units + "\" },\n"
+																						+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
+																						+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
+																						+ ", \"units\": \"" + vs_units + "\" },\n"
+																						+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
+																						+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
+																						+ ", \"units\": \"" + alt_units + "\" },\n"
+																						+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
 		return stats;
 	}
 

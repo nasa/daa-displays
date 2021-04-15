@@ -67,8 +67,8 @@ export const encounterDataTemplate = `
     <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
     <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
     <div>Altitude: {{ownship.acstate.altitude.val}} {{ownship.acstate.altitude.units}} {{#if ownship.acstate.altitude.internal}}({{ownship.acstate.altitude.internal}} {{ownship.acstate.altitude.internal_units}}){{/if}}</div>
-    <div>Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
-    <div>Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} {{#if ownship.acstate.airspeed.internal}}({{ownship.acstate.airspeed.internal}} {{ownship.acstate.airspeed.internal_units}}){{/if}} - Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} {{#if ownship.acstate.groundspeed.internal}}({{ownship.acstate.groundspeed.internal}} {{ownship.acstate.groundspeed.internal_units}}){{/if}}</div>
+    <div>{{#if ownship.acstate.wind}}Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - {{/if}}Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
+    <div>{{#if ownship.acstate.wind}}Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} {{#if ownship.acstate.airspeed.internal}}({{ownship.acstate.airspeed.internal}} {{ownship.acstate.airspeed.internal_units}}){{/if}} - {{/if}}Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} {{#if ownship.acstate.groundspeed.internal}}({{ownship.acstate.groundspeed.internal}} {{ownship.acstate.groundspeed.internal_units}}){{/if}}</div>
     <div>Vertical Speed: {{ownship.acstate.verticalspeed.val}} {{ownship.acstate.verticalspeed.units}} {{#if ownship.acstate.verticalspeed.internal}}({{ownship.acstate.verticalspeed.internal}} {{ownship.acstate.verticalspeed.internal_units}}){{/if}}</div>
 </div>
 {{/if}}
@@ -78,13 +78,17 @@ export const encounterDataTemplate = `
 <div style="padding-left:10px;">
     <div>Conflict: {{flags.conflict}} - Recovery: {{flags.recovery}} - Saturated: {{flags.saturated}}</div>
     <div>Ownship Region: {{ownship.region}}</div>
-    <div>Time to Recovery: {{recovery.time}} s</div>
-    <div>Recovery N-Factor: {{recovery.nfactor}}</div>
-    <div>Horizontal Recovery Separation: {{#if recovery.distance.horizontal}}{{recovery.distance.horizontal.val}} {{recovery.distance.horizontal.units}} {{#if recovery.distance.horizontal.internal}}({{recovery.distance.horizontal.internal}} {{recovery.distance.horizontal.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>
-    <div>Vertical Recovery Separation: {{#if recovery.distance.vertical}}{{recovery.distance.vertical.val}} {{recovery.distance.vertical.units}} {{#if recovery.distance.vertical.internal}}({{recovery.distance.vertical.internal}} {{recovery.distance.vertical.internal_units}}){{/if}}{{else}}N/A{{/if}}</div>
-    <div>Preferred Direction: {{flags.preferred}}</div>
+    {{#if direction}}
+    <div>Preferred Direction: {{#if flags.preferred}}{{direction.up}}{{else}}{{direction.down}}{{/if}} ({{flags.preferred}})</div>
     <div>Preferred Resolution ({{preferred_resolution.region}}): {{preferred_resolution.val}} {{preferred_resolution.units}}</div>
     <div>Other Resolution ({{other_resolution.region}}): {{other_resolution.val}} {{other_resolution.units}}</div>
+    {{/if}}
+    {{#if recovery}}
+    <div>Time to Recovery: {{recovery.time}} s</div>
+    <div>Recovery N-Factor: {{recovery.nfactor}}</div>
+    <div>Horizontal Recovery Separation: {{recovery.distance.horizontal.val}} {{recovery.distance.horizontal.units}} {{#if recovery.distance.horizontal.internal}}({{recovery.distance.horizontal.internal}} {{recovery.distance.horizontal.internal_units}}){{/if}}</div>
+    <div>Vertical Recovery Separation: {{recovery.distance.vertical.val}} {{recovery.distance.vertical.units}} {{#if recovery.distance.vertical.internal}}({{recovery.distance.vertical.internal}} {{recovery.distance.vertical.internal_units}}){{/if}}</div>
+    {{/if}}
 </div>
 {{/each}}
 <!-- traffic -->
@@ -96,8 +100,8 @@ export const encounterDataTemplate = `
 	    <div>sx: {{acstate.s.x}} m, sy: {{acstate.s.y}} m,  sz: {{acstate.s.z}} m</div>
         <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
         <div>Altitude: {{acstate.altitude.val}} {{acstate.altitude.units}} ({{acstate.altitude.val}} m)</div>
-        <div>Heading: {{acstate.heading.val}} {{acstate.heading.units}} - Track: {{acstate.track.val}} {{acstate.track.units}}</div>
-        <div>Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} {{#if acstate.airspeed.internal}}({{acstate.airspeed.internal}} m/s){{/if}} - Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} {{#if acstate.groundspeed.internal}}({{acstate.groundspeed.internal}} m/s){{/if}}</div>
+        <div>{{#if acstate.wind}}Heading: {{acstate.heading.val}} {{acstate.heading.units}} - {{/if}}Track: {{acstate.track.val}} {{acstate.track.units}}</div>
+        <div>{{#if acstate.wind}}Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} {{#if acstate.airspeed.internal}}({{acstate.airspeed.internal}} m/s){{/if}} - {{/if}}Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} {{#if acstate.groundspeed.internal}}({{acstate.groundspeed.internal}} {{acstate.groundspeed.internal_units}}){{/if}}</div>
         <div>Alert Level: {{alert.alert_level}} - Alerter: {{alert.alerter}}</div>
         <div>Vertical Speed: {{acstate.verticalspeed.val}} {{acstate.verticalspeed.units}} {{#if acstate.verticalspeed.internal}}({{acstate.verticalspeed.internal}} m/s){{/if}}</div>
         <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} {{#if metrics.separation.horizontal.internal}}({{metrics.separation.horizontal.internal}} m){{/if}}</div>

@@ -359,7 +359,7 @@ public class DAABandsV2 {
 		json += "\""+label+"\": { ";
 		json += "\"val\": \"" + fmt(Units.to(units,val)) + "\"";
 		json += ", \"units\": \"" + units + "\"";
-		if (Units.getFactor(units) == 1.0) {
+		if (Units.getFactor(units) != 1.0) {
 			json += ", \"internal\": \"" + fmt(val) + "\"";
 			String internalunit = getCompatibleInternalUnit(units);
 			if (!internalunit.isEmpty()) {
@@ -380,7 +380,7 @@ public class DAABandsV2 {
 		return json;
 	}
 
-	public String jsonAircraftState(TrafficState ac) {
+	public String jsonAircraftState(TrafficState ac, boolean wind) {
 		Velocity av = ac.getAirVelocity();
 		Velocity gv = ac.getGroundVelocity();
 		String json = "{ ";
@@ -388,11 +388,12 @@ public class DAABandsV2 {
 		json += ", "+jsonVect3("s",ac.get_s());
 		json += ", "+jsonVect3("v",ac.get_v());
 		json += ", "+jsonValUnits("altitude",ac.altitude(),alt_units);
-		json += ", "+jsonValUnits("heading",av.compassAngle(),hdir_units);
 		json += ", "+jsonValUnits("track",gv.compassAngle(),hdir_units);
-		json += ", "+jsonValUnits("airspeed",av.gs(),hs_units);
+		json += ", "+jsonValUnits("heading",av.compassAngle(),hdir_units);
 		json += ", "+jsonValUnits("groundspeed",gv.gs(),hs_units);
+		json += ", "+jsonValUnits("airspeed",av.gs(),hs_units);
 		json += ", "+jsonValUnits("verticalspeed",ac.verticalSpeed(),vs_units);
+		json += ", \"wind\": "+wind;
 		json += " }";
 		return json;
 	}
@@ -440,7 +441,7 @@ public class DAABandsV2 {
 		// ownship
 		String time = fmt(daa.getCurrentTime());
 		String own = "{ \"time\": " + time; 
-		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState());
+		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState(), !daa.getWindVelocityTo().isZero());
 		own += " }";
 		ownshipArray.add(own);
 
@@ -462,7 +463,7 @@ public class DAABandsV2 {
 		String traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			if (ac > 1) { traffic += ", "; }
-			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac));
+			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac), !daa.getWindVelocityTo().isZero());
 			traffic += ", \"metrics\": " + jsonAircraftMetrics(ac);
 			traffic += " }";
 		}
