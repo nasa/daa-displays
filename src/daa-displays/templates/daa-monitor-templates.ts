@@ -66,10 +66,10 @@ export const encounterDataTemplate = `
     <div>Identifier: {{ownship.acstate.id}}</div>
     <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
     <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
-    <div>Altitude: {{ownship.acstate.altitude.val}} {{ownship.acstate.altitude.units}} {{#if ownship.acstate.altitude.internal}}({{ownship.acstate.altitude.internal}} {{ownship.acstate.altitude.internal_units}}){{/if}}</div>
-    <div>{{#if ownship.acstate.wind}}Heading: {{ownship.acstate.heading.val}} {{ownship.acstate.heading.units}} - {{/if}}Track: {{ownship.acstate.track.val}} {{ownship.acstate.track.units}}</div>
-    <div>{{#if ownship.acstate.wind}}Air Speed: {{ownship.acstate.airspeed.val}} {{ownship.acstate.airspeed.units}} {{#if ownship.acstate.airspeed.internal}}({{ownship.acstate.airspeed.internal}} {{ownship.acstate.airspeed.internal_units}}){{/if}} - {{/if}}Ground Speed: {{ownship.acstate.groundspeed.val}} {{ownship.acstate.groundspeed.units}} {{#if ownship.acstate.groundspeed.internal}}({{ownship.acstate.groundspeed.internal}} {{ownship.acstate.groundspeed.internal_units}}){{/if}}</div>
-    <div>Vertical Speed: {{ownship.acstate.verticalspeed.val}} {{ownship.acstate.verticalspeed.units}} {{#if ownship.acstate.verticalspeed.internal}}({{ownship.acstate.verticalspeed.internal}} {{ownship.acstate.verticalspeed.internal_units}}){{/if}}</div>
+    <div>Altitude: {{printValUnits ownship.acstate.altitude}}</div> 
+    <div>{{#if ownship.acstate.wind}}Heading: {{printValUnits ownship.acstate.heading}} - {{/if}}Track: {{printValUnits ownship.acstate.track}}</div>
+    <div>{{#if ownship.acstate.wind}}Air Speed: {{printValUnits ownship.acstate.airspeed}} - {{/if}}Ground Speed: {{printValUnits ownship.acstate.groundspeed}}</div>
+    <div>Vertical Speed: {{printValUnits ownship.acstate.verticalspeed}}</div>
 </div>
 {{/if}}
 <!-- Resolutions -->
@@ -86,8 +86,8 @@ export const encounterDataTemplate = `
     {{#if recovery}}
     <div>Time to Recovery: {{recovery.time}} s</div>
     <div>Recovery N-Factor: {{recovery.nfactor}}</div>
-    <div>Horizontal Recovery Separation: {{recovery.distance.horizontal.val}} {{recovery.distance.horizontal.units}} {{#if recovery.distance.horizontal.internal}}({{recovery.distance.horizontal.internal}} {{recovery.distance.horizontal.internal_units}}){{/if}}</div>
-    <div>Vertical Recovery Separation: {{recovery.distance.vertical.val}} {{recovery.distance.vertical.units}} {{#if recovery.distance.vertical.internal}}({{recovery.distance.vertical.internal}} {{recovery.distance.vertical.internal_units}}){{/if}}</div>
+    <div>Horizontal Recovery Separation: {{printValUnits recovery.distance.horizontal}}</div>
+    <div>Vertical Recovery Separation: {{printValUnits recovery.distance.vertical}}</div>
     {{/if}}
 </div>
 {{/each}}
@@ -99,20 +99,20 @@ export const encounterDataTemplate = `
         <div>Identifier: {{acstate.id}}</div>
 	    <div>sx: {{acstate.s.x}} m, sy: {{acstate.s.y}} m,  sz: {{acstate.s.z}} m</div>
         <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
-        <div>Altitude: {{acstate.altitude.val}} {{acstate.altitude.units}} ({{acstate.altitude.val}} m)</div>
-        <div>{{#if acstate.wind}}Heading: {{acstate.heading.val}} {{acstate.heading.units}} - {{/if}}Track: {{acstate.track.val}} {{acstate.track.units}}</div>
-        <div>{{#if acstate.wind}}Air Speed: {{acstate.airspeed.val}} {{acstate.airspeed.units}} {{#if acstate.airspeed.internal}}({{acstate.airspeed.internal}} m/s){{/if}} - {{/if}}Ground Speed: {{acstate.groundspeed.val}} {{acstate.groundspeed.units}} {{#if acstate.groundspeed.internal}}({{acstate.groundspeed.internal}} {{acstate.groundspeed.internal_units}}){{/if}}</div>
+        <div>Altitude: {{printValUnits acstate.altitude}}</div>
         <div>Alert Level: {{alert.alert_level}} - Alerter: {{alert.alerter}}</div>
-        <div>Vertical Speed: {{acstate.verticalspeed.val}} {{acstate.verticalspeed.units}} {{#if acstate.verticalspeed.internal}}({{acstate.verticalspeed.internal}} m/s){{/if}}</div>
-        <div>Horizontal Separation: {{metrics.separation.horizontal.val}} {{metrics.separation.horizontal.units}} {{#if metrics.separation.horizontal.internal}}({{metrics.separation.horizontal.internal}} m){{/if}}</div>
-        <div>Vertical Separation: {{metrics.separation.vertical.val}} {{metrics.separation.vertical.units}} {{#if metrics.separation.vertical.internal}}({{metrics.separation.vertical.internal}} m){{/if}}</div>
-        <div>Horizontal Closure Rate: {{metrics.closurerate.horizontal.val}} {{metrics.closurerate.horizontal.units}} {{#if metrics.closurerate.horizontal.internal}}({{metrics.closurerate.horizontal.internal}} m/s){{/if}}</div>
-        <div>Vertical Closure Rate: {{metrics.closurerate.vertical.val}} {{metrics.closurerate.vertical.units}} {{#if metrics.closurerate.vertical.internal}}({{metrics.closurerate.vertical.internal}} m/s){{/if}}</div>
-        <div>Horizontal Miss Distance: {{metrics.missdistance.horizontal.val}} {{metrics.missdistance.horizontal.units}} {{#if metrics.missdistance.horizontal.internal}}({{metrics.missdistance.horizontal.internal}} m/s){{/if}}</div>
-        <div>Vertical Miss Distance: {{metrics.missdistance.vertical.val}} {{metrics.missdistance.vertical.units}} {{#if metrics.missdistance.vertical.internal}}({{metrics.missdistance.vertical.internal}} m/s){{/if}}</div>
-        <div>Time to Horizontal Closest Point of Approach: {{metrics.tcpa.val}} {{metrics.tcpa.units}}</div>
-        <div>Time to Co-Altitude: {{metrics.tcoa.val}} {{metrics.tcoa.units}}</div>
-        <div>Modified Tau: {{metrics.taumod.val}} {{metrics.taumod.units}}</div>
+        <div>{{#if acstate.wind}}Heading: {{printValUnits acstate.heading}} - {{/if}}Track: {{printValUnits acstate.track}}</div>
+        <div>{{#if acstate.wind}}Air Speed: {{printValUnits acstate.airspeed}} - {{/if}}Ground Speed: {{printValUnits acstate.groundspeed}}</div>
+        <div>Vertical Speed: {{printValUnits acstate.verticalspeed}}</div>
+        <div>Horizontal Separation: {{printValUnits metrics.separation.horizontal}}</div>
+        <div>Vertical Separation: {{printValUnits metrics.separation.vertical}}</div>
+        <div>Horizontal Closure Rate: {{printValUnits metrics.closurerate.horizontal}}</div>
+        <div>Vertical Closure Rate: {{printValUnits metrics.closurerate.vertical}}</div>
+        <div>Horizontal Miss Distance: {{printValUnits metrics.missdistance.horizontal}}</div>
+        <div>Vertical Miss Distance: {{printValUnits metrics.missdistance.vertical}}</div>
+        <div>Time to Horizontal Closest Point of Approach: {{printValUnits metrics.tcpa}}</div>
+        <div>Time to Co-Altitude: {{printValUnits metrics.tcoa}}</div>
+        <div>Modified Tau: {{printValUnits metrics.taumod}}</div>
     </div>
 {{/each}}
 {{/if}}

@@ -95,7 +95,7 @@ import { DAALosRegion } from '../daa-server/utils/daa-server';
 import { DAASpectrogram } from './daa-spectrogram';
 import { DAAClient } from './utils/daa-client';
 import { ExecMsg, LLAData, ScenarioDescriptor } from '../daa-server/utils/daa-server';
-import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DAALosDescriptor, ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState, SaveScenarioRequest, LLAPosition } from './utils/daa-server';
+import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, DAALosDescriptor, ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, ScenarioDataPoint, OwnshipState, SaveScenarioRequest, LLAPosition, ValUnits } from './utils/daa-server';
 
 import * as Backbone from 'backbone';
 
@@ -2150,7 +2150,15 @@ export class DAAPlayer extends Backbone.Model {
      * This function is to be used with DAIDALUS 2.x
      */
     protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[], bands: ScenarioDataPoint }): void {
-        if (data) {
+        Handlebars.registerHelper("printValUnits", function(valunits:ValUnits) {
+            var html = "";
+            html += valunits.val + " " + valunits.units;
+            if (valunits.internal) {
+                html += " ("+valunits.internal+" "+valunits.internal_units+")";
+            }
+            return html;
+          });
+          if (data) {
             const mapResolution = (name: string, down: string, up: string) => {
                 return data?.bands ? {
                     ...data.bands[name],
