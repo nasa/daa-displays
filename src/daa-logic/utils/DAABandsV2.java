@@ -147,13 +147,13 @@ public class DAABandsV2 {
 		json += "\""+label+"\": "+f.Fmi(val);
 		return json;
 	}
-	
+
 	public static String jsonString(String label, String str) {
 		String json = "";
 		json += "\""+label+"\": \""+str+"\"";
 		return json;
 	}
-	
+
 	/**
 	 * Returns the list of monitors in json format
 	 */
@@ -253,7 +253,7 @@ public class DAABandsV2 {
 
 	public String jsonHeader () {
 		String json = "";
-		json += "\"Info\": { \"version\": \"" + getVersion() + "\""; 
+		json += "\"Info\": { \"language\": \"Java\", \"version\": \"" + getVersion() + "\""; 
 		json +=	", \"configuration\": \"" + getConfig()+ "\" },\n";
 		json += "\"Scenario\": \"" + scenario + "\",\n";
 		Velocity wind = daa.getWindVelocityFrom();
@@ -381,7 +381,7 @@ public class DAABandsV2 {
 		json += " }";
 		return json;
 	}
-	
+
 	public String jsonValueRegion(String label, double val, String units, BandsRegion region) {
 		String json = "\""+label+"\": {";
 		json += jsonValUnits("valunit",val,units);
@@ -437,7 +437,7 @@ public class DAABandsV2 {
 		json += " }";
 		return json;
 	}
-	
+
 	public String jsonBands (
 			DAAMonitorsV2 monitors,
 			List<String> ownshipArray, 
@@ -459,9 +459,18 @@ public class DAABandsV2 {
 			List<String> monitorM4Array) {
 
 		// ownship
+		TrafficState ownship = daa.getOwnshipState();
 		String time = fmt(daa.getCurrentTime());
 		String own = "{ \"time\": " + time; 
 		own += ", \"acstate\": " + jsonAircraftState(daa.getOwnshipState(), !daa.getWindVelocityTo().isZero());
+		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); 
+		own += ", "+jsonString("trk_region",currentTrkRegion.toString());
+		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); 
+		own += ", "+jsonString("gs_region",currentGsRegion.toString());
+		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); 
+		own += ", "+jsonString("vs_region",currentVsRegion.toString());
+		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); 
+		own += ", "+jsonString("alt_region",currentAltRegion.toString());
 		own += " }";
 		ownshipArray.add(own);
 
@@ -471,14 +480,20 @@ public class DAABandsV2 {
 			int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac);
 			Alerter alerter = daa.getAlerterAt(alerter_idx);
 			int alert_level = daa.alertLevel(ac);
+			BandsRegion alert_region = BandsRegion.UNKNOWN;
+			if (alert_level == 0) {
+				alert_region = BandsRegion.NONE;
+			} else {
+				alert_region = daa.regionOfAlertLevel(alerter_idx,alert_level);
+			}
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 			if (ac > 1) { alerts += ", "; }
 			alerts += "{ " + jsonString("ac",ac_name) 
-					+ ", " + jsonInt("alert_level",alert_level) 
-					+ ", " + jsonString("alert_region",daa.regionOfAlertLevel(alerter_idx,alert_level).toString())
-					+ ", " + jsonString("alerter",alerter.getId())
-					+ ", " + jsonInt("alerter_idx",alerter_idx)
-					+ "}";
+			+ ", " + jsonInt("alert_level",alert_level) 
+			+ ", " + jsonString("alert_region",alert_region.toString())
+			+ ", " + jsonString("alerter",alerter.getId())
+			+ ", " + jsonInt("alerter_idx",alerter_idx)
+			+ "}";
 		}
 		alerts += " ]}";
 		alertsArray.add(alerts);
@@ -546,9 +561,6 @@ public class DAABandsV2 {
 		double resTrk_sec = daa.horizontalDirectionResolution(!preferredTrk);
 		BandsRegion resTrkRegion = daa.regionOfHorizontalDirection(resTrk); 
 		BandsRegion resTrkRegion_sec = daa.regionOfHorizontalDirection(resTrk_sec); 
-		TrafficState ownship = daa.getOwnshipState();
-		double currentTrk = ownship.horizontalDirection(hdir_units);
-		BandsRegion currentTrkRegion = daa.regionOfHorizontalDirection(ownship.horizontalDirection()); // we want to use internal units here, to minimize round-off errors
 		boolean isConflict = !Double.isNaN(resTrk);
 		RecoveryInformation recoveryInfo = daa.horizontalDirectionRecoveryInformation();
 		boolean isRecovery = recoveryInfo.recoveryBandsComputed();
@@ -561,7 +573,6 @@ public class DAABandsV2 {
 		trkResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		trkResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		trkResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
-		trkResolution += ", \"ownship\": { \"val\": \"" + fmt(currentTrk) + "\", \"units\": \"" + hdir_units + "\", \"region\": \"" + currentTrkRegion + "\" }";
 		trkResolution += " }";
 		resTrkArray.add(trkResolution);
 
@@ -571,8 +582,6 @@ public class DAABandsV2 {
 		double resGs_sec = daa.horizontalSpeedResolution(!preferredGs);
 		BandsRegion resGsRegion = daa.regionOfHorizontalSpeed(resGs); // we want to use internal units here, to minimize round-off errors
 		BandsRegion resGsRegion_sec = daa.regionOfHorizontalSpeed(resGs_sec); // we want to use internal units here, to minimize round-off errors
-		double currentGs = ownship.horizontalSpeed(hs_units);
-		BandsRegion currentGsRegion = daa.regionOfHorizontalSpeed(ownship.horizontalSpeed()); // we want to use internal units here, to minimize round-off errors
 		isConflict = !Double.isNaN(resGs);
 		recoveryInfo = daa.horizontalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
@@ -585,7 +594,6 @@ public class DAABandsV2 {
 		gsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		gsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		gsResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
-		gsResolution += ", \"ownship\": { \"val\": \"" + fmt(currentGs) + "\", \"units\": \"" + hs_units + "\", \"region\": \"" + currentGsRegion + "\" }"; 
 		gsResolution += " }";
 		resGsArray.add(gsResolution);
 
@@ -595,8 +603,6 @@ public class DAABandsV2 {
 		double resVs_sec = daa.verticalSpeedResolution(!preferredVs);
 		BandsRegion resVsRegion = daa.regionOfVerticalSpeed(resVs); // we want to use internal units here, to minimize round-off errors
 		BandsRegion resVsRegion_sec = daa.regionOfVerticalSpeed(resVs_sec); // we want to use internal units here, to minimize round-off errors
-		double currentVs = ownship.verticalSpeed(vs_units);
-		BandsRegion currentVsRegion = daa.regionOfVerticalSpeed(ownship.verticalSpeed()); // we want to use internal units here, to minimize round-off errors
 		isConflict = !Double.isNaN(resVs);
 		recoveryInfo = daa.verticalSpeedRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
@@ -609,7 +615,6 @@ public class DAABandsV2 {
 		vsResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		vsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		vsResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
-		vsResolution += ", \"ownship\": { \"val\": \"" + fmt(currentVs) + "\", \"units\": \"" + vs_units + "\", \"region\": \"" + currentVsRegion + "\" }"; 
 		vsResolution += " }";
 		resVsArray.add(vsResolution);
 
@@ -619,8 +624,6 @@ public class DAABandsV2 {
 		double resAlt_sec = daa.altitudeResolution(!preferredAlt);
 		BandsRegion resAltRegion = daa.regionOfAltitude(resAlt); // we want to use internal units here, to minimize round-off errors
 		BandsRegion resAltRegion_sec = daa.regionOfAltitude(resAlt_sec); // we want to use internal units here, to minimize round-off errors
-		double currentAlt = ownship.altitude(alt_units);
-		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); // we want to use internal units here, to minimize round-off errors
 		isConflict = !Double.isNaN(resAlt);
 		recoveryInfo = daa.altitudeRecoveryInformation();
 		isRecovery = recoveryInfo.recoveryBandsComputed();
@@ -633,7 +636,6 @@ public class DAABandsV2 {
 		altResolution += ", \"recovery\": { \"time\": \"" + timeToRecovery + "\", \"nfactor\": \"" + nFactor;
 		altResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		altResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
-		altResolution += ", \"ownship\": { \"val\": \"" + fmt(currentAlt) + "\", \"units\": \"" + alt_units + "\", \"region\": \"" + currentAltRegion + "\" }";
 		altResolution += " }";
 		resAltArray.add(altResolution);
 

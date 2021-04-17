@@ -35,7 +35,7 @@
    PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE
    REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
    TERMINATION OF THIS AGREEMENT.
-**/
+ **/
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -57,8 +57,8 @@ import gov.nasa.larcfm.Util.Velocity;
 
 public class DAABands {
 
-    static void printHelpMsg() {
-		System.out.println("Version: DAIDALUS V-" + KinematicBandsParameters.VERSION);
+	static void printHelpMsg() {
+		System.out.println("Version: DAIDALUSj v" + KinematicBandsParameters.VERSION);
 		System.out.println("Generates a file that can be rendered in daa-displays");
 		System.out.println("Usage:");
 		System.out.println("  DAABands [options] file");
@@ -69,32 +69,32 @@ public class DAABands {
 		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.exit(0);
-    }
-    
+	}
+
 	public static String jsonInt(String label, int val) {
 		String json = "";
 		json += "\""+label+"\": "+f.Fmi(val);
 		return json;
 	}
-	
+
 	public static String jsonString(String label, String str) {
 		String json = "";
 		json += "\""+label+"\": \""+str+"\"";
 		return json;
 	}
-	
-    static String region2str(BandsRegion r) {
+
+	static String region2str(BandsRegion r) {
 		switch (r) {
-			case NONE: return "0";
-			case FAR: return "1";
-			case MID: return "2";
-			case NEAR: return "3";
-			case RECOVERY: return "4";
-			default: return "-1";
+		case NONE: return "0";
+		case FAR: return "1";
+		case MID: return "2";
+		case NEAR: return "3";
+		case RECOVERY: return "4";
+		default: return "-1";
 		}
-    }
-    
-    private static void printBands(PrintWriter out, List<String> bands, String label) {
+	}
+
+	private static void printBands(PrintWriter out, List<String> bands, String label) {
 		if (bands != null) {
 			out.println("\"" + label + "\": [");
 			for (int i = 0; i < bands.size(); i++) {
@@ -107,9 +107,9 @@ public class DAABands {
 			}
 			out.println("]");
 		}
-    }
+	}
 
-    protected static boolean loadWind (Daidalus daa, String wind) {
+	protected static boolean loadWind (Daidalus daa, String wind) {
 		if (daa != null) {
 			if (wind != null) {
 				double deg = 0;
@@ -131,9 +131,9 @@ public class DAABands {
 			System.err.println("** Error: Daidalus is not initialized.");
 		}
 		return false;
-    }
+	}
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 		PrintWriter out = new PrintWriter(System.out);
 		String config = null;
 		String scenario = null;
@@ -143,21 +143,21 @@ public class DAABands {
 
 		for (int a = 0; a < args.length; a++) {
 			if (args[a].equals("--help") || args[a].equals("-help") || args[a].equals("-h")) {
-			printHelpMsg();
-			System.exit(0);
+				printHelpMsg();
+				System.exit(0);
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
-			System.out.println(KinematicBandsParameters.VERSION);
-					System.exit(0);
-				} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
-			config = args[++a];
+				System.out.println(KinematicBandsParameters.VERSION);
+				System.exit(0);
+			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
+				config = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
-			output = args[++a];
+				output = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
-			wind = args[++a];
+				wind = args[++a];
 			} else if (args[a].startsWith("-")) {
-			System.err.println("** Warning: Invalid option (" + args[a] + ")");
+				System.err.println("** Warning: Invalid option (" + args[a] + ")");
 			} else {
-			input = args[a];
+				input = args[a];
 			}
 		}
 		if (input == null) {
@@ -173,7 +173,7 @@ public class DAABands {
 			String name = file.getName();
 			scenario = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
 			if (output == null) {
-			output = scenario + ".json";
+				output = scenario + ".json";
 			} 
 			out = new PrintWriter(new BufferedWriter(new FileWriter(output)),true);
 			System.out.println("Writing file " + output);
@@ -200,10 +200,10 @@ public class DAABands {
 		String conf = (config != null) ? config.split("/")[config.split("/").length - 1] : "";
 
 		out.print("{\n\"Info\": ");
-		out.println("{ \"version\": " + "\"" + KinematicBandsParameters.VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");
+		out.println("{ \"language\": \"Java\", \"version\": " + "\"" + KinematicBandsParameters.VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");
 		out.println("\"Scenario\": \"" + scenario + "\",");
 		out.println("\"Wind\": { \"deg\": \"" + Units.to("deg", daa.getWindField().Neg().compassAngle())  // we wanto to show FROM format
-				+ "\", \"knot\": \"" + Units.to("knot", daa.getWindField().gs()) + "\" },");
+		+ "\", \"knot\": \"" + Units.to("knot", daa.getWindField().gs()) + "\" },");
 		String str_to = "";
 		String str_trko = "";
 		String str_gso = "";
@@ -289,7 +289,7 @@ public class DAABands {
 			}
 			gs += " ]}";
 			gsArray.add(gs);
-				
+
 			String vs = "{ \"time\": " + time;
 			vs += ", \"bands\": [ ";
 			for (int i = 0; i < kb.verticalSpeedLength(); i++) {
@@ -300,7 +300,7 @@ public class DAABands {
 			}
 			vs += " ]}";
 			vsArray.add(vs);
-				
+
 			String alt = "{ \"time\": " + time;
 			alt += ", \"bands\": [ ";
 			for (int i = 0; i < kb.altitudeLength(); i++) {
@@ -312,16 +312,16 @@ public class DAABands {
 			alt += " ]}";
 			altArray.add(alt);
 		}
-			
+
 		out.println("\"hs\": { \"min\": " + daa.parameters.getMinGroundSpeed(hdir_units) 
-				+ ", \"max\": " + daa.parameters.getMaxGroundSpeed(hdir_units) 
-				+ ", \"units\": \"" + hdir_units + "\" },");
+		+ ", \"max\": " + daa.parameters.getMaxGroundSpeed(hdir_units) 
+		+ ", \"units\": \"" + hdir_units + "\" },");
 		out.println("\"vs\": { \"min\": " + daa.parameters.getMinVerticalSpeed(vs_units)
-				+ ", \"max\": " + daa.parameters.getMaxVerticalSpeed(vs_units)
-				+ ", \"units\": \"" + vs_units + "\" },");
+		+ ", \"max\": " + daa.parameters.getMaxVerticalSpeed(vs_units)
+		+ ", \"units\": \"" + vs_units + "\" },");
 		out.println("\"alt\": { \"min\": " + daa.parameters.getMinAltitude(alt_units)
-				+ ", \"max\": " + daa.parameters.getMaxAltitude(alt_units)
-				+ ", \"units\": \"" + alt_units + "\" },");
+		+ ", \"max\": " + daa.parameters.getMaxAltitude(alt_units)
+		+ ", \"units\": \"" + alt_units + "\" },");
 		out.println("\"MostSevereAlertLevel\": \"" + daa.parameters.alertor.mostSevereAlertLevel() + "\",");
 
 		DAABands.printBands(out, ownshipArray, "Ownship");
@@ -336,7 +336,7 @@ public class DAABands {
 		out.println(",");
 		DAABands.printBands(out, altArray, "Altitude Bands");
 		out.println("}");
-			
+
 		out.close();
-    }
+	}
 }

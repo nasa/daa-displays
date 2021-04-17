@@ -98,7 +98,7 @@ public class DAA2Json {
 				}
 			}
 		}
-		System.out.println("LLA flag is FALSE");
+		// System.out.println("LLA flag is FALSE");
 		llaFlag = false;
 	}
 	protected boolean isBelowLLAThreshold(TrafficState ownship, TrafficState intruder) {

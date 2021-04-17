@@ -59,8 +59,8 @@ export class CppProcess {
 		opt = opt || {};
 		if (desc) {
 			const daaFolder: string = desc.daaFolder
-			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.1.jar";
-			const daaConfig = desc.daaConfig || "2.x/DO_365A_no_SUM.conf";
+			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.2.jar";
+			const daaConfig = desc.daaConfig || "2.x/DO_365B_no_SUM.conf";
 			const daaScenario = desc.daaScenario || "H1.daa";
 			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
 			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
@@ -92,7 +92,14 @@ export class CppProcess {
 						console.error(`stderr: ${stderr}`);  
 					}
 					console.info(`stdout: ${stdout}`);
-					resolve(stdout);
+				const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
+				console.log(`DAIDALUS++ version: ${match[1]}`);
+				if (match && match[1]) {
+					resolve(match[1]);
+				} else {
+					console.warn("Unable to identify Daildalus version");
+					resolve("xx.yy.zz");
+				}
 				});
 			});
 		}
@@ -114,15 +121,7 @@ export class CppProcess {
 					console.error(`stderr: ${stderr}`);  
 				}
 				console.info(`stdout: ${stdout}`);
-				console.info(`stdout: ${stdout}`);
-				const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
-				console.log(`Daidalus version: ${match[1]}`);
-				if (match && match[1]) {
-					resolve(match[1]);
-				} else {
-					console.warn("Unable to identify Daildalus version");
-					resolve("xx.yy.zz");
-				}
+				resolve(stdout.trim());
 			});
 		});
 	}

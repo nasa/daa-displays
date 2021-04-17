@@ -66,10 +66,10 @@ export const encounterDataTemplate = `
     <div>Identifier: {{ownship.acstate.id}}</div>
     <div>sx: {{ownship.acstate.s.x}} m, sy: {{ownship.acstate.s.y}} m,  sz: {{ownship.acstate.s.z}} m</div>
     <div>vx: {{ownship.acstate.v.x}} m/s, vy: {{ownship.acstate.v.y}} m/s,  vz: {{ownship.acstate.v.z}} m/s</div>
-    <div>Altitude: {{printValUnits ownship.acstate.altitude}}</div> 
-    <div>{{#if ownship.acstate.wind}}Heading: {{printValUnits ownship.acstate.heading}} - {{/if}}Track: {{printValUnits ownship.acstate.track}}</div>
-    <div>{{#if ownship.acstate.wind}}Air Speed: {{printValUnits ownship.acstate.airspeed}} - {{/if}}Ground Speed: {{printValUnits ownship.acstate.groundspeed}}</div>
-    <div>Vertical Speed: {{printValUnits ownship.acstate.verticalspeed}}</div>
+    <div>{{#if ownship.acstate.wind}}Heading ({{ownship.trk_region}}): {{printValUnits ownship.acstate.heading}} - {{/if}}Track{{#unless ownship.acstate.wind}} ({{ownship.trk_region}}){{/unless}}: {{printValUnits ownship.acstate.track}}</div>
+    <div>{{#if ownship.acstate.wind}}Air Speed ({{ownship.gs_region}}): {{printValUnits ownship.acstate.airspeed}} - {{/if}}Ground Speed{{#unless ownship.acstate.wind}} ({{ownship.gs_region}}){{/unless}}: {{printValUnits ownship.acstate.groundspeed}}</div>
+    <div>Vertical Speed ({{ownship.vs_region}}): {{printValUnits ownship.acstate.verticalspeed}}</div>
+    <div>Altitude ({{ownship.alt_region}}): {{printValUnits ownship.acstate.altitude}}</div> 
 </div>
 {{/if}}
 <!-- Resolutions -->
@@ -77,7 +77,6 @@ export const encounterDataTemplate = `
 <div style="margin-top:10px;"><b>{{@key}}</b></div>
 <div style="padding-left:10px;">
     <div>Conflict: {{flags.conflict}} - Recovery: {{flags.recovery}} - Saturated: {{flags.saturated}}</div>
-    <div>Ownship Region: {{ownship.region}}</div>
     {{#if direction}}
     <div>Preferred Direction: {{#if flags.preferred}}{{direction.up}}{{else}}{{direction.down}}{{/if}} ({{flags.preferred}})</div>
     <div>Preferred Resolution ({{preferred_resolution.region}}): {{printValUnits preferred_resolution.valunit}}</div>
@@ -99,11 +98,11 @@ export const encounterDataTemplate = `
         <div>Identifier: {{acstate.id}}</div>
 	    <div>sx: {{acstate.s.x}} m, sy: {{acstate.s.y}} m,  sz: {{acstate.s.z}} m</div>
         <div>vx: {{acstate.v.x}} m/s, vy: {{acstate.v.y}} m/s,  vz: {{acstate.v.z}} m/s</div>
-        <div>Altitude: {{printValUnits acstate.altitude}}</div>
-        <div>Alert Level: {{alert.alert_level}} ({{alert.alert_region}}){{#if alert.alerter}} - Alerter: {{alert.alerter}} ({{alert.alerter_idx}}){{/if}}</div>
-        <div>{{#if acstate.wind}}Heading: {{printValUnits acstate.heading}} - {{/if}}Track: {{printValUnits acstate.track}}</div>
+         <div>{{#if acstate.wind}}Heading: {{printValUnits acstate.heading}} - {{/if}}Track: {{printValUnits acstate.track}}</div>
         <div>{{#if acstate.wind}}Air Speed: {{printValUnits acstate.airspeed}} - {{/if}}Ground Speed: {{printValUnits acstate.groundspeed}}</div>
         <div>Vertical Speed: {{printValUnits acstate.verticalspeed}}</div>
+        <div>Altitude: {{printValUnits acstate.altitude}}</div>
+        <div>Alert Level: {{alert.alert_level}} ({{alert.alert_region}}){{#if alert.alerter}} - Alerter: {{alert.alerter}} ({{alert.alerter_idx}}){{/if}}</div>
         <div>Horizontal Separation: {{printValUnits metrics.separation.horizontal}}</div>
         <div>Vertical Separation: {{printValUnits metrics.separation.vertical}}</div>
         <div>Horizontal Closure Rate: {{printValUnits metrics.closurerate.horizontal}}</div>

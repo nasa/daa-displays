@@ -60,8 +60,8 @@ export class JavaProcess {
 		opt = opt || {};
 		if (desc) {
 			const daaFolder: string = desc.daaFolder;
-			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.1.jar";
-			const daaConfig: string = desc.daaConfig || "2.x/DO_365A_no_SUM.conf";
+			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.2.jar";
+			const daaConfig: string = desc.daaConfig || "2.x/DO_365B_no_SUM.conf";
 			const daaScenario: string = desc.daaScenario || "H1.daa";
 			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
 			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
@@ -94,7 +94,7 @@ export class JavaProcess {
 					}
 					console.info(`stdout: ${stdout}`);
 					const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
-					console.log(`Daidalus version: ${match[1]}`);
+					console.log(`DAIDALUSj version: ${match[1]}`);
 					if (match && match[1]) {
 						resolve(match[1]);
 					} else {

@@ -177,10 +177,9 @@ export declare interface RecoveryElement {
 export declare interface ResolutionElement {
     time: number,
     flags: ResolutionFlags,
-    ownship: { val: string, units: string, region: Region },
     recovery: RecoveryElement
-    preferred_resolution: { valunit: ValUnits, region: Region },
-    other_resolution: { valunit: ValUnits, region: Region }
+    preferred_resolution: ValueRegion,
+    other_resolution: ValueRegion
 }
 
 export declare type Polygon = LatLonAlt[];
@@ -200,6 +199,11 @@ export declare interface ValUnits {
     units: string,
     internal?: string,
     internal_units?: string
+}
+
+export declare interface ValueRegion {
+    valunit : ValUnits,
+    region : Region
 }
 
 export declare interface Metric {
@@ -231,7 +235,11 @@ export declare interface AircraftState {
 
 export declare interface OwnshipState {
     time: number,   
-    acstate: AircraftState
+    acstate: AircraftState,
+    trk_region : Region,
+    gs_region : Region,
+    vs_region: Region
+    alt_region : Region,
 }
 
 export declare interface AircraftMetrics {
@@ -288,6 +296,7 @@ export declare interface ScenarioDataPoint {
 }
 export declare interface ScenarioDescriptor extends ScenarioData {
     Info: {
+        language: string, // DAIDALUS language
         version: string, // DAIDALUS version
         configuration: string // DAIDALUS configuration file used to produce bands data
     },
