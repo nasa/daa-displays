@@ -58,8 +58,8 @@ function render(playerID: string, data: {
     const bands: ScenarioDataPoint = splitView.getPlayer(playerID).getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
-    const heading: number = (bands && bands.Ownship && bands.Ownship.acstate.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
-    const airspeed: number = (bands && bands.Ownship && bands.Ownship.acstate.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+    const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+    const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
     const vspeed: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     const alt: number = +flightData.ownship.s.alt;
 
@@ -152,10 +152,10 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
                                     : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
                                     : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
                                     : null;
-            const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution.valunit.val
-                                    : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution.valunit.val
-                                    : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution.valunit.val
-                                    : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution.valunit.val
+            const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution?.valunit?.val
+                                    : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution?.valunit?.val
+                                    : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution?.valunit?.val
+                                    : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution?.valunit?.val
                                     : null;
             splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
                 bands: desc.bands[daaPlots[i].name],
@@ -354,20 +354,22 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
             let resolutionL: ResolutionElement = bandsLeft[resInfo];
             if (resolutionR && resolutionL) {
                 // check direction
-                if (resolutionR.flags["preferred"] === resolutionL.flags["preferred"]) {
+                if (resolutionR.flags?.preferred === resolutionL.flags?.preferred) {
                     // if same direction, check that the numeric value of the preferred resolutions differ less than epsilon
                     const epsilon: number = 10e-5;
                     const ok: boolean =
-                        (isNaN(+resolutionL.preferred_resolution.valunit.val) && isNaN(+resolutionR.preferred_resolution.valunit.val))
-                            || (!isFinite(+resolutionL.preferred_resolution.valunit.val) && !isFinite(+resolutionR.preferred_resolution.valunit.val) && Math.sign(+resolutionL.preferred_resolution.valunit.val) === Math.sign(+resolutionR.preferred_resolution.valunit.val))
-                            || Math.abs(+resolutionL.preferred_resolution.valunit.val - +resolutionR.preferred_resolution.valunit.val) <= epsilon;
+                        (isNaN(+resolutionL.preferred_resolution?.valunit?.val) && isNaN(+resolutionR.preferred_resolution?.valunit?.val))
+                            || (!isFinite(+resolutionL.preferred_resolution?.valunit?.val) 
+                                && !isFinite(+resolutionR.preferred_resolution?.valunit?.val) 
+                                && Math.sign(+resolutionL.preferred_resolution?.valunit?.val) === Math.sign(+resolutionR.preferred_resolution?.valunit?.val))
+                            || Math.abs(+resolutionL.preferred_resolution?.valunit?.val - +resolutionR.preferred_resolution?.valunit?.val) <= epsilon;
                     if (!ok) {
-                        plotR += `<br>Resolution: ${resolutionR.preferred_resolution.valunit.val}`;
-                        plotL += `<br>Resolution: ${resolutionL.preferred_resolution.valunit.val}`;
+                        plotR += `<br>Resolution: ${resolutionR.preferred_resolution?.valunit?.val}`;
+                        plotL += `<br>Resolution: ${resolutionL.preferred_resolution?.valunit?.val}`;
                     }
                 } else {
-                    plotR += `<br>Resolution: ${resolutionR.flags["preferred"]}`;
-                    plotL += `<br>Resolution: ${resolutionL.flags["preferred"]}`;
+                    plotR += `<br>Resolution: ${resolutionR.flags?.preferred}`;
+                    plotL += `<br>Resolution: ${resolutionL.flags?.preferred}`;
                 }
             }
 

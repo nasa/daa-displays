@@ -2166,7 +2166,7 @@ export class DAAPlayer extends Backbone.Model {
             const mapResolution = (name: string, down: string, up: string) => {
                 return data?.bands ? {
                     ...data.bands[name],
-                    direction: isNaN(data.bands[name]?.preferred_resolution.valunit.val) ? undefined : { down, up },
+                    direction: isNaN(data.bands[name]?.preferred_resolution?.valunit?.val) ? undefined : { down, up },
                     recovery: data.bands[name]?.flags.recovery ? {
                         ...data.bands[name]?.recovery,
                     } : undefined
