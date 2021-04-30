@@ -41,7 +41,7 @@ The `./restart.sh` script supports the following options:
 - `-port <port number>`  (The server will use the given port)
 
 ## Publications
-Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://doi.org/10.1007/978-3-030-50995-8_9), Proceedings of the 14th International Conference on Tests and Proofs (TAP 2020), Lecture Notes in Computer Science, Vol. 12165, pp. 155-166, 2020 [[PDF](https://shemesh.larc.nasa.gov/people/cam/publications/TAP2020-MM.pdf)][[BibTex](https://shemesh.larc.nasa.gov/people/cam/publications/TAP2020-MM.bib)]
+Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://doi.org/10.1007/978-3-030-50995-8_9), Proceedings of the 14th International Conference on Tests and Proofs (TAP 2020), Lecture Notes in Computer Science, Vol. 12165, pp. 155-166, 2020 [[PDF](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.pdf)][[BibTex](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.bib)]
 
 ## Use Cases
 The following examples illustrate concrete applications of the daa-displays toolkit for the analysis of DAA functions in cockpit displays.
