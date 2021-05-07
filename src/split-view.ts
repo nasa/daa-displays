@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
-import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { DaidalusBand, LLAData, Region, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
@@ -214,7 +214,7 @@ const daaPlots: { id: string, name: string, units: string, range: { from: number
     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
 ];
 
-const bandNames: string[] = [
+const regionNames: string[] = [
     "NONE",
     "FAR",
     "MID",
@@ -315,23 +315,24 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
             const plotName: string = daaPlots[i].name;
             // const diffPlot: boolean = JSON.stringify(bandsLeft[plotName]) !== JSON.stringify(bandsRight[plotName]); // profiler 7.3ms
             // if (diffPlot) {
-            let bandsR: { range: { from: number, to: number }, band: string }[] = []
-            let bandsL: { range: { from: number, to: number }, band: string }[] = []
+            let bandsR: { range: { from: number, to: number }, region: Region }[] = []
+            let bandsL: { range: { from: number, to: number }, region: Region }[] = []
             //bandNames.forEach((band: string) => { // profiler 1.4ms
-            for (let b = 0; b < bandNames.length; b++) { // 0.3ms
-                const band: string = bandNames[b];
-                if (bandsRight[plotName][band]) {
-                    bandsRight[plotName][band].forEach((range: utils.FromTo) => {
-                        // bandsR += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
-                        bandsR.push({ band, range: { from: Math.floor(range.from * 100) / 100, to: Math.floor(range.to * 100) / 100 } });
-                    });
-                }
-                if (bandsLeft[plotName][band]) {
-                    bandsLeft[plotName][band].forEach((range: utils.FromTo) => {
-                        // bandsL += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
-                        bandsL.push({ band, range: { from: Math.floor(range.from * 100) / 100, to: Math.floor(range.to * 100) / 100 } });
-                    });
-                }
+            if (bandsRight[plotName]?.bands?.length) {
+                bandsRight[plotName].bands.forEach((band: DaidalusBand) => {
+                    // bandsR += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
+                    if (band?.range) {
+                        bandsR.push({ region: band.region, range: { from: Math.floor(band.range[0] * 100) / 100, to: Math.floor(band.range[1] * 100) / 100 } });
+                    }
+                });
+            }
+            if (bandsLeft[plotName]?.bands?.length) {
+                bandsLeft[plotName].bands.forEach((band: DaidalusBand) => {
+                    // bandsL += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
+                    if (band.range) {
+                        bandsL.push({ region: band.region, range: { from: Math.floor(band.range[0] * 100) / 100, to: Math.floor(band.range[1] * 100) / 100 } });
+                    }
+                });
             }
             bandsR = bandsR.sort((a, b) => {
                 return (a.range.from < b.range.from) ? -1 : 1;
@@ -342,10 +343,10 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
             let plotR: string = "";
             let plotL: string = "";
             for (let k = 0; k < bandsR.length; k++) {
-                plotR += `<br>${bandsR[k].band} [${bandsR[k].range.from}, ${bandsR[k].range.to}]`;
+                plotR += `<br>${bandsR[k].region} [${bandsR[k].range.from}, ${bandsR[k].range.to}]`;
             }
             for (let k = 0; k < bandsL.length; k++) {
-                plotL += `<br>${bandsL[k].band} [${bandsL[k].range.from}, ${bandsL[k].range.to}]`;
+                plotL += `<br>${bandsL[k].region} [${bandsL[k].range.from}, ${bandsL[k].range.to}]`;
             }
 
             // check resolutions
