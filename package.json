@@ -17,7 +17,7 @@
 	"dependencies": {
 		"common-js": "^0.3.8",
 		"express": "^4.16.4",
-		"handlebars": "^4.7.6",
+		"handlebars": "^4.7.7",
 		"jquery": "^3.5.1",
 		"node": "^14.14.41"
 	},
