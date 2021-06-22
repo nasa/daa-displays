@@ -69,4 +69,12 @@ delete-dist:
 	-@cd src/daa-logic && make clean
 	@echo "\033[0;33m Done removing dist folder! \033[0m"
 
+audit:
+	npm audit
+	cd src/daa-server && npm audit
+
+audit-fix:
+	npm audit fix
+	cd src/daa-server && npm audit fix
+
 .PHONY: dist

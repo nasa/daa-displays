@@ -1,4 +1,9 @@
 ## ChangeLog
+### 1.0.11 (2021.06.22)
+- Improved playback player
+- Added wind indicator in DaNTi
+- Refactoring
+
 ### 1.0.10 (2020.08.02)
 - Added hazard areas in single-view
 
