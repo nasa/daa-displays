@@ -119,7 +119,8 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
             // change the GET so that tiles are requested to the local server
             // this.xhr.open("GET", "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml", true);
             // this.xhr.open("GET", "http://localhost:10000/WMTSCapabilities.xml", true);
-            const url: string = `${document.location.origin}/WMTSCapabilities.xml`;//"http://localhost:8082/WMTSCapabilities.xml";
+            const origin: string = document?.location?.origin?.startsWith("file://") ? "http://0.0.0.0:8082" : document?.location?.origin;
+            const url: string = `${origin}/WMTSCapabilities.xml`;//"http://localhost:8082/WMTSCapabilities.xml";
             this.xhr.open("GET", url, true);
             this.xhr.onreadystatechange = () => {
                 if (this.xhr.readyState === 4) {
@@ -128,9 +129,9 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
                         const wmtsCapabilities = new WorldWind.WmtsCapabilities(this.xhr.responseXML);
 
                         if (this.useTileCache) {
-                            wmtsCapabilities.serviceProvider.providerSiteUrl = `${document.location.origin}/daadisplays`; //"http://localhost:8082/daadisplays";
+                            wmtsCapabilities.serviceProvider.providerSiteUrl = `${origin}/daadisplays`; //"http://localhost:8082/daadisplays";
                             wmtsCapabilities.contents.layer[0].resourceUrl[0].template =
-                                `${document.location.origin}/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg`;
+                                `${origin}/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg`;
                                 // "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
                         }
 
