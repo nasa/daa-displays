@@ -1,7 +1,6 @@
 all: npm dist daidalus compile install-dependencies
 	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
 
-
 ts:
 	# generate javascript files
 	npm run build
@@ -32,7 +31,6 @@ dist:
 	rsync -a src/daa-displays/images dist/daa-displays/
 	rsync -a src/daa-displays/wwd dist/daa-displays/
 	rsync -a src/contrib dist/
-#	rsync src/daa-tablet/*.html src/daa-tablet/*.json src/daa-tablet/Makefile dist/daa-tablet
 	@echo "\033[0;32m** Done copying dist folder! **\033[0m"
 
 daidalus:
