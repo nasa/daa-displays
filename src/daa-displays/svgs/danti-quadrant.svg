@@ -1298,6 +1298,7 @@
      id="line8067"
      style="stroke:#00f500;stroke-width:2;" />
   <text
+     transform="scale(1.0067311,0.9933139)"
      x="240.18593"
      y="58.756996"
      font-size="18"
@@ -1305,8 +1306,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8069"
-     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0"
-     transform="scale(1.0067311,0.9933139)">N</text>
+     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">N</text>
   <text
      transform="scale(-0.98646598,-1.0137197)"
      x="-263.52988"
@@ -1316,7 +1316,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8071"
-     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">S</text>
+     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">S</text>
   <text
      transform="matrix(0,0.97723732,-1.0232929,0,0,0)"
      x="249.1985"
@@ -1326,7 +1326,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8073"
-     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">E</text>
+     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">E</text>
   <text
      transform="matrix(0,-0.89888288,1.112492,0,0,0)"
      x="-293.17395"
@@ -1336,7 +1336,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8075"
-     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">W</text>
+     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">W</text>
   <line
      x1="89.613396"
      x2="75.656929"

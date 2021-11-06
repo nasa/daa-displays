@@ -18,6 +18,13 @@
    -ms-perspective: 1000;
    perspective: 1000;
 }
+div {
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
 input[type=number]::-webkit-inner-spin-button {
     opacity: 1;
     height: 2.2em;

@@ -3,36 +3,55 @@ import * as templates from './templates/daa-view-options-templates';
 import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
-export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" | "contours" | "hazard-zones" | ""; // "" means empty slot
+export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" 
+    | "contours" | "hazard-zones" | "flight-plan" | ""; // "" means empty slot
 
 export class ViewOptions {
+    // widget id
     protected id: string;
+    // position and size of the view options
     protected top: number;
     protected left: number;
+    protected width: number;
+    protected buttonWidth: number;
+    // pointers to map, compass, div, and labels
     protected map: InteractiveMap;
     protected compass: Compass;
     protected div: HTMLElement;
     protected labels: ViewOptionLabels[];
-    protected readonly offsets: number[] = [ 0, 208, 416, 624, 832 ];
+    protected offsets: number[]; // = [ 0, 208, 416, 624, 832 ];
 
-    constructor (id: string, coords: utils.Coords, opt?: { labels?: ViewOptionLabels[], compass?: Compass, map?: InteractiveMap, parent?: string }) {
+    /**
+     * Constructor
+     */
+    constructor (id: string, coords: utils.Coords, opt?: {
+        labels?: ViewOptionLabels[], 
+        buttonWidth?: number, 
+        compass?: Compass, 
+        map?: InteractiveMap, 
+        parent?: string
+    }) {
         opt = opt || {};
         this.id = id || "daa-view-options";
 
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 100 : (+coords.top);
         this.left = (isNaN(+coords.left)) ? 10 : +coords.left;
-        this.labels = (opt.labels) ? opt.labels : [ "nrthup", "call-sign", "terrain" ];
+        this.width = (isNaN(+coords.width)) ? 1040 : +coords.width;
+        this.labels = (opt.labels) ? opt.labels : [ "nrthup", "call-sign", "terrain", "", "" ];
+        this.offsets = [];
+        this.buttonWidth = opt?.buttonWidth || this.width / this.labels.length;
+        for (let i = 0; i < this.labels.length; i++) {
+            this.offsets.push(i * this.buttonWidth);
+        }
 
         // save pointer to compass and interative map, if provided
         this.compass = opt.compass;
         this.map = opt.map;
 
+        // create html elements and install handlers
         this.createHtml(opt);
         this.installHandlers();
-
-        // check traffic by default
-        // this.showTraffic(true);
     }
     protected createHtml (opt?: { parent?: string }): void {
         opt = opt || {};
@@ -50,6 +69,8 @@ export class ViewOptions {
             zIndex: 2,
             top: this.top,
             left: this.left,
+            width: this.width,
+            buttonWidth: this.buttonWidth,
             viewOptions
         });
         $(this.div).html(theHTML);
@@ -162,6 +183,10 @@ export class ViewOptions {
                 if (this.map) { this.map.showHazardZones(true); }
                 break;
             }
+            case "flight-plan": {
+                if (this.map) { this.map.showFlightPath(true); }
+                break;
+            }
             default: // do nothing
         }
         return this;
@@ -194,6 +219,10 @@ export class ViewOptions {
             }
             case "hazard-zones": {
                 if (this.map) { this.map.showHazardZones(false); }
+                break;
+            }
+            case "flight-plan": {
+                if (this.map) { this.map.showFlightPath(false); }
                 break;
             }
             default: // do nothing

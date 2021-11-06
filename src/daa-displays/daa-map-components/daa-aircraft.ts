@@ -639,7 +639,7 @@ export class DAA_Aircraft extends Aircraft {
             this.renderablePosition.attributes.font.weight = "bold";
             this.renderablePosition.attributes.font.size = 18;
             this.renderablePosition.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
-            this.renderablePosition.attributes.depthTest = true;
+            this.renderablePosition.attributes.depthTest = false;
             this.renderablePosition.declutterGroup = 0;
             this.renderablePosition.enabled = this.aircraftVisible;
             this.textLayer.addRenderable(this.renderablePosition);
@@ -651,7 +651,7 @@ export class DAA_Aircraft extends Aircraft {
             this.renderableCallSign.attributes.font.weight = "bold";
             this.renderableCallSign.attributes.font.size = 14;
             this.renderableCallSign.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetX, WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetY);
-            this.renderableCallSign.attributes.depthTest = true;
+            this.renderableCallSign.attributes.depthTest = false;
             this.renderableCallSign.declutterGroup = 0;
             this.renderableCallSign.enabled = this.callSignVisible;
             this.renderableCallSign.text = this.callSign;

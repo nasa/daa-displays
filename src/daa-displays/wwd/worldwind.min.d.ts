@@ -200,6 +200,31 @@ export declare class SurfacePolygon extends SurfaceShape {
 export declare class SurfacePolyline extends SurfaceShape {
     constructor(boundaries: Location[], attributes: ShapeAttributes);
 }
+export declare class Path extends AbstractShape {
+    altitudeMode: string;
+    followTerrain: boolean;
+    extrude: boolean;
+    useSurfaceShapeFor2D: boolean;
+    attributes: ShapeAttributes;
+    constructor(positions: Position[], attributes: ShapeAttributes);    
+}
+export declare class Placemark extends Renderable {
+    label: string;
+    altitudeMode: string;
+    attributes: PlacemarkAttributes;
+    constructor(position: Position, eyeDistanceScaling: boolean, attributes: PlacemarkAttributes[]);
+}
+export declare class PlacemarkAttributes {
+    imageColor: Color;
+    imageOffset: Offset;
+    imageScale: number;
+    imageSource: string | ImageSource;
+    labelAttributes: TextAttributes;
+    drawLeaderLine: boolean;
+    leaderLineAttributes: ShapeAttributes;
+    depthTest: boolean;
+    constructor(attributes: PlacemarkAttributes);
+}
 export declare class Polygon extends AbstractShape {
     altitudeMode: string;
     extrude: boolean;
@@ -239,7 +264,8 @@ export declare class BMNGRestLayer extends RenderableLayer {
 }
 export declare class SurfaceImage extends Renderable {
     opacity: number;
-    constructor (sector, imageSource)
+    constructor (sector, imageSource);
+    sector: { minLatitude: number, maxLatitude: number, minLongitude: number, maxLongitude: number };
 }
 export declare class Sector {
     static readonly FULL_SPHERE: number;

@@ -29,46 +29,46 @@ let ownship = {
 
 let others: DAA_AircraftDescriptor[] = [
     {
-        "callSign": "AC1",
-        "s": {
-        "lat": cities.hampton.lat,
-        "lon": cities.hampton.lon,
-        "alt": 4000.018859
+        callSign: "AC1",
+        s: {
+            lat: cities.newportnews.lat,
+            lon: cities.newportnews.lon,
+            alt: 4000.018859
         },
-        "v": {
-        "x": 107.350647,
-        "y": 200.000092,
-        "z": 0.004356
+        v: {
+            x: 107.350647,
+            y: 200.000092,
+            z: 0.004356
         },
-        "symbol": "daa-traffic-monitor"
+        symbol: "daa-traffic-monitor"
     },
     {
-        "callSign": "AC2",
-        "s": {
-        "lat": 28.520167,
-        "lon": -80.61631,
-        "alt": 3500.007042
+        callSign: "AC2",
+        s: {
+            lat: cities.suffolk.lat,
+            lon: cities.suffolk.lon,
+            alt: 3500.007042
         },
-        "v": {
-        "x": 299.373444,
-        "y": 110.000044,
-        "z": 0.001983
+        v: {
+            x: 299.373444,
+            y: 110.000044,
+            z: 0.001983
         },
-        "symbol": "daa-traffic-avoid"
+        symbol: "daa-traffic-avoid"
     },
     {
-        "callSign": "AC3",
-        "s": {
-        "lat": 28.5166,
-        "lon": -80.70284,
-        "alt": 6000.008612
+        callSign: "AC3",
+        s: {
+            lat: cities.poquoson.lat,
+            lon: cities.poquoson.lon,
+            alt: 6000.008612
         },
-        "v": {
-        "x": 76.524117,
-        "y": 164.000187,
-        "z": 0.00126
+        v: {
+            x: 76.524117,
+            y: 164.000187,
+            z: 0.00126
         },
-        "symbol": "daa-alert"
+        symbol: "daa-alert"
     }
 ];
 
@@ -76,6 +76,12 @@ const geofence_perimeter: utils.LatLon[] = [
     { lat: cities.hampton.lat, lon: cities.hampton.lon },
     { lat: cities.newportnews.lat, lon: cities.newportnews.lon },
     { lat: cities.poquoson.lat, lon: cities.poquoson.lon }
+];
+
+const flight_path: utils.FlightPath = [
+    { lla: { ...cities.virginiabeach, alt: 200 }, label: "Virginia Beach" },
+    { lla: { ...cities.norfolk, alt: 200 }, label: "Norfolk" },
+    { lla: { ...cities.poquoson, alt: 200 }, label: "Poquoson" }
 ];
 
 const geofence_floor: { top: string | number, bottom: string | number } = { top: 120, bottom: "SFC" };
@@ -91,13 +97,19 @@ const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { paren
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
 // map view options
-const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, { parent: "daa-disp", compass, map });
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
+    labels: [ "nrthup", "call-sign", "terrain", "", "", "flight-plan" ],
+    parent: "daa-disp", 
+    compass, 
+    map
+});
 viewOptions.applyCurrentViewOptions();
 // tape displays
 const airspeedTape: AirspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp" });
 const altitudeTape: AltitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp" });
 const verticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000 });
 
+// set bands
 airspeedTape.setBands({
     RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
     NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
@@ -110,6 +122,10 @@ verticalSpeedTape.setBands({
     RECOVERY: [ { from: -2000, to: 4000, units: verticalSpeedTape.units.fpm } ],
     NEAR: [ { from: -6000, to: -2000, units: verticalSpeedTape.units.fpm } ]
 });
+
+// set flight path
+map.setFlightPath(flight_path);
+map.hideFlightPath();
 
 declare interface DaaWidgets {
     map: InteractiveMap,

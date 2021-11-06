@@ -50,6 +50,7 @@ import * as WorldWind from '../wwd/worldwind.min';
 import * as serverInterface from '../utils/daa-server'
 import { DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
+import { DAA_FlightPlan } from './daa-flight-plan';
 
 // scale factor for the map, computed manually by inspecting the DOM, for a compass size of 634x634 pixels. FIXME: find a better way to match compass and map scale
 const scaleFactor = 32000 / 5; // if canvas size is 1054x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 32000
@@ -202,6 +203,7 @@ export class DAA_Airspace {
     protected nmi: number;
     protected _ownship: DAA_Aircraft;
     protected _traffic: DAA_Aircraft[];
+    protected flightPath: DAA_FlightPlan;
 
     protected hazardZones: GeoFence;
     protected contours: GeoFence;
@@ -213,6 +215,7 @@ export class DAA_Airspace {
     protected protectedAreasLayer: WorldWind.RenderableLayer;
     protected contoursLayer: WorldWind.RenderableLayer;
     protected losLayer: WorldWind.RenderableLayer;
+    protected flightPathLayer: WorldWind.RenderableLayer;
     protected trafficLayer: WorldWind.RenderableLayer;
     protected ownshipLayer: WorldWind.RenderableLayer;
     protected textLayer: WorldWind.RenderableLayer;
@@ -228,6 +231,7 @@ export class DAA_Airspace {
     protected trafficVisible: boolean = true;
     protected hazardZonesVisible: boolean = false;
     protected contoursVisible: boolean = false;
+    protected flightPathVisible: boolean = false;
     protected _3dview: boolean;
     /**
      * @function <a name="DAA_Airspace">DAA_Airspace</a>
@@ -235,6 +239,7 @@ export class DAA_Airspace {
      * @param opt {Object} Configuration options for the airspace.
      *          <li>ownship (Object({ lat: real, lon: real, alt: real})): ownship position, given in the form { lat: real, lon: real, alt: real } (default lat/lon: Hampton, VA, USA; default altitude 0 meters) </li>
      *          <li>traffic (Array of Object({ lat: real, lon: real, alt: real})): position of other aircraft (default is null)</li>
+     *          <li>canvar (string): name of the canvas were the airspace will be rendered (default: "canvasOne")</li>
      *          <li>offlineMap (String): folder storing BMNG offline maps, downloaded from the <a href="http://worldwindserver.net/webworldwind/WebWorldWindStandaloneData.zip" target=_blank>http://worldwindserver.net</a></li>
      *          <li>terrain (String): terrain type, one of "BMNG" (terrain, low res), "BMNGOne" (terrain, low res), "BMNGLandsat" (terrain, low res), "BingAerial" (terrain, high res), "BingAerialWithLabels" (terrain, high res), "BingRoads" (map, high res)</li>
      *          <li>atmosphere (bool): whether the atmosphere layer is to be rendered (default: false)</li>
@@ -245,9 +250,24 @@ export class DAA_Airspace {
      * @instance
      * @inner
      */
-    constructor(opt?: { ownship?: utils.LatLonAlt | serverInterface.LatLonAlt, traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, callSign: string }[], 
-                        canvas?: string, shader?: number, godsView?: boolean, offlineMap?: string, terrainMap?: string, streetMap?: string, terrainMode?: boolean, atmosphere?: boolean, view3D?: boolean,
-                        los?: boolean, callSignVisible?: boolean, trafficVisible?: boolean }) {
+    constructor(opt?: { 
+        ownship?: utils.LatLonAlt | serverInterface.LatLonAlt, 
+        traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, callSign: string }[], 
+        flightPath?: utils.FlightPath,
+        canvas?: string, // canvas where the airspace will be rendered
+        shader?: number, 
+        godsView?: boolean, 
+        offlineMap?: string, 
+        terrainMap?: string, 
+        streetMap?: string, 
+        terrainMode?: boolean, 
+        atmosphere?: boolean, 
+        view3D?: boolean,
+        los?: boolean, 
+        callSignVisible?: boolean, 
+        trafficVisible?: boolean, 
+        flightPathVisible?: boolean
+    }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
             lat: cities.hampton.lat,
@@ -264,7 +284,7 @@ export class DAA_Airspace {
         // create worldwind view in the canvas
         this.wwd = new WorldWind.WorldWindow(opt.canvas);
 
-        this.wwd.surfaceOpacity = 0.999; // this should reduce flickering when loading tiles, see https://github.com/NASAWorldWind/WebWorldWind/issues/353
+        this.wwd.surfaceOpacity = 0.99; // this should reduce flickering when loading tiles, see https://github.com/NASAWorldWind/WebWorldWind/issues/353
         this.nmi = 5; // default eye view
 
         // Add map layers to worldwind.
@@ -304,6 +324,11 @@ export class DAA_Airspace {
         this.losLayer = new WorldWind.RenderableLayer(`LoS Layer`); // This layer is used to render the conflict regions between this aircraft and the ownship
         this.wwd.addLayer(this.losLayer);
 
+        // create flight path layer
+        this.flightPathLayer = new WorldWind.RenderableLayer(`Flight Path Layer`);
+        this.flightPathLayer.opacity = 0.9;
+        this.wwd.addLayer(this.flightPathLayer);
+
         // create layer for rendering traffic aircraft symbol
         this.trafficLayer = new WorldWind.RenderableLayer(`Aicraft Layer`);
         this.wwd.addLayer(this.trafficLayer);
@@ -317,6 +342,13 @@ export class DAA_Airspace {
         this.wwd.addLayer(this.textLayer);
 
         this._3dview = !!opt.view3D;
+
+        // create flight path
+        this.flightPathVisible = !!opt.flightPathVisible;
+        this.flightPath = new DAA_FlightPlan(this.flightPathLayer);
+        if (opt?.flightPath) {
+            this.setFlightPath(opt.flightPath);
+        }    
 
         // Create ownship, and make it invisible because danti renders the ownship in overlay
         // Having the ownship in WWD is useful for adjusting the map location
@@ -335,12 +367,12 @@ export class DAA_Airspace {
 
         // Render traffic information
         this._traffic = [];
-        if (opt.traffic && opt.traffic.length) {
+        if (opt?.traffic?.length) {
             this.setTraffic(opt.traffic);
         }
 
         // Create atmosphere layer
-        if (opt.atmosphere) {
+        if (opt?.atmosphere) {
             this.atmosphereLayer = new WorldWind.AtmosphereLayer();
             const timestamp = Date.now(); // The current date will be given to initialize the position of the sun.
             this.atmosphereLayer.time = new Date(timestamp); // Atmosphere layer requires a date to simulate the position of the Sun.
@@ -582,6 +614,16 @@ export class DAA_Airspace {
         return this;
     }
     /**
+     * Sets a flight path
+     */
+    setFlightPath (flightPath: utils.FlightPath): DAA_Airspace {
+        for (let i = 0; i < flightPath?.length; i++) {
+            this.flightPath.addWaypoint(flightPath[i]);
+        }
+        this.flightPathVisible ? this.revealFlightPath() : this.hideFlightPath();
+        return this;
+    }
+    /**
      * @function <a name="DAA_Airspace_setHeading">setHeading</a>
      * @desc Ownship's heading, in degrees, clockwise, north is 0 deg.
      * @param deg (real) Heading degrees
@@ -691,16 +733,8 @@ export class DAA_Airspace {
                 }
             }
         }
-        if (this.hazardZonesVisible) {
-            this.revealHazardZones();
-        } else {
-            this.hideHazardZones();
-        }
-        if (this.contoursVisible) {
-            this.revealContours();
-        } else {
-            this.hideContours();
-        }
+        (this.hazardZonesVisible) ? this.revealHazardZones() : this.hideHazardZones();
+        (this.contoursVisible) ? this.revealContours() : this.hideContours();
         this.redraw();
         return this;
     }
@@ -829,6 +863,14 @@ export class DAA_Airspace {
         }
         return this;
     }
+    revealFlightPath (): DAA_Airspace {
+        this.flightPathVisible = true;
+        if (this.flightPath) {
+            this.flightPath.reveal();
+            this.redraw();
+        }
+        return this;
+    }
     revealHazardZones (): DAA_Airspace {
         this.hazardZonesVisible = true;
         if (this.hazardZones) {
@@ -848,6 +890,14 @@ export class DAA_Airspace {
     revealGeoFence () : DAA_Airspace {
         this.revealHazardZones();
         this.revealContours();
+        return this;
+    }
+    hideFlightPath (): DAA_Airspace {
+        this.flightPathVisible = true;
+        if (this.flightPath) {
+            this.flightPath.hide();
+            this.redraw();
+        }
         return this;
     }
     hideHazardZones (): DAA_Airspace {

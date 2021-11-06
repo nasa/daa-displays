@@ -39,4 +39,24 @@
 		return (c === 'x' ? r : (r & 0x7 | 0x8)).toString(16);
 	});
 	return uuid;
-}
+};
+
+/**
+ * Colors
+ * NOTE: worldwind uses values between 0..1, instead of 0..255
+ */
+ export const COLORS: { [name: string]: [ 
+	number, number, number, number // rgba
+]} = {
+	// shades of purple
+	levender:    [ 230/255, 230/255, 250/255, 1 ],
+	violet:      [ 238/255, 130/255, 238/255, 1 ],
+	fuchsia:     [ 1,       0,       1,       1 ],
+	magenta:     [ 1,       0,       1,       1 ],
+	blueviolet:  [ 138/255, 43/255,  226/255, 1 ],
+	darkviolet:  [ 148/255, 0,       211/255, 1 ],
+	darkorchid:  [ 153/255, 50/255,  204/255, 1 ],
+	darkmagenta: [ 139/255, 0,       139/255, 1 ],
+	purple:      [ 128/255, 0,       128/255, 1 ],
+	indigo:      [ 75/255,  0,       130/255, 1 ]
+};

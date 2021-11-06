@@ -463,7 +463,7 @@ export class InteractiveMap {
         return this.addGeoFence("pa-" + id, perimeter, floor, opt);
     }
     removeGeoFence (id?: string): InteractiveMap {
-        this.airspace.removeGeoFencePolygon(id);
+        this.airspace?.removeGeoFencePolygon(id);
         return this;
     }
     showGeoFence (flag: boolean): InteractiveMap {
@@ -471,16 +471,41 @@ export class InteractiveMap {
         this.showHazardZones(flag);
         return this;
     }
-    showHazardZones (flag: boolean): InteractiveMap {
-        if (flag) {
-            this.airspace.revealHazardZones();
-        } else { this.airspace.hideHazardZones(); }
+    showHazardZones (reveal: boolean): InteractiveMap {
+        (reveal) ? this.airspace?.revealHazardZones() : this.airspace?.hideHazardZones();
         return this;
     }
-    showContours (flag: boolean): InteractiveMap {
-        if (flag) {
-            this.airspace.revealContours();
-        } else { this.airspace.hideContours(); }
+    showContours (reveal: boolean): InteractiveMap {
+        (reveal) ? this.airspace?.revealContours() : this.airspace?.hideContours();
         return this;
     }
+    /**
+     * Sets a flight path on the map
+     */
+    setFlightPath (flightPath: utils.FlightPath): InteractiveMap {
+        this.airspace?.setFlightPath(flightPath);
+        return this;
+    }
+    /**
+     * Reveals/Hides flight path
+     */
+    showFlightPath (reveal: boolean): InteractiveMap {
+        (reveal) ? this.revealFlightPath() : this.hideFlightPath();
+        return this;
+    }
+    /**
+     * Reveals flight path
+     */
+    revealFlightPath (): InteractiveMap {
+        this.airspace?.revealFlightPath();
+        return this;
+    }
+    /**
+     * Hides flight path
+     */
+    hideFlightPath (): InteractiveMap {
+        this.airspace?.hideFlightPath();
+        return this;
+    }
+
 }
