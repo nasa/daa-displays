@@ -100,6 +100,7 @@ export const cities = {
 
 class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
     useTileCache: boolean = false;
+    useOpenAIP: boolean = true;
     constructor(opt?: { useTileCache?: boolean }) {
         super();
         opt = opt || {};
@@ -128,6 +129,9 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
                         // Create a layer from the WMTS capabilities.
                         const wmtsCapabilities = new WorldWind.WmtsCapabilities(this.xhr.responseXML);
 
+                        // providerName: "EOX"
+                        // providerSiteUrl: "https://maps.eox.at"
+                        // FIXME -- tileCache server does not seem to be working
                         if (this.useTileCache) {
                             wmtsCapabilities.serviceProvider.providerSiteUrl = `${origin}/daadisplays`; //"http://localhost:8082/daadisplays";
                             wmtsCapabilities.contents.layer[0].resourceUrl[0].template =
@@ -135,14 +139,18 @@ class OpenStreetMapRestLayer extends WorldWind.OpenStreetMapImageLayer {
                                 // "http://localhost:8082/tiles.maps.eox.at/wmts/1.0.0/osm/default/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpg";
                         }
 
-                        const wmtsLayerCapabilities = wmtsCapabilities.getLayer("osm");
+                        // hi-res layers: osm
+                        // low-res layers: terrain, bluemarble, blackmarble, coastline
+                        const layerId: string = "osm";
+                        const wmtsLayerCapabilities = wmtsCapabilities.getLayer(layerId);
                         const wmtsConfig = WorldWind.WmtsLayer.formLayerConfiguration(wmtsLayerCapabilities);
                         wmtsConfig.title = this.displayName;
                         this.layer = new WorldWind.WmtsLayer(wmtsConfig);
 
                         // Send an event to request a redraw.
-                        const e: Event = document.createEvent('Event');
-                        e.initEvent(WorldWind.REDRAW_EVENT_TYPE, true, true);
+                        // const e: Event = document.createEvent('Event');
+                        // e.initEvent(WorldWind.REDRAW_EVENT_TYPE, true, true);
+                        const e: Event = new CustomEvent(WorldWind.REDRAW_EVENT_TYPE, { bubbles: true, cancelable: true });
                         canvas.dispatchEvent(e);
                     } else {
                         console.warn(`OSM retrieval failed (${this.xhr.statusText}): ${url}`);

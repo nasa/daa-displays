@@ -14,6 +14,7 @@
    id="svg9563"
    sodipodi:docname="danti-quadrant-full.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   style="transform:rotate(360deg)"
    width="503.78"
    height="503.78">
   <metadata
@@ -980,14 +981,14 @@
      d="null"
      points="null"
      id="line7995"
-     style="stroke:#00bf00; stroke-width:2;" />
+     style="stroke:#00f500; stroke-width:2;" />
   <line
      x1="252.23997"
      x2="252.23997"
      y1="464.20001"
      y2="501.88995"
      id="line7997"
-     style="stroke:#00bf00; stroke-width:2;" />
+     style="stroke:#00f500; stroke-width:2;" />
   <text
      style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text7999"
@@ -1288,14 +1289,14 @@
      d="null"
      points="null"
      id="line8065"
-     style="stroke:#00bf00;stroke-width:2;" />
+     style="stroke:#00f500;stroke-width:2;" />
   <line
      x1="252.23997"
      x2="252.23997"
      y1="1.2879858"
      y2="38.463985"
      id="line8067"
-     style="stroke:#00bf00;stroke-width:2;" />
+     style="stroke:#00f500;stroke-width:2;" />
   <text
      x="240.18593"
      y="58.756996"
@@ -1304,7 +1305,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8069"
-     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00bf00;stroke:#ffffff;stroke-width:1;;stroke-width:0"
+     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0"
      transform="scale(1.0067311,0.9933139)">N</text>
   <text
      transform="scale(-0.98646598,-1.0137197)"
@@ -1315,7 +1316,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8071"
-     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00bf00;stroke:#ffffff;stroke-width:1;;stroke-width:0">S</text>
+     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">S</text>
   <text
      transform="matrix(0,0.97723732,-1.0232929,0,0,0)"
      x="249.1985"
@@ -1325,7 +1326,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8073"
-     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00bf00;stroke:#ffffff;stroke-width:1;;stroke-width:0">E</text>
+     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">E</text>
   <text
      transform="matrix(0,-0.89888288,1.112492,0,0,0)"
      x="-293.17395"
@@ -1335,7 +1336,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8075"
-     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00bf00;stroke:#ffffff;stroke-width:1;;stroke-width:0">W</text>
+     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0">W</text>
   <line
      x1="89.613396"
      x2="75.656929"

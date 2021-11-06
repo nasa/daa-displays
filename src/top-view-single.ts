@@ -98,7 +98,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             if (compassBands.RECOVERY) {
                 data.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeConstraints: compassBands.RECOVERY,
-                    resolutionBugColor: "green"
+                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
                 });
             } else {
                 data.compass.setBug(bands["Horizontal Direction Resolution"], {
@@ -108,7 +108,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             if (airspeedBands?.RECOVERY) {
                 data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: airspeedBands.RECOVERY,
-                    resolutionBugColor: "green"
+                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
                 });
             } else {
                 data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
@@ -118,7 +118,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             if (altitudeBands?.RECOVERY) {
                 data.altitudeTape.setBug(bands["Altitude Resolution"], {
                     wedgeConstraints: altitudeBands.RECOVERY,
-                    resolutionBugColor: "green"
+                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
                 });
             } else {
                 data.altitudeTape.setBug(bands["Altitude Resolution"], {
@@ -128,7 +128,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             if (vspeedBands?.RECOVERY) {
                 data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: vspeedBands.RECOVERY,
-                    resolutionBugColor: "green"
+                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
                 });
             } else {
                 data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {

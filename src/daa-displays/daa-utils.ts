@@ -1,7 +1,7 @@
 import { BandElement, Region, DaidalusBand } from "./utils/daa-server";
 
 export const color = {
-    RECOVERY: "#07dc0a", // DASHED green
+    RECOVERY: "#00f500", // DASHED green
     FAR: "#ffc107", // DASHED YELLOW
     MID: "#ffc107", // yellow "#ffbf00",
     NEAR: "red",
@@ -9,7 +9,7 @@ export const color = {
     NONE: "transparent"
 };
 export const bandColors = {
-    RECOVERY: { style: "dash", color: "#07dc0a" }, // DASH green
+    RECOVERY: { style: "dash", color: "#00f500" }, // DASH green
     FAR: { style: "dash", color: "#ffc107" }, // DASH YELLOW
     MID: { style: "solid", color: "#ffc107" }, // YELLOW
     NEAR: { style: "solid", color: "red" }, // red
@@ -17,7 +17,7 @@ export const bandColors = {
     NONE: { style: "solid", color: "transparent" }
 };
 export const bandColorsDanti = {
-    RECOVERY: { style: "dash", color: "#07dc0a" }, // DASH green
+    RECOVERY: { style: "dash", color: "#00f500" }, // DASH green
     FAR: { style: "dash", color: "transparent" }, // DASH YELLOW
     MID: { style: "solid", color: "transparent" }, // YELLOW
     NEAR: { style: "solid", color: "#ffbf00" }, // amber
@@ -35,27 +35,27 @@ export function hex2rgb (hex: string, opt?: { normalize?: boolean }): RGBColor {
         : { r: parseInt(r, 16), g: parseInt(g, 16), b: parseInt(b, 16) };
 }
 export const bugColors = {
-    NONE: "white",
+    NONE: "#cccccc", // white
     FAR: "#ffc107", // DASHED YELLOW
     MID: "#ffc107", //"#ffbf00",
     NEAR: "red",
-    RECOVERY: "#07dc0a", // DASHED green
+    RECOVERY: "#00f500", // DASHED green #07dc0a
     UNKNOWN: "gray"
     ,
-    "0": "white",  // NONE
+    "0": "#cccccc",  // NONE
     "1": "#ffc107",// FAR
     "2": "#ffc107",// MID
     "3": "red",    // NEAR
-    "4": "#07dc0a",// RECOVERY
+    "4": "#00f500",// RECOVERY
     "-1": "gray"   // UNKNOWN
 };
 export const alertingColors = {
     NONE: { color: "transparent" },
-    MONITOR: { color: "white" },
+    MONITOR: { color: "#cccccc" }, // white
     AVOID: { color: "#ffc107" }, // yellow
     ALERT: { color: "red" },
     "0": { color: "transparent" },
-    "1": { color: "white" },
+    "1": { color: "#cccccc" }, // white
     "2": { color: "#ffc107" }, // yellow
     "3": { color: "red" }
 };
