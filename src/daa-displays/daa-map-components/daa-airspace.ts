@@ -253,7 +253,7 @@ export class DAA_Airspace {
     constructor(opt?: { 
         ownship?: utils.LatLonAlt | serverInterface.LatLonAlt, 
         traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, callSign: string }[], 
-        flightPath?: utils.FlightPath,
+        flightPath?: utils.FlightPlan,
         canvas?: string, // canvas where the airspace will be rendered
         shader?: number, 
         godsView?: boolean, 
@@ -616,7 +616,7 @@ export class DAA_Airspace {
     /**
      * Sets a flight path
      */
-    setFlightPath (flightPath: utils.FlightPath): DAA_Airspace {
+    setFlightPath (flightPath: utils.FlightPlan): DAA_Airspace {
         for (let i = 0; i < flightPath?.length; i++) {
             this.flightPath.addWaypoint(flightPath[i]);
         }

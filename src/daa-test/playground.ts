@@ -78,7 +78,7 @@ const geofence_perimeter: utils.LatLon[] = [
     { lat: cities.poquoson.lat, lon: cities.poquoson.lon }
 ];
 
-const flight_path: utils.FlightPath = [
+const flight_path: utils.FlightPlan = [
     { lla: { ...cities.virginiabeach, alt: 200 }, label: "Virginia Beach" },
     { lla: { ...cities.norfolk, alt: 200 }, label: "Norfolk" },
     { lla: { ...cities.poquoson, alt: 200 }, label: "Poquoson" }

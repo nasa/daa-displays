@@ -1,7 +1,10 @@
 ## ChangeLog
+### 1.0.12 (2021.11.xx)
+- Added display elements for flight plan
+
 ### 1.0.11 (2021.06.22)
 - Improved playback player
-- Added wind indicator in DaNTi
+- Added wind indicator in DANTi
 - Refactoring
 
 ### 1.0.10 (2020.08.02)
@@ -11,7 +14,7 @@
 - Added contours in single-view
 
 ### 1.0.8 (2020.04.08)
-- Added 'wedge' resolution in DaNTi
+- Added 'wedge' resolution in DANTi
 
 ### 1.0.7 (2020.04.08)
 - Added wind vector

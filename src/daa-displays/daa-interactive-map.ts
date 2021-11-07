@@ -482,7 +482,7 @@ export class InteractiveMap {
     /**
      * Sets a flight path on the map
      */
-    setFlightPath (flightPath: utils.FlightPath): InteractiveMap {
+    setFlightPath (flightPath: utils.FlightPlan): InteractiveMap {
         this.airspace?.setFlightPath(flightPath);
         return this;
     }

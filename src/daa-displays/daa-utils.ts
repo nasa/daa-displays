@@ -83,7 +83,7 @@ export function feet2meters(ft: number): number {
 
 // interface definitions
 export interface WayPoint { lla: LatLonAlt, label?: string };
-export type FlightPath = WayPoint[]
+export type FlightPlan = WayPoint[]
 export interface Vector3D { x: number, y: number, z: number };
 export interface FromTo { from: number, to: number, units: string };
 export interface Val { val: number, units: string };
