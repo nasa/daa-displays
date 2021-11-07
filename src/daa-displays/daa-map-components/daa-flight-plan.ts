@@ -93,7 +93,7 @@ export class DAA_FlightPlan {
             placemark.altitudeMode = WorldWind.CLAMP_TO_GROUND; //WorldWind.RELATIVE_TO_GROUND;
             // set placemark attributes
             placemark.attributes = new WorldWind.PlacemarkAttributes(null);
-            placemark.attributes.imageScale = 0.5;
+            placemark.attributes.imageScale = 0.4;
             placemark.attributes.depthTest = false;
             placemark.attributes.imageSource = waypointLibrary + waypointImages[0];
             placemark.attributes.labelAttributes = new WorldWind.TextAttributes(null);
@@ -118,7 +118,7 @@ export class DAA_FlightPlan {
                 path.attributes = new WorldWind.ShapeAttributes(null);
                 path.attributes.drawInterior = true;
                 path.attributes.drawOutline = true;
-                path.attributes.interiorColor = new WorldWind.Color(...COLORS.magenta);
+                path.attributes.interiorColor = WorldWind.Color.BLUE;
                 path.attributes.drawVerticals = false;
                 path.attributes.applyLighting = false;
                 path.attributes.depthTest = false; // this prevents the area from being occluded by other objects in the scene
