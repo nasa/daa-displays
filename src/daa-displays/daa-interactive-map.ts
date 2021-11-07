@@ -480,32 +480,31 @@ export class InteractiveMap {
         return this;
     }
     /**
-     * Sets a flight path on the map
+     * Sets a flight plan and displays it on the map
      */
-    setFlightPath (flightPath: utils.FlightPlan): InteractiveMap {
-        this.airspace?.setFlightPath(flightPath);
+    setFlightPlan (flightPlan: utils.FlightPlan): InteractiveMap {
+        this.airspace?.setFlightPlan(flightPlan);
         return this;
     }
     /**
-     * Reveals/Hides flight path
+     * Reveals/Hides flight plan
      */
-    showFlightPath (reveal: boolean): InteractiveMap {
-        (reveal) ? this.revealFlightPath() : this.hideFlightPath();
+    showFlightPlan (reveal: boolean): InteractiveMap {
+        (reveal) ? this.revealFlightPlan() : this.hideFlightPlan();
         return this;
     }
     /**
-     * Reveals flight path
+     * Reveals flight plan
      */
-    revealFlightPath (): InteractiveMap {
+    revealFlightPlan (): InteractiveMap {
         this.airspace?.revealFlightPath();
         return this;
     }
     /**
-     * Hides flight path
+     * Hides flight plan
      */
-    hideFlightPath (): InteractiveMap {
+    hideFlightPlan (): InteractiveMap {
         this.airspace?.hideFlightPath();
         return this;
     }
-
 }

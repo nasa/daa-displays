@@ -184,7 +184,7 @@ export class ViewOptions {
                 break;
             }
             case "flight-plan": {
-                if (this.map) { this.map.showFlightPath(true); }
+                if (this.map) { this.map.showFlightPlan(true); }
                 break;
             }
             default: // do nothing
@@ -222,7 +222,7 @@ export class ViewOptions {
                 break;
             }
             case "flight-plan": {
-                if (this.map) { this.map.showFlightPath(false); }
+                if (this.map) { this.map.showFlightPlan(false); }
                 break;
             }
             default: // do nothing

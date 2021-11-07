@@ -347,7 +347,7 @@ export class DAA_Airspace {
         this.flightPathVisible = !!opt.flightPathVisible;
         this.flightPath = new DAA_FlightPlan(this.flightPathLayer);
         if (opt?.flightPath) {
-            this.setFlightPath(opt.flightPath);
+            this.setFlightPlan(opt.flightPath);
         }    
 
         // Create ownship, and make it invisible because danti renders the ownship in overlay
@@ -616,7 +616,7 @@ export class DAA_Airspace {
     /**
      * Sets a flight path
      */
-    setFlightPath (flightPath: utils.FlightPlan): DAA_Airspace {
+    setFlightPlan (flightPath: utils.FlightPlan): DAA_Airspace {
         for (let i = 0; i < flightPath?.length; i++) {
             this.flightPath.addWaypoint(flightPath[i]);
         }

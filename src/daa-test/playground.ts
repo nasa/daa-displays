@@ -124,8 +124,8 @@ verticalSpeedTape.setBands({
 });
 
 // set flight path
-map.setFlightPath(flight_path);
-map.hideFlightPath();
+map.setFlightPlan(flight_path);
+map.hideFlightPlan();
 
 declare interface DaaWidgets {
     map: InteractiveMap,
