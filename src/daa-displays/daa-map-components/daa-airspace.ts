@@ -203,7 +203,7 @@ export class DAA_Airspace {
     protected nmi: number;
     protected _ownship: DAA_Aircraft;
     protected _traffic: DAA_Aircraft[];
-    protected flightPath: DAA_FlightPlan;
+    protected flightPlan: DAA_FlightPlan;
 
     protected hazardZones: GeoFence;
     protected contours: GeoFence;
@@ -345,7 +345,7 @@ export class DAA_Airspace {
 
         // create flight path
         this.flightPathVisible = !!opt.flightPathVisible;
-        this.flightPath = new DAA_FlightPlan(this.flightPathLayer);
+        this.flightPlan = new DAA_FlightPlan(this.flightPathLayer);
         if (opt?.flightPath) {
             this.setFlightPlan(opt.flightPath);
         }    
@@ -616,9 +616,12 @@ export class DAA_Airspace {
     /**
      * Sets a flight path
      */
-    setFlightPlan (flightPath: utils.FlightPlan): DAA_Airspace {
-        for (let i = 0; i < flightPath?.length; i++) {
-            this.flightPath.addWaypoint(flightPath[i]);
+    setFlightPlan (flightPlan: utils.FlightPlan): DAA_Airspace {
+        // delete old flight plan
+        this.flightPlan.clearWaypoints();
+        // add new waypoints
+        for (let i = 0; i < flightPlan?.length; i++) {
+            this.flightPlan.addWaypoint(flightPlan[i]);
         }
         this.flightPathVisible ? this.revealFlightPath() : this.hideFlightPath();
         return this;
@@ -865,8 +868,8 @@ export class DAA_Airspace {
     }
     revealFlightPath (): DAA_Airspace {
         this.flightPathVisible = true;
-        if (this.flightPath) {
-            this.flightPath.reveal();
+        if (this.flightPlan) {
+            this.flightPlan.reveal();
             this.redraw();
         }
         return this;
@@ -894,8 +897,8 @@ export class DAA_Airspace {
     }
     hideFlightPath (): DAA_Airspace {
         this.flightPathVisible = true;
-        if (this.flightPath) {
-            this.flightPath.hide();
+        if (this.flightPlan) {
+            this.flightPlan.hide();
             this.redraw();
         }
         return this;

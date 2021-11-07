@@ -134,6 +134,14 @@ export class DAA_FlightPlan {
         }
     }
     /**
+     * Deletes all waypoint
+     */
+    clearWaypoints (): void {
+        this.layer.removeAllRenderables();
+        this.waypoints = [];
+        this.segments = [];
+    }
+    /**
      * Shows flight path
      */
     reveal (): DAA_FlightPlan {
