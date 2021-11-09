@@ -116,8 +116,8 @@ export class InteractiveMap {
      * @function <a name="InteractiveMap">InteractiveMap</a>
      * @description Constructor.
      * @param id {String} Unique widget identifier.
-     * @param coords {Object} The four coordinates (top, left, width, height) of the widget, specifying
-     *        the left/top corners, and the width/height of the (rectangular) widget area.
+     * @param coords {Object} The four coordinates (top, left) of the widget, specifying
+     *        the left/top corners of the (rectangular) widget area.
      * @param opt {Object} Style options defining the visual appearance of the widget.
      *          <li>pos (Object): Earth location shown at the center of the map. Location is given as { lat: (real), lon: (real) } (default: lat/lon of Hampton, VA, USA) </li>
      *          <li>offlineMap (String): path to a folder containing NASA Blue Marble (BMNG) offline maps</li>
@@ -127,9 +127,9 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    constructor(id: string, coords: { top?: number, left?: number, width?: number, height?: number},
+    constructor(id: string, coords: { top?: number, left?: number },
                 opt?: { parent?: string, pos?: utils.LatLonAlt, offlineMap?: string, terrainMap?: string, streetMap?: string, terrainMode?: boolean, atmosphere?: boolean, view3D?: boolean,
-                        godsView?: boolean, los?: boolean, callSignVisible?: boolean }) {
+                        godsView?: boolean, los?: boolean, callSignVisible?: boolean, widescreen?: boolean }) {
         opt = opt || {};
         this.id = id;
         this.heading = 0; // default heading is 0 deg (i.e., pointing north)
@@ -139,6 +139,8 @@ export class InteractiveMap {
         coords = coords || {};
         coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
         coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
+        const width: number = opt.widescreen ? 1496 : 1054;
+        const height: number = 842;
 
         // create the DOM element
         this.div = utils.createDiv(id, {
@@ -147,7 +149,9 @@ export class InteractiveMap {
         let theHTML = Handlebars.compile(templates.mapTemplate)({
             id: this.id,
             top: coords.top,
-            left: coords.left
+            left: coords.left,
+            width: width,
+            height: height
         });
         $(this.div).html(theHTML);
         this.airspace = new DAA_Airspace({
@@ -160,7 +164,8 @@ export class InteractiveMap {
             godsView: opt.godsView,
             view3D: opt.view3D,
             los: opt.los,
-            callSignVisible: opt.callSignVisible
+            callSignVisible: opt.callSignVisible,
+            widescreen: opt.widescreen
         });
         this.airspace.setOwnshipHeading(this.heading);
         this.airspace.setZoomLevel(5); // NMI

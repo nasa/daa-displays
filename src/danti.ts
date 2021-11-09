@@ -43,6 +43,8 @@ import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands } from './daa-displays/daa-utils';
 
+const widescreen: boolean = false;
+
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
     const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
@@ -216,22 +218,22 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
 }
 
 // interactive map
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6 }, { parent: "daa-disp", widescreen });
 // wind indicator
-const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
+const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: widescreen ? 288 : 195 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
+const compass: Compass = new Compass("compass", { top: 110, left: widescreen ? 434 : 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
+const hscale: HScale = new HScale("hscale", { top: 800, left: 13, width: widescreen ? 1480 : 1040 }, { parent: "daa-disp", map, compass });
 // map view options
-const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
+const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13, width: widescreen ? 1480 : 1040 }, {
     labels: [
         "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
-const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {top: 210, left: 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
+const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 const player: DAAPlayer = new DAAPlayer();
 player.define("step", async () => {
     render({

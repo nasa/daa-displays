@@ -52,9 +52,6 @@ import { DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
 
-// scale factor for the map, computed manually by inspecting the DOM, for a compass size of 634x634 pixels. FIXME: find a better way to match compass and map scale
-const scaleFactor = 32000 / 5; // if canvas size is 1054x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 32000
-
 // standard set of locations
 export const cities = {
     hampton: {
@@ -208,6 +205,12 @@ export class DAA_Airspace {
     protected hazardZones: GeoFence;
     protected contours: GeoFence;
 
+    // scale factor for the map, computed manually by inspecting the DOM, for a compass size of 634x634 pixels.
+    // FIXME: find a better way to match compass and map scale
+    // if canvas size is 1054x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 32000
+    // if canvas size is 1496x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 45000
+    protected scaleFactor: number = 32000 / 5; 
+
     // layers
     protected terrainLayer: WorldWind.RenderableLayer;
     protected streetLayer: WorldWind.RenderableLayer;
@@ -266,7 +269,8 @@ export class DAA_Airspace {
         los?: boolean, 
         callSignVisible?: boolean, 
         trafficVisible?: boolean, 
-        flightPathVisible?: boolean
+        flightPathVisible?: boolean,
+        widescreen?: boolean
     }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -277,6 +281,7 @@ export class DAA_Airspace {
         opt.traffic = opt.traffic || [];
         opt.canvas = opt.canvas || "canvasOne";
         opt.shader = (isNaN(+opt.shader)) ? 0.4 : +opt.shader;
+        this.scaleFactor = opt?.widescreen ? 45000/5 : 32000/5;
         this.godsView = !!opt.godsView;
         this.callSignVisible = !!opt.callSignVisible;
         this.offlineMap = opt.offlineMap;
@@ -448,7 +453,7 @@ export class DAA_Airspace {
      * @inner
      */
     protected getScale (): number {
-        return this.wwd.navigator.range / scaleFactor;
+        return this.wwd.navigator.range / this.scaleFactor;
     }
     /**
      * Utility function, adds event listener for mouse wheel events -- necessary for resizing traffic symbols when zooming the map
@@ -486,7 +491,7 @@ export class DAA_Airspace {
     setZoomLevel (NMI: number): DAA_Airspace {
         this.nmi = NMI || this.nmi;
         // wwd.navigator.range is the diagonal size of the wwd map displayed in the canvas.
-        this.wwd.navigator.range = NMI * scaleFactor;
+        this.wwd.navigator.range = NMI * this.scaleFactor;
         if (this._traffic) {
             this._traffic.forEach(function (aircraft) {
                 aircraft.setScale(NMI);

@@ -7,13 +7,16 @@ export class HScale {
     protected id: string;
     protected top: number;
     protected left: number;
+    protected width: number;
+    protected buttonWidth: number;
     protected zoomLevel: number;
     protected map: InteractiveMap;
     protected compass: Compass;
     protected div: HTMLElement;
     readonly nRadios: number = 16;
+    protected offsets: number[];
     protected readonly nmiRadios: number[] = [ 0, // valid radio IDs start from 1
-        0.02, 0.04, 0.08, 0.1, 0.2, 0.4, 0.8, 1, 
+        0.02, 0.04, 0.08, 0.1, 0.2, 0.4, 0.8, 1, // display 8 elements in each screen
         2.5, 5, 10, 20, 40, 80, 160, 320
     ]; // this array must contain 17 elements --- see daa-hscale-template.ts
 
@@ -24,6 +27,14 @@ export class HScale {
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 500 : (+coords.top);
         this.left = (isNaN(+coords.left)) ? 10 : +coords.left;
+        this.width = (isNaN(+coords.width)) ? 1040 : +coords.width;
+        this.offsets = [];
+        const arrow_width: number = 40; // arrows placed on the side of the options, they are used for changing screen
+        const n: number = 8; // number of elements displays in each screen
+        this.buttonWidth = (this.width - 2 * arrow_width) / 8;
+        for (let i = 0; i < n; i++) {
+            this.offsets.push(arrow_width + i * this.buttonWidth);
+        }
 
         // save pointer to a daa-interactive-map object, if provided
         this.map = opt.map;
@@ -36,7 +47,10 @@ export class HScale {
             zIndex: 2,
             top: this.top,
             left: this.left,
-            nmiRadios: this.nmiRadios
+            width: this.width,
+            buttonWidth: this.buttonWidth,
+            nmiRadios: this.nmiRadios,
+            offsets: this.offsets
         });
         $(this.div).html(theHTML);
         // @ts-ignore // .carousel is added by bootstrap

@@ -1,6 +1,8 @@
 all: npm dist daidalus compile install-dependencies
 	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
 
+tsc: ts
+
 ts:
 	# generate javascript files
 	npm run build
