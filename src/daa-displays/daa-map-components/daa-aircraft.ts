@@ -62,7 +62,7 @@ const arrows = {
 };
 // scale factor for collada objects
 const colladaScaleDaaSymbol = 1100 / 5;
-const colladaScaleDrone: number = 0.4
+const colladaScaleDrone: number = 0.6
 // collada objects representing the daa symbols
 const colladaObjects = {
     "protected-jet": {
@@ -295,7 +295,7 @@ export class ColladaAircraft extends Aircraft {
 
         // to load the objects, the caller needs to invoke setupRenderables
     }
-    async setupRenderables (selectedSymbol: string): Promise<ColladaAircraft> {
+    async setupRenderables (selectedSymbol: string, opt?: { view3D: boolean }): Promise<ColladaAircraft> {
         return new Promise ((resolve, reject) => {
             const obj = colladaObjects[this.symbol]; //colladaObjects.privateJet;
             this.colladaLoader.load(obj.fileName, (colladaScene: WorldWind.ColladaScene) => {
@@ -305,7 +305,7 @@ export class ColladaAircraft extends Aircraft {
                     this.renderable.displayName = this.callSign;
                     // this.renderableAircraft.useTexturePaths = false; // use this option to force loading textures from the same directory of the collada file
                     // set standard position and heading
-                    this.renderable.altitudeMode = WorldWind.ABSOLUTE; // the alternative is RELATIVE_TO_GROUND;
+                    this.renderable.altitudeMode = opt?.view3D ? WorldWind.RELATIVE_TO_GROUND : WorldWind.ABSOLUTE; //the alternatives are WorldWind.ABSOLUTE and WorldWind.RELATIVE_TO_GROUND;
                     this.renderable.xRotation = obj.xRotation || 0;
                     this.rotationOffset.xRotation = this.renderable.xRotation;
                     this.renderable.yRotation = obj.yRotation || 0;
@@ -514,9 +514,9 @@ export class DAA_Aircraft extends Aircraft {
         // add labels
         this.addRenderableLabels({ view3D: desc.view3D });
         // add aircraft -- async call, the aircraft will be rendered when ready
-        this.addRenderableAircraft();
+        this.addRenderableAircraft({ view3D: desc.view3D });
     }
-    protected async addRenderableAircraft (): Promise<DAA_Aircraft> {
+    protected async addRenderableAircraft (opt?: { view3D: boolean }): Promise<DAA_Aircraft> {
         this.renderableAircraft = (!this.view3D) ? {
             "daa-ownship": new ColladaAircraft(this.wwd, { lat: this.position.lat, lon: this.position.lon, alt: this.position.alt, heading: this.heading, callSign: this.callSign, symbol: "daa-ownship" }, { wwdLayer: this.aircraftLayer }),
             "daa-alert": new ColladaAircraft(this.wwd, { lat: this.position.lat, lon: this.position.lon, alt: this.position.alt, heading: this.heading, callSign: this.callSign, symbol: "daa-alert" }, { wwdLayer: this.aircraftLayer }),
@@ -534,7 +534,7 @@ export class DAA_Aircraft extends Aircraft {
         const keys: string[] = Object.keys(this.renderableAircraft);
         for (let i = 0; i < keys.length; i++) {
             const aircraft: ColladaAircraft = this.renderableAircraft[keys[i]];
-            await aircraft.setupRenderables(this.selectedSymbol); // load the collada object
+            await aircraft.setupRenderables(this.selectedSymbol, opt); // load the collada object
         }
         if (this.aircraftVisible) {
             this.reveal();
@@ -640,6 +640,7 @@ export class DAA_Aircraft extends Aircraft {
             this.renderablePosition.attributes.font.size = 18;
             this.renderablePosition.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
             this.renderablePosition.attributes.depthTest = false;
+            this.renderablePosition.altitudeMode = opt?.view3D ? WorldWind.RELATIVE_TO_GROUND : WorldWind.ABSOLUTE;
             this.renderablePosition.declutterGroup = 0;
             this.renderablePosition.enabled = this.aircraftVisible;
             this.textLayer.addRenderable(this.renderablePosition);
@@ -652,6 +653,7 @@ export class DAA_Aircraft extends Aircraft {
             this.renderableCallSign.attributes.font.size = 14;
             this.renderableCallSign.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetX, WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetY);
             this.renderableCallSign.attributes.depthTest = false;
+            this.renderableCallSign.altitudeMode = opt?.view3D ? WorldWind.RELATIVE_TO_GROUND : WorldWind.ABSOLUTE;
             this.renderableCallSign.declutterGroup = 0;
             this.renderableCallSign.enabled = this.callSignVisible;
             this.renderableCallSign.text = this.callSign;

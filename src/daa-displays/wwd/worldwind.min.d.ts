@@ -123,7 +123,7 @@ export declare class RenderableLayer extends Layer {
 export declare class ColladaLoader {
     init(config?: { dirPath?: string }): void;
     constructor (position: Position, config?: { dirPath?: string });
-    load(url: string, cb: (scene: ColladaScene) => void);
+    load(url: string, cb: (scene: ColladaScene) => void): void;
 }
 export declare class ColladaScene extends Renderable {
     constructor(position: Position, sceneData: { root: { children: any }, meshes: any, materials: any, images: any, upAxis: any, dirPath: string });
@@ -134,11 +134,15 @@ export declare class ColladaScene extends Renderable {
     zRotation: number;
     position: Position;
 }
-export declare class GeographicText extends Renderable {
-    attributes?: TextAttributes;
-    declutterGroup?: number;
-    position: Position;
+export declare class WWDText extends Renderable {
     text: string;
+    attributes: TextAttributes;
+    highlighted: boolean;
+    altitudeMode: string;
+}
+export declare class GeographicText extends WWDText {
+    declutterGroup: number;
+    position: Position;
     constructor (position: Position, text: string);
 }
 export declare class TextAttributes {

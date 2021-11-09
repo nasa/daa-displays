@@ -532,7 +532,7 @@ export class DAA_Airspace {
      */
     view3D (): DAA_Airspace {
         this.wwd.navigator.tilt = 55; // 55 degrees tilt
-        this.wwd.navigator.range = 0.5; //this.nmi; // 6e4;
+        this.wwd.navigator.range = 0.3; //this.nmi; // 6e4;
         this.wwd.verticalExaggeration = 1; // 0 is flat (2D) world. A value > 0 will make it 3D. Default in WorldWind is 1.
         return this.redraw();
     }
