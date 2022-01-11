@@ -34,21 +34,35 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { colors, InteractiveMap } from './daa-displays/daa-interactive-map';
+import { colors, DAA_AircraftDescriptor, DEFAULT_WIDTH, InteractiveMap, WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
 import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands } from './daa-displays/daa-utils';
+import { Bands, computeBearing, computeNmiDistance } from './daa-displays/daa-utils';
+import { DaaSounds } from './daa-displays/daa-sounds';
 
-const widescreen: boolean = false;
+// flag indicating whether the display should be widescreen
+const widescreen: boolean = true;
+// display padding, used for centering the options and view controls shown at the top/bottom of the danti display
+const PADDING: number = 13; //px
 
-function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
+/**
+ * Utility function, renders the display content
+ */
+function render (danti: {
+    map: InteractiveMap, 
+    compass: Compass, 
+    airspeedTape: AirspeedTape, 
+    altitudeTape: AltitudeTape, 
+    verticalSpeedTape: VerticalSpeedTape,
+    sound: DaaSounds
+}) {
     const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
-    data.map.setPosition(flightData.ownship.s);
+    danti.map.setPosition(flightData.ownship.s);
 
     const bands: ScenarioDataPoint = player.getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
@@ -57,67 +71,67 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
     const vspeed: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
-    data.compass.setCompass(heading);
-    data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
-    data.verticalSpeedTape.setVerticalSpeed(vspeed);
-    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+    danti.compass.setCompass(heading);
+    danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
+    danti.verticalSpeedTape.setVerticalSpeed(vspeed);
+    danti.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
 
     // console.log(`Flight data`, flightData);
     if (bands) {
         const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
-        data.compass.setBands(compassBands);
+        danti.compass.setBands(compassBands);
         const airspeedBands: Bands = utils.bandElement2Bands(bands["Horizontal Speed Bands"]);
-        data.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
+        danti.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
         const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
-        data.verticalSpeedTape.setBands(vspeedBands);
+        danti.verticalSpeedTape.setBands(vspeedBands);
         const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
-        data.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
+        danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
 
         // set resolutions
         // show wedge only for recovery bands
         if (compassBands.RECOVERY) {
-            data.compass.setBug(bands["Horizontal Direction Resolution"], {
+            danti.compass.setBug(bands["Horizontal Direction Resolution"], {
                 wedgeConstraints: compassBands.RECOVERY,
                 resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
             });
         } else {
-            data.compass.setBug(bands["Horizontal Direction Resolution"], {
+            danti.compass.setBug(bands["Horizontal Direction Resolution"], {
                 wedgeAperture: 0
             });
         }
         if (airspeedBands?.RECOVERY) {
-            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+            danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                 wedgeConstraints: airspeedBands.RECOVERY,
                 resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
             });
         } else {
-            data.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
+            danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                 wedgeAperture: 0
             });
         }
         if (altitudeBands?.RECOVERY) {
-            data.altitudeTape.setBug(bands["Altitude Resolution"], {
+            danti.altitudeTape.setBug(bands["Altitude Resolution"], {
                 wedgeConstraints: altitudeBands.RECOVERY,
                 resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
             });
         } else {
-            data.altitudeTape.setBug(bands["Altitude Resolution"], {
+            danti.altitudeTape.setBug(bands["Altitude Resolution"], {
                 wedgeAperture: 0
             });
         }
         if (vspeedBands?.RECOVERY) {
-            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+            danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                 wedgeConstraints: vspeedBands.RECOVERY,
                 resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
             });
         } else {
-            data.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
+            danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                 wedgeAperture: 0
             });
         }
     }
     // set contours
-    data.map.removeGeoFence();
+    danti.map.removeGeoFence();
     if (bands && bands.Contours && bands.Contours.data) {
         for (let i = 0; i < bands.Contours.data.length; i++) {
             if (bands.Contours.data[i].polygons) {
@@ -129,7 +143,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                             bottom: +perimeter[0].alt - 20
                         }
                         // add geofence to the map
-                        data.map.addContour(`${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
+                        danti.map.addContour(`${bands.Contours.data[i].ac}-${i}-${j}`, perimeter, floor, {
                             showLabel: false
                         });
                     }
@@ -149,7 +163,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                             bottom: +perimeter[0].alt - 20
                         }
                         // add geofence to the map
-                        data.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
+                        danti.map.addProtectedArea(`${bands["Hazard Zones"].data[i].ac}-${i}-${j}`, perimeter, floor, {
                             showLabel: false
                         });
                     }
@@ -157,32 +171,72 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         }
     }
-    const traffic = flightData.traffic.map((data, index) => {
+    let max_alert: number = 0;
+    let max_alert_aircraft: DAA_AircraftDescriptor = null;
+    const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
         const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
-        return {
+        const desc: DAA_AircraftDescriptor = {
             callSign: data.id,
             s: data.s,
             v: data.v,
             symbol: daaSymbols[alert_level]
+        };
+        if (alert_level > max_alert) {
+            max_alert = alert_level;
+            max_alert_aircraft = desc;
         }
+        return desc;
     });
-    data.map.setTraffic(traffic);
+    danti.map.setTraffic(traffic);
     // set wind indicator
     if (bands && bands.Wind) {
         wind.setAngleFrom(bands.Wind.deg);
         wind.setMagnitude(bands.Wind.knot);
     }
     
+    // play sound if max_alert > 2 (red alert)
+    if (max_alert > 2) {
+        if (max_alert_aircraft) {
+            const dist: string = computeNmiDistance({
+                lat: +flightData.ownship.s.lat,
+                lon: +flightData.ownship.s.lon
+            }, {
+                lat: +max_alert_aircraft.s.lat,
+                lon: +max_alert_aircraft.s.lon
+            }).toFixed(1);
+            const heading: number = utils.rad2deg(Math.atan2(+flightData.ownship.v.x, +flightData.ownship.v.y));
+            const bearing: number = computeBearing({
+                lat: +flightData.ownship.s.lat,
+                lon: +flightData.ownship.s.lon
+            }, {
+                lat: +max_alert_aircraft.s.lat,
+                lon: +max_alert_aircraft.s.lon
+            });
+            const relative_bearing: number = ((((bearing - heading) % 360) + 360) % 360);
+            console.log({ relative_bearing, bearing, heading });
+            let dir: string = ((relative_bearing / 360) * 12).toFixed(0);
+            if (dir === "0") { dir = "12"; }
+            const msg: string = `Traffic... At ${dir} o'clock... ${dist} miles`; // e.g., traffic at 2 o'clock 3 miles
+            danti?.sound?.speak(msg, { voice: "Samantha" });
+        } else {
+            danti?.sound?.ping();
+        }
+    }
     // plot({ ownship: { hs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
 }
 
+/**
+ * List of available plots
+ */
 const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands" },
     { id: "horizontal-speed-bands", units: "knot", name: "Horizontal Speed Bands" },
     { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands" },
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
-
+/**
+ * Plot function
+ */
 function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
@@ -220,16 +274,28 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
 // interactive map
 const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6 }, { parent: "daa-disp", widescreen });
 // wind indicator
-const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: widescreen ? 288 : 195 }, { parent: "daa-disp"});
+const wind: WindIndicator = new WindIndicator("wind", {
+    top: 690, 
+    left: widescreen ? 48 : 195 
+}, { parent: "daa-disp"});
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: widescreen ? 434 : 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13, width: widescreen ? 1480 : 1040 }, { parent: "daa-disp", map, compass });
+const hscale: HScale = new HScale("hscale", {
+    top: widescreen ? 851 : 800, 
+    left: widescreen ? 7 : 13, 
+    width: widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING
+}, { parent: "daa-disp", map, compass });
 // map view options
-const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13, width: widescreen ? 1480 : 1040 }, {
+const viewOptions: ViewOptions = new ViewOptions("view-options", { 
+    top: widescreen ? -44 : 0, 
+    left: widescreen ? 7 : 13, 
+    width: widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING }, {
     labels: [
         "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
+// sounds
+const sound: DaaSounds = new DaaSounds();
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
@@ -238,7 +304,8 @@ const player: DAAPlayer = new DAAPlayer();
 player.define("step", async () => {
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
-        altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape
+        altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
+        sound
     });
 });
 player.define("init", async () => {
@@ -353,6 +420,13 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         if (args.config) { await player.selectConfiguration(args.config); }
         await player.loadSelectedScenario();
     }
+}
+if (widescreen) {
+    $("#daa-theme").css("display", "block");
+    $("#main-frame").css("margin-left", 154);
+    $("#daa-cockpit").css("top", 150);
+    $("#daa-panel").css({ top: 1186, left: 200 });
+    $("#daidalus-wind").css("margin-left", 1106);
 }
 const args: DaaConfig = parseDaaConfigInBrowser();
 if (args) {

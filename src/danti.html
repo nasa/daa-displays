@@ -41,18 +41,25 @@
     <body>
 
         <div class="zoomable">
-            <div style="position:absolute; margin-top:64px; margin-left:-10px;">
+            <style>
+                .input-group {
+                    z-index: 1;
+                }
+            </style>
+            <div id="main-frame" style="position:absolute; margin-top:64px; margin-left:-10px;">
                 <div id="daidalus-version" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
                 <div id="daidalus-configuration" class="input-group" style="height:31px;width:400px; margin-left:4px;"></div>
                 <div id="daidalus-wind" style="position:absolute; top:0px; height:60px; width:400px; margin-left:660px;"></div>
-                <div id="daa-cockpit" style="position:absolute; ">
+                <div id="daa-cockpit" style="position:absolute; top:80px;">
+                    <div id="daa-theme" style="display:none; position:absolute; transform-origin: top left; transform:scale(1.92); top:-247px; left:-191px;">
+                        <img src="daa-displays/themes/toughpad.png">
+                    </div>            
                     <div id="daa-disp"></div>
                 </div>
-                <div id="activation-controls" style="position:absolute; top:940px; width:80%;">
-                </div>
-                <div id="simulation-controls" style="position:absolute; top:1000px; width:80%;">
-                </div>
-                <div id="simulation-plot" style="position:absolute; top:1140px; height:200px; width:1020px;">
+                <div id="daa-panel" style="position:absolute; top:914px; left:-18px;">
+                    <div id="activation-controls" style="position:absolute; top:40px; width:80%;"></div>
+                    <div id="simulation-controls" style="position:absolute; top:100px; width:80%;"></div>
+                    <div id="simulation-plot" style="position:absolute; top:240px; height:200px; width:1020px;"></div>
                 </div>
             </div>
         </div>

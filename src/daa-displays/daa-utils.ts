@@ -81,6 +81,45 @@ export function feet2meters(ft: number): number {
     return ft / 3.28084;
 };
 
+
+/**
+ * Utility functions for computing the distance between two points given as latlot
+ * The returned result is in NMI
+ * See also haversine formula at https://www.movable-type.co.uk/scripts/latlong.html
+ */
+ export function computeNmiDistance (pos1: LatLon, pos2: LatLon): number {
+    const EARTH_RADIUS: number = 3443.92; //nmi
+    const lat1: number = deg2rad(pos1.lat);
+    const lon1: number = deg2rad(pos1.lon);
+    const lat2: number = deg2rad(pos2.lat);
+    const lon2: number = deg2rad(pos2.lon);
+    const dLat: number = lat1 - lat2;
+    const dLon: number = lon1 - lon2;
+    const a: number = Math.asin(
+        (Math.sin(dLat / 2) * Math.sin(dLat / 2)) 
+            + Math.cos(lat1) * Math.cos(lat2) * (Math.sin(dLon/2) * Math.sin(dLon/2))
+    );
+    const c: number = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d: number = EARTH_RADIUS * c; // distance in NMI
+    return d;
+}
+/**
+ * Computes the angle between two points given in latllot
+ * The result is in degrees
+ */
+export function computeBearing (pos1: LatLon, pos2: LatLon): number {
+    const lat1: number = deg2rad(pos1.lat);
+    const lon1: number = deg2rad(pos1.lon);
+    const lat2: number = deg2rad(pos2.lat);
+    const lon2: number = deg2rad(pos2.lon);
+    const dLon: number = lon2 - lon1;
+    const y: number = Math.sin(dLon) * Math.cos(lat2);
+    const x: number = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    const phi: number = rad2deg(Math.atan2(y, x));
+    const bearing: number = (phi + 360) % 360;
+    return bearing;
+}
+
 // interface definitions
 export interface WayPoint { lla: LatLonAlt, label?: string };
 export type FlightPlan = WayPoint[]

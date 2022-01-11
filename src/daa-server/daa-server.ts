@@ -40,8 +40,10 @@ import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
 
+// flag for enabling verbose log, useful for debugging purposes but may reduce performance
 const VERBOSE: boolean = false;
 
+// help message
 const helpMsg: string = `
   Usage: node daa-server.js [options]
   Options:
@@ -51,7 +53,10 @@ const helpMsg: string = `
     -port <port number>  (The server will use the given port)
 `;
 
-class DAAServer {
+/**
+ * DAAServer class
+ */
+export class DAAServer {
     pvsioPath: string = null;
     pvsioProcessEnabled: boolean = false;
     useCache: boolean = false;
@@ -68,6 +73,9 @@ class DAAServer {
         // file: string;
         // theory: string;
     }
+    /**
+     * Constructor
+     */
     constructor (port?: number) {
         this.config = {
             port: port || 8082,

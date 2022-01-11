@@ -104,6 +104,9 @@ export interface DAA_AircraftDescriptor {
 }
 
 export const colors = GeoFence.geofenceColors;
+export const WIDESCREEN_WIDTH: number = 1496; // 1334
+export const DEFAULT_WIDTH: number = 1054;
+export const DEFAULT_HEIGHT: number = 842;
 
 export class InteractiveMap {
     id: string;
@@ -139,8 +142,8 @@ export class InteractiveMap {
         coords = coords || {};
         coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
         coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
-        const width: number = opt.widescreen ? 1496 : 1054;
-        const height: number = 842;
+        const width: number = opt.widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH;
+        const height: number = DEFAULT_HEIGHT;
 
         // create the DOM element
         this.div = utils.createDiv(id, {

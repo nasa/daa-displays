@@ -31,6 +31,8 @@ dist:
 	rsync -a src/daa-displays/ColladaModels dist/daa-displays/
 	rsync -a src/daa-displays/css dist/daa-displays/
 	rsync -a src/daa-displays/images dist/daa-displays/
+	rsync -a src/daa-displays/sounds dist/daa-displays/
+	rsync -a src/daa-displays/themes dist/daa-displays/
 	rsync -a src/daa-displays/wwd dist/daa-displays/
 	rsync -a src/contrib dist/
 	@echo "\033[0;32m** Done copying dist folder! **\033[0m"

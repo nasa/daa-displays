@@ -28,7 +28,7 @@ export const airspeedTemplate = `
             </div>
         </div>
     </div>
-    <div id="{{id}}-indicator">
+    <div id="{{id}}-indicator" style="position:absolute; opacity:0.9;">
         <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:72px; height: 86px; top:281px; left:-13px;">
             <div id="{{id}}-indicator-still-digits" style="position:absolute; left: 5px; width:68%; height:100%; color:white; font-size:34px; text-align: center; line-height:85px; font-family:serif;">
             </div>

@@ -32,7 +32,7 @@ export const altitudeTemplate = `
             </div>
         </div>
     </div>
-    <div id="{{id}}-indicator" style="position:absolute;">
+    <div id="{{id}}-indicator" style="position:absolute; opacity:0.9;">
         <div id="{{id}}-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:99px; height: 86px; top:281px; left:70px;">
             <div id="{{id}}-indicator-first-still-digit" style="z-index:1; background-color:grey; position:absolute; top:28px; left:2px; width:18%; height:28px; color:white; font-size:34px; text-align: center; line-height:85px; font-family:serif;">
                 &nbsp;
