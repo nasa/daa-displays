@@ -45,7 +45,8 @@ import { Bands, computeBearing, computeNmiDistance } from './daa-displays/daa-ut
 import { DaaSounds } from './daa-displays/daa-sounds';
 
 // flag indicating whether the display should be widescreen
-const widescreen: boolean = true;
+const enable_widescreen: boolean = true;
+const enable_sound: boolean = false;
 // display padding, used for centering the options and view controls shown at the top/bottom of the danti display
 const PADDING: number = 13; //px
 
@@ -217,9 +218,13 @@ function render (danti: {
             let dir: string = ((relative_bearing / 360) * 12).toFixed(0);
             if (dir === "0") { dir = "12"; }
             const msg: string = `Traffic... At ${dir} o'clock... ${dist} miles`; // e.g., traffic at 2 o'clock 3 miles
-            danti?.sound?.speak(msg, { voice: "Samantha" });
+            if (enable_sound) {
+                danti?.sound?.speak(msg, { voice: "Samantha" });
+            }
         } else {
-            danti?.sound?.ping();
+            if (enable_sound) {
+                danti?.sound?.ping();
+            }
         }
     }
     // plot({ ownship: { hs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step: player.getCurrentSimulationStep(), time: player.getCurrentSimulationTime() });
@@ -272,34 +277,34 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
 }
 
 // interactive map
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6 }, { parent: "daa-disp", widescreen });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6 }, { parent: "daa-disp", widescreen: enable_widescreen });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", {
     top: 690, 
-    left: widescreen ? 48 : 195 
+    left: enable_widescreen ? 48 : 195 
 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: widescreen ? 434 : 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
+const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
-    top: widescreen ? 851 : 800, 
-    left: widescreen ? 7 : 13, 
-    width: widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING
+    top: enable_widescreen ? 851 : 800, 
+    left: enable_widescreen ? 7 : 13, 
+    width: enable_widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING
 }, { parent: "daa-disp", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { 
-    top: widescreen ? -44 : 0, 
-    left: widescreen ? 7 : 13, 
-    width: widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING }, {
+    top: enable_widescreen ? -44 : 0, 
+    left: enable_widescreen ? 7 : 13, 
+    width: enable_widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING }, {
     labels: [
         "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // sounds
 const sound: DaaSounds = new DaaSounds();
 // create remaining display widgets
-const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
+const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: enable_widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: enable_widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: enable_widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 const player: DAAPlayer = new DAAPlayer();
 player.define("step", async () => {
     render({
@@ -421,7 +426,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         await player.loadSelectedScenario();
     }
 }
-if (widescreen) {
+if (enable_widescreen) {
     $("#daa-theme").css("display", "block");
     $("#main-frame").css("margin-left", 154);
     $("#daa-cockpit").css("top", 150);
