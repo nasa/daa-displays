@@ -1,5 +1,10 @@
 ## ChangeLog
-### 1.0.12 (2021.11.xx)
+### 1.0.13 (2022.01.25)
+- Improved DANTi view
+- Added widescreen mode for moving map
+- Added support for DAA aural annunciations
+
+### 1.0.12 (2021.11.09)
 - Added display elements for flight plan
 
 ### 1.0.11 (2021.06.22)

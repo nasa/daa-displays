@@ -32,7 +32,7 @@ COMPILE_CPP_TARGETS = $(foreach ver,$(releases),compile-cpp-$(ver))
 define compile-cpp-template
 compile-cpp-$(1): 
 	@echo "\033[0;32m** Building DAIDALUS$(1).exe **\033[0m"
-	-cd utils; $(CPP) -c $(if $(call version1,$(1)),DAABands.cpp,DAABandsV2.cpp DAAMonitorsV2.cpp) -std=c++11 -I. -I$(DAIDALUS_DIR)/$(1)/C++/include && $(CPP) -o ../DAIDALUS$(1).exe $(DAIDALUS_DIR)/$(1)/C++/lib/$(if $(call version1,$(1)),DAIDALUS.a,DAIDALUS2.a) $(if $(call version1,$(1)),DAABands.o,DAAMonitorsV2.o DAABandsV2.o) 
+	-cd utils; $(CPP) -c $(if $(call version1,$(1)),DAABands.cpp,DAABandsV2.cpp DAAMonitorsV2.cpp) -std=c++11 -I. -I$(DAIDALUS_DIR)/$(1)/C++/include && $(CPP) -o ../DAIDALUS$(1).exe $(if $(call version1,$(1)),DAABands.o,DAAMonitorsV2.o DAABandsV2.o) $(DAIDALUS_DIR)/$(1)/C++/lib/$(if $(call version1,$(1)),DAIDALUS.a,DAIDALUS2.a)
 endef
 compile-cpp-all = $(foreach ver,$(releases),$(eval $(call compile-cpp-template,$(ver))))
 
