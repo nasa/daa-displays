@@ -93,12 +93,13 @@ export class HScale {
         this.checkInput(radioID);
         this.zoomLevel = radioID;
         const NMI = this.nmiRadios[this.zoomLevel];
+        let zoomLevelOk: boolean = true;
         if (this.map) {
-            this.map.setZoomLevel(NMI);
+            zoomLevelOk = this.map.trySetZoomLevel(NMI);
         } else {
             console.warn("Warning: HScale is not linked to an interactive map object");
         }
-        if (this.compass) {
+        if (this.compass && zoomLevelOk) {
             this.compass.setZoomLevel(NMI);
         } else {
             console.warn("Warning: HScale is not linked to a compass");

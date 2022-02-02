@@ -48,12 +48,17 @@ import * as WorldWind from '../wwd/worldwind.min';
 import * as utils from '../daa-utils';
 import * as serverInterface from '../utils/daa-server'
 
+/**
+ * WWD geofence class
+ */
 export class GeoFence {
     protected renderablePolygons: { [ key: string ] : { area: WorldWind.SurfacePolygon, perimeter: WorldWind.SurfacePolygon, label: WorldWind.GeographicText } } = {};
     protected layer: WorldWind.RenderableLayer;
     static readonly maxLabelFontSize: number = 32;
     protected NMI: number = 5;
 
+    // NOTE: geofence colors are normalized in WWD
+    // other classes using these colors should multiply the r g b components by 255, see utils.getHtmlColor
     static readonly geofenceColors = {
         red: { r: 1, g: 0, b: 0 },
         yellow: { r: 1, g: 1, b: 0 },
@@ -61,11 +66,13 @@ export class GeoFence {
         darkyellow: { r: 1, g: 0.5, b: 0 },
         daayellow: utils.hex2rgb(utils.bandColors.MID.color, { normalize: true })
     };
+
     static readonly defaultColor: utils.RGBColor = GeoFence.geofenceColors.red; // default color is red, as in Temporary Flight Restriction (TFR) areas
     protected color: utils.RGBColor = GeoFence.defaultColor;
 
     static readonly defaultOpacity: number = 0.2;
     protected opacity: number = GeoFence.defaultOpacity;
+
 
     /**
      * Constructor
@@ -198,6 +205,7 @@ export class GeoFence {
     removePolygon (id?: string): GeoFence {
         if (this.layer) {
             if (id) {
+                // remove a specific geofence
                 this.layer.removeRenderable(this.renderablePolygons[id].area);
                 this.layer.removeRenderable(this.renderablePolygons[id].perimeter);
                 if (this.renderablePolygons[id].label) {
@@ -205,6 +213,7 @@ export class GeoFence {
                 }
                 delete this.renderablePolygons[id];
             } else {
+                // remove all geofences
                 const keys: string[] = Object.keys(this.renderablePolygons);
                 for (let i = 0; i < keys.length; i++) {
                     this.layer.removeRenderable(this.renderablePolygons[keys[i]].area);

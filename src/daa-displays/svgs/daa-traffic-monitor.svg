@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Svg Vector Icons : http://www.onlinewebfonts.com/icon -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -18,6 +16,7 @@
    id="svg10"
    sodipodi:docname="daa-traffic-monitor.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   style="-webkit-filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, 0.9)); filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, 0.9));"
    width="1080.2539"
    height="1090.847"><defs
    id="defs14"><marker
@@ -51,7 +50,8 @@
    inkscape:window-x="67"
    inkscape:window-y="27"
    inkscape:window-maximized="0"
-   inkscape:current-layer="svg10" />
+   inkscape:current-layer="svg10"
+   />
 <metadata
    id="metadata2"> Svg Vector Icons : http://www.onlinewebfonts.com/icon <rdf:RDF><cc:Work
      rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type

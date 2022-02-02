@@ -862,6 +862,7 @@ export class DAAServer {
         app.use(/(\/\w+\/[^\/]+)?\/underscore\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/underscore/underscore-min.js`)));
         app.use(/(\/\w+\/[^\/]+)?\/backbone\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/backbone/backbone.js`)));       
         app.use(/(\/\w+\/[^\/]+)?\/bootstrap\.bundle\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/bootstrap/dist/js/bootstrap.bundle.min.js`)));
+        app.use(/(\/\w+\/[^\/]+)?\/leaflet\.js/, express.static(path.join(daaDisplaysRoot, `node_modules/leaflet/dist/leaflet.js`)));
 
         // create http server
         this.httpServer = http.createServer(app);

@@ -24,6 +24,7 @@ dist:
 	rsync -a src/daa-scenarios dist/
 	rsync -a src/daa-output dist/
 	rsync -a src/images dist/
+	rsync -a src/aeronav dist/
 	rsync src/daa-server/daa-server.json src/daa-server/package.json src/daa-server/start-server.sh dist/daa-server/
 	-rsync src/daa-server/package-lock.json dist/daa-server
 	rsync -a src/daa-server/tileServer dist/daa-server

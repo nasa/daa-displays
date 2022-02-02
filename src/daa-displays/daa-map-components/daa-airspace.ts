@@ -14,9 +14,9 @@
  * Administrator of the National Aeronautics and Space Administration. No
  * copyright is claimed in the United States under Title 17,
  * U.S. Code. All Other Rights Reserved.
- * <br>
+ * 
  * Disclaimers
- * <br>
+ * 
  * No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY
  * WARRANTY OF ANY KIND, EITHER EXPRESSED, IMPLIED, OR STATUTORY,
  * INCLUDING, BUT NOT LIMITED TO, ANY WARRANTY THAT THE SUBJECT SOFTWARE
@@ -31,7 +31,7 @@
  * FURTHER, GOVERNMENT AGENCY DISCLAIMS ALL WARRANTIES AND LIABILITIES
  * REGARDING THIRD-PARTY SOFTWARE, IF PRESENT IN THE ORIGINAL SOFTWARE,
  * AND DISTRIBUTES IT "AS IS."
- * <br>
+ * 
  * Waiver and Indemnity: RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS
  * AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND
  * SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF
@@ -48,7 +48,7 @@
 import * as utils from '../daa-utils';
 import * as WorldWind from '../wwd/worldwind.min';
 import * as serverInterface from '../utils/daa-server'
-import { DAA_Aircraft } from './daa-aircraft';
+import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
 
@@ -192,9 +192,65 @@ function _get_streetMap(t: string): WorldWind.RenderableLayer {
 }
 
 /**
- * DAA Airspace class
+ * Convenient type definitions
  */
-export class DAA_Airspace {
+export type LatLon = utils.LatLon | serverInterface.LatLon;
+export type LatLonAlt = utils.LatLonAlt | serverInterface.LatLonAlt;
+export type Vector3D = utils.Vector3D | serverInterface.Vector3D;
+
+/**
+ * Airspace interface, provides information on ownship and traffic
+ */
+export declare interface AirspaceInterface {
+    terrainMode (): AirspaceInterface;
+    vfrMode (): AirspaceInterface;
+    streetMode (): AirspaceInterface;
+    godsViewOn (): AirspaceInterface;
+    godsViewOff (): AirspaceInterface;
+    autoScale (): AirspaceInterface;
+    setZoomLevel (NMI: number): AirspaceInterface;
+    trySetZoomLevel (NMI: number): boolean; // this is a variant of the setZoomLevel interface, returns true if the level was set correctly
+    view2D (): AirspaceInterface;
+    view3D (): AirspaceInterface;
+    recenter (pos: { lat: number, lon: number }): AirspaceInterface;
+    goTo (pos: { lat: number, lon: number }): AirspaceInterface;
+    setOwnshipPosition (pos: string | LatLonAlt): AirspaceInterface;
+    setOwnshipVelocity (v: Vector3D): AirspaceInterface;
+    setFlightPlan (flightPlan: utils.FlightPlan): AirspaceInterface;
+    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean}): AirspaceInterface;
+    getOwnshipHeading (): number;
+    getTraffic (): AircraftInterface[];
+    setTraffic (traffic: { s: LatLonAlt, v: Vector3D, symbol: string, callSign: string }[]): AirspaceInterface;
+    hideTraffic (): AirspaceInterface;
+    revealTraffic (): AirspaceInterface;
+    hideCallSign (): AirspaceInterface;
+    revealCallSign (): AirspaceInterface;
+    addGeoFencePolygon (
+        id: string,
+        perimeter: LatLon[], 
+        floor: { top: number | string, bottom: number | string }, 
+        opt?: {
+            opacity?: number, 
+            color?: { r: number, g: number, b: number },
+            fontScale?: number,
+            showLabel?: boolean
+        }
+    ) : AirspaceInterface;
+    removeGeoFencePolygon (id?: string) : AirspaceInterface;
+    revealFlightPlan (): AirspaceInterface;
+    hideFlightPlan (): AirspaceInterface;
+    revealHazardZones (): AirspaceInterface;
+    hideHazardZones (): AirspaceInterface
+    revealContours (): AirspaceInterface;
+    hideContours (): AirspaceInterface
+    revealGeoFence () : AirspaceInterface;
+    hideGeoFence () : AirspaceInterface;
+};
+
+/**
+ * Airspace implemented with WWD 
+ */
+export class DAA_Airspace implements AirspaceInterface {
     protected offlineMap: string;
     protected wwd: WorldWind.WorldWindow;
     protected nmi: number;
@@ -205,7 +261,8 @@ export class DAA_Airspace {
     protected hazardZones: GeoFence;
     protected contours: GeoFence;
 
-    // scale factor for the map, computed manually by inspecting the DOM, for a compass size of 634x634 pixels.
+    // scale factor used for the conversion visual range <-> NMI
+    // the scale is computed manually by inspecting the DOM, for a compass size of 634x634 pixels.
     // FIXME: find a better way to match compass and map scale
     // if canvas size is 1054x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 32000
     // if canvas size is 1496x842 and compass size is 634x634, then compass radius corresponds to 5NMI (9.26Km) when range is 45000
@@ -234,28 +291,15 @@ export class DAA_Airspace {
     protected trafficVisible: boolean = true;
     protected hazardZonesVisible: boolean = false;
     protected contoursVisible: boolean = false;
-    protected flightPathVisible: boolean = false;
+    protected flightPlanVisible: boolean = false;
     protected _3dview: boolean;
+
     /**
-     * @function <a name="DAA_Airspace">DAA_Airspace</a>
-     * @description Constructor. Creates a virtual airspace, including a map and traffic information.
-     * @param opt {Object} Configuration options for the airspace.
-     *          <li>ownship (Object({ lat: real, lon: real, alt: real})): ownship position, given in the form { lat: real, lon: real, alt: real } (default lat/lon: Hampton, VA, USA; default altitude 0 meters) </li>
-     *          <li>traffic (Array of Object({ lat: real, lon: real, alt: real})): position of other aircraft (default is null)</li>
-     *          <li>canvar (string): name of the canvas were the airspace will be rendered (default: "canvasOne")</li>
-     *          <li>offlineMap (String): folder storing BMNG offline maps, downloaded from the <a href="http://worldwindserver.net/webworldwind/WebWorldWindStandaloneData.zip" target=_blank>http://worldwindserver.net</a></li>
-     *          <li>terrain (String): terrain type, one of "BMNG" (terrain, low res), "BMNGOne" (terrain, low res), "BMNGLandsat" (terrain, low res), "BingAerial" (terrain, high res), "BingAerialWithLabels" (terrain, high res), "BingRoads" (map, high res)</li>
-     *          <li>atmosphere (bool): whether the atmosphere layer is to be rendered (default: false)</li>
-     *          <li>shader (real): semi-transparent overlay layer applied over the map. This layer is useful
-     *                              for enhancing the visibility of traffic information over bright map colors.
-     *                              A value of 0 means the shader is not applied. (default: 0.4)</li>
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
+     * Constructor
      */
-    constructor(opt?: { 
-        ownship?: utils.LatLonAlt | serverInterface.LatLonAlt, 
-        traffic?: { s: utils.LatLonAlt, v: utils.Vector3D, symbol: string, callSign: string }[], 
+    constructor (opt?: { 
+        ownship?: LatLonAlt, 
+        traffic?: { s: LatLonAlt, v: Vector3D, symbol: string, callSign: string }[], 
         flightPath?: utils.FlightPlan,
         canvas?: string, // canvas where the airspace will be rendered
         shader?: number, 
@@ -269,7 +313,7 @@ export class DAA_Airspace {
         los?: boolean, 
         callSignVisible?: boolean, 
         trafficVisible?: boolean, 
-        flightPathVisible?: boolean,
+        flightPlanVisible?: boolean,
         widescreen?: boolean
     }) {
         opt = opt || {};
@@ -349,7 +393,7 @@ export class DAA_Airspace {
         this._3dview = !!opt.view3D;
 
         // create flight path
-        this.flightPathVisible = !!opt.flightPathVisible;
+        this.flightPlanVisible = !!opt.flightPlanVisible;
         this.flightPlan = new DAA_FlightPlan(this.flightPathLayer);
         if (opt?.flightPath) {
             this.setFlightPlan(opt.flightPath);
@@ -417,31 +461,54 @@ export class DAA_Airspace {
             this.view2D();
         }
     }
+    /**
+     * Switch to vfr mode
+     */
+    vfrMode (): DAA_Airspace {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: VFR mode not available in WWD, please use LeafletJS`);
+        return this;
+    }
+    /**
+     * Switch to terrain mode
+     */
     terrainMode (): DAA_Airspace {
         this.terrainLayer.enabled = true;
         this.streetLayer.enabled = false;
         this.redraw();
         return this;
     }
+    /**
+     * Switch to street mode
+     */
     streetMode (): DAA_Airspace {
         this.terrainLayer.enabled = false;
         this.streetLayer.enabled = true;
         this.redraw();
         return this;
     }
-    resetLoS (): DAA_Airspace {
-        if (this.losLayer) {
-            for (let i = 0; i < this._traffic.length; i++) {
-                this._traffic[i].removeLoS();
-            }
-        }
-        this.redraw();
-        return this;
-    }
+    /**
+     * Removes all protected areas
+     */
+    // resetLoS (): DAA_Airspace {
+    //     if (this.losLayer) {
+    //         for (let i = 0; i < this._traffic.length; i++) {
+    //             this._traffic[i].removeLoS();
+    //         }
+    //     }
+    //     this.redraw();
+    //     return this;
+    // }
+    /**
+     * airspace view
+     */
     godsViewOn (): DAA_Airspace {
         this.godsView = true;
         return this;
     }
+    /**
+     * ownship view
+     */
     godsViewOff (): DAA_Airspace {
         this.godsView = false;
         return this;
@@ -482,11 +549,16 @@ export class DAA_Airspace {
         return this;
     }
     /**
+     * Tries to sets the zoom level to the given NMI.
+     * Returns true if the level was set correctly, false otherwise
+     */
+    trySetZoomLevel (NMI: number): boolean {
+        this.setZoomLevel(NMI);
+        return true;
+    }
+    /**
      * Sets the zoom level of the airspace.
      * @param NMI {real} Zoom level, given in nautical miles. The map is resized so that the diagonal size of the map corresponds to the provided NMI value.
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
      */
     setZoomLevel (NMI: number): DAA_Airspace {
         this.nmi = NMI || this.nmi;
@@ -537,12 +609,7 @@ export class DAA_Airspace {
         return this.redraw();
     }
     /**
-     * @function <a name="DAA_Airspace_recenter">recenter</a>
-     * @description Centers the map on the ownship position.
-     * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
+     * Centers the map on the ownship position.
      */
     recenter (pos: { lat: number, lon: number }): DAA_Airspace {
         if (pos) {
@@ -550,22 +617,20 @@ export class DAA_Airspace {
             if (!isNaN(+pos.lon)) { this.wwd.navigator.lookAtLocation.longitude = pos.lon; }
             this.redraw();
         } else {
-            console.error("Unable to recenter map -- position is null :/");
+            console.warn("[daa-airspace] Warning: Unable to recenter map -- position is null :/");
         }
         return this;
     }
-    redraw (): DAA_Airspace {
+    /**
+     * Internal function, re-draws the view
+     */
+    protected redraw (): DAA_Airspace {
         this.wwd.redraw();
         return this;
     }
 
     /**
-     * @function <a name="DAA_Airspace_goTo">goTo</a>
-     * @description Centers the map to a given location. The ownship position is kept unchanged.
-     * @param pos {Object({ lat: real, lon: real })} Position where the map should be centered.
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
+     * Centers the map to a given location. The ownship position is kept unchanged.
      */
     goTo (pos: { lat: number, lon: number }): DAA_Airspace {
         if (pos) {
@@ -576,12 +641,7 @@ export class DAA_Airspace {
         return this;
     }
     /**
-     * @function <a name="DAA_Airspace_setOwnshipPosition">setOwnshipPosition</a>
-     * @description Sets the ownship position to a given location.
-     * @param pos {Object({ lat: real, lon: real, alt: real })} New position of the ownship.
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
+     * Set ownship position
      */
     setOwnshipPosition (pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): DAA_Airspace {
         if (pos) {
@@ -589,17 +649,17 @@ export class DAA_Airspace {
                 // remove white spaces in the name and make all small letters
                 pos = pos.replace(/\s/g, "").toLowerCase();
                 // look for the name of the city in the list of known destinations (array cities)
-                let loc = cities[pos];
-                if (loc && loc.lat && loc.lon) {
+                const loc: serverInterface.LatLonAlt = cities[pos];
+                if (loc) {
                     this._ownship.setPosition(loc);
                 } else {
                     console.error("Could not find location " + location + " :((");
                 }
             } else {
                 const position: utils.LatLonAlt = {
-                    alt: (typeof pos.alt === "string") ? +pos.alt : pos.alt,
-                    lat: (typeof pos.lat === "string") ? +pos.lat : pos.lat,
-                    lon: (typeof pos.lon === "string") ? +pos.lon : pos.lon,
+                    alt: +pos.alt,
+                    lat: +pos.lat,
+                    lon: +pos.lon,
                 }
                 this._ownship.setPosition(position);
             }
@@ -610,6 +670,9 @@ export class DAA_Airspace {
         }
         return this;
     }
+    /**
+     * Set ownship velocity
+     */
     setOwnshipVelocity (v: utils.Vector3D | serverInterface.Vector3D): DAA_Airspace {
         if (v) {
             this._ownship.setVelocity(v);
@@ -628,7 +691,7 @@ export class DAA_Airspace {
         for (let i = 0; i < flightPlan?.length; i++) {
             this.flightPlan.addWaypoint(flightPlan[i]);
         }
-        this.flightPathVisible ? this.revealFlightPath() : this.hideFlightPath();
+        this.flightPlanVisible ? this.revealFlightPlan() : this.hideFlightPlan();
         return this;
     }
     /**
@@ -679,17 +742,7 @@ export class DAA_Airspace {
         return this._traffic;
     }
     /**
-     * @function <a name="DAA_Airspace_setTraffic">setTraffic</a>
-     * @desc Updates traffic information.
-     * @param traffic {Array(TrafficDescriptors)} Traffic information, as an array of traffic descriptors.
-     *              Each traffic descriptor is an object with the following attributes:
-     *              <li>s: {lat: real, lon: real, alt: real} position of the aircraft</li>
-     *              <li>v: {x: real, y: real, z: real} velocity vector</li>
-     *              <li>symbol (String): one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship"</li>
-     *              <li>name (String): unique traffic identifier</li>
-     * @memberof module:InteractiveMap
-     * @instance
-     * @inner
+     * Updates traffic information.
      */
     setTraffic (traffic: { s: utils.LatLonAlt | serverInterface.LatLonAlt, v: utils.Vector3D | serverInterface.Vector3D, symbol: string, callSign: string }[]): DAA_Airspace {
         const len: number = (traffic) ? traffic.length : 0;
@@ -838,6 +891,10 @@ export class DAA_Airspace {
         }
         return this.redraw();
     }
+    /**
+     * Adds a geofence polygon, where a geofence can be either a contour or a hazard zone
+     * We use a convention to distinguish contours from hazard zones: the ID of a contour starts with "c-"
+     */
     addGeoFencePolygon (
         id: string,
         perimeter: utils.LatLon[] | serverInterface.LatLon[], 
@@ -860,6 +917,10 @@ export class DAA_Airspace {
         }
         return this;
     }
+    /**
+     * Removes geofence polygon identified by id
+     * If id is not specified, all geofence polygons are removed
+     */
     removeGeoFencePolygon (id?: string) : DAA_Airspace {
         if (this.hazardZones) {
             this.hazardZones.removePolygon(id);
@@ -871,14 +932,20 @@ export class DAA_Airspace {
         }
         return this;
     }
-    revealFlightPath (): DAA_Airspace {
-        this.flightPathVisible = true;
+    /**
+     * Reveals flight path
+     */
+    revealFlightPlan (): DAA_Airspace {
+        this.flightPlanVisible = true;
         if (this.flightPlan) {
             this.flightPlan.reveal();
             this.redraw();
         }
         return this;
     }
+    /**
+     * Reveals hazard zones
+     */
     revealHazardZones (): DAA_Airspace {
         this.hazardZonesVisible = true;
         if (this.hazardZones) {
@@ -900,8 +967,8 @@ export class DAA_Airspace {
         this.revealContours();
         return this;
     }
-    hideFlightPath (): DAA_Airspace {
-        this.flightPathVisible = true;
+    hideFlightPlan (): DAA_Airspace {
+        this.flightPlanVisible = true;
         if (this.flightPlan) {
             this.flightPlan.hide();
             this.redraw();

@@ -4,7 +4,7 @@ import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
 export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" 
-    | "contours" | "hazard-zones" | "flight-plan" | ""; // "" means empty slot
+    | "contours" | "hazard-zones" | "flight-plan" | "vfr-map" | ""; // "" means empty slot
 
 export class ViewOptions {
     // widget id
@@ -175,6 +175,10 @@ export class ViewOptions {
                 if (this.map) { this.map.terrainMode(); }
                 break;
             }
+            case "vfr-map": {
+                if (this.map) { this.map.vfrMode(); }
+                break;
+            }
             case "contours": {
                 if (this.map) { this.map.showContours(true); }
                 break;
@@ -207,6 +211,10 @@ export class ViewOptions {
             // }
             case "call-sign": {
                 if (this.map) { this.map.showCallSign(false); }
+                break;
+            }
+            case "vfr-map": {
+                if (this.map) { this.map.streetMode(); }
                 break;
             }
             case "terrain": {

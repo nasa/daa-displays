@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Svg Vector Icons : http://www.onlinewebfonts.com/icon -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -18,6 +16,7 @@
    id="svg10"
    sodipodi:docname="daa-target.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   style="-webkit-filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, 0.9)); filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, 0.9));"
    width="541.43561"
    height="838.52313"><defs
    id="defs14" /><sodipodi:namedview
@@ -39,7 +38,8 @@
    inkscape:window-x="67"
    inkscape:window-y="27"
    inkscape:window-maximized="0"
-   inkscape:current-layer="svg10" />
+   inkscape:current-layer="svg10" 
+   />
 <metadata
    id="metadata2"> Svg Vector Icons : http://www.onlinewebfonts.com/icon <rdf:RDF><cc:Work
      rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
@@ -50,9 +50,8 @@
    transform="matrix(0.56568542,-0.56568542,0.56568542,0.56568542,-294.76617,549.13714)"><g
      transform="matrix(0.1,0,0,-0.1,0,511)"
      id="g6"
-     style="fill:#ffffff"><path
-       d="M 4932.4,2530.1 C 2296,1168.3 130.7,35.3 119.8,19 87.1,-32.8 95.3,-100.9 141.6,-147.2 c 38.1,-38.1 283.3,-43.6 2301.5,-43.6 H 4701 v -2257.9 c 0,-2018.2 5.4,-2263.3 43.6,-2301.5 54.5,-57.2 128,-54.5 182.5,5.5 43.6,46.3 4907.9,9437.3 4959.7,9570.8 21.8,59.9 19,84.4 -24.5,128 -27.2,32.7 -68.1,57.2 -92.6,57.2 -24.7,0 -2200.8,-1116.6 -4837.3,-2481.2 z M 9407.3,4496.6 C 9404.6,4483 8407.7,2551.9 7193,206.9 l -2206.1,-4262.5 -13.6,2040 C 4965.1,-896.2 4948.8,32.6 4937.9,46.2 4924.3,57.1 3995.5,73.4 2873.4,81.6 L 833.4,95.2 5104,2306.8 c 2347.8,1214.7 4278.8,2211.6 4289.7,2211.6 13.6,2.7 19,-8.2 13.6,-21.8 z"
-       id="path4"
-       inkscape:connector-curvature="0"
-       style="fill:#ffffff" /></g></g>
+     style="fill:#ffffff">
+     <path d="M 9769.7 5011.3 C 9745 5011.3 130.7 35.3 119.8 19 C 87.1 -32.8 95.3 -100.9 141.6 -147.2 C 179.7 -185.3 4701 -190.8 4701 -190.8 C 4701 -190.8 4706.4 -4712 4744.6 -4750.2 C 4799.1 -4807.4 4872.6 -4804.7 4927.1 -4744.7 C 4970.7 -4698.4 9835 4692.6 9886.8 4826.1 C 9908.6 4886 9905.8 4910.5 9862.3 4954.1 C 9835.1 4986.8 9794.2 5011.3 9769.7 5011.3 Z M 8206.461 3258.774 C 7958.561 2999.974 4986.9 -4055.6 4986.9 -4055.6 C 4986.9 -4055.6 5601.137 629.613 5590.237 643.213 C 5576.637 654.113 833.4 95.2 833.4 95.2 C 833.4 95.2 8195.561 3258.774 8206.461 3258.774 Z" id="path4" style="">
+     </path>
+     </g></g>
 </svg>

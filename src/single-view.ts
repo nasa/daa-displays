@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, parseDaaConfigInBrowser, DAAPlayer } from './daa-displays/daa-player';
 import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -46,7 +46,7 @@ import { Bands } from './daa-displays/daa-utils';
 const player: DAAPlayer = new DAAPlayer();
 
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     player.displayFlightData();
     if (flightData && flightData.ownship) {
@@ -239,7 +239,7 @@ function plotMonitor (desc: { data: MonitorElement, monitorID: number }) {
 }
 
 // interactive map
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" });
+const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp", engine: "leafletjs" });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
@@ -249,7 +249,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+        "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });

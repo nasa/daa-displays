@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
 import { DAAScenario, LLAData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -42,7 +42,7 @@ import * as utils from './daa-displays/daa-utils';
 // import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render(playerID: string, data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.compass.setCompass(flightData.ownship.v);

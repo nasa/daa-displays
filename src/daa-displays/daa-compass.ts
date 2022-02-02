@@ -98,6 +98,7 @@ import { WindIndicator } from './daa-wind-indicator';
 
 export const singleStroke: number = 8;
 export const doubleStroke: number = 20;
+export const animationDuration: number = 100; //ms
 
 // internal class, renders a resolution bug over the compass
 class ResolutionBug {
@@ -248,7 +249,6 @@ class ResolutionBug {
         opt = opt || {};
         this.refreshWedge(opt);
 
-        const animationDuration: number = 100;
         $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
@@ -282,6 +282,9 @@ class ResolutionBug {
     }
 }
 
+/**
+ * Rotating compass
+ */
 export class Compass {
     static readonly units = {
         deg: "deg",

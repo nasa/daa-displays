@@ -34,7 +34,7 @@ import { Compass, singleStroke, doubleStroke } from './daa-displays/daa-compass'
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -51,7 +51,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     recenter?: boolean 
 }) {
     opt = opt || {};
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     player.displayFlightData();
     if (flightData && flightData.ownship) {
@@ -267,7 +267,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
-        "", "call-sign", "terrain", "contours", "hazard-zones"
+        "vfr-map", "call-sign", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp-hidden", maxWedgeAperture: 50 });

@@ -126,9 +126,55 @@ const colladaObjects = {
     }
 };
 
-export class Aircraft {
+/**
+ * Aircraft interface
+ */
+export declare interface AircraftInterface {
+    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): AircraftInterface;
+    setVelocity(vel: utils.Vector3D | serverInterface.Vector3D): AircraftInterface;
+    setPositionAndVelocity(pos?: utils.LatLonAlt | serverInterface.LatLonAlt, vel?: utils.Vector3D | serverInterface.Vector3D): AircraftInterface;
+    setAltitude(alt: number): AircraftInterface;
+    setCallSign (callSign: string): AircraftInterface;
+    getPosition(): utils.LatLonAlt;
+    getVelocity(): utils.Vector3D;
+    getAltitude (): number;
+    getHeading (): number;
+    getCallSign (): string;
+};
+
+/**
+ * Utility function, converts an alert level to a symbol name
+ */
+export function alert2symbol(daaAlert: number): string {
+    switch (daaAlert) {
+        case 1:
+            return "daa-traffic-avoid";
+        case 2:
+            return "daa-traffic-monitor";
+        case 3:
+            return "daa-alert";
+        default: // return "daa-target"
+    }
+    return "daa-target";
+}
+
+/**
+ * Label interface, defines the label of an aircraft and the 
+ */
+export interface AircraftLabel { 
+    text: string, 
+    position: utils.LatLonAlt, 
+    offsetX: number, 
+    offsetY: number
+};
+
+
+/**
+ * Aircraft is a base aircraft suitable to collect information about the aircraft position, speed, heading, and call sign
+ */
+export class Aircraft implements AircraftInterface {
     protected position: utils.LatLonAlt;
-    protected heading: number;
+    protected heading: number; // we keed a separate variable for heading, so this information is well defined even if velocity is 0
     protected velocity: utils.Vector3D;
     protected callSign: string;
     /**
@@ -187,6 +233,11 @@ export class Aircraft {
         }
         return this;
     }
+    setPositionAndVelocity(pos?: utils.LatLonAlt | serverInterface.LatLonAlt, vel?: utils.Vector3D | serverInterface.Vector3D): Aircraft {
+        if (pos) { this.setPosition(pos); }
+        if (vel) { this.setVelocity(vel); }
+        return this;
+    }
     /**
      * @function <a name="Aircraft_setAltiude">setAltitude</a>
      * @description Sets the current altitude of the aircraft.
@@ -224,19 +275,120 @@ export class Aircraft {
      * @instance
      * @inner
      */
-    protected getVelocity(): utils.Vector3D {
-        return this.velocity;
+    getVelocity (): utils.Vector3D {
+        return { ...this.velocity };
     }
+    /**
+     * Return the aircraft altitude
+     */
+    getAltitude (): number {
+        return this?.position?.alt | 0;
+    }
+    /**
+     * Return the aircraft call sign (i.e., the aircraft identifier)
+     */
     getCallSign (): string {
         return this.callSign;
     }
+    /**
+     * Sets the aircraft call sign
+     */
     setCallSign (callSign: string): Aircraft {
         this.callSign = callSign;
         return this;
     }
+    /**
+     * Returns the heading of the aircraft
+     */
     getHeading (): number {
         return this.heading;
     }
+    /**
+     * Utility function, returns the heading described by the velocity vector passed as function parameter
+     */
+    static headingFromVelocity (v: { x: number | string, y: number | string }): number {
+        return v && +v.x !== 0 && +v.y !== 0 ? utils.rad2deg(Math.atan2(+v.x, +v.y)) : 0;
+    }
+    /**
+     * utility function, creates a label similar to that used in TCAS displays
+     * The label includes:
+     *  - relative altitude (relative to the ownship, if ownship info is provided): 2 digits, units is 100 feet
+     *  - velocity vector: represented using an arrow 
+     *          arrow-up if aircraft is climbing
+     *          arrow-down if aircraft is descending
+     *          no arrow is shown if the aircraft is levelled
+    */
+    createTrafficLabel (opt?: { ownship?: AircraftInterface }): AircraftLabel {
+        opt = opt || {};
+        function fixed2(val: number): string {
+            if (val > 0) {
+                return (val < 10) ? "0" + val : val.toString();
+            }
+            return (val > -10) ? "-0" + (-val) : val.toString();
+        };
+        const label: AircraftLabel = {
+            text: "",
+            // position: new WorldWind.Position(this.position.lat, this.position.lon, colladaAltitude(this.position.alt)),
+            position: { lat: this.position.lat, lon: this.position.lon, alt: this.position.alt },
+            offsetX: 18,
+            offsetY: 0
+        };
+        // indicate altitude, in feet
+        if (opt.ownship) {
+            const val = Math.trunc((this.position.alt - opt.ownship.getPosition().alt) / 100);
+            if (val === 0) {
+                label.text = " 00";
+                label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
+            } else if (val > 0) {
+                label.text = "＋" + fixed2(val); // using large plus ＋ to increase the visibility of the + sign
+                label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
+            } else {
+                label.text = "—" + fixed2(-val); // using long dash — to increase the visibility of the - sign
+                label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
+            }
+        } else {
+            label.text = `${Math.floor(this.position.alt)}ft`;
+            label.offsetY = -16;
+        }
+        // indicate whether the aircraft is climbing or descending, based on the velocity vector
+        if (this.getVelocity()) {
+            const THRESHOLD: number = 50; // Any climb or descent smaller than this threshold show as level flight (no arrow)
+            if (Math.abs(this.getVelocity().z) >= THRESHOLD) {
+                if (this.getVelocity().z > 0) {
+                    // add arrow up before label
+                    label.text += arrows["white-up"];
+                } else if (this.getVelocity().z < 0) {
+                    // add arrow down before label
+                    label.text += arrows["white-down"];
+                }
+            }
+        }
+        // console.log(label);
+        return label;
+    }
+    /**
+     * Internal function, creates the call sign label, including text, position, offsetX, offsetY
+     * offsetY < 0 means text should go on top
+     */
+    protected createCallSignLabel (opt?: { ownship?: AircraftInterface }): AircraftLabel {
+        opt = opt || {};
+        const label: AircraftLabel = {
+            text: "",
+            position: { lat: this.position.lat, lon: this.position.lon, alt: this.position.alt },
+            offsetX: 18,
+            offsetY: 0
+        };
+        // indicate altitude, in feet
+        const val = (opt.ownship) ? Math.trunc((this.position.alt - opt.ownship.getPosition().alt) / 100) : Math.trunc(this.position.alt / 100);
+        label.text = this.callSign;
+        if (val < 0) {
+            label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
+        } else {
+            label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
+        }
+        return label;
+    }
+
 }
 
 // utility function, used to offset the label for collada aircraft and convert feet to meters
@@ -245,6 +397,9 @@ export class Aircraft {
 export function colladaAltitude(alt: number) {
     return alt / 4;
 }
+/**
+ * Renderable collada aircraft
+ */
 export class ColladaAircraft extends Aircraft {
     static readonly aircraftSymbols: string[] = [ "daa-ownship", "daa-alert", "daa-target", "daa-traffic-avoid", "daa-traffic-monitor" ];
     static readonly MAX_RETRY_COLLADA_ACTION: number = 64;
@@ -450,6 +605,9 @@ export class ColladaAircraft extends Aircraft {
     }
 }
 
+/**
+ * Renderable WWD aircraft
+ */
 export class DAA_Aircraft extends Aircraft {
     readonly symbolColor = {
         "daa-ownship": WorldWind.Color.CYAN,
@@ -536,68 +694,14 @@ export class DAA_Aircraft extends Aircraft {
             const aircraft: ColladaAircraft = this.renderableAircraft[keys[i]];
             await aircraft.setupRenderables(this.selectedSymbol, opt); // load the collada object
         }
-        if (this.aircraftVisible) {
-            this.reveal();
-        } else {
-            this.hide();
-        }
+        this.aircraftVisible ? this.reveal() : this.hide();
         // we need to refresh the map here, after all collada objects have been loaded
         this.wwd.redraw();
         return this;
     }
-
-    // utility function, creates a label similar to that used in TCAS displays
-    // The label includes:
-    //  - relative altitude (reference altitude is the ownship altitude): 2 digits, units is 100 feet
-    //  - velocity vector: represented using an arrow (arrow-up if aircraft is climbing, arrow-down if aircraft is descending, no arrow is shown if the aircraft is levelled)
-    // The label color matches that of the daa symbol of the aircraft
-    // The label is shown above the daa symbol if the altitude of the aircraft is greater than or equal the ownship's altitude, below otherwise.
-    protected createLabel (): { text: string, position: WorldWind.Position, offsetX: number, offsetY: number } {
-        function fixed2(val: number): string {
-            if (val > 0) {
-                return (val < 10) ? "0" + val : val.toString();
-            }
-            return (val > -10) ? "-0" + (-val) : val.toString();
-        }
-        let label = {
-            text: "",
-            position: new WorldWind.Position(this.position.lat, this.position.lon, colladaAltitude(this.position.alt)),
-            offsetX: 18,
-            offsetY: 0
-        };
-        // indicate altitude, in feet
-        if (this._own) {
-            let val = Math.trunc((this.position.alt - this._own.getPosition().alt) / 100);
-            if (val === 0) {
-                label.text = " 00";
-                label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
-            } else if (val > 0) {
-                label.text = "+" + fixed2(val);
-                label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
-            } else {
-                label.text = fixed2(val);
-                label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
-            }
-        } else {
-            label.text = `${Math.floor(this.position.alt)}ft`;
-            label.offsetY = -16;
-        }
-        // indicate whether the aircraft is climbing or descending, based on the velocity vector
-        if (this.getVelocity()) {
-            const THRESHOLD: number = 50; // Any climb or descent smaller than this threshold show as level flight (no arrow)
-            if (Math.abs(this.getVelocity().z) >= THRESHOLD) {
-                if (this.getVelocity().z > 0) {
-                    // add arrow up before label
-                    label.text += arrows["white-up"];
-                } else if (this.getVelocity().z < 0) {
-                    // add arrow down before label
-                    label.text += arrows["white-down"];
-                }
-            }
-        }
-        // console.log(label);
-        return label;
-    }
+    /**
+     * Hides call sign
+     */
     hideCallSign (): DAA_Aircraft {
         if (this.renderableCallSign) {
             this.renderableCallSign.enabled = false;
@@ -605,6 +709,9 @@ export class DAA_Aircraft extends Aircraft {
         }
         return this;
     }
+    /**
+     * Reveals call sign
+     */
     revealCallSign (): DAA_Aircraft {
         if (this.renderableCallSign) {
             this.renderableCallSign.enabled = true;
@@ -612,28 +719,20 @@ export class DAA_Aircraft extends Aircraft {
         }
         return this;
     }
-    protected createCallSign (): { text: string, position: WorldWind.Position, offsetX: number, offsetY: number } {
-        let label = {
-            text: "",
-            position: new WorldWind.Position(this.position.lat, this.position.lon, colladaAltitude(this.position.alt)),
-            offsetX: 18,
-            offsetY: 0
-        };
-        // indicate altitude, in feet
-        const val = (this._own) ? Math.trunc((this.position.alt - this._own.getPosition().alt) / 100) : Math.trunc(this.position.alt / 100);
-        label.text = this.getCallSign();
-        if (val < 0) {
-            label.offsetY = -16; // text will at the top of the symbol (y axis points down in the canvas)
-        } else {
-            label.offsetY = 42; // text will at the bottom of the symbol (y axis points down in the canvas)
-        }
-        return label;
-    }
+    /**
+     * Internal function, adds a renderable label to the aircraft
+     */
     protected addRenderableLabels(opt?: { view3D?: boolean }): DAA_Aircraft {
         opt = opt || {};
         if (this.selectedSymbol && (opt.view3D || this.selectedSymbol !== "daa-ownship")) {
-            const aircraftLabel = this.createLabel();
-            this.renderablePosition = new WorldWind.GeographicText(aircraftLabel.position, aircraftLabel.text);
+            const aircraftLabel = this.createTrafficLabel({ ownship: this._own });
+            const renderablePosition: WorldWind.Position = new WorldWind.Position(
+                aircraftLabel.position.lat, 
+                aircraftLabel.position.lon, 
+                colladaAltitude(aircraftLabel.position.alt)
+            );
+
+            this.renderablePosition = new WorldWind.GeographicText(renderablePosition, aircraftLabel.text);
             this.renderablePosition.attributes = new WorldWind.TextAttributes(null);
             this.renderablePosition.attributes.color = this.symbolColor[this.selectedSymbol];
             this.renderablePosition.attributes.font.weight = "bold";
@@ -645,8 +744,8 @@ export class DAA_Aircraft extends Aircraft {
             this.renderablePosition.enabled = this.aircraftVisible;
             this.textLayer.addRenderable(this.renderablePosition);
 
-            const aircraftCallSign = this.createCallSign();
-            this.renderableCallSign = new WorldWind.GeographicText(aircraftCallSign.position, aircraftCallSign.text);
+            const aircraftCallSign = this.createCallSignLabel({ ownship: this._own });
+            this.renderableCallSign = new WorldWind.GeographicText(renderablePosition, aircraftCallSign.text);
             this.renderableCallSign.attributes = new WorldWind.TextAttributes(null);
             this.renderableCallSign.attributes.color = this.symbolColor[this.selectedSymbol];
             this.renderableCallSign.attributes.font.weight = "bold";
@@ -661,6 +760,9 @@ export class DAA_Aircraft extends Aircraft {
         }
         return this;
     }
+    /**
+     * Sets the call sign of the aircraft
+     */
     setCallSign (callSign: string): DAA_Aircraft {
         super.setCallSign(callSign);
         if (callSign !== null && callSign !== undefined) {
@@ -673,6 +775,9 @@ export class DAA_Aircraft extends Aircraft {
         }
         return this;
     }
+    /**
+     * deletes the aicraft
+     */
     remove (): DAA_Aircraft {
         if (this.aircraftLayer && this.renderableAircraft) {
             Object.keys(this.renderableAircraft).forEach(symbol => {
@@ -704,7 +809,7 @@ export class DAA_Aircraft extends Aircraft {
      */
     setSymbol(daaSymbol?: string | number): DAA_Aircraft {
         if (daaSymbol) {
-            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : this._alert2symbol(+daaSymbol);
+            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alert2symbol(+daaSymbol);
             if (symbol) {
                 if (!this.renderableAircraft[this.selectedSymbol]) {
                     // console.log("Warning: still loading DAA_Aircraft symbols... :/");
@@ -724,21 +829,12 @@ export class DAA_Aircraft extends Aircraft {
         }
         return this;
     }
+    /**
+     * Stores information about the reference aircraft, i.e., the ownship
+     */
     setReferenceAircraft(ownship: Aircraft): DAA_Aircraft {
         this._own = ownship;
         return this;
-    }
-    _alert2symbol(daaAlert: number): string {
-        switch (daaAlert) {
-            case 1:
-                return "daa-traffic-avoid";
-            case 2:
-                return "daa-traffic-monitor";
-            case 3:
-                return "daa-alert";
-            default: // return "daa-target"
-        }
-        return "daa-target";
     }
     /**
      * @function <a name="DAA_Aircraft_selectSymbolByAlert">selectSymbolByAlert</a>
@@ -774,15 +870,23 @@ export class DAA_Aircraft extends Aircraft {
      */
     refreshLabel(): DAA_Aircraft {
         if (this.renderablePosition) {
-            const aircraftLabel = this.createLabel();
-            this.renderablePosition.position = aircraftLabel.position;
+            const aircraftLabel = this.createTrafficLabel({ ownship: this._own });
+            this.renderablePosition.position = new WorldWind.Position(
+                aircraftLabel.position.lat,
+                aircraftLabel.position.lon,
+                colladaAltitude(aircraftLabel.position.alt)
+            );
             this.renderablePosition.attributes.color = this.symbolColor[this.selectedSymbol];
             this.renderablePosition.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftLabel.offsetX, WorldWind.OFFSET_PIXELS, aircraftLabel.offsetY);
             this.renderablePosition.text = aircraftLabel.text;
         }
         if (this.renderableCallSign) {
-            const aircraftCallSign = this.createCallSign();
-            this.renderableCallSign.position = aircraftCallSign.position;
+            const aircraftCallSign = this.createCallSignLabel({ ownship: this._own });
+            this.renderableCallSign.position = new WorldWind.Position(
+                aircraftCallSign.position.lat,
+                aircraftCallSign.position.lon,
+                colladaAltitude(aircraftCallSign.position.alt)
+            );
             this.renderableCallSign.attributes.color = this.symbolColor[this.selectedSymbol];
             this.renderableCallSign.attributes.offset = new WorldWind.Offset(WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetX, WorldWind.OFFSET_PIXELS, aircraftCallSign.offsetY);
             this.renderableCallSign.text = aircraftCallSign.text;

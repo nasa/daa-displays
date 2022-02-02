@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { colors, DAA_AircraftDescriptor, DEFAULT_WIDTH, InteractiveMap, WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
+import { colors, DaaSymbol, DAA_AircraftDescriptor, DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -61,7 +61,7 @@ function render (danti: {
     verticalSpeedTape: VerticalSpeedTape,
     sound: DaaSounds
 }) {
-    const daaSymbols: string[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     danti.map.setPosition(flightData.ownship.s);
 
@@ -284,20 +284,20 @@ const wind: WindIndicator = new WindIndicator("wind", {
     left: enable_widescreen ? 48 : 195 
 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
+const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 210 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 
     left: enable_widescreen ? 7 : 13, 
-    width: enable_widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING
+    width: enable_widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH - PADDING
 }, { parent: "daa-disp", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { 
     top: enable_widescreen ? -44 : 0, 
     left: enable_widescreen ? 7 : 13, 
-    width: enable_widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH - PADDING }, {
+    width: enable_widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH - PADDING }, {
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+        "nrthup", "vfr-map", "call-sign", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // sounds
 const sound: DaaSounds = new DaaSounds();
@@ -428,9 +428,9 @@ async function createPlayer(args: DaaConfig): Promise<void> {
 }
 if (enable_widescreen) {
     $("#daa-theme").css("display", "block");
-    $("#main-frame").css("margin-left", 154);
+    $("#main-frame").css({ "margin-left": 92, "margin-top": 102, "transform-origin": "top left", "transform": "scale(0.5)" });
     $("#daa-cockpit").css("top", 150);
-    $("#daa-panel").css({ top: 1186, left: 200 });
+    $("#daa-panel").css({ top: 1200, left: 0, transform: "scale(1.38)" });
     $("#daidalus-wind").css("margin-left", 1106);
 }
 const args: DaaConfig = parseDaaConfigInBrowser();

@@ -36,12 +36,15 @@
         <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="../node_modules/font-awesome/css/font-awesome.min.css">
         <link rel="stylesheet" href="../node_modules/animate.css/animate.min.css">
+        <link rel="stylesheet" href="../node_modules/leaflet/dist/leaflet.css">
         <link rel="stylesheet" href="../daa-displays/css/daa-displays.css">
-
 
         <script src="../node_modules/jquery/dist/jquery.min.js"></script>
         <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="../node_modules/handlebars/dist/handlebars.min.js"></script>
+
+        <script src="../node_modules/leaflet/dist/leaflet.js"></script>
+
         <script src="../node_modules/requirejs/require.js" data-main="playground.js"></script>
     </head>
     <body>
@@ -49,6 +52,7 @@
             <div id="daa-disp" style="margin-top:64px;"></div>
             <div id="daa-disp-left" style="margin-left:50px;"></div>
             <div id="daa-disp-right" style="margin-left:1200px;"></div>
+            <div id="ljs-disp" style="margin-top:1064px;"></div>
         </div>
         <div id="simulation-controls" style="position:absolute; top:940px; left:0; width:80%;">
         </div>
@@ -136,9 +140,10 @@
                 </div>
                 <input type="number" class="form-control" id="test-pitch-input" value="2" aria-label="Pitch">
                 <button type="button" class="btn btn-sm btn-secondary" id="test-pitch">Submit</button>
-            </div> -->
-
+            </div> -->    
         </div>
 
+        <div id="test-ljs" style="position:absolute; margin-top:1070px; margin-left:1080px; height:842px; width:1054px;">
+        </div>
     </body>
 </html>

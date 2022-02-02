@@ -28,11 +28,14 @@ export interface RGBColor { r: number, g: number, b: number };
 export function hex2rgb (hex: string, opt?: { normalize?: boolean }): RGBColor {
     let elems: string = hex || "000000";
     elems = elems.startsWith("#") ? elems.substring(1, elems.length) : elems;
-	const r: string = (elems.length > 2) ? elems.substr(0, 2) : "00";
-	const g: string = (elems.length > 4) ? elems.substr(2, 2) : "00";
-    const b: string = (elems.length > 6) ? elems.substr(4, 2) : "00";
+	const r: string = (elems.length > 2) ? elems.substring(0, 2) : "00";
+	const g: string = (elems.length > 4) ? elems.substring(2, 4) : "00";
+    const b: string = (elems.length > 6) ? elems.substring(4, 6) : "00";
     return opt?.normalize ? { r: parseInt(r, 16) / 255.0, g: parseInt(g, 16) / 255.0, b: parseInt(b) / 255.0 }
         : { r: parseInt(r, 16), g: parseInt(g, 16), b: parseInt(b, 16) };
+}
+export function getHtmlColor (wwdColor: { r: number, g: number, b: number }): string {
+    return `rgb(${wwdColor.r * 255}, ${wwdColor.g * 255}, ${wwdColor.b * 255 })`;
 }
 export const bugColors = {
     NONE: "#cccccc", // white
@@ -40,14 +43,14 @@ export const bugColors = {
     MID: "#ffc107", //"#ffbf00",
     NEAR: "red",
     RECOVERY: "#00f500", // DASHED green #07dc0a
-    UNKNOWN: "gray"
+    UNKNOWN: "gainsboro"
     ,
     "0": "#cccccc",  // NONE
     "1": "#ffc107",// FAR
     "2": "#ffc107",// MID
     "3": "red",    // NEAR
     "4": "#00f500",// RECOVERY
-    "-1": "gray"   // UNKNOWN
+    "-1": "gainsboro"   // UNKNOWN
 };
 export const alertingColors = {
     NONE: { color: "transparent" },
@@ -228,14 +231,24 @@ export function limit(min: number, max: number, name?: string): (val: number) =>
     };
 };
 
-export function createDiv(id: string, opt?: { zIndex?: number, top?: number, left?: number, parent?: string, class?: string }): HTMLElement {
+export function createDiv(id: string, opt?: { 
+    zIndex?: number, 
+    top?: number, 
+    left?: number,
+    width?: number,
+    height?: number,
+    parent?: string, 
+    class?: string
+}): HTMLElement {
     opt = opt || {};
     opt.zIndex = opt.zIndex || 0;
     const div: JQuery<HTMLElement> = $('<div></div>');//document.createElement("div");
-    $(div).css("position", "absolute").css("height", "0px").css("width", "0px").attr("id", id).css("z-index", opt.zIndex);
+    $(div).css("position", "absolute").attr("id", id).css("z-index", opt.zIndex);
     if (opt.class) { $(div).addClass(opt.class); }
     if (opt.top) { $(div).css("top", opt.top + "px"); }
     if (opt.left) { $(div).css("left", opt.left + "px"); }
+    $(div).css("height", (opt.height) ? opt.height + "px" : "0px");
+    $(div).css("width", (opt.width) ? opt.width + "px" : "0px");
     const parentDIV: JQuery<HTMLElement> = (opt.parent && $(`#${opt.parent}`).length) ? $(`#${opt.parent}`) : $('BODY');
     $(parentDIV).append(div);
     return $(div)[0];

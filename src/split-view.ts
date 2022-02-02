@@ -33,7 +33,7 @@ import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
 import { DaidalusBand, LLAData, Region, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -43,6 +43,9 @@ import { ViewOptions } from './daa-displays/daa-view-options';
 import { ConfigData, ResolutionElement } from './daa-server/utils/daa-server';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
+/**
+ * Utility function, renders the display elements
+ */
 function render(playerID: string, data: { 
     map: InteractiveMap, 
     compass: Compass, 
@@ -51,7 +54,7 @@ function render(playerID: string, data: {
     verticalSpeedTape: VerticalSpeedTape,
     windIndicator: WindIndicator
 }) {
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
 
@@ -139,6 +142,9 @@ function render(playerID: string, data: {
     plot(playerID, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
+/**
+ * Utility function, renders the plot diagrams
+ */
 function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     if (desc) {
         splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
@@ -172,7 +178,13 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
 }
 
 // interactive map
-const map_left: InteractiveMap = new InteractiveMap("map-left", { top: 2, left: 6}, { parent: "daa-disp-left" });
+const map_left: InteractiveMap = new InteractiveMap("map-left", { 
+    top: 2, 
+    left: 6
+}, { 
+    parent: "daa-disp-left", 
+    engine: "leafletjs" 
+});
 // wind indicator
 const wind_left: WindIndicator = new WindIndicator("wind-left", { top: 690, left: 195 }, { parent: "daa-disp-left"});
 // map heading is controlled by the compass
@@ -182,7 +194,7 @@ const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { 
 // map view options
 const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { 
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+        "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
     ], parent: "daa-disp-left", compass: compass_left, map: map_left 
 });
 const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
@@ -190,7 +202,13 @@ const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top:
 const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", { top: 210, left: 981 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
 
 // interactive map
-const map_right: InteractiveMap = new InteractiveMap("map-right", { top: 2, left: 6}, { parent: "daa-disp-right" });
+const map_right: InteractiveMap = new InteractiveMap("map-right", { 
+    top: 2, 
+    left: 6
+}, { 
+    parent: "daa-disp-right",
+    engine: "leafletjs"
+});
 // wind indicator
 const wind_right: WindIndicator = new WindIndicator("wind-right", { top: 690, left: 195 }, { parent: "daa-disp-right"});
 // map heading is controlled by the compass
@@ -200,7 +218,7 @@ const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, 
 // map view options
 const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { 
     labels: [
-        "nrthup", "call-sign", "terrain", "contours", "hazard-zones"
+        "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
     ], parent: "daa-disp-right", compass: compass_right, map: map_right 
 });
 const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });

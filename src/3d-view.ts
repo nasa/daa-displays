@@ -32,7 +32,7 @@ import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -40,7 +40,7 @@ import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 
 function render (data: { map: InteractiveMap }) {
-    const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
+    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     let flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.map.setOwnshipVelocity(flightData.ownship.v);
@@ -101,7 +101,17 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
 
 
 // single player
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp" , terrainMode: true, godsView: true, atmosphere: false, callSignVisible: true, view3D: true });
+const map: InteractiveMap = new InteractiveMap("map", {
+    top: 2, 
+    left: 6
+}, { 
+    parent: "daa-disp" , 
+    terrainMode: true, 
+    godsView: true, 
+    atmosphere: false, 
+    callSignVisible: true, 
+    view3D: true
+});
 // map heading is controlled by the compass
 // const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
 // map zoom is controlled by nmiSelector

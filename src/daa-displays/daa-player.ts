@@ -1,9 +1,9 @@
 /**
  * @module DAAPlayer
  * @version 2.0.0
- * @description <div style="display:flex;"><div style="width:50%;">
- *              <b>Playback Player.</b>
- *              <p>This tool provides functions for the execution of scenario-based simulation runs. 
+ * @author Paolo Masci
+ * @date October 2018
+ * @description Playback Player, provides functions for the execution of scenario-based simulation runs. 
  *              Scenarios include information necessary to feed the functional logic
  *              of the prototype, e.g., position and velocity of ownship and traffic.
  *              This information can be based on pre-recorded real flight data, 
@@ -11,47 +11,7 @@
  *              A front-end is provided to support interactive simulations, 
  *              with the usual controls start/pause/resume simulation. 
  *              Logging functions are provided to enable off-line analysis of simulation 
- *              traces.</p></div>
- *              <img src="images/daa-playback-player.png" style="margin-left:8%; margin-top:3%; max-height:180px;" alt="DAA Playback Player"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-playback"], function (PlaybackPlayer) {
-    "use strict";
-    const player = new DAAPlaybackPlayer("player");
-    // create simulation controls
-    player.simulationControls({
-        top: 860
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
- * @author Paolo Masci
- * @date October 2018
+ *              traces.
  * @copyright 
  * Copyright 2016 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration. No
@@ -99,6 +59,9 @@ import { DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, 
 
 import * as Backbone from 'backbone';
 
+/**
+ * DAA Player events and types
+ */
 export const PlayerEvents = {
     DidSelectConfiguration: "DidSelectConfiguration",
     DidUploadScenarioFile: "DidUploadScenarioFile"
@@ -109,6 +72,9 @@ export interface DidSelectConfigurationData {
 };
 export type DidUploadScenarioFileData = SaveScenarioRequest;
 
+/**
+ * DAA Player interfaces
+ */
 export declare interface DAAPlaybackHandlers {
     init: () => Promise<void>;
     step: () => Promise<void>;
@@ -119,15 +85,12 @@ export declare interface DAAPlaybackHandlers {
     speed: () => Promise<void>;
     identify: () => Promise<void>;
 }
-
 export declare type InputHandler = (data: string) => void;
-
 export declare interface Handlers extends DAAPlaybackHandlers {
     scenarioReloader: (scenarios: string[]) => Promise<void>;
     configurationReloader: () => Promise<void>;
     daidalusVersionReloader: () => Promise<void>;
 }
-
 export declare interface PlotDescriptor {
     id: string,
     paused?: boolean,
@@ -143,8 +106,16 @@ export declare interface PlotDescriptor {
     parent?: string,
     player?: DAAPlayer
 }
-
-export function safeSelector(str: string): string {
+export interface DaaConfig {
+	scenario: string,
+	config: string
+}
+/**
+ * Utility function, converts a string into a safe DOM selector (the selector should not include "." otherwise jquery interpretes the string as a series of class names)
+ * @param str 
+ * @returns 
+ */
+ export function safeSelector(str: string): string {
     if (str) {
         if (str.endsWith(".daa")) {
             str = str.slice(0, -4);
@@ -152,11 +123,6 @@ export function safeSelector(str: string): string {
         return str.replace(/\.|\/|\s/g, "-");
     }
     return str;
-}
-
-export interface DaaConfig {
-	scenario: string,
-	config: string
 }
 /**
  * Parse arguments indicated in the browser address.
@@ -177,16 +143,33 @@ export function parseDaaConfigInBrowser (search?: string): DaaConfig {
     return null;
 }
 
+/**
+ * DAA Player class
+ */
 export class DAAPlayer extends Backbone.Model {
+    /**
+     * Useful constants
+     */
     static readonly prefix: string = "DAIDALUSv";
     static readonly VERSION: string = "2.0.0";
     static readonly timerJiffy: number = 8; // 8ms
+
+    // player ID
     id: string;
+
+    // current simulation step
     protected simulationStep: number;
+
+    /**
+     * init, step, render, and plot functions.
+     * An implementation of these functions must be provided by the user through player.define
+     * e.g., player.define("init", <function defn>)
+     */
     init: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
     step: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
     render: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: rendering function has not been defined :/"); };
     plot: (args?: any) => Promise<void> = async function () { console.error("[daa-player] Warning: plot function has not been defined :/"); };
+    
     monitorEventHandlers: { [key: string]: () => void } = {};
     protected ms: number;
     protected precision: number;
@@ -226,7 +209,7 @@ export class DAAPlayer extends Backbone.Model {
     };
     
     protected _handlers: Handlers;
-    protected _defines;
+    protected _defines: { [fun:string]: (...args: any[]) => any};
     protected _timer_active: boolean;
     protected _simulationControls: {
         htmlTemplate: string,
@@ -260,18 +243,10 @@ export class DAAPlayer extends Backbone.Model {
         developerMode?: () => Promise<void> | void
     } = {};
 
-    getWellClearVersionSelector(): string {
-        return this.wellClearVersionSelector;
-    }
-    getWellClearConfigurationSelector(): string {
-        return this.wellClearConfigurationSelector;
-    }
-
-    bridgePlayer(player: DAAPlayer) {
-        this.bridgedPlayer = player;
-    }
-
-    public async stepControl(currentStep?: number): Promise<void> {
+    /**
+     * Utility function, advances the simulation step
+     */
+    async stepControl(currentStep?: number): Promise<void> {
         currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
         if (!isNaN(currentStep)) {
             this.simulationStep = currentStep;
@@ -291,15 +266,9 @@ export class DAAPlayer extends Backbone.Model {
     }
 
     /**
-     * @function <a name="DAAPlayback">DAAPlayback</a>
-     * @description Constructor. Creates a new playback player.
+     * Constructor. 
+     * Creates a new playback player.
      * @param id {String} Unique player identifier (default: "daa-playback").
-     * @param opt {Object} Player options
-     *          <li>label (String): human-readable label, useful for identifying the player (default: label = player id)</li>
-     *          <li>fs (Object): FileSystem, used for saving simulation logs.</li>
-     *          <li>scenarios (Object({ scenarioID: data })): scenarios to be simulated</li>
-     * @memberof module:DAAPlaybackPlayer
-     * @instance
      */
     constructor (id?: string) {
         super();
@@ -467,7 +436,41 @@ export class DAAPlayer extends Backbone.Model {
             }
         };
     }
-
+    /**
+     * Activates the player
+     */
+    async activate(opt?: { developerMode?: boolean }): Promise<void> {
+        opt = opt || {};
+        const scenarios = await this.listScenarioFiles();
+        if (!this.activationControlsPresent && scenarios && scenarios.length) {
+            await this.selectScenarioFile(scenarios[0]);
+        }
+        if (opt.developerMode) {
+            await this.clickDeveloperMode();
+        }
+    }
+    /**
+     * Utility function, returns the ID of the dropdown element for selecting a daidalus/wellclear version 
+     */
+     getWellClearVersionSelector(): string {
+        return this.wellClearVersionSelector;
+    }
+    /**
+     * Utility function, returns the ID of the dropdown element for selecting a daidalus/wellclear configuration
+     */
+    getWellClearConfigurationSelector(): string {
+        return this.wellClearConfigurationSelector;
+    }
+    /**
+     * Utility function, links the current player with a secondary player
+     * The two player will be in lockstep
+     */
+    bridgePlayer(player: DAAPlayer) {
+        this.bridgedPlayer = player;
+    }
+    /**
+     * Utility function, returns the current horizontal speed, vertical speed and altitude
+     */
     getConfigData (): ConfigData {
         if (this.configInfo) {
             return {
@@ -478,7 +481,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
     /**
      * Sets simulation speed
      * @param speed Simulation speed, in percentage: 100 is 1x, 1000 is 10x, etc.
@@ -490,7 +492,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this;
     }
-
     /**
      * utility function, renders the DOM elements necessary to control a simulation (start, stop, goto, etc.)
      */
@@ -512,7 +513,6 @@ export class DAAPlayer extends Backbone.Model {
         //@ts-ignore -- dropdown function is introduced by bootstrap
         $('.dropdown-toggle').dropdown();
     }
-
     /**
      * Uploads an external daa file to the server
      * @param data fname is the scenario name, fileContent is the content of the scenario file
@@ -588,25 +588,32 @@ export class DAAPlayer extends Backbone.Model {
         $(".zoomable").css({ "margin-left": marginLeft });
         return this;
     }
-
+    /**
+     * Disables simulation controls play/pause/goto etc
+     */
     disableSimulationControls (): void {
         $(`.sim-control`).prop("disabled", true);
         $(`.simulation-controls`).animate({ "opacity": "0.5" });
     }
-
+    /**
+     * Enables simulation controls play/pause/goto etc
+     */
     enableSimulationControls (): void {
         $(`.sim-control`).removeAttr("disabled");
         $(`.simulation-controls`).animate({ "opacity": "1" });
     }
-
+    /**
+     * Disables input elements for selecting scenarios, configurations, daidalus version, wind
+     */
     disableSelectors (): void {
         $(`.sim-selector`).removeAttr("disabled");
     }
-
+    /**
+     * Enables input elements for selecting scenarios, configurations, daidalus version, wind
+     */
     enableSelectors (): void {
         $(`.sim-selector`).removeAttr("disabled");
     }
-
     /**
      * Updates the browser address by indicating scenario and configuration currently selected
      * The execution of this function will not reload the page
@@ -618,16 +625,23 @@ export class DAAPlayer extends Backbone.Model {
         const url: string = window.location.origin + window.location.pathname + search;
         history.replaceState({}, document.title, url);
     }
-
+    /**
+     * Reveal player activation panel
+     */
     revealActivationPanel (): void {
         $(`.activation-panel`).animate({ "opacity": "1" });
         $(`.load-scenario-btn`).removeAttr("disabled");
     }
+    /**
+     * Hide player activation panel
+     */
     hideActivationPanel (): void {
         $(`.load-scenario-btn`).prop("disabled", true);
         $(`.activation-panel`).animate({ "opacity": "0" });
     }
-
+    /**
+     * Appends the player activation panel to the DOM, which includes a "load scenario and configuration" control
+     */
     appendActivationPanel (opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
         opt = opt || {};
         opt.parent = opt.parent || this.id;
@@ -649,7 +663,9 @@ export class DAAPlayer extends Backbone.Model {
         });
         this.activationControlsPresent = true;
     }
-
+    /**
+     * Utility function, loads the scenario selected in the dropdown menu "#${this.id}-scenario-selector"
+     */
     async loadSelectedScenario (): Promise<void> {
         $(`.load-scenario-btn`).html(`<i class="fa fa-spinner fa-pulse"></i>`); // loading spinner
         const scenario: string = this.getSelectedScenario();
@@ -663,7 +679,6 @@ export class DAAPlayer extends Backbone.Model {
         this.enableSelectors();
         this.enableSimulationControls();
     }
-
     /**
      * utility function, renders the DOM elements necessary for developers
      */
@@ -717,7 +732,6 @@ export class DAAPlayer extends Backbone.Model {
             }
         });
     }
-
     /**
      * utility function, applies current resolution options by triggering the handlers associated to each option
      */
@@ -783,7 +797,9 @@ export class DAAPlayer extends Backbone.Model {
             hdl(`${this.id}-max-vspeed-wedge-aperture`, "setVerticalSpeedWedgeAperture");
         });
     }
-
+    /**
+     * Programmatically clicks "developer mode" button in the player
+     */
     async clickDeveloperMode (): Promise<void> {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", true);
         this.mode = "developerMode";
@@ -791,7 +807,9 @@ export class DAAPlayer extends Backbone.Model {
             await this.developerControls.developerMode();
         }
     }
-
+    /**
+     * Programmatically clicks "normal mode" button in the player
+     */
     async clickNormalMode (): Promise<void> {
         $(`#${this.id}-developer-mode-checkbox`).prop("checked", false);
         this.mode = "normalMode";
@@ -799,17 +817,20 @@ export class DAAPlayer extends Backbone.Model {
             await this.developerControls.normalMode();
         }
     }
-
+    /**
+     * Makes all plots visible
+     */
     clickShowPlots (): void {
         $(`#${this.id}-show-plots-checkbox`).prop("checked", true);
         $(`.daa-spectrogram`).css({ display: "block" });
     }
-
+    /**
+     * Hides all plots
+     */
     clickHidePlots (): void {
         $(`#${this.id}-show-plots-checkbox`).prop("checked", false);
         $(`.daa-spectrogram`).css({ display: "none" });
     }
-
     /**
      * utility function, renders the DOM elements necessary for controlling spectrograms
      */
@@ -836,21 +857,27 @@ export class DAAPlayer extends Backbone.Model {
         });
         return this;
     }
-
+    /**
+     * Disables the dropdown list for selecting a scenario
+     */
     disableSelection(): void {
         $(`#${this.id}-scenarios-list`).attr("disabled", "true");
     }
-
+    /**
+     * Enables the dropdown list for selecting a scenario
+     */
     enableSelection(): void {
         $(`#${this.id}-scenarios-list`).removeAttr("disabled");
     }
-
+    /**
+     * Shows an animation indicating that the backend is loading scenario data
+     */
     loadingAnimation(): void {
         if (this._displays) {
             for (const i in this._displays) {
                 const display: string = this._displays[i];
-                const width: number = $('.map-canvas').width() || 1072;
-                const height: number = $('.map-canvas').height() || 854;
+                const width: number = $('.map-canvas').width() || $('.map-div').width() || 1072;
+                const height: number = $('.map-canvas').height() || $('.map-div').height() || 854;
                 const left: number = 10;
                 const right: number = 10;
                 const theHTML: string = Handlebars.compile(templates.loadingTemplate)({ width, height, left, right, id: `${this.id}-${display}-daa-loading` });
@@ -858,12 +885,14 @@ export class DAAPlayer extends Backbone.Model {
             }
         }
     }
+    /**
+     * Stops any animation triggered with loadingAnimation()
+     */
     loadingComplete(): void {
         if (this._displays) {
             $('.daa-loading').remove();
         }
     }
-
     /**
      * Loads a .daa scenario file
      * @param scenarioName Name of the scenario. Default is H1.
@@ -893,7 +922,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return scenarioData;
     }
-
     /**
      * Loads all daa files contained in folder daa-scenarios
      * @param selected (optional) Name of the scenario file to be selected. If not specified, the first scenario in the list will be selected;
@@ -912,7 +940,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return scenarioFiles;
     }
-
     /**
      * Returns the list of daa files available in folder daa-scenarios
      */
@@ -937,7 +964,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return daaFiles;
     }
-
+    /**
+     * Loads the daidalus configuration selected in the corresponding dropdown menu
+     */
     async loadSelectedConfiguration (): Promise<ConfigFile> {
         const selectedConfig: string = this.getSelectedConfiguration();
         if (selectedConfig) {
@@ -945,7 +974,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Sends a request to the server to load a given daidalus configuration file
+     */
     async loadConfigFile (config: string): Promise<ConfigFile> {
         await this.connectToServer();
         const data: LoadConfigRequest = { config };
@@ -961,7 +992,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
     /**
      * Returns the list of available monitors
      */
@@ -991,7 +1021,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
     /**
      * @function <a name="getCurrentSimulationStep">getCurrentSimulationStep</a>
      * @descrition Returns the current simulation step
@@ -1001,12 +1030,16 @@ export class DAAPlayer extends Backbone.Model {
     getCurrentSimulationStep (): number {
         return this.simulationStep;
     }
+    /**
+     * Forces reload of a scenario file
+     */
     async reloadScenarioFile (): Promise<void> {
         const selectedScenario: string = this.getSelectedScenario();
         await this.selectScenarioFile(selectedScenario, { forceReload: true });
     }
     /**
-     * Loads the scenario to be simulated. The available scenarios are those provided in the constructor, using parameter scenarios.
+     * Loads the scenario to be simulated.
+     * The list of available scenariosis obtained with listScenarioFiles() and is stored in this.scenarios (see also activation function)
      * @param scenario {String} daa file name (e.g., H1.daa)
      * @memberof module:DAAPlaybackPlayer
      * @instance
@@ -1071,7 +1104,6 @@ export class DAAPlayer extends Backbone.Model {
             console.error(`Unable to select scenario ${scenario} :X`);
         }
     }
-
     /**
      * @function <a name="define">define</a>
      * @description Utility function for defining player functionalities that are simulation-specific.
@@ -1164,7 +1196,6 @@ export class DAAPlayer extends Backbone.Model {
             }
         }
     }
-
     /**
      * @function <a name="gotoTimeControl">gotoTimeControl</a>
      * @description Goes to a given target simulation step
@@ -1226,7 +1257,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this;
     }
-    
     /**
      * @function <a name="connectToServer">connectToServer</a>
      * @description Connects to a WebSocket server compatible with the PVSio-web APIs.
@@ -1341,7 +1371,6 @@ export class DAAPlayer extends Backbone.Model {
         }
         
     }
-
     /**
      * @function <a name="javaLoS">javaLoS</a>
      * @description Computes conflict regions using the java implementation of well-clear
@@ -1395,7 +1424,6 @@ export class DAAPlayer extends Backbone.Model {
             };
         }
     }
-    
     /**
      * @function <a name="javaVirtualPilot">javaVirtualPilot</a>
      * @description Sends a java evaluation request to the server
@@ -1449,7 +1477,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         
     }
-
+    /**
+     * Returns LoS regions for the current simulation step
+     */
     getCurrentLoS (): DAALosRegion[] {
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._los) {
             if (this._los.LoS && this.simulationStep < this._los.LoS.length) {
@@ -1460,23 +1490,39 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Returns true if the player is using a "wellclear" app
+     */
     wellclearMode (): void {
         this.selectedAppType = this.appTypes[0];
         this.scenarioType = "daa";
     }
+    /**
+     * @deprecated
+     * Returns true if the player is using a "LoS" app
+     */
     losMode (): void {
         this.selectedAppType = this.appTypes[1];
         this.scenarioType = "daa";
     }
+    /**
+     * @deprecated
+     * Returns true if the player is using a "virtual pilot" app
+     */
     virtualPilotMode (): void {
         this.selectedAppType = this.appTypes[2];
         this.scenarioType = "ic";
     }
+    /**
+     * @deprecated
+     * Returns the player mode
+     */
     getSelectedAppType (): string {
         return this.selectedAppType;
     }
-
+    /**
+     * Connects to the server to request the list of available daidalus versions 
+     */
     async listVersions(): Promise<string[]> {
         await this.connectToServer();
         const res = await this.client.send({
@@ -1492,7 +1538,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this._wellClearVersions;
     }
-
+    /**
+     * Connects to the server to request the list of available daidalus configurations 
+     */
     async listConfigurations(): Promise<string[]> {
         await this.connectToServer();
         const res = await this.client.send({
@@ -1511,18 +1559,15 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this._wellClearConfigurations;
     }
-
-    // setVersionChangeCallback(f: () => void) {
-    //     this._versionCallback = f;
-    // }
-
-    // setConfigurationChangeCallback(f: () => void) {
-    //     this._configurationCallback = f;
-    // }    
-
+    /**
+     * Returns the daidalus configuration currently selected in the player interface
+     */
     getSelectedConfiguration(): string {
         return $(`#${this.wellClearConfigurationSelector}-list option:selected`).text();
     }
+    /**
+     * Programmatically selects a daidalus configuration in the player interface
+     */
     async selectConfiguration(configName: string): Promise<boolean> {
         if (configName) {
             const prev: string = this.getSelectedConfiguration();
@@ -1535,11 +1580,16 @@ export class DAAPlayer extends Backbone.Model {
         }
         return false;
     }
-
+    /**
+     * Returns the daidalus version currently selected in the player interface
+     */
     getSelectedWellClearVersion(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
         return sel;
     }
+    /**
+     * Programmatically selects a daidalus version in the player interface
+     */
     selectWellClearVersion(versionName: string): boolean {
         if (versionName) {
             $(`#${this.wellClearVersionSelector}-list option:contains("${versionName}")`).prop("selected", true);
@@ -1547,7 +1597,10 @@ export class DAAPlayer extends Backbone.Model {
         }
         return false;
     }
-
+    /**
+     * @deprecated
+     * Returns the LoS version currently selected in the player interface
+     */
     getSelectedLoSVersion(): string {
         if (this.selectedAppType === this.appTypes[1]) {
             const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
@@ -1555,6 +1608,10 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
+    /**
+     * @deprecated
+     * Returns the virtual pilot version currently selected in the player interface
+     */
     getSelectedVirtualPilotVersion(): string {
         if (this.selectedAppType === this.appTypes[2]) {
             const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
@@ -1562,6 +1619,10 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
+    /**
+     * @deprecated
+     * Returns the name of the app loaded in the player
+     */
     getSelectedLogic(): string {
         const sel: string = $(`#${this.wellClearVersionSelector}-list option:selected`).text();
         return sel;
@@ -1645,7 +1706,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Returns the current traffic metrics
+     */
     getCurrentTrafficMetrics (): AircraftMetrics[] {
         const bands: ScenarioDataPoint = this.getCurrentBands();
         const ans: AircraftMetrics[] = bands?.Metrics?.aircraft;
@@ -1661,12 +1724,16 @@ export class DAAPlayer extends Backbone.Model {
         }
         return ans;
     }
-
+    /**
+     * Returns the current ownship state, including position, velocity, wind, metrics, etc, see also interface OwnshipState
+     */
     getCurrentOwnshipState (): OwnshipState {
         const scenario: ScenarioDataPoint = this.getCurrentBands();
         return scenario?.Ownship;
     }
-
+    /**
+     * Returns the current flight data
+     */
     getFlightData (enc?: string): LLAData[] {
         if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
             return Object.keys(this._scenarios[this._selectedScenario].lla).map((key: string) => {
@@ -1675,15 +1742,21 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Returns the current simulation time
+     */
     getCurrentSimulationTime (): string {
         return this.getTimeAt(this.simulationStep);
     }
-
+    /**
+     * Returns the length of the current simulation loaded in the player
+     */
     getSimulationLength(): number {
         return this._simulationLength;
     }
-
+    /**
+     * Returns the virtual time associated with a given simulation step
+     */
     getTimeAt (step: number): string {
         if (!isNaN(step) && this._selectedScenario && this._scenarios[this._selectedScenario]) {
             if (step < this._scenarios[this._selectedScenario].length) {
@@ -1694,10 +1767,8 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
     /**
      * Utility function, finds the step corresponding to the given time
-     * @param time 
      */
     getStep (time: string): number {
         if (this._selectedScenario && this._scenarios[this._selectedScenario]) {
@@ -1708,91 +1779,18 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Returns all bands for all simulation steps
+     */
     getBandsData (): ScenarioData {
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             return this._bands;
-            // //FIXME: the data structure for _bands should be consistent with those used by getCurrentFlightData
-            // if (this._bands) {
-            //     for (let step = 0; step < this._simulationLength; step++) {
-            //         // convert bands to the DAA format
-            //         const res: utils.DAABandsData = {
-            //             Ownship: null,
-            //             Wind: { deg: `0`, knot: `0` },
-            //             Alerts: [],
-            //             "Altitude Bands": {},
-            //             "Heading Bands": {},
-            //             "Horizontal Speed Bands": {},
-            //             "Vertical Speed Bands": {},
-            //             "Altitude Resolution": null,
-            //             "Horizontal Direction Resolution": null,
-            //             "Horizontal Speed Resolution": null,
-            //             "Vertical Speed Resolution": null,
-            //             Contours: null,
-            //             "Hazard Zones": null,
-            //             Monitors: [],
-            //             Metrics: null
-            //         };
-            //         const bandNames: string[] = utils.BAND_NAMES;
-            //         for (const b in bandNames) {
-            //             const band_or_resolution: string = bandNames[b];
-            //             const data: BandElement = (this._bands[band_or_resolution] && step < this._bands[band_or_resolution].length) ? 
-            //                                         this._bands[band_or_resolution][step] : null;
-            //             if (data) {
-            //                 if (data.bands) {
-            //                     // bands info
-            //                     for (let i = 0; i < data.bands.length; i++) {
-            //                         const info: DaidalusBand = data.bands[i];
-            //                         if (info && info.range) {
-            //                             const range: utils.FromTo = {
-            //                                 from: info.range[0],
-            //                                 to: info.range[1],
-            //                                 units: info.units
-            //                             };
-            //                             const region: string = info.region;
-            //                             res[band_or_resolution][region] = res[band_or_resolution][region] || [];
-            //                             res[band_or_resolution][region].push(range);
-            //                         }
-            //                     }
-            //                 } else if (data.resolution) {
-            //                     // resolution info
-            //                     res[band_or_resolution] = data;
-            //                 }
-            //             }
-            //             if (this._bands.Alerts && step < this._bands.Alerts.length) {
-            //                 // copy alerting info
-            //                 res.Alerts = this._bands.Alerts[step].alerts;
-            //             }
-            //             if (this._bands.Contours && step < this._bands.Contours.length) {
-            //                 // copy contours
-            //                 res.Contours = this._bands.Contours[step];
-            //             }
-            //             if (this._bands["Hazard Zones"] && step < this._bands["Hazard Zones"].length) {
-            //                 // copy hazard zones
-            //                 res["Hazard Zones"] = this._bands["Hazard Zones"][step];
-            //             }
-            //             if (this._bands.Monitors) {
-            //                 // copy monitors
-            //                 res.Monitors = this._bands.Monitors;
-            //             }
-            //             if (this._bands.Wind) {
-            //                 // copy wind
-            //                 res.Wind = this._bands.Wind;
-            //             }
-            //             if (this._bands.Ownship && step < this._bands.Ownship.length) {
-            //                 res.Ownship = this._bands.Ownship[step];
-            //             }
-            //             if (this._bands.Metrics && step < this._bands.Metrics.length) {
-            //                 res.Metrics = this._bands.Metrics[step];
-            //             }
-            //         }
-            //         ans.push(res);
-            //     }
-            // }
         }
         return null;
     }
-
+    /**
+     * Returns the bands for the current simulation step
+     */
     getCurrentBands (step?: number): ScenarioDataPoint {
         const res: ScenarioDataPoint = {
             Wind: { deg: `0`, knot: `0` },
@@ -1921,10 +1919,15 @@ export class DAAPlayer extends Backbone.Model {
         this.clearTimerJiffy();
         return this;
     }
-
+    /**
+     * Stes a timer
+     */
     setTimerJiffy (tname: string, f: () => void, step: number): void {
         this.timers[`${tname}-${step}`] = setTimeout(f, DAAPlayer.timerJiffy * step);
     }
+    /**
+     * Clears a timer
+     */
     clearTimerJiffy (tname?: string): void {
         const keys: string[] = Object.keys(this.timers);
         const tk: string[] = (tname) ? keys.filter((timer) => { return timer.startsWith(`${tname}-`); }) : keys;
@@ -1934,35 +1937,28 @@ export class DAAPlayer extends Backbone.Model {
             }
         }
     }
- 
-
+    /**
+     * Writes an informative message in the status panel of the player, to inform the user about what is going on, e.g., loading a scenario
+     */
     setStatus(msg: string) {
         $(`#${this.id}-status`).css("display", "block").text(msg);
     }
-
+    /**
+     * Indicates player ready
+     */
     statusReady() {
         $(`#${this.id}-status`).css("display", "none").text("");
     }
-
-    async activate(opt?: { developerMode?: boolean }): Promise<void> {
-        opt = opt || {};
-        const scenarios = await this.listScenarioFiles();
-        if (!this.activationControlsPresent && scenarios && scenarios.length) {
-            await this.selectScenarioFile(scenarios[0]);
-        }
-        if (opt.developerMode) {
-            await this.clickDeveloperMode();
-        }
-    }
-
+    /**
+     * Sets the ID of the DOM element where the daa-displays elements are attached
+     */
     setDisplays (displays: string[]): DAAPlayer {
         this._displays = displays || [];
         return this;
     }
-
-
-    //-- append functions ------------
-
+    /**
+     * Appends the player navbar to the DOM
+     */
     appendNavbar(): void {
         const theHTML: string = Handlebars.compile(templates.navbarTemplate)({
             id: this.id,
@@ -1998,7 +1994,9 @@ export class DAAPlayer extends Backbone.Model {
             });
         }
     }
-
+    /**
+     * Appends the daidalus/wellclear version selector to the DOM
+     */
     async appendWellClearVersionSelector(opt?: { selector?: string }): Promise<void> {
         opt = opt || {};
         this.wellClearVersionSelector = opt.selector || "sidebar-daidalus-version";
@@ -2010,7 +2008,9 @@ export class DAAPlayer extends Backbone.Model {
         // update the front-end
         this.refreshVersionsView();
     }
-
+    /**
+     * Appends the daidalus/wellclear configuration selector to the DOM
+     */
     async appendWellClearConfigurationSelector(opt?: { selector?: string, attributeSelector?: string }): Promise<void> {
         opt = opt || {};
         this.wellClearConfigurationSelector = opt.selector || "sidebar-daidalus-configuration";
@@ -2020,14 +2020,18 @@ export class DAAPlayer extends Backbone.Model {
         // update the front-end
         await this.refreshConfigurationView();
     }
-
+    /**
+     * Appends the wind input element to the DOM
+     */
     async appendWindSettings(opt?: { selector?: string, parent?: string, dropDown?: boolean, fromToSelectorVisible?: boolean }): Promise<void> {
         opt = opt || {};
         this.windSettingsSelector = opt.selector || this.windSettingsSelector
         // update the front-end
         this.refreshWindSettingsView(opt);
     }
-
+    /**
+     * Appends the panel for displaying monitored parameters to the DOM
+     */
     async appendMonitorPanel(monitorDomSelector?: string): Promise<void> {
         monitorDomSelector = monitorDomSelector || "daa-monitors";
         this.monitorDomSelector = monitorDomSelector;
@@ -2049,7 +2053,9 @@ export class DAAPlayer extends Backbone.Model {
             this.appendMonitors(this.daaMonitors);
         }
     }
-
+    /**
+     * Appends the panel for displaying traffic information to the DOM
+     */
     async appendTrafficPanel(domSelector?: string): Promise<void> {
         domSelector = domSelector || "daa-traffic";
         this.flightDataDomSelector = domSelector;
@@ -2058,7 +2064,9 @@ export class DAAPlayer extends Backbone.Model {
         });
         $(`#${this.flightDataDomSelector}`).append(theHTML);
     }
-
+    /**
+     * Appends the panel for displaying monitor status to the DOM
+     */
     protected appendMonitors(monitors: { id: number, name: string, color: string }[], opt?: { installHandlers?: boolean }): void {
         if (monitors) {
             opt = opt || {};
@@ -2084,25 +2092,27 @@ export class DAAPlayer extends Backbone.Model {
             }
         }
     }
-
+    /**
+     * Internal function, clears the monitor panel
+     */
     protected removeMonitors(): void {
         $(`#${this.monitorDomSelector}-list`).remove();
     }
-
+    /**
+     * Updates monitor information
+     */
     updateMonitors (): void {
         this.removeMonitors();
         if (this._bands && this._bands.Monitors) {
             this.appendMonitors(this._bands.Monitors, { installHandlers: true });
         }
     }
-
     /**
-     * Utility function, clears the content of the data panel on the right-size of the view
+     * Internal function, clears the content of the data panel on the right-size of the view
      */
     protected removeFlightData(): void {
         $(`#${this.flightDataDomSelector}-list`).remove();
     }
-
     /**
      * Internal function, updates encounter data in the data panel on the right-side of the view
      * This function is to be used with DAIDALUS 1.x
@@ -2144,7 +2154,6 @@ export class DAAPlayer extends Backbone.Model {
             $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);
         }
     }
-
     /**
      * Internal function, updates encounter data in the data panel on the right-side of the view
      * This function is to be used with DAIDALUS 2.x
@@ -2187,7 +2196,9 @@ export class DAAPlayer extends Backbone.Model {
             $(`#${this.flightDataDomSelector} .encounter-data`).html(theHTML);
         }
     }
-
+    /**
+     * Diplays flight data in a side panel
+     */
     displayFlightData (): void {
         this.removeFlightData();
         const flightInfo: LLAData = this.getCurrentFlightData();
@@ -2201,7 +2212,6 @@ export class DAAPlayer extends Backbone.Model {
             this.appendFlightData(flightData);
         }
     }
-
     /**
      * @function <a name="simulationControls">simulationControls</a>
      * @description Utility function for attaching simulation controls to the DOM.
@@ -2259,8 +2269,6 @@ export class DAAPlayer extends Backbone.Model {
         $(`#${this.id}-refresh-daidalus-configurations`).on("click", () => { this._handlers.configurationReloader(); });
         $(`#${this.id}-refresh-daidalus-versions`).on("click", () => { this._handlers.daidalusVersionReloader(); });
     }
-
-
     /**
      * @function <a name="simulationPlot">simulationPlot</a>
      * @description Creates a simulation plot
@@ -2301,7 +2309,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this;
     }
-
+    /**
+     * Appends scenario selector to the DOM
+     */
     async appendScenarioSelector(): Promise<void> {
         try {
             const scenarios: string[] = await this.listScenarioFiles();
@@ -2337,7 +2347,6 @@ export class DAAPlayer extends Backbone.Model {
             console.error("[daa-player] Warning: could not append scenario selector", error);
         }
     }
-
     /**
      * Programmatically select a scenario in the user interface
      * @param scenarioName 
@@ -2401,6 +2410,9 @@ export class DAAPlayer extends Backbone.Model {
         // this._handlers.installConfigurationReloader();
         // this._handlers.installDaidalusVersionReloader();
     }
+    /**
+     * Refresh monitors information
+     */
     refreshMonitors(): void {
         $(`.${this.monitorDomSelector}-checkbox`).prop("checked", false);
     }
@@ -2459,7 +2471,9 @@ export class DAAPlayer extends Backbone.Model {
             $(`#${this.id}-tot-sim-steps`).html((this._simulationLength - 1).toString());
         }
     }
-
+    /**
+     * Internal function, refreshes the daidalus/wellclear configuration selector
+     */
     protected async refreshConfigurationView(): Promise<void> {
         const theHTML: string = Handlebars.compile(templates.daidalusConfigurationsTemplate)({
             configurations: this._wellClearConfigurations,
@@ -2484,7 +2498,9 @@ export class DAAPlayer extends Backbone.Model {
             this.trigger(PlayerEvents.DidSelectConfiguration, bevt);
         });
     }
-
+    /**
+     * Internal function, refreshes the daidalus/wellclear attributes displayed in the view
+     */
     protected async refreshConfigurationAttributesView (selected: string): Promise<string[]> {
         if (selected) {
             this.configInfo = await this.loadConfigFile(selected);
@@ -2508,7 +2524,9 @@ export class DAAPlayer extends Backbone.Model {
         }
         return null;
     }
-
+    /**
+     * Internal function, refreshes the daidalus/wellclear version information displayed in the view
+     */
     protected refreshVersionsView(): DAAPlayer {
         const theHTML: string = Handlebars.compile(templates.daidalusVersionsTemplate)({
             versions: this._wellClearVersions,
@@ -2523,7 +2541,9 @@ export class DAAPlayer extends Backbone.Model {
         });
         return this;
     }
-
+    /**
+     * Utility function, refreshes the wind settings input element displayed in the view
+     */
     refreshWindSettingsView(opt?: { dropDown?: boolean, fromToSelectorVisible?: boolean }): DAAPlayer {
         opt = opt || {};
         if (opt.dropDown) {
@@ -2563,7 +2583,6 @@ export class DAAPlayer extends Backbone.Model {
         });
         return this;
     }
-
     /**
      * Returns a given plot
      * @param plotID {String} The identifier of the plot to be returned.

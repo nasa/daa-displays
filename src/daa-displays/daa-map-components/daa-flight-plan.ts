@@ -118,7 +118,7 @@ export class DAA_FlightPlan {
                 path.attributes = new WorldWind.ShapeAttributes(null);
                 path.attributes.drawInterior = true;
                 path.attributes.drawOutline = true;
-                path.attributes.interiorColor = WorldWind.Color.BLUE;
+                path.attributes.interiorColor = WorldWind.Color.MAGENTA;
                 path.attributes.drawVerticals = false;
                 path.attributes.applyLighting = false;
                 path.attributes.depthTest = false; // this prevents the area from being occluded by other objects in the scene

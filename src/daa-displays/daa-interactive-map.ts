@@ -93,28 +93,40 @@ require(["widgets/daa-displays/daa-interactive-map"], function (InteractiveMap) 
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-map-templates';
 import * as serverInterface from './utils/daa-server'
-import { cities, DAA_Airspace } from './daa-map-components/daa-airspace';
+import { AirspaceInterface, cities, DAA_Airspace } from './daa-map-components/daa-airspace';
 import { GeoFence } from './daa-map-components/daa-geofence';
+import { LeafletAirspace } from './daa-map-components/leaflet-airspace';
+
+export type DaaSymbol = "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-target" | "ownship" | string;
 
 export interface DAA_AircraftDescriptor {
     s: utils.LatLonAlt | serverInterface.LatLonAlt;
     v: utils.Vector3D | serverInterface.Vector3D;
-    symbol: string;
+    symbol: DaaSymbol;
     callSign: string;
 }
 
 export const colors = GeoFence.geofenceColors;
-export const WIDESCREEN_WIDTH: number = 1496; // 1334
-export const DEFAULT_WIDTH: number = 1054;
-export const DEFAULT_HEIGHT: number = 842;
+export const MAP_WIDESCREEN_WIDTH: number = 1496; // 1334
+export const DEFAULT_MAP_WIDTH: number = 1054;
+export const DEFAULT_MAP_HEIGHT: number = 842;
 
+/**
+ * Moving map
+ */
 export class InteractiveMap {
     id: string;
     heading: number;
     pos: utils.LatLonAlt;
     trafficDescriptor: DAA_AircraftDescriptor[];
-    airspace: DAA_Airspace;
-    div: HTMLElement;
+    airspace: AirspaceInterface;
+
+    // parent DOM element where the aerospace will be created
+    protected $div: JQuery<HTMLElement>;
+ 
+    // inner div, used for map rotations
+    protected $innerDiv: JQuery<HTMLElement>;
+
     /**
      * @function <a name="InteractiveMap">InteractiveMap</a>
      * @description Constructor.
@@ -130,9 +142,25 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    constructor(id: string, coords: { top?: number, left?: number },
-                opt?: { parent?: string, pos?: utils.LatLonAlt, offlineMap?: string, terrainMap?: string, streetMap?: string, terrainMode?: boolean, atmosphere?: boolean, view3D?: boolean,
-                        godsView?: boolean, los?: boolean, callSignVisible?: boolean, widescreen?: boolean }) {
+    constructor(
+        id: string, 
+        coords: { top?: number, left?: number },
+        opt?: { 
+            parent?: string, 
+            pos?: utils.LatLonAlt, 
+            offlineMap?: string, 
+            terrainMap?: string, 
+            streetMap?: string, 
+            terrainMode?: boolean, 
+            atmosphere?: boolean, 
+            view3D?: boolean,
+            godsView?: boolean, 
+            los?: boolean, 
+            callSignVisible?: boolean, 
+            widescreen?: boolean,
+            engine?: "wwd" | "leafletjs"
+        }
+    ) {
         opt = opt || {};
         this.id = id;
         this.heading = 0; // default heading is 0 deg (i.e., pointing north)
@@ -142,22 +170,34 @@ export class InteractiveMap {
         coords = coords || {};
         coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
         coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
-        const width: number = opt.widescreen ? WIDESCREEN_WIDTH : DEFAULT_WIDTH;
-        const height: number = DEFAULT_HEIGHT;
+        const width: number = opt.widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH;
+        const height: number = DEFAULT_MAP_HEIGHT;
+
+        // parent div
+        this.$div = $(`#${opt.parent}`);
 
         // create the DOM element
-        this.div = utils.createDiv(id, {
+        const innerDiv: HTMLElement = utils.createDiv(id, {
             parent: opt.parent
         });
-        let theHTML = Handlebars.compile(templates.mapTemplate)({
+        this.$innerDiv = $(innerDiv);
+        const theHTML = Handlebars.compile(templates.mapTemplate)({
             id: this.id,
             top: coords.top,
             left: coords.left,
             width: width,
             height: height
         });
-        $(this.div).html(theHTML);
-        this.airspace = new DAA_Airspace({
+        $(this.$innerDiv).html(theHTML);
+        // default rendering engine for the moving map is leafletjs
+        const engine: "leafletjs" | "wwd" = opt?.engine || "leafletjs";
+        this.airspace = (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
+            div: this.id + "-div",
+            godsView: opt.godsView,
+            los: opt.los,
+            callSignVisible: opt.callSignVisible,
+            widescreen: opt.widescreen
+        }) : new DAA_Airspace({
             canvas: this.id + "-canvas",
             offlineMap: opt.offlineMap,
             terrainMap: opt.terrainMap,
@@ -170,11 +210,38 @@ export class InteractiveMap {
             callSignVisible: opt.callSignVisible,
             widescreen: opt.widescreen
         });
-        this.airspace.setOwnshipHeading(this.heading);
+        this.airspace.setOwnshipHeading(this.heading, { nrthup: true });
         this.airspace.setZoomLevel(5); // NMI
+        // enable/disable pointer events based on the type of view
+        (opt.godsView) ? 
+            this.enableMapPointerEvents()
+                : this.disableMapPointerEvents();
     }
-    resetLoS (): InteractiveMap {
-        this.airspace.resetLoS();
+    /**
+     * Internal function enables pointer events on the map
+     */
+    protected enableMapPointerEvents (): void {
+        this.$div.css({
+            "pointer-events": "all",
+            "touch-action": "auto",
+            cursor: "grab"
+        });
+    }
+    /**
+     * Internal function disables pointer events on the map
+     */
+    protected disableMapPointerEvents (): void {
+        this.$innerDiv.find(`#map-div`).css({
+            "pointer-events": "none",
+            "touch-action": "none",
+            cursor: "auto"
+        });
+    }
+    /**
+     * @deprecated
+     * @returns 
+     */
+    protected resetLoS (): InteractiveMap {
         return this;
     }
     /**
@@ -254,6 +321,13 @@ export class InteractiveMap {
     setZoomLevel(NMI: number): InteractiveMap {
         this.airspace.setZoomLevel(NMI);
         return this;
+    }
+    /**
+     * Tries to set the zoom level to the given NMI
+     * Returns true if the zoom level was set correctly, otherwise false
+     */
+    trySetZoomLevel (NMI: number): boolean {
+        return this.airspace.trySetZoomLevel(NMI);
     }
     /**
      * @function <a name="goTo">goTo</a>
@@ -377,13 +451,15 @@ export class InteractiveMap {
         return this;
     }
     /**
-     * @function <a name="setLoS">setLoS</a>
-     * @description Sets the LoS (loss of separation) Region.
-     * @memberof module:InteractiveMap
-     * @instance
+     * Sets the LoS (loss of separation) Region.
+     * LoS regions are now implemented as geofence contours
+     * @deprecated
      */
-    setLoS(regions: serverInterface.DAALosRegion[], opt?: { nmi?: number }) {
-        this.airspace.setLoS(regions, opt);
+    protected setLoS(regions: serverInterface.DAALosRegion[], opt?: { nmi?: number }): InteractiveMap {
+        if (this.airspace["setLoS"]) {
+            this.airspace["setLoS"](regions, opt);
+        }
+        return this;
     }
     /**
      * @function <a name="setLoS">setLoS</a>
@@ -413,6 +489,13 @@ export class InteractiveMap {
      */
     terrainMode (): InteractiveMap {
         this.airspace.terrainMode();
+        return this;
+    }
+    /**
+     * VFR map mode
+     */
+    vfrMode (): InteractiveMap {
+        this.airspace.vfrMode();
         return this;
     }
     /**
@@ -505,14 +588,14 @@ export class InteractiveMap {
      * Reveals flight plan
      */
     revealFlightPlan (): InteractiveMap {
-        this.airspace?.revealFlightPath();
+        this.airspace?.revealFlightPlan();
         return this;
     }
     /**
      * Hides flight plan
      */
     hideFlightPlan (): InteractiveMap {
-        this.airspace?.hideFlightPath();
+        this.airspace?.hideFlightPlan();
         return this;
     }
 }
