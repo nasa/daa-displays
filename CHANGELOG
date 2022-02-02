@@ -1,8 +1,9 @@
 ## ChangeLog
-### 1.0.13 (2022.01.25)
-- Improved DANTi view
+### 1.0.13 (2022.02.02)
+- Added support for VFR maps
 - Added widescreen mode for moving map
 - Added support for DAA aural annunciations
+- Updated map rendering engine (default is now LeafletJS)
 
 ### 1.0.12 (2021.11.09)
 - Added display elements for flight plan
