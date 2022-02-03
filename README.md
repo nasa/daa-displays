@@ -82,7 +82,7 @@ speed/heading/altitude bugs rendered on the flight display.
 
 To reproduce the demonstration shown in the figure:
 1. Launch the `split-view` app (see *Use instructions* above).
-2. Select flight scenario `s_1_turn_L_wind_0_50`, then select `WellClear-2.0.f.jar` on the left player and `WellClear-1.0.1.jar` in the right player. Click `Load Selected Scenario and Configuration`.
+2. Select flight scenario `s_1_turn_L_wind_0_50`, then select `WellClear-2.0.2.jar` on the left player and `WellClear-1.0.2.jar` in the right player. Click `Load Selected Scenario and Configuration`.
 3. Click `Play` to watch the behavior of the two versions in the same flight scenario.
 
 ### **Example 3**: 3D Simulation
