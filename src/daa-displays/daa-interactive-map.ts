@@ -189,8 +189,12 @@ export class InteractiveMap {
             height: height
         });
         $(this.$innerDiv).html(theHTML);
-        // default rendering engine for the moving map is leafletjs
-        const engine: "leafletjs" | "wwd" = opt?.engine || "leafletjs";
+        // default rendering engine is wwd, for backwards compatibility with other tools that might be using daa-displays
+        // external tools using daa-displays need the following minor changes to use leafletjs:
+        // - include leaflet.css in the html file, e.g., <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+        // - if daa-server is not used, update the list of folders served by their server, so leaflet.js is provided to the client, see daa-server.ts
+        // - update the dependencies with "leaflet": "^1.7.1"
+        const engine: "leafletjs" | "wwd" = opt?.engine || "wwd";
         this.airspace = (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
             div: this.id + "-div",
             godsView: opt.godsView,
