@@ -239,7 +239,13 @@ function plotMonitor (desc: { data: MonitorElement, monitorID: number }) {
 }
 
 // interactive map
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6}, { parent: "daa-disp", engine: "leafletjs" });
+const map: InteractiveMap = new InteractiveMap("map", { 
+    top: 2, 
+    left: 6
+}, { 
+    parent: "daa-disp", 
+    engine: "leafletjs" 
+});
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
 // map heading is controlled by the compass

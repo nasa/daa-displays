@@ -215,7 +215,7 @@ export class LeafletAirspace implements AirspaceInterface {
             filter: brightness(60%);
         }
         .leaflet-tile {
-            filter: brightness(60%) contrast(160%) saturate(60%);
+            filter: brightness(60%) contrast(120%);
         }
         .daa-flight-plan {
             filter: drop-shadow(2px 2px 1px black);
@@ -375,11 +375,17 @@ export class LeafletAirspace implements AirspaceInterface {
     protected createVfrLayer (): void{
         const layers: L.Layer[] = [];
         for (let i = 0; i < VFR_CHARTS.length; i++) {
+            const offset = {
+                west: VFR_CHARTS[i].offset?.x || VFR_CHARTS[i].offset?.west || 0,
+                east: VFR_CHARTS[i].offset?.x || VFR_CHARTS[i].offset?.east || 0,
+                north: VFR_CHARTS[i].offset?.y || VFR_CHARTS[i].offset?.north || 0,
+                south: VFR_CHARTS[i].offset?.y || VFR_CHARTS[i].offset?.south || 0
+            };
             const vfr: L.Layer = L.imageOverlay(`aeronav/${VFR_CHARTS[i].file}`, [
                 // southwest
-                [ VFR_CHARTS[i].south, VFR_CHARTS[i].west ], 
+                [ VFR_CHARTS[i].south + offset.south, VFR_CHARTS[i].west + offset.west ], 
                 // northeast
-                [ VFR_CHARTS[i].north, VFR_CHARTS[i].east ]
+                [ VFR_CHARTS[i].north + offset.north, VFR_CHARTS[i].east + offset.east ]
             ], {
                 opacity: 1,
                 className: "leaflet-vfr-chart"

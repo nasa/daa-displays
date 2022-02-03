@@ -40,6 +40,12 @@ export declare interface VfrChart {
     south: number,
     // date of the sectional chart
     date?: string | { begin: string, end: string },
+    // optional offset, can be used fine-tune the chart position if needed
+    // e.g., when there's a mismatch between the position of the chart wrt the street map
+    // landmarks such as airports can be used to perform fine tuning of the chart position
+    // x,y can be used for rigid translations
+    // west, east, north, south can be used for stretching the dimensions of the chart
+    offset?: { west?: number, east?: number, north?: number, south?: number, x?: number, y?: number },
     // optional description of the sectional chart
     description?: string
 };
@@ -48,7 +54,7 @@ export declare interface VfrChart {
  * List of VFR sectional charts used in daa-displays
  * Edit this array to add/remove VFR charts
  * The original GeoTIFF charts are 16000x12000 (300dpi)
- * For performance reasons, the GeoTIFF charts are down-scaled to a .png file 8000x6000 (300dpi)
+ * For performance reasons, the GeoTIFF charts are down-scaled to a .png file of approx 8000x6000 (300dpi)
  */
 export const VFR_CHARTS: VfrChart[] = [
     {
@@ -57,7 +63,8 @@ export const VFR_CHARTS: VfrChart[] = [
         east: -71.651166, 
         north: 40.279218, 
         south: 35.498088,
-        date: { begin: "20220127", end: "20220323" }
+        date: { begin: "20220127", end: "20220323" },
+        offset: { x: 0.032, y: 0.01 } // landmark is langley airbase
     },
     {
         file: "atlanta.png",
@@ -122,6 +129,7 @@ export const VFR_CHARTS: VfrChart[] = [
         east: -103.709904, 
         north: 40.125550, 
         south: 35.323989,
-        date: { begin: "20220127", end: "20220323" }
+        date: { begin: "20220127", end: "20220323" },
+        offset: { x: -0.016, y: -0.04 } // landmark is centennial airport
     }
 ];

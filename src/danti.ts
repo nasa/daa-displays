@@ -277,7 +277,14 @@ function plot (desc: { ownship: { hs: number, vs: number, alt: number, hd: numbe
 }
 
 // interactive map
-const map: InteractiveMap = new InteractiveMap("map", { top: 2, left: 6 }, { parent: "daa-disp", widescreen: enable_widescreen });
+const map: InteractiveMap = new InteractiveMap("map", { 
+    top: 2, 
+    left: 6 
+}, { 
+    parent: "daa-disp", 
+    widescreen: enable_widescreen,
+    engine: "leafletjs"
+});
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", {
     top: 690, 
