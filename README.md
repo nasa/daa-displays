@@ -67,7 +67,7 @@ indicate that the ownship should avoid right turns.
 
 To reproduce the demonstration shown in the figure:
 1. Launch the `DANTi` app (see *Use instructions* above).
-2. Select flight scenario `scenario_6` and click `Load Selected Scenario and Configuration`.
+2. Select flight scenario `scenario-6` and click `Load Selected Scenario and Configuration`.
 3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario.
 
 ### **Example 2**: Comparison of different DAA configurations
@@ -103,7 +103,7 @@ the same flight scenario of Example 1, where a traffic aircraft overtakes the ow
 
 To reproduce the demonstration shown in the figure:
 1. Launch the `3D view` app (see *Use instructions* above).
-2. Select flight scenario `scenario_6` and click `Load Selected Scenario and Configuration`.
+2. Select flight scenario `scenario-6` and click `Load Selected Scenario and Configuration`.
 3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario. Position the mouse in the view and use mouse wheel to zoom in/out, use the central mouse button to tilt/pan the view.
 
 
