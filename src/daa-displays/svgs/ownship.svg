@@ -46,7 +46,7 @@
        rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata>
 
 <path
-   style="opacity:1;fill:#00fefe;fill-opacity:1;stroke:#ffffff;stroke-width:5.32103109;stroke-opacity:0"
+   style="opacity:1;fill:#00fefe;fill-opacity:1;stroke:#0096FF;stroke-width:16;stroke-opacity:1"
    d="M 435.41384,761.45337 C 357.78459,686.12041 292.05203,624.48431 289.34148,624.48431 c -2.71055,0 -67.91472,60.62444 -144.89816,134.72102 C 67.459854,833.30189 3.6862045,893.14795 2.7240445,892.1966 1.2699645,890.75877 82.390264,636.71718 259.13497,89.203518 274.79074,40.705626 288.33845,1.7521488 289.24102,2.6402178 291.4825,4.8456608 578.7333,896.63231 577.52303,897.62825 576.99222,898.06532 513.0431,836.78638 435.41384,761.45337 Z"
    id="path814"
    inkscape:connector-curvature="0" /></svg>

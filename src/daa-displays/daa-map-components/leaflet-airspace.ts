@@ -212,10 +212,10 @@ export class LeafletAirspace implements AirspaceInterface {
         // the map is artificially grown 3x larger to enable view rotations in ownship-centric mode
         $("head").append(`<style>
         .leaflet-vfr-chart {
-            filter: brightness(60%);
+            filter: brightness(60%) saturate(30%);
         }
         .leaflet-tile {
-            filter: brightness(60%) contrast(120%);
+            filter: brightness(55%) contrast(140%) grayscale(55%) hue-rotate(20deg);
         }
         .daa-flight-plan {
             filter: drop-shadow(2px 2px 1px black);
@@ -282,6 +282,7 @@ export class LeafletAirspace implements AirspaceInterface {
                 this.streetLayer,
                 this.vfrLayer,
                 this.flightPlanLayer,
+                this.ownshipLayer,
                 this.contoursLayer,
                 this.hazardZonesLayer,
                 this.trafficLayer
