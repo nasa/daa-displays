@@ -42,6 +42,7 @@
 #include "WCV_tvar.h"
 #include "Units.h"
 #include <regex>
+#include <cstring>
 
 using namespace larcfm;
 
