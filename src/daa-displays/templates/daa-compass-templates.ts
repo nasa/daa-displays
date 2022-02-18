@@ -1,4 +1,4 @@
-export const COMPASS_OPACITY: number = 0.4;
+export const COMPASS_OPACITY: number = 0.6;
 export const BANDS_OPACITY: number = 0.7;
 export const WEDGE_OPACITY: number = 0.6;
 export const COMPASS_SIZE: number = 634; //px

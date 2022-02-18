@@ -211,6 +211,9 @@ export class LeafletAirspace implements AirspaceInterface {
         // append required stylesheet to head
         // the map is artificially grown 3x larger to enable view rotations in ownship-centric mode
         $("head").append(`<style>
+        .leaflet-container {
+            background: transparent !important;
+        }
         .leaflet-vfr-chart {
             filter: brightness(60%) saturate(30%);
         }
