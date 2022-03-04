@@ -266,9 +266,9 @@ export const voiceFeedbackControls: string = `
                             <input type="checkbox" id="{{id}}-voice-feedback-checkbox" class="voice-feedback">
                         </div>
                         <div class="input-group-prepend">
-                            <span class="btn-sm voice-feedback" style="width:96px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Aural Ann.</span>
+                            <span class="btn-sm voice-feedback" style="width:96px; text-align:center; color:white; background-color:#6c757d; border:1px solid #6c757d; white-space:nowrap;vertical-align: middle;">Aural Ann.</span>
                         </div>
-                        <input id="{{id}}-voice-feedback-output" style="text-align:center;background:white;" readonly disabled type="text" value="" aria-label="aural annunciations" class="form-control">
+                        <input id="{{id}}-voice-feedback-output" style="text-align:center;" readonly disabled type="text" value="" aria-label="aural annunciations" class="form-control">
                     </div>
                 </div>
             </div>
