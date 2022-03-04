@@ -1,19 +1,22 @@
 # DAA-Displays: A Toolkit for the Analysis of Detect-And-Avoid Functions in Cockpit Displays
-DAA-Displays is a toolkit for model-based design and analysis of software functions in cockpit
-displays. It includes a library of interactive graphical display elements (widgets)
-for cockpit systems, and simulations tools supporting comparative analysis of cockpit displays.
-
+DAA-Displays is a desktop DAA application for model-based design and analysis of detect-and-avoid functions in cockpit
+displays. It provides simulations tools designed to support the analysis of cockpit displays, and a library of interactive graphical display elements (widgets) for creating cockpit display prototypes.
 ![](src/images/danti.gif "")
 
 ## Latest version
 daa-displays-1.0.13 (2022.01.25)
 
-## Functionalities
-- Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
-- Simulation tools supporting comparative analysis of cockpit displays
-
 ## Publications
 Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://doi.org/10.1007/978-3-030-50995-8_9), Proceedings of the 14th International Conference on Tests and Proofs (TAP 2020), Lecture Notes in Computer Science, Vol. 12165, pp. 155-166, 2020 [[PDF](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.pdf)][[BibTex](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.bib)]
+
+## Functionalities
+- Playback of flight scenarios
+- Fast-time simulation of flight scenarios
+- Comparative analysis of cockpit displays
+- Rendering of DAA alerts and guidance
+- Plotting of DAA alerts and guidance over time
+- Front-end for quick selection of flight scenarios, DAA configurations
+- Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
 
 ## Requirements
 The following software is necessary to compile and execute DAA-Displays
