@@ -1,6 +1,6 @@
 export const FONT_FAMILY: string = "sans-serif";
 export const TAPE_BACKGROUND_OPACITY: number = 0.6;
-export const BUG_OPACITY: number = 0.5;
+export const BUG_OPACITY: number = 1;
 export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; position:absolute; height:432px; width:60px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
         <div class="trims" style="opacity:${TAPE_BACKGROUND_OPACITY}">
             <div style="position:absolute; background-color:#333333; left:-77px; width:180px; height:71px; transform:rotate(75deg);"></div>
@@ -9,12 +9,12 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
             <div style="position:absolute; background-color:#333333; top:278px; left:-12px; width:90px; height:80px; transform:rotate(-30deg); border-radius:2px;"></div>
             <div style="position:absolute; background-color:#333333; top:128px; left:21px; width:39px; height:230px;"></div>
         </div>
-        <div class="tape-right-small-spin-number-top" style="top:-10px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:${FONT_FAMILY};">
+        <div class="tape-right-small-spin-number-top" style="opacity:${TAPE_BACKGROUND_OPACITY}; top:-10px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:${FONT_FAMILY};">
             <div class="vspeedP3">6</div>
             <div class="vspeedP2">2</div>
             <div class="vspeedP1" style="line-height:78px;">1</div>
         </div>
-        <div class="tape-right-small-spin-number-bottom" style="top:270px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:${FONT_FAMILY};">
+        <div class="tape-right-small-spin-number-bottom" style="opacity:${TAPE_BACKGROUND_OPACITY}; top:270px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:${FONT_FAMILY};">
             <div class="vspeedP1" style="line-height:78px;">1</div>
             <div class="vspeedP2">2</div>
             <div class="vspeedP3">6</div>
