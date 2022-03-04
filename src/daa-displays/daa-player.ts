@@ -832,7 +832,7 @@ export class DAAPlayer extends Backbone.Model {
         $(`.daa-spectrogram`).css({ display: "none" });
     }
     /**
-     * utility function, renders the DOM elements necessary for controlling spectrograms
+     * utility function, renders the DOM elements necessary for plotting spectrograms
      */
     appendPlotControls (opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
         opt = opt || {};
@@ -856,6 +856,54 @@ export class DAAPlayer extends Backbone.Model {
             await this.plot();
         });
         return this;
+    }
+    /**
+     * utility function, renders the DOM elements necessary for enabling/disabling aural annunciations
+     */
+    appendVoiceFeedbackControls (opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
+        opt = opt || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 724 : opt.width;
+        const theHTML = Handlebars.compile(templates.voiceFeedbackControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-voice-feedback-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-voice-feedback-controls`).html(theHTML);
+        // install handlers
+        // $(`#${this.id}-voice-feedback-checkbox`).on("change", () => {
+        //     hdl();
+        // });
+        return this;
+    }
+    /**
+     * Checks whether aural annunciations are enabled
+     */
+    voiceFeedbackIsEnabled (): boolean {
+        const isEnabled: boolean = $(`#${this.id}-voice-feedback-checkbox`).is(":checked");
+        return isEnabled;
+    }
+    /**
+     * Disables voice feedback
+     */
+    disableVoiceFeedbackIsEnabled (): void {
+        $(`#${this.id}-voice-feedback-checkbox`).prop("checked", false);
+    }
+    /**
+     * Enables voice feedback
+     */
+    enableVoiceFeedbackIsEnabled (): void {
+        $(`#${this.id}-voice-feedback-checkbox`).prop("checked", true);
+    }
+    /**
+     * Writes the given message in the voice feedback output box
+     */
+    voiceFeedback (msg: string): void {
+        msg = msg || "";
+        $(`#${this.id}-voice-feedback-output`).val(msg);
     }
     /**
      * Disables the dropdown list for selecting a scenario

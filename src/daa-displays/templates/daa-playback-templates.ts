@@ -255,6 +255,27 @@ export const spectrogramControls: string = `
     </div>
 </div>`;
 
+export const voiceFeedbackControls: string = `
+<div id="{{id}}-voice-feedback-controls-inner" style="position:absolute;width:100%;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-voice-feedback-checkbox" class="voice-feedback">
+                        </div>
+                        <div class="input-group-prepend">
+                            <span class="btn-sm voice-feedback" style="width:96px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Aural Ann.</span>
+                        </div>
+                        <input id="{{id}}-voice-feedback-output" style="text-align:center;background:white;" readonly disabled type="text" value="" aria-label="aural annunciations" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;
+
 export const developersControls: string = `
 <div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px; min-width:{{width}}px; display:{{display}};">
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">

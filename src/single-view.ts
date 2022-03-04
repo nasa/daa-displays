@@ -327,7 +327,7 @@ player.define("plot", () => {
             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
             const vs: number = +lla.ownship.v.z / 100;
             const alt: number = +lla.ownship.s.alt;
-            plot({ ownship: { hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });   
+            plot({ ownship: { hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });
         }, step);
     }
     // const monitorID: number = 2;
