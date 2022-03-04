@@ -1,6 +1,7 @@
 # DAA-Displays: A Toolkit for the Analysis of Detect-And-Avoid Functions in Cockpit Displays
 DAA-Displays is a desktop DAA application for model-based design and analysis of detect-and-avoid functions in cockpit
 displays. It provides simulations tools designed to support the analysis of cockpit displays, and a library of interactive graphical display elements (widgets) for creating cockpit display prototypes.
+
 ![](src/images/danti.gif "")
 
 ## Latest version
@@ -15,6 +16,7 @@ Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requir
 - Comparative analysis of cockpit displays
 - Rendering of DAA alerts and guidance
 - Plotting of DAA alerts and guidance over time
+- Aural annunciations
 - Front-end for quick selection of flight scenarios, DAA configurations
 - Library of interactive graphical display elements (called widgets) for cockpit systems: Compass, Interactive Map, Airspeed Tape, Altitude Tape, Vertical Speed, Virtual Horizon 
 
