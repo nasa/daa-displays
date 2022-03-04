@@ -220,13 +220,13 @@ function render (danti: {
                 console.log({ relative_bearing, bearing, heading });
                 let dir: string = ((relative_bearing / 360) * 12).toFixed(0);
                 if (dir === "0") { dir = "12"; }
-                const msg: string = `Traffic... At ${dir} o'clock... ${dist} miles`; // e.g., traffic at 2 o'clock 3 miles
-                const ann: string = `Traffic at ${dir} o'clock ${dist} miles`;
+                const ann: string = `Traffic... At ${dir} o'clock... ${dist} miles`; // e.g., traffic at 2 o'clock 3 miles
+                const msg: string = `Traffic at ${dir} o'clock ${dist} NMI`;
                 // write aural annunciation in output message box
-                player.voiceFeedback(ann);
+                player.voiceFeedback(msg);
                 // read message if voice feedback is enabled
                 if (enable_sound && player.voiceFeedbackIsEnabled()) {
-                    danti?.sound?.speak(msg, { voice: "Samantha" });
+                    danti?.sound?.speak(ann, { voice: "Samantha" });
                 }
             } else {
                 if (enable_sound) {
