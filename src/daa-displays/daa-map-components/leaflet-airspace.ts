@@ -51,6 +51,17 @@ import { GeoFence } from "./daa-geofence";
 export const FONT_SIZE: number = 28; //px
 export const FONT_FAMILY: string = "sans-serif";
 
+// openstreet providers, see https://leaflet-extras.github.io/leaflet-providers/preview/
+export interface TileProvider { server: string, credict: string };
+export const tileProvider = {
+    default: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", // this does not seem to be working all the times
+    topology: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+    terrain: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    street: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    cyclosm: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", // bicicle map
+    carto: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" // grayscale map
+};
+
 /**
  * table indicating the correspondence between NMI and leafletjs zoom levels
  * these values are approximations obtained by inspecting the rendered map
@@ -245,6 +256,7 @@ export class LeafletAirspace implements AirspaceInterface {
             height: ${this.godsView ? height : 3 * height}px !important;
             top: ${this.godsView ? 0 : -height}px !important;
             left: ${this.godsView ? 0 : -width}px !important;
+            background: black;
         }
         </style>`);
 
@@ -367,7 +379,8 @@ export class LeafletAirspace implements AirspaceInterface {
      * Internal function, creates a street layer
      */
     protected createStreetLayer (): void {
-        this.streetLayer = L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        const tileServer: string = tileProvider.topology;
+        this.streetLayer = L.tileLayer(tileServer, {
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>',
             opacity: 1,
             className: "leaflet-street-layer"
