@@ -33,7 +33,7 @@
  export function uuid (format?: string) {
 	let d: number = new Date().getTime();
 	format = format || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-	const uuid = format.replace(/[xy]/g, (c: string) => {
+	const uuid = format.replace(/[xy]/g, (c: string) => { //lgtm [js/insecure-randomness]
 		const r: number = ((d + Math.random() * 16) % 16) | 0;
 		d = Math.floor(d / 16);
 		return (c === 'x' ? r : (r & 0x7 | 0x8)).toString(16);

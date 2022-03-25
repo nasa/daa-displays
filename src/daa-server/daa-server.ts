@@ -805,40 +805,40 @@ export class DAAServer {
         app.use(express.static(daaDisplaysRoot));
         const daaLogicFolder: string = path.join(__dirname, '../daa-logic');
         app.use(express.static(daaLogicFolder));
-        app.get('/split', (req, res) => {
+        app.get('/split', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
         });
-        app.get('/split-view', (req, res) => { // alias for split
+        app.get('/split-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for split
             res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
         });
-        app.get('/single', (req, res) => {
+        app.get('/single', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
         });
-        app.get('/single-view', (req, res) => { // alias for single
+        app.get('/single-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for single
             res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
         });
-        app.get('/top', (req, res) => {
+        app.get('/top', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
         });
-        app.get('/top-view', (req, res) => { // alias for top
+        app.get('/top-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for top
             res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
         });
-        app.get('/3d', (req, res) => {
+        app.get('/3d', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
-        app.get('/3d-view', (req, res) => { // alias for 3d
+        app.get('/3d-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
-        app.get('/3D', (req, res) => { // alias for 3d
+        app.get('/3D', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
-        app.get('/3D-view', (req, res) => { // alias for 3d
+        app.get('/3D-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
             res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
         });
-        app.get('/danti', (req, res) => {
+        app.get('/danti', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
         });
-        app.get('/danti-view', (req, res) => { // alias for danti
+        app.get('/danti-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for danti
             res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
         });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');
@@ -846,13 +846,13 @@ export class DAAServer {
         app.get('/test', (req, res) => {
             res.sendFile(path.join(daaTestFolder, 'test-runner.html'));
         });
-        app.get('/playground', (req, res) => {
+        app.get('/playground', (req, res) => { //lgtm [js/missing-rate-limiting]
             res.sendFile(path.join(daaTestFolder, 'playground.html'));
         });
         const tileServerFolder: string = path.join(__dirname, 'tileServer');
         // console.log(`### serving ${tileServerFolder}`);
         app.use(express.static(tileServerFolder));
-        app.get('/WMTSCapabilities.xml', (req, res) => {
+        app.get('/WMTSCapabilities.xml', (req, res) => { //lgtm [js/missing-rate-limiting]
             // console.log("received request for WMTSCapabilities.xml");
             res.sendFile(path.join(tileServerFolder, 'osm', 'WMTSCapabilities.xml'));
         });
