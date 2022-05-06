@@ -198,8 +198,8 @@ function render (danti: {
             wind.setMagnitude(bands.Wind.knot);
         }
         
-        // play sound if max_alert > 2 (red alert)
-        if (max_alert > 2) {
+        // play sound if voice feedback is enabled and max_alert > 2 (red alert)
+        if (enable_sound && max_alert > 2) {
             if (max_alert_aircraft) {
                 const dist: string = computeNmiDistance({
                     lat: +flightData.ownship.s.lat,

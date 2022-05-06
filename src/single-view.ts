@@ -439,7 +439,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
         left: 754,
         width: 344,
         controls: {
-            showDeveloper: false
+            showDeveloper: true
         }
     });
     await player.activate({ developerMode: true });
