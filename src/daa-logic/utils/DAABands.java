@@ -197,7 +197,7 @@ public class DAABands {
 		String alt_units = daa.parameters.getUnits("alt_step");
 		String hdir_units = daa.parameters.getUnits("trk_step");
 
-		String conf = (config != null) ? config.split("/")[config.split("/").length - 1] : "";
+		String conf = (config != null) ? (new File(config)).getName() : "";
 
 		out.print("{\n\"Info\": ");
 		out.println("{ \"language\": \"Java\", \"version\": " + "\"" + KinematicBandsParameters.VERSION + "\", \"configuration\": " + "\"" + conf + "\" },");

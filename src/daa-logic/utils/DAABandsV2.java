@@ -111,11 +111,7 @@ public class DAABandsV2 {
 	}
 
 	public String getConfig () {
-		if (daaConfig != null) {
-			String[] qid = daaConfig.split("/");
-			return qid[qid.length - 1 ];
-		}
-		return null;
+		return getFileName(daaConfig);
 	}
 
 	public String getOutputFileName() {
@@ -812,9 +808,9 @@ public class DAABandsV2 {
 	}
 
 	public static String getFileName (String fname) {
-		if (fname != null && fname.contains("/")) {
-			String[] comp = fname.split("/");
-			return comp[comp.length - 1];
+		if (fname != null && fname.contains(File.separator)) {
+			File file = new File(fname);
+			return file.getName();
 		}
 		return fname;
 	}
