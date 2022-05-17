@@ -14,7 +14,7 @@
    id="svg9563"
    sodipodi:docname="danti-quadrant-full.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   style="transform:rotate(360deg); filter: drop-shadow( 2px 2px 1px rgba(0, 0, 0, 0.9)); -webkit-filter: drop-shadow( 2px 2px 1px rgba(0, 0, 0, 0.9));"
+   style="transform:rotate(360deg); text-shadow: 1px 1px black; filter: drop-shadow( 2px 2px 1px rgba(0, 0, 0, 0.9)); -webkit-filter: drop-shadow( 2px 2px 1px rgba(0, 0, 0, 0.9));"
    width="503.78"
    height="503.78">
   <metadata
@@ -57,7 +57,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7367"
-           style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#000000;stroke-width:1.0000031px">2</text>
+           style="font-weight:bold;font-size:14.00004387px;font-family:sans-serif;fill:#000000;stroke-width:1.0000031px">2</text>
         <text
            transform="rotate(10.379615)"
            x="286.27734"
@@ -66,7 +66,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7369"
-           style="font-weight:bold;font-size:14.00006199px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000441px">1</text>
+           style="font-weight:bold;font-size:14.00006199px;font-family:sans-serif;fill:#000000;stroke-width:1.00000441px">1</text>
         <text
            transform="rotate(30.797793)"
            x="336.79364"
@@ -75,7 +75,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7371"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">3</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">3</text>
         <text
            transform="rotate(40.215801)"
            x="348.08997"
@@ -84,7 +84,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7373"
-           style="font-weight:bold;font-size:14.00003719px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000262px">4</text>
+           style="font-weight:bold;font-size:14.00003719px;font-family:sans-serif;fill:#000000;stroke-width:1.00000262px">4</text>
         <text
            transform="rotate(50.13354)"
            x="349.4259"
@@ -93,7 +93,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7375"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">5</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">5</text>
         <text
            transform="rotate(60.525954)"
            x="335.99091"
@@ -102,7 +102,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7377"
-           style="font-weight:bold;font-size:14.00002098px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000155px">6</text>
+           style="font-weight:bold;font-size:14.00002098px;font-family:sans-serif;fill:#000000;stroke-width:1.00000155px">6</text>
         <text
            transform="rotate(70.552719)"
            x="313.88004"
@@ -111,7 +111,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7379"
-           style="font-weight:bold;font-size:14.00002575px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000191px">7</text>
+           style="font-weight:bold;font-size:14.00002575px;font-family:sans-serif;fill:#000000;stroke-width:1.00000191px">7</text>
         <text
            transform="rotate(80.162221)"
            x="285.24765"
@@ -120,7 +120,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7381"
-           style="font-weight:bold;font-size:14.00006485px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000465px">8</text>
+           style="font-weight:bold;font-size:14.00006485px;font-family:sans-serif;fill:#000000;stroke-width:1.00000465px">8</text>
         <text
            transform="rotate(-159.21153)"
            x="-337.93515"
@@ -129,7 +129,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7385"
-           style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#000000;stroke-width:1.0000031px"><tspan
+           style="font-weight:bold;font-size:14.00004387px;font-family:sans-serif;fill:#000000;stroke-width:1.0000031px"><tspan
              x="-337.93515"
              y="-344.23224"
              id="tspan7383"
@@ -142,7 +142,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7387"
-           style="font-weight:bold;font-size:14.00006199px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000441px">19</text>
+           style="font-weight:bold;font-size:14.00006199px;font-family:sans-serif;fill:#000000;stroke-width:1.00000441px">19</text>
         <text
            transform="rotate(-149.20221)"
            x="-358.26547"
@@ -151,7 +151,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7389"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">21</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">21</text>
         <text
            transform="rotate(-139.7842)"
            x="-366.00195"
@@ -160,7 +160,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7391"
-           style="font-weight:bold;font-size:14.00003719px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000262px">22</text>
+           style="font-weight:bold;font-size:14.00003719px;font-family:sans-serif;fill:#000000;stroke-width:1.00000262px">22</text>
         <text
            transform="rotate(-129.86646)"
            x="-365.47336"
@@ -169,7 +169,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7393"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">23</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">23</text>
         <text
            transform="rotate(-119.47405)"
            x="-354.71027"
@@ -178,7 +178,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7395"
-           style="font-weight:bold;font-size:14.00002098px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000155px">24</text>
+           style="font-weight:bold;font-size:14.00002098px;font-family:sans-serif;fill:#000000;stroke-width:1.00000155px">24</text>
         <text
            transform="rotate(-109.44728)"
            x="-332.19791"
@@ -187,7 +187,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7397"
-           style="font-weight:bold;font-size:14.00002575px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000191px">25</text>
+           style="font-weight:bold;font-size:14.00002575px;font-family:sans-serif;fill:#000000;stroke-width:1.00000191px">25</text>
         <text
            transform="rotate(-99.837779)"
            x="-300.83221"
@@ -196,7 +196,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7399"
-           style="font-weight:bold;font-size:14.00006485px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000465px">26</text>
+           style="font-weight:bold;font-size:14.00006485px;font-family:sans-serif;fill:#000000;stroke-width:1.00000465px">26</text>
         <text
            transform="rotate(-10.015249)"
            x="194.92712"
@@ -205,7 +205,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7401"
-           style="font-weight:bold;font-size:13.99997902px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999845px">35</text>
+           style="font-weight:bold;font-size:13.99997902px;font-family:sans-serif;fill:#000000;stroke-width:0.99999845px">35</text>
         <text
            transform="rotate(-20.589575)"
            x="138.99457"
@@ -214,7 +214,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7403"
-           style="font-weight:bold;font-size:13.99994755px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999624px">34</text>
+           style="font-weight:bold;font-size:13.99994755px;font-family:sans-serif;fill:#000000;stroke-width:0.99999624px">34</text>
         <text
            transform="rotate(-30.095098)"
            x="82.787857"
@@ -223,7 +223,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7405"
-           style="font-weight:bold;font-size:14.00009155px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000656px">33</text>
+           style="font-weight:bold;font-size:14.00009155px;font-family:sans-serif;fill:#000000;stroke-width:1.00000656px">33</text>
         <text
            transform="rotate(-40.017729)"
            x="21.94512"
@@ -232,7 +232,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7407"
-           style="font-weight:bold;font-size:13.99989891px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999279px">32</text>
+           style="font-weight:bold;font-size:13.99989891px;font-family:sans-serif;fill:#000000;stroke-width:0.99999279px">32</text>
         <text
            transform="rotate(-50.097741)"
            x="-40.668705"
@@ -241,7 +241,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7409"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">31</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">31</text>
         <text
            transform="rotate(-60.154133)"
            x="-102.17336"
@@ -250,7 +250,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7411"
-           style="font-weight:bold;font-size:14.00004292px;font-family:Thryomanes;fill:#000000;stroke-width:1.0000031px">30</text>
+           style="font-weight:bold;font-size:14.00004292px;font-family:sans-serif;fill:#000000;stroke-width:1.0000031px">30</text>
         <text
            transform="rotate(-70.101285)"
            x="-159.92792"
@@ -259,7 +259,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7413"
-           style="font-weight:bold;font-size:14.00006294px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000453px">29</text>
+           style="font-weight:bold;font-size:14.00006294px;font-family:sans-serif;fill:#000000;stroke-width:1.00000453px">29</text>
         <text
            transform="rotate(-79.905061)"
            x="-213.55214"
@@ -268,7 +268,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7415"
-           style="font-weight:bold;font-size:14.00001907px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000131px">28</text>
+           style="font-weight:bold;font-size:14.00001907px;font-family:sans-serif;fill:#000000;stroke-width:1.00000131px">28</text>
         <text
            transform="rotate(169.98475)"
            x="-213.54297"
@@ -277,7 +277,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7417"
-           style="font-weight:bold;font-size:13.99997902px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999845px">17</text>
+           style="font-weight:bold;font-size:13.99997902px;font-family:sans-serif;fill:#000000;stroke-width:0.99999845px">17</text>
         <text
            transform="rotate(159.41042)"
            x="-154.39603"
@@ -286,7 +286,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7419"
-           style="font-weight:bold;font-size:13.99994755px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999624px">16</text>
+           style="font-weight:bold;font-size:13.99994755px;font-family:sans-serif;fill:#000000;stroke-width:0.99999624px">16</text>
         <text
            transform="rotate(149.9049)"
            x="-100.35177"
@@ -295,7 +295,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7421"
-           style="font-weight:bold;font-size:14.00009155px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000656px">15</text>
+           style="font-weight:bold;font-size:14.00009155px;font-family:sans-serif;fill:#000000;stroke-width:1.00000656px">15</text>
         <text
            transform="rotate(139.98227)"
            x="-40.730549"
@@ -304,7 +304,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7423"
-           style="font-weight:bold;font-size:13.99989891px;font-family:Thryomanes;fill:#000000;stroke-width:0.99999279px">14</text>
+           style="font-weight:bold;font-size:13.99989891px;font-family:sans-serif;fill:#000000;stroke-width:0.99999279px">14</text>
         <text
            transform="rotate(129.90226)"
            x="22.650412"
@@ -313,7 +313,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7425"
-           style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#000000;stroke-width:1px">13</text>
+           style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#000000;stroke-width:1px">13</text>
         <text
            transform="rotate(119.84587)"
            x="84.026268"
@@ -322,7 +322,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7427"
-           style="font-weight:bold;font-size:14.00004292px;font-family:Thryomanes;fill:#000000;stroke-width:1.0000031px">12</text>
+           style="font-weight:bold;font-size:14.00004292px;font-family:sans-serif;fill:#000000;stroke-width:1.0000031px">12</text>
         <text
            transform="rotate(109.89872)"
            x="141.61855"
@@ -331,7 +331,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7429"
-           style="font-weight:bold;font-size:14.00006294px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000453px">11</text>
+           style="font-weight:bold;font-size:14.00006294px;font-family:sans-serif;fill:#000000;stroke-width:1.00000453px">11</text>
         <text
            transform="rotate(100.09494)"
            x="194.65021"
@@ -340,7 +340,7 @@
            font-weight="bold"
            xml:space="preserve"
            id="text7431"
-           style="font-weight:bold;font-size:14.00001907px;font-family:Thryomanes;fill:#000000;stroke-width:1.00000131px">10</text>
+           style="font-weight:bold;font-size:14.00001907px;font-family:sans-serif;fill:#000000;stroke-width:1.00000131px">10</text>
       </g>
     </clipPath>
     <linearGradient
@@ -990,7 +990,7 @@
      id="line7997"
      style="stroke:#00f500; stroke-width:2;" />
   <text
-     style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00004387px;font-family:sans-serif;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text7999"
      xml:space="preserve"
      font-weight="bold"
@@ -999,7 +999,7 @@
      x="315.78391"
      transform="rotate(20.788474)">2</text>
   <text
-     style="font-weight:bold;font-size:14.00006199px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000441px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006199px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000441px;fill-opacity:1;opacity:1;"
      id="text8001"
      xml:space="preserve"
      font-weight="bold"
@@ -1008,7 +1008,7 @@
      x="286.27734"
      transform="rotate(10.379615)">1</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
      id="text8003"
      xml:space="preserve"
      font-weight="bold"
@@ -1017,7 +1017,7 @@
      x="336.79364"
      transform="rotate(30.797793)">3</text>
   <text
-     style="font-weight:bold;font-size:14.00003719px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000262px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00003719px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000262px;fill-opacity:1;opacity:1;"
      id="text8005"
      xml:space="preserve"
      font-weight="bold"
@@ -1026,7 +1026,7 @@
      x="348.08997"
      transform="rotate(40.215801)">4</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
      id="text8007"
      xml:space="preserve"
      font-weight="bold"
@@ -1035,7 +1035,7 @@
      x="349.4259"
      transform="rotate(50.13354)">5</text>
   <text
-     style="font-weight:bold;font-size:14.00002098px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000155px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00002098px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000155px;fill-opacity:1;opacity:1;"
      id="text8009"
      xml:space="preserve"
      font-weight="bold"
@@ -1044,7 +1044,7 @@
      x="335.99091"
      transform="rotate(60.525954)">6</text>
   <text
-     style="font-weight:bold;font-size:14.00002575px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000191px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00002575px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000191px;fill-opacity:1;opacity:1;"
      id="text8011"
      xml:space="preserve"
      font-weight="bold"
@@ -1053,7 +1053,7 @@
      x="313.88004"
      transform="rotate(70.552719)">7</text>
   <text
-     style="font-weight:bold;font-size:14.00006485px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000465px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006485px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000465px;fill-opacity:1;opacity:1;"
      id="text8013"
      xml:space="preserve"
      font-weight="bold"
@@ -1062,7 +1062,7 @@
      x="285.24765"
      transform="rotate(80.162221)">8</text>
   <text
-     style="font-weight:bold;font-size:14.00004387px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00004387px;font-family:sans-serif;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text8017"
      xml:space="preserve"
      font-weight="bold"
@@ -1075,7 +1075,7 @@
        y="-344.23224"
        x="-337.93515">20</tspan></text>
   <text
-     style="font-weight:bold;font-size:14.00006199px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000441px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006199px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000441px;fill-opacity:1;opacity:1;"
      id="text8019"
      xml:space="preserve"
      font-weight="bold"
@@ -1084,7 +1084,7 @@
      x="-304.54117"
      transform="rotate(-169.62038)">19</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
      id="text8021"
      xml:space="preserve"
      font-weight="bold"
@@ -1093,7 +1093,7 @@
      x="-358.26547"
      transform="rotate(-149.20221)">21</text>
   <text
-     style="font-weight:bold;font-size:14.00003719px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000262px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00003719px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000262px;fill-opacity:1;opacity:1;"
      id="text8023"
      xml:space="preserve"
      font-weight="bold"
@@ -1102,7 +1102,7 @@
      x="-366.00195"
      transform="rotate(-139.7842)">22</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-opacity:0;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-opacity:0;opacity:1;"
      id="text8025"
      xml:space="preserve"
      font-weight="bold"
@@ -1111,7 +1111,7 @@
      x="-365.47336"
      transform="rotate(-129.86646)">23</text>
   <text
-     style="font-weight:bold;font-size:14.00002098px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000155px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00002098px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000155px;fill-opacity:1;opacity:1;"
      id="text8027"
      xml:space="preserve"
      font-weight="bold"
@@ -1120,7 +1120,7 @@
      x="-354.71027"
      transform="rotate(-119.47405)">24</text>
   <text
-     style="font-weight:bold;font-size:14.00002575px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000191px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00002575px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000191px;fill-opacity:1;opacity:1;"
      id="text8029"
      xml:space="preserve"
      font-weight="bold"
@@ -1129,7 +1129,7 @@
      x="-332.19791"
      transform="rotate(-109.44728)">25</text>
   <text
-     style="font-weight:bold;font-size:14.00006485px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000465px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006485px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000465px;fill-opacity:1;opacity:1;"
      id="text8031"
      xml:space="preserve"
      font-weight="bold"
@@ -1138,7 +1138,7 @@
      x="-300.83221"
      transform="rotate(-99.837779)">26</text>
   <text
-     style="font-weight:bold;font-size:13.99997902px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999845px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99997902px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999845px;fill-opacity:1;opacity:1;"
      id="text8033"
      xml:space="preserve"
      font-weight="bold"
@@ -1147,7 +1147,7 @@
      x="194.92712"
      transform="rotate(-10.015249)">35</text>
   <text
-     style="font-weight:bold;font-size:13.99994755px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999624px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99994755px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999624px;fill-opacity:1;opacity:1;"
      id="text8035"
      xml:space="preserve"
      font-weight="bold"
@@ -1156,7 +1156,7 @@
      x="138.99457"
      transform="rotate(-20.589575)">34</text>
   <text
-     style="font-weight:bold;font-size:14.00009155px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000656px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00009155px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000656px;fill-opacity:1;opacity:1;"
      id="text8037"
      xml:space="preserve"
      font-weight="bold"
@@ -1165,7 +1165,7 @@
      x="82.787857"
      transform="rotate(-30.095098)">33</text>
   <text
-     style="font-weight:bold;font-size:13.99989891px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999279px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99989891px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999279px;fill-opacity:1;opacity:1;"
      id="text8039"
      xml:space="preserve"
      font-weight="bold"
@@ -1174,7 +1174,7 @@
      x="21.94512"
      transform="rotate(-40.017729)">32</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
      id="text8041"
      xml:space="preserve"
      font-weight="bold"
@@ -1183,7 +1183,7 @@
      x="-40.668705"
      transform="rotate(-50.097741)">31</text>
   <text
-     style="font-weight:bold;font-size:14.00004292px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00004292px;font-family:sans-serif;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text8043"
      xml:space="preserve"
      font-weight="bold"
@@ -1192,7 +1192,7 @@
      x="-102.17336"
      transform="rotate(-60.154133)">30</text>
   <text
-     style="font-weight:bold;font-size:14.00006294px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000453px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006294px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000453px;fill-opacity:1;opacity:1;"
      id="text8045"
      xml:space="preserve"
      font-weight="bold"
@@ -1201,7 +1201,7 @@
      x="-159.92792"
      transform="rotate(-70.101285)">29</text>
   <text
-     style="font-weight:bold;font-size:14.00001907px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000131px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00001907px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000131px;fill-opacity:1;opacity:1;"
      id="text8047"
      xml:space="preserve"
      font-weight="bold"
@@ -1210,7 +1210,7 @@
      x="-213.55214"
      transform="rotate(-79.905061)">28</text>
   <text
-     style="font-weight:bold;font-size:13.99997902px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999845px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99997902px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999845px;fill-opacity:1;opacity:1;"
      id="text8049"
      xml:space="preserve"
      font-weight="bold"
@@ -1219,7 +1219,7 @@
      x="-213.54297"
      transform="rotate(169.98475)">17</text>
   <text
-     style="font-weight:bold;font-size:13.99994755px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999624px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99994755px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999624px;fill-opacity:1;opacity:1;"
      id="text8051"
      xml:space="preserve"
      font-weight="bold"
@@ -1228,7 +1228,7 @@
      x="-154.39603"
      transform="rotate(159.41042)">16</text>
   <text
-     style="font-weight:bold;font-size:14.00009155px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000656px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00009155px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000656px;fill-opacity:1;opacity:1;"
      id="text8053"
      xml:space="preserve"
      font-weight="bold"
@@ -1237,7 +1237,7 @@
      x="-100.35177"
      transform="rotate(149.9049)">15</text>
   <text
-     style="font-weight:bold;font-size:13.99989891px;font-family:Thryomanes;fill:#ffffff;stroke-width:0.99999279px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:13.99989891px;font-family:sans-serif;fill:#ffffff;stroke-width:0.99999279px;fill-opacity:1;opacity:1;"
      id="text8055"
      xml:space="preserve"
      font-weight="bold"
@@ -1246,7 +1246,7 @@
      x="-40.730549"
      transform="rotate(139.98227)">14</text>
   <text
-     style="font-weight:bold;font-size:14px;font-family:Thryomanes;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14px;font-family:sans-serif;fill:#ffffff;stroke-width:1px;fill-opacity:1;opacity:1;"
      id="text8057"
      xml:space="preserve"
      font-weight="bold"
@@ -1255,7 +1255,7 @@
      x="22.650412"
      transform="rotate(129.90226)">13</text>
   <text
-     style="font-weight:bold;font-size:14.00004292px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00004292px;font-family:sans-serif;fill:#ffffff;stroke-width:1.0000031px;fill-opacity:1;opacity:1;"
      id="text8059"
      xml:space="preserve"
      font-weight="bold"
@@ -1264,7 +1264,7 @@
      x="84.026268"
      transform="rotate(119.84587)">12</text>
   <text
-     style="font-weight:bold;font-size:14.00006294px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000453px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00006294px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000453px;fill-opacity:1;opacity:1;"
      id="text8061"
      xml:space="preserve"
      font-weight="bold"
@@ -1273,7 +1273,7 @@
      x="141.61855"
      transform="rotate(109.89872)">11</text>
   <text
-     style="font-weight:bold;font-size:14.00001907px;font-family:Thryomanes;fill:#ffffff;stroke-width:1.00000131px;fill-opacity:1;opacity:1;"
+     style="font-weight:bold;font-size:14.00001907px;font-family:sans-serif;fill:#ffffff;stroke-width:1.00000131px;fill-opacity:1;opacity:1;"
      id="text8063"
      xml:space="preserve"
      font-weight="bold"
@@ -1306,7 +1306,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8069"
-     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">N</text>
+     style="font-weight:bold;font-size:29.34215164px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0;">N</text>
   <text
      transform="scale(-0.98646598,-1.0137197)"
      x="-263.52988"
@@ -1316,7 +1316,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8071"
-     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">S</text>
+     style="font-weight:bold;font-size:28.47183228px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0;">S</text>
   <text
      transform="matrix(0,0.97723732,-1.0232929,0,0,0)"
      x="249.1985"
@@ -1326,7 +1326,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8073"
-     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">E</text>
+     style="font-weight:bold;font-size:27.49232101px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0;">E</text>
   <text
      transform="matrix(0,-0.89888288,1.112492,0,0,0)"
      x="-293.17395"
@@ -1336,7 +1336,7 @@
      stroke-opacity="null"
      xml:space="preserve"
      id="text8075"
-     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0; opacity:0.6;">W</text>
+     style="font-weight:bold;font-size:24.44834328px;font-family:'Times New Roman', Times, serif;fill:#00f500;stroke:#ffffff;stroke-width:1;;stroke-width:0;">W</text>
   <line
      x1="89.613396"
      x2="75.656929"

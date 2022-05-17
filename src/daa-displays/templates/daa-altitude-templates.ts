@@ -1,11 +1,9 @@
-export const FONT_FAMILY: string = "sans-serif";
-export const TAPE_BACKGROUND_OPACITY: number = 0.6;
-export const BUG_OPACITY: number = 0.5;
+import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR } from "./daa-constant-templates";
 export const altitudeTemplate = `
-<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
+<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:${TAPE_OPACITY};">
     <div style="position:absolute; overflow:hidden; width:128px; height:650px;">
         <div id="{{id}}-spinner" style="transform:translateY(0px);">
-            <div class="{{id}}-tape" style="position:absolute; opacity:${TAPE_BACKGROUND_OPACITY}; background-color:#333333; margin-left:36px; left:8px; width:85px; height:{{height}}px;">
+            <div class="{{id}}-tape" style="position:absolute; opacity:${TAPE_BACKGROUND_OPACITY}; background-color:${TAPE_BACKGROUND_COLOR}; margin-left:36px; left:8px; width:85px; height:{{height}}px;">
                 <div id="{{id}}-tick-values" style="position:absolute; color:white; font-size:20px; font-family:${FONT_FAMILY}; top:24px; left:18px; line-height:162px; width:55px; text-align:right;">
                     3000 2800 2600 2400 2200 2000 1800 1600 1400 1200 1000 800 600 400 200 000
                 </div>

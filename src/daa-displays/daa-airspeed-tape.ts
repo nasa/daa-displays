@@ -9,50 +9,6 @@
  *              display showing the current value in numeric form. A small graduated linear
  *              string is used for the least significant digit of the digital display.
  *              The tape unit is 20 knot.</p>
- *              <p>This implementation requires the installation of the pvsio-web toolkit 
- *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
- *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
- *              <img src="images/daa-airspeed-tape.png" style="margin-left:8%; max-height:250px;" alt="DAA Airspeed Tape Widget"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-airspeed-tape"], function (AirspeedTape) {
-    "use strict";
-    const airSpeedTape = new AirspeedTape("airspeed", {
-        top: 100, left: 100
-    });
-    airSpeedTape.setAirSpeed(300);
-    airSpeedTape.setBands({
-        RECOVERY: [ { from: 0, to: 300 } ], 
-        NEAR: [ { from: 300, to: 600 } ] 
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
  * @author Paolo Masci
  * @date October 2018
  * @copyright 

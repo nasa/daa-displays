@@ -1,8 +1,9 @@
+import { FONT_FAMILY } from "./daa-constant-templates";
 export const COMPASS_OPACITY: number = 0.6;
 export const BANDS_OPACITY: number = 0.7;
 export const WEDGE_OPACITY: number = 0.6;
 export const COMPASS_SIZE: number = 634; //px
-export const FONT_FAMILY: string = "sans-serif";
+export const OWNSHIP_OPACITY: number = 0.6;
 export const compassTemplate = `
     <style>
         .compass {
@@ -67,7 +68,7 @@ export const compassTemplate = `
     <div id="{{id}}-ownship" style="z-index:1;">
         <div style="position:absolute; margin-left:300px; margin-top:289px;">
             <!-- <i class="fas fa-2x fa-location-arrow" style="color: #00fefe; transform-origin:center; transform:rotate(-45deg);"></i> -->
-            <object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="height:52px;position:absolute; opacity:0.5;"></object>
+            <object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="height:52px;position:absolute; opacity:${OWNSHIP_OPACITY};"></object>
         </div>
     </div>
 </div>`;

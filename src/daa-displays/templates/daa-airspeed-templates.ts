@@ -1,11 +1,9 @@
-export const FONT_FAMILY: string = "sans-serif";
-export const TAPE_BACKGROUND_OPACITY: number = 0.6;
-export const BUG_OPACITY: number = 0.5;
+import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR } from "./daa-constant-templates";
 export const airspeedTemplate = `
-<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
+<div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:${TAPE_OPACITY};">
     <div style="position:absolute; overflow:hidden; width:128px; height:650px;">
         <div id="{{id}}-spinner" style="transform:translateY(0px)">
-            <div id="{{id}}-rule" style="position:absolute; opacity:${TAPE_BACKGROUND_OPACITY}; background-color:#333333;width:85px;height:{{height}}px;">
+            <div id="{{id}}-rule" style="position:absolute; opacity:${TAPE_BACKGROUND_OPACITY}; background-color:${TAPE_BACKGROUND_COLOR};width:85px;height:{{height}}px;">
                 <div id="{{id}}-tick-values" style="position:absolute; color:white; font-size:28px; font-family:${FONT_FAMILY}; line-height:54px; padding-top:26px; width:55px; text-align:right;">
                     500 480 460 440 420 400 380 360 340 320 300 280 260 240 220 200 180 160 140 120 100 80 60 40 20 10 00
                 </div>

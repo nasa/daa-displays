@@ -1,13 +1,11 @@
-export const FONT_FAMILY: string = "sans-serif";
-export const TAPE_BACKGROUND_OPACITY: number = 0.6;
-export const BUG_OPACITY: number = 1;
-export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; position:absolute; height:432px; width:60px; top:{{top}}px; left:{{left}}px; opacity:0.8;">
+import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR } from "./daa-constant-templates";
+export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; position:absolute; height:432px; width:60px; top:{{top}}px; left:{{left}}px; opacity:${TAPE_OPACITY};">
         <div class="trims" style="opacity:${TAPE_BACKGROUND_OPACITY}">
-            <div style="position:absolute; background-color:#333333; left:-77px; width:180px; height:71px; transform:rotate(75deg);"></div>
-            <div style="position:absolute; background-color:#333333; top:400px; left:-99px; width:202px; height:71px; transform:rotate(-75deg);"></div>
-            <div style="position:absolute; background-color:#333333; top:80px; left:-12px; width:90px; height:74px; transform:rotate(30deg); border-radius:2px;"></div>
-            <div style="position:absolute; background-color:#333333; top:278px; left:-12px; width:90px; height:80px; transform:rotate(-30deg); border-radius:2px;"></div>
-            <div style="position:absolute; background-color:#333333; top:128px; left:21px; width:39px; height:230px;"></div>
+            <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; left:-77px; width:180px; height:71px; transform:rotate(75deg);"></div>
+            <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; top:400px; left:-99px; width:202px; height:71px; transform:rotate(-75deg);"></div>
+            <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; top:80px; left:-12px; width:90px; height:74px; transform:rotate(30deg); border-radius:2px;"></div>
+            <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; top:278px; left:-12px; width:90px; height:80px; transform:rotate(-30deg); border-radius:2px;"></div>
+            <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; top:128px; left:21px; width:39px; height:230px;"></div>
         </div>
         <div class="tape-right-small-spin-number-top" style="opacity:${TAPE_BACKGROUND_OPACITY}; top:-10px; position:absolute; left:1px; width:24px; height:100%; color:white; font-size:20px; text-align: right; line-height:48px; font-family:${FONT_FAMILY};">
             <div class="vspeedP3">6</div>
