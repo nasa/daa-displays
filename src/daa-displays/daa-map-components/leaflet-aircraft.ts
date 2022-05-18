@@ -40,7 +40,6 @@
 
 import * as L from 'leaflet';
 import { DaaSymbol } from '../daa-interactive-map';
-import { alertingColors } from '../daa-utils';
 import { Aircraft, AircraftInterface, AircraftLabel, alert2symbol } from "./daa-aircraft";
 import { LatLonAlt, Vector3D } from './daa-airspace';
 
@@ -87,7 +86,8 @@ export class LeafletAircraft extends Aircraft {
         ownship?: AircraftInterface,
         callSignVisible?: boolean,
         aircraftVisible?: boolean,
-        mapCanRotate?: boolean
+        mapCanRotate?: boolean,
+        zIndex?: number
     }, layer: L.Layer) {
         super(desc?.callSign, { lat: +desc?.s?.lat || 0, lon: +desc?.s?.lon || 0, alt: +desc?.s?.alt || 0 });
 
@@ -107,7 +107,7 @@ export class LeafletAircraft extends Aircraft {
 
         // create custom marker and append marker to the map
         const icon: L.DivIcon = this.createAircraftIcon();
-        this.marker = L.marker([ this.position.lat, this.position.lon ]).setIcon(icon);
+        this.marker = L.marker([ this.position.lat, this.position.lon ]).setIcon(icon).setZIndexOffset(isNaN(+desc?.zIndex) ? +desc?.zIndex : 0);
         this.marker.addTo(this.map);
 
         // set visiblity of the aircraft

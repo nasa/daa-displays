@@ -355,7 +355,8 @@ export class Compass {
             zIndex: 2,
             baseUrl: utils.baseUrl,
             top: this.top,
-            left: this.left
+            left: this.left,
+            fullShade: true
         });
         $(this.div).html(theHTML);
         this.canvas = <HTMLCanvasElement> document.getElementById(id + "-bands");

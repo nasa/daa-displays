@@ -300,7 +300,8 @@ const wind: WindIndicator = new WindIndicator("wind", {
     left: enable_widescreen ? 48 : 195 
 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 210 }, { parent: "daa-disp", maxWedgeAperture: 15, map: map });
+const compassDivName: string = map.getCompassDivName();
+const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 210 }, { parent: compassDivName, maxWedgeAperture: 15, map: map });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 

@@ -245,6 +245,7 @@ export declare interface AirspaceInterface {
     hideContours (): AirspaceInterface
     revealGeoFence () : AirspaceInterface;
     hideGeoFence () : AirspaceInterface;
+    getCompassDivName (): string;
 };
 
 /**
@@ -460,6 +461,12 @@ export class DAA_Airspace implements AirspaceInterface {
             // set 2D view
             this.view2D();
         }
+    }
+    /**
+     * Compass div is not supported in wwd
+     */
+    getCompassDivName (): string {
+        return null;
     }
     /**
      * Switch to vfr mode

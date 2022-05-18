@@ -288,9 +288,14 @@ export class InteractiveMap {
         } else { this.airspace.hideCallSign(); }
         return this;
     }
-    // getMap () {
-    //     return this.wwd;
-    // }
+    /**
+     * Utility function, returns the if of a DOM element that can be used for rendering the compass
+     * The returned div is designed to be placed above the map layer and below the traffic layer
+     * A null pointer is returned if the map does not support the use of such div (e.g., wwd does not support this feature, while leaflet-js has it)
+     */
+    getCompassDivName (): string {
+        return this.airspace.getCompassDivName();
+    }
     /**
      * @function <a name="revealTraffic">revealTraffic</a>
      * @description Reveals traffic information on the map.

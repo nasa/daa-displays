@@ -4,6 +4,7 @@ export const BANDS_OPACITY: number = 0.7;
 export const WEDGE_OPACITY: number = 0.6;
 export const COMPASS_SIZE: number = 634; //px
 export const OWNSHIP_OPACITY: number = 0.6;
+export const SHADE_OPACITY: number = 0.2;
 export const compassTemplate = `
     <style>
         .compass {
@@ -25,7 +26,7 @@ export const compassTemplate = `
     </style>
     <div id="{{id}}-inner" class="compass" style="top:{{top}}px; left:{{left}}px;">
     <!-- compass shade -->
-    <div class="compass" style="border-radius:400px; border:79px solid #333333; opacity:0.1;"></div>
+    <div class="compass" style="border-radius:400px; border:{{#if fullShade}}310{{else}}79{{/if}}px solid #333333; opacity:${SHADE_OPACITY};"></div>
     <!-- compass labels -->
     <div id="{{id}}-compass-labels" class="compass-labels" style="display:none;">
         <div id="{{id}}-compass-label-outer" style="position: absolute; left:546px; top:76px;">5</div>

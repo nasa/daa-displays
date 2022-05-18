@@ -245,8 +245,8 @@ export function createDiv(id: string, opt?: {
     const div: JQuery<HTMLElement> = $('<div></div>');//document.createElement("div");
     $(div).css("position", "absolute").attr("id", id).css("z-index", opt.zIndex);
     if (opt.class) { $(div).addClass(opt.class); }
-    if (opt.top) { $(div).css("top", opt.top + "px"); }
-    if (opt.left) { $(div).css("left", opt.left + "px"); }
+    if (opt.top !== undefined && opt.top !== null) { $(div).css("top", opt.top + "px"); }
+    if (opt.left !== undefined && opt.left !== null) { $(div).css("left", opt.left + "px"); }
     $(div).css("height", (opt.height) ? opt.height + "px" : "0px");
     $(div).css("width", (opt.width) ? opt.width + "px" : "0px");
     const parentDIV: JQuery<HTMLElement> = (opt.parent && $(`#${opt.parent}`).length) ? $(`#${opt.parent}`) : $('BODY');

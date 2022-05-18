@@ -149,7 +149,7 @@ export const ZINDEX = {
  */
 export class LeafletAirspace implements AirspaceInterface {
     // map object where the airspace layers will be renderes
-    protected lworld: L.Map;
+    protected lworlds: L.Map[];
 
     // airspace layers for rendering different kind of objects
     protected ownshipLayer: L.Layer; // ownship layer
@@ -164,7 +164,10 @@ export class LeafletAirspace implements AirspaceInterface {
     protected $div: JQuery<HTMLElement>;
 
     // inner div, used for map rotations
-    protected $innerDiv: JQuery<HTMLElement>;
+    protected $innerDivs: JQuery<HTMLElement>[];
+
+    // compass div
+    protected $compassDiv: JQuery<HTMLElement>;
 
     // ownship
     protected _ownship: LeafletAircraft;
@@ -251,12 +254,19 @@ export class LeafletAirspace implements AirspaceInterface {
         .leaflet-top {
             margin-top: 40px;
         }
-        #${opt.div}-inner {
+        #${opt.div}-background {
             width: ${this.godsView ? width : 3 * width}px !important;
             height: ${this.godsView ? height : 3 * height}px !important;
             top: ${this.godsView ? 0 : -height}px !important;
             left: ${this.godsView ? 0 : -width}px !important;
             background: black;
+        }
+        #${opt.div}-traffic {
+            width: ${this.godsView ? width : 3 * width}px !important;
+            height: ${this.godsView ? height : 3 * height}px !important;
+            top: ${this.godsView ? 0 : -height}px !important;
+            left: ${this.godsView ? 0 : -width}px !important;
+            background: transparent !important;
         }
         </style>`);
 
@@ -266,10 +276,26 @@ export class LeafletAirspace implements AirspaceInterface {
         // we use two divs to implement a rotate map functionality
         // the outer div is the div provided by the user, and defines the dimensions of the view
         // the inner div is for the leaflet map, whose size will be larger than the outer div so map tiles are not missing when rotating the rectangular map
-        const innerDiv: HTMLElement = utils.createDiv(`${opt.div}-inner`, {
-            parent: opt.div
+        const innerDiv0: HTMLElement = utils.createDiv(`${opt.div}-background`, {
+            parent: opt.div,
+            top: 0,
+            left: 0
         });
-        this.$innerDiv = $(innerDiv);
+        const compassLayer: HTMLElement = utils.createDiv(`${opt.div}-compass`, {
+            parent: opt.div,
+            top: 0,
+            left: 0
+        });
+        this.$compassDiv = $(compassLayer);
+        const innerDiv1: HTMLElement = utils.createDiv(`${opt.div}-traffic`, {
+            parent: opt.div,
+            top: 0,
+            left: 0
+        });
+        this.$innerDivs = [
+            $(innerDiv0),
+            $(innerDiv1),
+        ];
         // adjust size of outer div to match the standard dimensions of the danti quadrant
         this.$div.css({
             width,
@@ -287,24 +313,39 @@ export class LeafletAirspace implements AirspaceInterface {
         this.createFlightPlanLayer();
 
         // create leaflet view in the div
-        this.lworld = L.map(`${opt.div}-inner`, {
-            center: [ +opt?.ownship?.lat, +opt?.ownship?.lon ],
-            zoom: 12, // 12 is 5 NMI
-            zoomSnap: this.godsView ? 1 : 0.0005, // this accuracy is needed for NMI lower than 1
-            zoomDelta: this.godsView ? 1 : 0.0005,
-            zoomControl: this.godsView,
-            layers: [
-                this.streetLayer,
-                this.vfrLayer,
-                this.flightPlanLayer,
-                this.ownshipLayer,
-                this.contoursLayer,
-                this.hazardZonesLayer,
-                this.trafficLayer
-            ]
-        });
-        // add scale to the map
-        L.control.scale().addTo(this.lworld);
+        const center: [ number, number ] = [ +opt?.ownship?.lat, +opt?.ownship?.lon ];
+        const zoomSnap: number = this.godsView ? 1 : 0.0005; // this accuracy is needed for NMI lower than 1
+        const zoomDelta: number = this.godsView ? 1 : 0.0005;
+        const zoom: number = 12; // 12 is 5 NMI
+        this.lworlds = [
+            L.map(`${opt.div}-background`, {
+                center,
+                zoom,
+                zoomSnap,
+                zoomDelta,
+                zoomControl: this.godsView,
+                layers: [
+                    this.streetLayer,
+                    this.vfrLayer
+                ]
+            }),
+            L.map(`${opt.div}-traffic`, {
+                center,
+                zoom,
+                zoomSnap,
+                zoomDelta,
+                zoomControl: this.godsView,
+                layers: [
+                    this.flightPlanLayer,
+                    this.ownshipLayer,
+                    this.contoursLayer,
+                    this.hazardZonesLayer,
+                    this.trafficLayer
+                ]
+            })
+        ];
+        // add scale to the traffic map
+        L.control.scale().addTo(this.lworlds[1]);
 
         // enable/disable pointer events based on the type of view
         (this.godsView) ? 
@@ -338,7 +379,7 @@ export class LeafletAirspace implements AirspaceInterface {
         }
 
         // Render ownship
-        this._ownship = new LeafletAircraft(this.lworld, {
+        this._ownship = new LeafletAircraft(this.lworlds[1], {
             s: opt?.ownship,
             heading: 0,
             callSign: "ownship",
@@ -358,6 +399,12 @@ export class LeafletAirspace implements AirspaceInterface {
         this.setZoomLevel(5);
     }
     /**
+     * Utility function, returns a pointer to the compass div
+     */
+    getCompassDivName (): string {
+        return this.$compassDiv[0] ? this.$compassDiv.attr("id") : null;
+    }
+    /**
      * Internal function enables pointer events on the map
      */
     protected enableMapPointerEvents (): void {
@@ -370,10 +417,12 @@ export class LeafletAirspace implements AirspaceInterface {
      * Internal function disables pointer events on the map
      */
     protected disableMapPointerEvents (): void {
-        this.$innerDiv.find(`#map-div`).css({
-            "pointer-events": "none",
-            "touch-action": "none"
-        });
+        for (let i = 0; i < this.$innerDivs.length; i++) {
+            this.$innerDivs[i].find(`#map-div`).css({
+                "pointer-events": "none",
+                "touch-action": "none"
+            });
+        }
     }
     /**
      * Internal function, creates a street layer
@@ -462,9 +511,11 @@ export class LeafletAirspace implements AirspaceInterface {
         if (NMI !== this.nmi && NMI > 0) {
             const zoom: number = nmi2zoom(NMI);
             if (zoom > 0) {
-                this.lworld.setZoom(zoom, {
-                    animate: false
-                });
+                for (let i = 0; i < this.lworlds.length; i++) {
+                    this.lworlds[i].setZoom(zoom, {
+                        animate: false
+                    });
+                }
                 // update nmi info
                 this.nmi = NMI;
                 return this;
@@ -550,9 +601,11 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     goTo(pos: LatLon): AirspaceInterface {
         if (pos) {
-            this.lworld.panTo([ +pos.lat, +pos.lon ], {
-                animate: false
-            });
+            for (let i = 0; i < this.lworlds.length; i++) {
+                this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
+                    animate: false
+                });
+            }
         }
         return this;
     }
@@ -660,10 +713,12 @@ export class LeafletAirspace implements AirspaceInterface {
         // rotate ownship
         this._ownship.setHeading(rotation);
         // rotate map
-        this.$innerDiv.css({
-            transform: `rotate(${rotation}deg)`,
-            "transition-duration": `40ms`
-        });
+        for (let i = 0; i < this.$innerDivs.length; i++) {
+            this.$innerDivs[i].css({
+                transform: `rotate(${rotation}deg)`,
+                "transition-duration": `40ms`
+            });
+        }
         // refresh traffic
         for (let i = 0; i < this._traffic?.length; i++) {
             this._traffic[i].refresh();
@@ -700,7 +755,7 @@ export class LeafletAirspace implements AirspaceInterface {
         this.removeAllTraffic();
         // add new traffic
         for (let i = 0; i < traffic?.length; i++) {
-            const aircraft = new LeafletAircraft(this.lworld, {
+            const aircraft = new LeafletAircraft(this.lworlds[1], {
                 s: traffic[i].s,
                 v: traffic[i].v,
                 symbol: (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? 
