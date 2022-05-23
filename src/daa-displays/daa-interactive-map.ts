@@ -297,6 +297,14 @@ export class InteractiveMap {
         return this.airspace.getCompassDivName();
     }
     /**
+     * Utility function, returns the if of a DOM element that can be used for rendering compass indicators
+     * The returned div is designed to be placed above all other layers
+     * A null pointer is returned if the map does not support the use of such div (e.g., wwd does not support this feature, while leaflet-js has it)
+     */
+    getIndicatorsDivName (): string {
+        return this.airspace.getIndicatorsDivName();
+    }
+    /**
      * @function <a name="revealTraffic">revealTraffic</a>
      * @description Reveals traffic information on the map.
      * @memberof module:InteractiveMap

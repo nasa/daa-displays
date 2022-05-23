@@ -168,6 +168,8 @@ export class LeafletAirspace implements AirspaceInterface {
 
     // compass div
     protected $compassDiv: JQuery<HTMLElement>;
+    // indicators div
+    protected $indicatorsDiv: JQuery<HTMLElement>;
 
     // ownship
     protected _ownship: LeafletAircraft;
@@ -229,7 +231,7 @@ export class LeafletAirspace implements AirspaceInterface {
             background: transparent !important;
         }
         .leaflet-vfr-chart {
-            filter: brightness(60%) saturate(50%);
+            filter: brightness(70%) saturate(32%);
         }
         .leaflet-tile {
             filter: brightness(55%) contrast(140%) grayscale(55%) hue-rotate(20deg);
@@ -292,6 +294,12 @@ export class LeafletAirspace implements AirspaceInterface {
             top: 0,
             left: 0
         });
+        const indicatorsLayer: HTMLElement = utils.createDiv(`${opt.div}-indicators`, {
+            parent: opt.div,
+            top: 0,
+            left: 0
+        });
+        this.$indicatorsDiv = $(indicatorsLayer);
         this.$innerDivs = [
             $(innerDiv0),
             $(innerDiv1),
@@ -403,6 +411,12 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     getCompassDivName (): string {
         return this.$compassDiv[0] ? this.$compassDiv.attr("id") : null;
+    }
+    /**
+     * Utility function, returns a pointer to the indicators div
+     */
+    getIndicatorsDivName (): string {
+        return this.$indicatorsDiv[0] ? this.$indicatorsDiv.attr("id") : null;
     }
     /**
      * Internal function enables pointer events on the map

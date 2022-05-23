@@ -249,7 +249,9 @@ const map: InteractiveMap = new InteractiveMap("map", {
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});
 // map heading is controlled by the compass
-const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", maxWedgeAperture: 15, map, wind });
+const compassDivName: string = map.getCompassDivName();
+const indicatorsDivName: string = map.getIndicatorsDivName();
+const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
 // map view options
@@ -279,7 +281,9 @@ player.define("init", async () => {
     viewOptions.applyCurrentViewOptions();
     player.applyCurrentResolutionOptions();
     player.updateMonitors();
-    await developerMode();
+    player.getMode() === "developerMode" ?
+        await developerMode()
+            : await normalMode();
 });
 async function developerMode (): Promise<void> {
     const configData: ConfigData = await player.loadSelectedConfiguration();
@@ -298,8 +302,8 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape.setRange(configData["vertical-speed"]);
     verticalSpeedTape.revealUnits();
     verticalSpeedTape.showValueBox();
-}
-function normalMode () {
+};
+function normalMode (): void {
     // left
     airspeedTape.defaultUnits();
     airspeedTape.hideUnits();
@@ -315,7 +319,7 @@ function normalMode () {
     verticalSpeedTape.hideUnits();
     verticalSpeedTape.hideValueBox();
     verticalSpeedTape.defaultRange();
-}
+};
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {
     const flightData: LLAData[] = player.getFlightData();

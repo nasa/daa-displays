@@ -328,7 +328,8 @@ export class Compass {
         map?: InteractiveMap,
         wind?: WindIndicator,
         maxWedgeAperture?: number,
-        parent?: string
+        parent?: string, // ID of the parent where the compass rose will be rendered
+        indicatorsDiv?: string // ID of the div element where indicators are to be rendered
     }) {
         opt = opt || {};
         this.id = id || "daa-compass";
@@ -350,15 +351,29 @@ export class Compass {
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
-        const theHTML = Handlebars.compile(templates.compassTemplate)({
+        const theHTML: string = Handlebars.compile(templates.compassTemplate)({
             id: this.id,
             zIndex: 2,
             baseUrl: utils.baseUrl,
             top: this.top,
             left: this.left,
-            fullShade: true
+            fullShade: true,
+            indicators: opt.indicatorsDiv
         });
         $(this.div).html(theHTML);
+        // render indicators in external div if opt.indicatorsDiv specifies a div ID
+        if (opt.indicatorsDiv) {
+            const indicatorsDiv: HTMLElement = utils.createDiv(`${this.id}-indicators-inner`, {
+                parent: opt.indicatorsDiv, 
+                zIndex: 2,
+                top: this.top,
+                left: this.left
+            });
+            const indicatorsHTML: string = Handlebars.compile(templates.indicatorsTemplate)({
+                id: this.id
+            });
+            $(indicatorsDiv)?.html(indicatorsHTML);
+        }
         this.canvas = <HTMLCanvasElement> document.getElementById(id + "-bands");
         this.radius = this.canvas.width / 2 - this.strokeWidth + 1;
         this.centerX = this.centerY = this.canvas.width / 2;

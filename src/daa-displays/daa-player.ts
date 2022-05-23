@@ -192,10 +192,15 @@ export class DAAPlayer extends Backbone.Model {
 
     protected mode: "developerMode" | "normalMode" = "normalMode";
 
+    /**
+     * Utility function, returns the current display mode (normalMode or developerMode)
+     */
     getMode (): "developerMode" | "normalMode" {
         return this.mode;
     }
-    
+    /**
+     * Display modes
+     */   
     static readonly modes = {
         developerMode: "developerMode",
         normalMode: "normalMode"
