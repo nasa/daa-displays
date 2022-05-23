@@ -34,7 +34,7 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { colors, DaaSymbol, DAA_AircraftDescriptor, DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
+import { DaaSymbol, DAA_AircraftDescriptor, DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
 import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
 
@@ -43,6 +43,7 @@ import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, computeBearing, computeNmiDistance } from './daa-displays/daa-utils';
 import { DaaSounds } from './daa-displays/daa-sounds';
+import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 
 // flag indicating whether the display should be widescreen
 const enable_widescreen: boolean = true;
@@ -292,7 +293,8 @@ const map: InteractiveMap = new InteractiveMap("map", {
 }, { 
     parent: "daa-disp", 
     widescreen: enable_widescreen,
-    engine: "leafletjs"
+    engine: "leafletjs",
+    layeringMode: LayeringMode.byAlertLevel
 });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", {

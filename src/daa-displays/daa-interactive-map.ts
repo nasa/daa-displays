@@ -96,6 +96,7 @@ import * as serverInterface from './utils/daa-server'
 import { AirspaceInterface, cities, DAA_Airspace } from './daa-map-components/daa-airspace';
 import { GeoFence } from './daa-map-components/daa-geofence';
 import { LeafletAirspace } from './daa-map-components/leaflet-airspace';
+import { LayeringMode } from './daa-map-components/leaflet-aircraft';
 
 export type DaaSymbol = "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-target" | "ownship" | string;
 
@@ -158,6 +159,7 @@ export class InteractiveMap {
             los?: boolean, 
             callSignVisible?: boolean, 
             widescreen?: boolean,
+            layeringMode?: LayeringMode,
             engine?: "wwd" | "leafletjs"
         }
     ) {
@@ -200,7 +202,8 @@ export class InteractiveMap {
             godsView: opt.godsView,
             los: opt.los,
             callSignVisible: opt.callSignVisible,
-            widescreen: opt.widescreen
+            widescreen: opt.widescreen,
+            layeringMode: opt.layeringMode
         }) : new DAA_Airspace({
             canvas: this.id + "-canvas",
             offlineMap: opt.offlineMap,

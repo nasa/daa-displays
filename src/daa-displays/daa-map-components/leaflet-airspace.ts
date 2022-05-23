@@ -43,8 +43,8 @@ import * as server from "../utils/daa-server";
 import { Aircraft, AircraftInterface } from "./daa-aircraft";
 import { AirspaceInterface, cities, LatLon, LatLonAlt, Vector3D } from "./daa-airspace";
 import * as L from "leaflet";
-import { DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
-import { LeafletAircraft } from "./leaflet-aircraft";
+import { DaaSymbol, DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
+import { LayeringMode, LeafletAircraft } from "./leaflet-aircraft";
 import { GeoFence } from "./daa-geofence";
 
 // font size/family used for labels
@@ -175,6 +175,9 @@ export class LeafletAirspace implements AirspaceInterface {
     protected _ownship: LeafletAircraft;
     // traffic
     protected _traffic: LeafletAircraft[] = [];
+    // layering mode for traffic
+    protected layeringMode: LayeringMode = LayeringMode.byAlertLevel;
+
     // contours
     protected contours: {[id: string]: L.Polygon} = {};
     // hazard zones
@@ -207,7 +210,8 @@ export class LeafletAirspace implements AirspaceInterface {
         callSignVisible?: boolean, // default: false
         trafficVisible?: boolean,  // default: true
         flightPlanVisible?: boolean, // default: false
-        widescreen?: boolean // default: false
+        widescreen?: boolean, // default: false
+        layeringMode?: LayeringMode // default: byAlertLevel
     }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -221,6 +225,7 @@ export class LeafletAirspace implements AirspaceInterface {
         this.callSignVisible = !!opt.callSignVisible;
         this.trafficVisible = opt.trafficVisible !== undefined ? !!opt.trafficVisible : true;
         this.flightPlanVisible = !!opt.flightPlanVisible;
+        this.layeringMode = opt.layeringMode !== LayeringMode.byAltitudeLevel ? LayeringMode.byAlertLevel : LayeringMode.byAltitudeLevel;
 
         const width: number = opt?.widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH;
         const height: number = DEFAULT_MAP_HEIGHT;
@@ -763,7 +768,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Updates traffic information.
      */
-    setTraffic(traffic: { s: LatLonAlt; v: Vector3D; symbol: string; callSign: string; }[]): AirspaceInterface {
+    setTraffic(traffic: { s: LatLonAlt; v: Vector3D; symbol: DaaSymbol; callSign: string; }[]): AirspaceInterface {
         // const nmiScale: number = this.getScale();
         // remove current traffic
         this.removeAllTraffic();
@@ -780,7 +785,8 @@ export class LeafletAirspace implements AirspaceInterface {
                 callSignVisible: this.callSignVisible,
                 aircraftVisible: this.trafficVisible,
                 ownship: this._ownship,
-                mapCanRotate: !this.godsView
+                mapCanRotate: !this.godsView,
+                layeringMode: this.layeringMode
             }, this.trafficLayer);
             this._traffic.push(aircraft);
         }

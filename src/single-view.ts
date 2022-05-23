@@ -42,6 +42,7 @@ import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands } from './daa-displays/daa-utils';
+import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 
 const player: DAAPlayer = new DAAPlayer();
 
@@ -244,7 +245,8 @@ const map: InteractiveMap = new InteractiveMap("map", {
     left: 6
 }, { 
     parent: "daa-disp", 
-    engine: "leafletjs" 
+    engine: "leafletjs",
+    layeringMode: LayeringMode.byAlertLevel
 });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", { top: 690, left: 195 }, { parent: "daa-disp"});

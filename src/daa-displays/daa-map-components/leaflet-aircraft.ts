@@ -57,6 +57,22 @@ export const LEAFLET_LON_RANGE: [ number, number] = [-720, 720];
 export const MARKER_SIZE: number = 52; //px
 
 /**
+ * zIndex values used for traffic symbols (alerts are on top, ownship has z-index 0)
+ */
+export const zIndexValue: { [alert: string]: number } = {
+    "daa-alert": 10000,
+    "daa-traffic-avoid": 1000,
+    "daa-traffic-monitor": 100,
+    "daa-target": 10,
+    "daa-ownship": 0
+};
+
+/**
+ * Layering mode, default is byAlertLevel (i.e., alerts are shown on top)
+ */
+export enum LayeringMode { byAlertLevel, byAltitudeLevel };
+
+/**
  * Leaflet Aircraft class, renders a daa aircraft symbol as a custom leaflet marker
  */
 export class LeafletAircraft extends Aircraft {
@@ -87,7 +103,7 @@ export class LeafletAircraft extends Aircraft {
         callSignVisible?: boolean,
         aircraftVisible?: boolean,
         mapCanRotate?: boolean,
-        zIndex?: number
+        layeringMode?: LayeringMode
     }, layer: L.Layer) {
         super(desc?.callSign, { lat: +desc?.s?.lat || 0, lon: +desc?.s?.lon || 0, alt: +desc?.s?.alt || 0 });
 
@@ -107,7 +123,10 @@ export class LeafletAircraft extends Aircraft {
 
         // create custom marker and append marker to the map
         const icon: L.DivIcon = this.createAircraftIcon();
-        this.marker = L.marker([ this.position.lat, this.position.lon ]).setIcon(icon).setZIndexOffset(isNaN(+desc?.zIndex) ? +desc?.zIndex : 0);
+        this.marker = L.marker([ this.position.lat, this.position.lon ]).setIcon(icon);
+        const layeringMode: LayeringMode = desc.layeringMode !== LayeringMode.byAltitudeLevel ? LayeringMode.byAlertLevel : LayeringMode.byAltitudeLevel;
+        const zIndex: number = layeringMode === LayeringMode.byAlertLevel ? (zIndexValue[this.symbol] || 0) : (this.position.alt || 0);
+        this.marker.setZIndexOffset(zIndex);
         this.marker.addTo(this.map);
 
         // set visiblity of the aircraft
