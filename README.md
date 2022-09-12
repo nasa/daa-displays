@@ -40,13 +40,12 @@ The following software is necessary to compile and execute DAA-Displays
 4. Select a flight scenario, a configuration, and a DAA specification using the drop-down menus provided by the App. Click `Load Selected Scenario and Configuration` to initialize the simulation.
 5. Click `Play` to simulate the DAA specification in the selected flight scenario. Use the other simulation controls to jump to specific time instants, change the simulation speed, and generate plot diagrams.
 
-## Tips for developers
-The `./restart.sh` script supports the following options:
-- `-help`                (Shows the available options)
-- `-pvsio`               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
-- `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires PVS and NASALib)
-- `-fast`                (Enables optimizations, including caching of simulation results)
-- `-port <port number>`  (The server will use the given port)
+> Note: The `./restart.sh` script supports the following options:
+> - `-help`                (Shows the available options)
+> - `-pvsio`               (Enables the pvsio process; pvsio must be in the execution path; requires nasalib)
+> - `-pvsio <path>`        (Enables the pvsio process; the given pvsio path is used for executing the pvsio environment; requires PVS and NASALib)
+> - `-fast`                (Enables optimizations, including caching of simulation results)
+> - `-port <port number>`  (The server will use the given port)
 
 ## Use Cases
 The following examples illustrate concrete applications of the daa-displays toolkit for the analysis of DAA functions in cockpit displays.
@@ -110,6 +109,20 @@ To reproduce the demonstration shown in the figure:
 1. Launch the `3D view` app (see *Use instructions* above).
 2. Select flight scenario `scenario-6` and click `Load Selected Scenario and Configuration`.
 3. Click `Play` to watch the behavior of the DAA specification for the selected flight scenario. Position the mouse in the view and use mouse wheel to zoom in/out, use the central mouse button to tilt/pan the view.
+
+## Tips for developers
+This section provides information on how to use DAA-Displays to build a stand-alone display prototype that can provide DAA alerts and maneuver guidance in real-time based on a live stream of flight data. An example such prototype is the [DANTi stand-alone display](https://shemesh.larc.nasa.gov/fm/DANTi/).
+
+![](screenshots/stand-alone-display.png "")
+
+To create a stand-alone display prototype based on DAA-Displays, developers should adopt a separation of concerns between rendering the visual appearance of the display (front-end modules), and the core logic (back-end modules). DAA-Displays builds on this separation of concerns, and the architectural diagram described in the research paper [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.pdf) can be used as a reference. 
+
+The front-end modules of the stand-alone display prototype can be conveniently developed in [TypeScript](https://www.typescriptlang.org/). The code of the `DANTi` app in DAA-Displays can be re-used to create the visual appearance of the display (e.g., see [how DANTi app instantiates the display elements](https://github.com/nasa/daa-displays/blob/master/src/danti.ts#L289-L327) and [renders DAA alerts and resolutions](https://github.com/nasa/daa-displays/blob/master/src/danti.ts#L59-L246)).
+
+The back-end modules of the stand-alone display prototype can be conveniently developed using [NodeJS](https://nodejs.org/). The code of the DAA-Displays Server can be re-used to create a dedicated [execution provider](https://github.com/nasa/daa-displays/blob/master/src/daa-server/daa-javaProcess.ts#L88-L104) that computes DAA alerts and maneuver guidance with [DAIDALUS](https://shemesh.larc.nasa.gov/fm/DAIDALUS/). A routing module needs to be implemented in the back-end to receive a live stream of flight data (position and velocity vector of ownship and traffic). The execution provider will be used to process the received data on-demand, and the results of the computation will be forwarded to the front-end module for rendering. 
+
+Once the front-end and the back-end modules of the stand-alone display application are ready, package them into a stand-alone application using [Electron JS](https://www.electronjs.org/docs/latest/tutorial/tutorial-prerequisites).
+
 
 
 ## Structure
