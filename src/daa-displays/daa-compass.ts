@@ -95,6 +95,7 @@ import * as templates from './templates/daa-compass-templates';
 import * as server from '../daa-server/utils/daa-server';
 import { InteractiveMap } from './daa-interactive-map';
 import { WindIndicator } from './daa-wind-indicator';
+import { fixed3 } from './daa-utils';
 
 export const singleStroke: number = 8;
 export const doubleStroke: number = 20;
@@ -253,7 +254,7 @@ class ResolutionBug {
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
         if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
-            $(`#${this.id}-wedge`).css({ "display": "block"});
+            $(`#${this.id}-wedge`).css({ "display": "block", "filter": "brightness(1.5)" });
             $(`#${this.id}-indicator`).css({ "display": "none"});
             const canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById(`${this.id}-wedge`);
             const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
@@ -434,7 +435,7 @@ export class Compass {
         opt = opt || {};
         opt.transitionDuration = opt.transitionDuration || "500ms";
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
-        $(`#${this.id}-value`).html(`${Math.floor(posangle)}`);
+        $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
         if (this.nrthup) {
             $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });
