@@ -42,7 +42,7 @@ import * as utils from './daa-displays/daa-utils';
 import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, computeBearing, computeNmiDistance } from './daa-displays/daa-utils';
-import { DaaSounds } from './daa-displays/daa-sounds';
+import { DaaVoice } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 
 // flag indicating whether the display should be widescreen
@@ -62,7 +62,7 @@ function render (danti: {
     airspeedTape: AirspeedTape, 
     altitudeTape: AltitudeTape, 
     verticalSpeedTape: VerticalSpeedTape,
-    sound: DaaSounds
+    sound: DaaVoice
 }) {
     const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
@@ -201,39 +201,7 @@ function render (danti: {
         
         // play sound if voice feedback is enabled and max_alert > 2 (red alert)
         if (enable_sound && max_alert > 2) {
-            if (max_alert_aircraft) {
-                const dist: string = computeNmiDistance({
-                    lat: +flightData.ownship.s.lat,
-                    lon: +flightData.ownship.s.lon
-                }, {
-                    lat: +max_alert_aircraft.s.lat,
-                    lon: +max_alert_aircraft.s.lon
-                }).toFixed(1);
-                const heading: number = utils.rad2deg(Math.atan2(+flightData.ownship.v.x, +flightData.ownship.v.y));
-                const bearing: number = computeBearing({
-                    lat: +flightData.ownship.s.lat,
-                    lon: +flightData.ownship.s.lon
-                }, {
-                    lat: +max_alert_aircraft.s.lat,
-                    lon: +max_alert_aircraft.s.lon
-                });
-                const relative_bearing: number = ((((bearing - heading) % 360) + 360) % 360);
-                console.log({ relative_bearing, bearing, heading });
-                let dir: string = ((relative_bearing / 360) * 12).toFixed(0);
-                if (dir === "0") { dir = "12"; }
-                const ann: string = `Traffic... At ${dir} o'clock... ${dist} miles`; // e.g., traffic at 2 o'clock 3 miles
-                const msg: string = `Traffic at ${dir} o'clock ${dist} NMI`;
-                // write aural annunciation in output message box
-                player.voiceFeedback(msg);
-                // read message if voice feedback is enabled
-                if (enable_sound && player.voiceFeedbackIsEnabled()) {
-                    danti?.sound?.speak(ann, { voice: "Samantha" });
-                }
-            } else {
-                if (enable_sound) {
-                    danti?.sound?.ping();
-                }
-            }
+            voiceFeedback(danti?.sound, flightData, max_alert_aircraft, { altitude_type: "absolute" });
         } else {
             player.voiceFeedback("");
         }
@@ -241,6 +209,92 @@ function render (danti: {
             const step: number = player.getCurrentSimulationStep();
             const time: string = player.getCurrentSimulationTime();    
             plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
+        }
+    }
+}
+
+/**
+ * Voice feedback for DANTi
+ * Example: "Traffic, eleven o'clock, one-zero miles, southbound, converging, Boeing Seven Twenty Seven, one seven thousand."
+ * See example ATC phraseology at https://www.faa.gov/air_traffic/publications/atpubs/atc_html/chap2_section_1.html
+ */
+function voiceFeedback (voice: DaaVoice, flightData: LLAData, max_alert_aircraft: DAA_AircraftDescriptor, opt?: {
+    altitude_type?: "relative" | "absolute"
+}) {
+    if (voice && flightData) {
+        if (max_alert_aircraft) {
+            // text used to introduce pauses in the electronic speech
+            const pause: string = `... ... ... ...`;
+
+            // relative heading position of the intruder
+            const ownship_heading: number = utils.rad2deg(Math.atan2(+flightData.ownship.v.x, +flightData.ownship.v.y));
+            const bearing: number = computeBearing({
+                lat: +flightData.ownship.s.lat,
+                lon: +flightData.ownship.s.lon
+            }, {
+                lat: +max_alert_aircraft.s.lat,
+                lon: +max_alert_aircraft.s.lon
+            });
+            const relative_bearing: number = ((((bearing - ownship_heading) % 360) + 360) % 360);
+            console.log({ relative_bearing, bearing, heading: ownship_heading });
+            let relative_heading: string = ((relative_bearing / 360) * 12).toFixed(0);
+            if (relative_heading === "0") { relative_heading = "12"; }
+            // feedback for heading position
+            const relative_heading_msg: string = `${relative_heading} o'clock`;
+            const relative_heading_txt: string = `${relative_heading} o'clock`;
+
+            // distance between the aircraft
+            const distance: string = computeNmiDistance({
+                lat: +flightData.ownship.s.lat,
+                lon: +flightData.ownship.s.lon
+            }, {
+                lat: +max_alert_aircraft.s.lat,
+                lon: +max_alert_aircraft.s.lon
+            }).toFixed(1);
+            // feedback for distance -- round the number to the nearest integer if distance > 1NM, otherwise use two digits accuracy
+            const distance_msg: string = `${voice.readNumber(+distance > 1 ? Math.round(+distance) : +distance, { pause })} miles`;
+            const distance_txt: string = `${+distance > 1 ? Math.round(+distance) : +distance} miles`;
+
+            // feedback for direction
+            const traffic_direction: number = utils.rad2deg(Math.atan2(+max_alert_aircraft.v.x, +max_alert_aircraft.v.y));
+            const direction_msg: string = voice.readDirection(+traffic_direction);
+            const direction_txt: string = direction_msg;
+
+            // altitude of the intruder
+            // option 1: absolute altitude, e.g., one-seven thousands
+            // option 2: relative altitude, e.g., one thousand feet below you
+            const alt: { absolute: number, relative: number } = {
+                absolute: +max_alert_aircraft.s.alt,
+                relative: +max_alert_aircraft.s.alt - +flightData.ownship.s.alt 
+            }; // altitude, in ft
+            const altitude_type: "relative" | "absolute" = opt?.altitude_type || "absolute";
+            const altitude: number = altitude_type === "absolute" ? alt.absolute : Math.abs(alt.relative);
+            // feedback for altitude, number is rounded to 100xft
+            let altitude_msg: string = `${voice.readNumber(Math.floor(altitude / 100) * 100, { pause })}`; // feet is often omitted for brevity
+            let altitude_txt: string = `${Math.floor(altitude / 100) * 100}`;
+            if (altitude_type === "relative") {
+                altitude_msg += alt.relative < 0 ? " feet below you " : " feet above you ";
+                altitude_txt += alt.relative < 0 ? " feet below you " : " feet above you ";
+            }
+
+            // info from flight data
+            const info: string = `Traffic, ${relative_heading} o'clock, ${distance} NMI, ${altitude} ft`;
+
+            // feedback message read to the pilot by the electronic voice
+            const msg: string = `Traffic ${pause} ${relative_heading_msg} ${pause} ${distance_msg} ${pause} ${direction_msg} ${pause} ${altitude_msg}`; // e.g., traffic, 2 o'clock, 3 miles, 8000 ft
+            const txt: string = `Traffic, ${relative_heading_txt}, ${distance_txt}, ${direction_txt}, ${altitude_txt}`;
+            
+            // write aural annunciation in output message box
+            player.voiceFeedback(txt);
+            console.log({ info, msg });
+            // read message if voice feedback is enabled
+            if (enable_sound && player.voiceFeedbackIsEnabled()) {
+                voice?.speak(msg, { voice: "Samantha" });
+            }
+        } else {
+            if (enable_sound) {
+                voice?.ping();
+            }
         }
     }
 }
@@ -320,7 +374,7 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", {
         "nrthup", "vfr-map", "call-sign", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // sounds
-const sound: DaaSounds = new DaaSounds();
+const sound: DaaVoice = new DaaVoice();
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: enable_widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: enable_widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
@@ -445,6 +499,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         parent: "simulation-controls",
         top: 100
     });
+    player.enableWedgeApertureOption("compass");
     await player.activate();
 
     // auto-load scenario+config if they are specified in the browser

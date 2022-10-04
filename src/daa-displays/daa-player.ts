@@ -747,6 +747,18 @@ export class DAAPlayer extends Backbone.Model {
         $(`#${this.id}-max-vspeed-wedge-aperture-input`).trigger("input");
     }
     /**
+     * Utility function, enables wedge aperture option for a given widget
+     */
+    enableWedgeApertureOption (widget: "compass" | "airspeed" | "altitude" | "vspeed"): void {
+        $(`#${this.id}-max-${widget}-wedge-aperture-checkbox`).prop( "checked", true);
+    }
+    /**
+     * Utility function, disables wedge aperture option for a given widget
+     */
+    disableWedgeApertureOption (widget: "compass" | "airspeed" | "altitude" | "vspeed"): void {
+        $(`#${this.id}-max-${widget}-wedge-aperture-checkbox`).prop( "checked", false);
+    }
+    /**
      * utility function, renders the DOM elements necessary for the configuration of conflict resolutions elements
      */
     appendResolutionControls (handlers: { [key: string]: InputHandler }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
