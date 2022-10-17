@@ -500,6 +500,9 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         top: 100
     });
     player.enableWedgeApertureOption("compass");
+    player.enableWedgeApertureOption("airspeed");
+    player.enableWedgeApertureOption("altitude");
+    player.enableWedgeApertureOption("vspeed");
     await player.activate();
 
     // auto-load scenario+config if they are specified in the browser
