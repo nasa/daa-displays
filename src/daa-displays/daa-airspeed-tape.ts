@@ -185,7 +185,7 @@ class SpeedBug {
         this.refreshWedge(opt);
 
         let bugPosition: number = this.zero - this.val * this.tickHeight / this.airspeedStep;
-        if (this.color === "green" && (isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
+        if (this.color === utils.bugColors["RECOVERY"] && (isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
             $(`#${this.id}-notch`).css({ display: "block"});
             $(`#${this.id}-indicator`).css({ display: "none"});
 
