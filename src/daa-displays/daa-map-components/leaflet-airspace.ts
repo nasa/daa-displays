@@ -236,7 +236,7 @@ export class LeafletAirspace implements AirspaceInterface {
             background: transparent !important;
         }
         .leaflet-vfr-chart {
-            filter: brightness(70%) saturate(32%);
+            filter: brightness(50%) grayscale(55%);
         }
         .leaflet-tile {
             filter: brightness(55%) contrast(140%) grayscale(55%) hue-rotate(20deg);
