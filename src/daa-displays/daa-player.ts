@@ -906,13 +906,13 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * Disables voice feedback
      */
-    disableVoiceFeedbackIsEnabled (): void {
+    disableVoiceFeedback (): void {
         $(`#${this.id}-voice-feedback-checkbox`).prop("checked", false);
     }
     /**
      * Enables voice feedback
      */
-    enableVoiceFeedbackIsEnabled (): void {
+    enableVoiceFeedback (): void {
         $(`#${this.id}-voice-feedback-checkbox`).prop("checked", true);
     }
     /**
@@ -922,6 +922,53 @@ export class DAAPlayer extends Backbone.Model {
         msg = msg || "";
         $(`#${this.id}-voice-feedback-output`).val(msg);
     }
+    /**
+     * utility function, renders the DOM elements necessary for enabling/disabling wedge persistence on alert
+     */
+    appendWedgePersistenceControls (opt?: { top?: number, left?: number, width?: number, parent?: string, callback?: () => void }): DAAPlayer {
+        opt = opt || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 724 : opt.width;
+        const theHTML = Handlebars.compile(templates.wedgePersistenceControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top,
+            left: opt.left, 
+            width: opt.width,
+            outerWidth: opt.width + 70 // 70 is used to accommodate the checkbox width and avoid the element going to the next line 
+        });
+        utils.createDiv(`${this.id}-wedge-persistence-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-wedge-persistence-controls`).html(theHTML);
+        // install handlers
+        $(`#${this.id}-wedge-persistence-checkbox`).on("change", () => {
+            if (opt?.callback) {
+                opt.callback();
+            }
+        });
+        return this;
+    }
+    /**
+     * Checks whether wedge persistence is enabled
+     */
+    wedgePersistenceIsEnabled (): boolean {
+        const isEnabled: boolean = $(`#${this.id}-wedge-persistence-checkbox`).is(":checked");
+        return isEnabled;
+    }
+    /**
+     * Disables wedge persistence
+     */
+    disableWedgePersistence (): void {
+        $(`#${this.id}-wedge-persistence-checkbox`).prop("checked", false);
+    }
+    /**
+     * Enables wedge persistence
+     */
+    enableWedgePersistence (): void {
+        $(`#${this.id}-wedge-persistence-checkbox`).prop("checked", true);
+    }
+
     /**
      * Disables the dropdown list for selecting a scenario
      */
