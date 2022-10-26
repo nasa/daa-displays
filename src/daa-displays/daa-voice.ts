@@ -39,7 +39,7 @@ export class DaaVoice {
     protected repeat_timer: NodeJS.Timer;
     protected can_speak_new_utterance: boolean = true;
     protected voices: SpeechSynthesisVoice[] = window?.speechSynthesis?.getVoices() || [];
-    protected synthVoice: SpeechSynthesisUtterance = new SpeechSynthesisUtterance();
+    protected synthVoice: SpeechSynthesisUtterance = new SpeechSynthesisUtterance(); // see APIs at https://lists.w3.org/Archives/Public/public-speech-api/2012Oct/0004.html
 
     // Phonetic rules for the pronunciation of numbers
     // these rules are based on comments from JC
@@ -76,7 +76,7 @@ export class DaaVoice {
     /**
      * Constructor
      */
-    constructor () {
+    constructor (opt?: { volume?: number }) {
         // load sounds
         this.pingSound = <HTMLAudioElement> document?.getElementById("danti-sound");
         if (!this.pingSound) {
@@ -103,16 +103,20 @@ export class DaaVoice {
     /**
      * synthetic voice reads a message
      */
-    speak (msg: string, opt?: { voice?: SpeechSynthesisVoice | "Alex" | "Samantha" | string }): void {
+    speak (msg: string, opt?: { 
+        voice?: SpeechSynthesisVoice | "Alex" | "Samantha" | string,
+        volume?: number,
+        rate?: number
+    }): void {
         if (msg) {
             opt = opt || {};
             this.pingSound?.play();
             if (!this.isSpeaking()) {
-                console.log(`[daa-sounds] speaking: ${msg}`);
-                if (opt.voice) {
-                    this.synthVoice.voice = this.getVoice(opt.voice);
-                }
+                if (opt.voice) { this.synthVoice.voice = this.getVoice(opt.voice); }
+                if (!isNaN(opt.volume)) { this.setVolume(opt.volume); }
+                if (!isNaN(opt.rate)) { this.setRate(opt.rate); }
                 this.synthVoice.text = msg;
+                console.log(`[daa-sounds] speaking: ${msg} (volume: ${this.getVolume()}, rate: ${this.getRate()})`);
                 window.speechSynthesis.speak(this.synthVoice);
             }
         }
@@ -158,6 +162,69 @@ export class DaaVoice {
                 this.synthVoice.voice = v;
                 return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * Utility function, returns the current voice volume level (0=min, 100=max)
+     */
+    getVolume (): number {
+        if (this.synthVoice) {
+            console.log(`[daa-sounds] Using volume `, this.synthVoice.volume * 100);
+            return this.synthVoice.volume * 100;
+        }
+        return 0;
+    }
+
+    /**
+     * Utility function, sets the voice volume level, valid values range from 0..100
+     */
+    setVolume (vol: number): boolean {
+        if (this.synthVoice && !isNaN(vol)) {
+            const target: number = 
+                vol < 0 ? 0
+                : vol > 100 ? 100
+                : vol;
+            console.log(`[daa-sounds] Setting volume to ${target}`);
+            // Speaking volume between 0 and 1 inclusive, with 0 being lowest and 1 being highest, with a default of 1.0.
+            this.synthVoice.volume = target / 100;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Utility function, returns the current voice rate (0=min, 100=max)
+     */
+    getRate (): number {
+        if (this.synthVoice) {
+            console.log(`[daa-sounds] Using rate `, this.synthVoice.rate * 100);
+            return this.synthVoice.volume * 100;
+        }
+        return 0;
+    }
+
+    /**
+     * Utility function, sets the voice rate, valid values range from 0.1 to 3
+     * Speaking rate relative to the default rate for this voice. 1.0 is the
+     * default rate supported by the speech synthesis engine or specific
+     * voice (which should correspond to a normal speaking rate). 2.0 is twice as
+     * fast, and 0.5 is half as fast. Values below 0.1 or above 10.0 are strictly
+     * disallowed, but speech synthesis engines or specific voices may constrain
+     * the minimum and maximum rates further—for example a particular voice may
+     * not actually speak faster than 3 times normal even if you specify a value
+     * larger than 3.0
+     */
+    setRate (rate: number): boolean {
+        if (this.synthVoice && !isNaN(rate)) {
+            const target: number = 
+                rate < 0.1 ? 0.1
+                : rate > 3 ? 3
+                : rate;
+            console.log(`[daa-sounds] Setting rate to ${target}`);
+            this.synthVoice.rate = target;
+            return true;
         }
         return false;
     }
