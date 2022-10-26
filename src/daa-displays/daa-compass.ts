@@ -99,7 +99,7 @@ import { fixed3 } from './daa-utils';
 
 export const singleStroke: number = 8;
 export const doubleStroke: number = 20;
-export const animationDuration: number = 100; //ms
+export const animationDuration: number = 0; //ms
 
 // internal class, renders a resolution bug over the compass
 class ResolutionBug {
@@ -433,7 +433,7 @@ export class Compass {
         transitionDuration?: string
     }) {
         opt = opt || {};
-        opt.transitionDuration = opt.transitionDuration || "500ms";
+        opt.transitionDuration = opt.transitionDuration || `${animationDuration}ms`;
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
         $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
         if (this.nrthup) {
