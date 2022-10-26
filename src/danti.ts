@@ -50,9 +50,11 @@ const enable_widescreen: boolean = true;
 const enable_sound: boolean = true;
 // display padding, used for centering the options and view controls shown at the top/bottom of the danti display
 const PADDING: number = 13; //px
-
 const INCLUDE_PLOTS: boolean = true;
-
+// voice options
+const voiceName: string = "Samantha";
+const voiceVolume: number = 50;
+const voiceRate: number = 1.1;
 /**
  * Utility function, renders the display content
  */
@@ -81,6 +83,25 @@ function render (danti: {
         danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
         danti.verticalSpeedTape.setVerticalSpeed(vspeed);
         danti.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+
+        // compute max alert and collect aircraft alert descriptors
+        let max_alert: number = 0;
+        let max_alert_aircraft: DAA_AircraftDescriptor = null;
+        const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
+            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+            const desc: DAA_AircraftDescriptor = {
+                callSign: data.id,
+                s: data.s,
+                v: data.v,
+                symbol: daaSymbols[alert_level]
+            };
+            if (alert_level > max_alert) {
+                max_alert = alert_level;
+                max_alert_aircraft = desc;
+            }
+            return desc;
+        });
+
         // console.log(`Flight data`, flightData);
         if (bands) {
             const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
@@ -92,9 +113,12 @@ function render (danti: {
             const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
             danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
 
+            // checks whether resolution wedges are persistent when there is an alerting aircraft
+            const wedgePersistenceEnabled: boolean = player.wedgePersistenceIsEnabled();
+
             // set resolutions
             // show wedge only for recovery bands
-            if (compassBands.RECOVERY) {
+            if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
                 danti.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeConstraints: compassBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -104,7 +128,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            if (airspeedBands?.RECOVERY) {
+            if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
                 danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: airspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -114,7 +138,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            if (altitudeBands?.RECOVERY) {
+            if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
                 danti.altitudeTape.setBug(bands["Altitude Resolution"], {
                     wedgeConstraints: altitudeBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -124,7 +148,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            if (vspeedBands?.RECOVERY) {
+            if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
                 danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: vspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -176,22 +200,6 @@ function render (danti: {
                 }
             }
         }
-        let max_alert: number = 0;
-        let max_alert_aircraft: DAA_AircraftDescriptor = null;
-        const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
-            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
-            const desc: DAA_AircraftDescriptor = {
-                callSign: data.id,
-                s: data.s,
-                v: data.v,
-                symbol: daaSymbols[alert_level]
-            };
-            if (alert_level > max_alert) {
-                max_alert = alert_level;
-                max_alert_aircraft = desc;
-            }
-            return desc;
-        });
         danti.map.setTraffic(traffic);
         // set wind indicator
         if (bands && bands.Wind) {
@@ -289,7 +297,7 @@ function voiceFeedback (voice: DaaVoice, flightData: LLAData, max_alert_aircraft
             console.log({ info, msg });
             // read message if voice feedback is enabled
             if (enable_sound && player.voiceFeedbackIsEnabled()) {
-                voice?.speak(msg, { voice: "Samantha" });
+                voice?.speak(msg, { voice: voiceName, volume: voiceVolume, rate: voiceRate });
             }
         } else {
             if (enable_sound) {
@@ -497,12 +505,25 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     }, { top: -64, left: 752 });
     player.appendVoiceFeedbackControls({
         parent: "simulation-controls",
-        top: 100
+        top: 93
+    });
+    player.appendWedgePersistenceControls({
+        parent: "simulation-controls",
+        top: 140,
+        width: 308,
+        callback: () => {
+            render({
+                map: map, compass: compass, airspeedTape: airspeedTape, 
+                altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
+                sound
+            });
+        }
     });
     player.enableWedgeApertureOption("compass");
     player.enableWedgeApertureOption("airspeed");
     player.enableWedgeApertureOption("altitude");
     player.enableWedgeApertureOption("vspeed");
+    player.enableWedgePersistence();
     await player.activate();
 
     // auto-load scenario+config if they are specified in the browser
