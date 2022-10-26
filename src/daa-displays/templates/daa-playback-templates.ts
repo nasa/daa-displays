@@ -276,6 +276,26 @@ export const voiceFeedbackControls: string = `
     </div>
 </div>`;
 
+export const wedgePersistenceControls: string = `
+<div id="{{id}}-voice-feedback-controls-inner" style="position:absolute;width:0px;">
+    <div class="input-group input-group-sm mb-3" style="width:{{outerWidth}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-wedge-persistence-checkbox" class="wedget-persistence">
+                        </div>
+                        <div class="input-group-prepend">
+                            <span class="btn-sm wedge-persistence" style="width:{{width}}px; text-align:center; background-color:#e9ecef; border:1px solid #e9ecef; white-space:nowrap;vertical-align: middle;">Wedge Persistence On Traffic Alerts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;
+
 export const developersControls: string = `
 <div class="input-group input-group-sm mb-3" style="top:{{top}}px; left:{{left}}px; min-width:{{width}}px; display:{{display}};">
   <div id="{{id}}-developer-mode-button" class="input-group-prepend">
