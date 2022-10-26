@@ -66,7 +66,7 @@ export class DAAClient {
             }
         }
         return new Promise((resolve, reject) => {
-            const wsUrl = this.href.replace("http://", "ws://");
+            const wsUrl = this.href.replace("http", "ws");
             this.ws = new WebSocket(wsUrl);
             this.ws.onopen = (evt) => {
                 resolve(this.ws);
@@ -86,6 +86,9 @@ export class DAAClient {
         });
     }
     async send (request: Token): Promise<any> {
+        if (!this.ws) {
+            await this.connectToServer();
+        }
         if (this.ws) {
             return new Promise((resolve, reject) => {
                 let desc: ScenarioDescriptor = {
