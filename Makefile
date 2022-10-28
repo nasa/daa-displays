@@ -1,3 +1,5 @@
+version = 1.0.14
+
 all: npm dist daidalus compile install-dependencies
 	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
 
@@ -13,6 +15,11 @@ npm:
 	@npm install
 	# generate javascript files
 	npm run build
+
+zip:
+	@echo "\033[0;32m** Creating a zip file with the full distribution **\033[0m"
+	zip -9 -r daa-displays-$(version).zip ./dist/* ./daidalus-submodules/v1.0.2/* ./daidalus-submodules/v2.0.2/* ./*.json ./LICENSE ./CHANGELOG -x "*.DS_Store"
+
 
 dist:
 	@echo "\033[0;32m** Copying dist folder **\033[0m"
