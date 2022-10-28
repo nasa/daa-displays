@@ -268,7 +268,7 @@ class ResolutionBug {
             ctx.moveTo(centerX, centerY);
             ctx.arc(centerX, centerY, radius, from - Math.PI / 2, to - Math.PI / 2, false); // 0 degrees in the compass is -90 degrees in the canvas
             ctx.closePath();
-            ctx.fillStyle = "green";
+            ctx.fillStyle = utils.bugColors["RECOVERY"]; // "green";
             ctx.fill();
         } else {
             $(`#${this.id}-wedge`).css({ "display": "none"});
