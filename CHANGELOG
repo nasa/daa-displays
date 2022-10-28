@@ -1,4 +1,8 @@
 ## ChangeLog
+### 1.0.14 (2022.10.26)
+- Improved aural annunciations
+- Improved DANTi app (wedge persistence + compass rotation)
+
 ### 1.0.13 (2022.02.02)
 - Added support for VFR maps
 - Added widescreen mode for moving map
