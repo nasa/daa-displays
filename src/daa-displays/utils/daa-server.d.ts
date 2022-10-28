@@ -169,7 +169,7 @@ export declare interface AlertElement {
 
 export declare interface MonitorData {
     time: number;
-    color: string; // this is the result for a specific band
+    color: "green" | "yellow" | "red" | "gray"; // this is the result for a specific band, see DAAMonitorsV2.java, function color2string()
     details: { [key: string]: string }; // key is one of { Heading, Vertical Speed, Horizontal Speed, Altitude }
 }
 
