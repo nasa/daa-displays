@@ -85,7 +85,7 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  * TERMINATION OF THIS AGREEMENT.
  **/
 import { DAAPlayer, DidSelectConfigurationData, PlayerEvents, safeSelector } from './daa-player';
-import { LLAData } from 'src/daa-server/utils/daa-server';
+import { LLAData } from '../daa-server/utils/daa-server';
 import { ScenarioDataPoint } from './utils/daa-server';
 
 export interface SplitConfig {

@@ -90,8 +90,7 @@ require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpee
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-vertical-speed-templates';
-import { ResolutionElement } from 'src/daa-server/utils/daa-server';
-import { timeStamp } from 'console';
+import { ResolutionElement } from '../daa-server/utils/daa-server';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {

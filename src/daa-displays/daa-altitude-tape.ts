@@ -92,7 +92,7 @@ require(["widgets/daa-displays/daa-altitude-tape"], function (AltitudeTape) {
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-altitude-templates';
-import { ResolutionElement } from 'src/daa-server/utils/daa-server';
+import { ResolutionElement } from '../daa-server/utils/daa-server';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {
