@@ -79,11 +79,11 @@ export class JavaProcess {
 			}
 			const outputFilePath: string = opt.contrib ? path.join("..", outputFolder, outputFileName) : path.join(outputFolder, outputFileName);
 			return new Promise((resolve, reject) => {
-				const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", daaScenario);
-				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
+				const scenario: string = path.join(__dirname, "../daa-scenarios", daaScenario);
+				const config: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`java -jar ${daaLogic} --conf ${wellClearConfig} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
+					`java -jar ${daaLogic} --conf ${config} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${scenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);
@@ -191,6 +191,9 @@ export class JavaProcess {
 			});
 		});
 	}
+	/**
+	 * Returns the list of monitors
+	 */
 	async getMonitorList (folder: string, daaLogic: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const cmds: string[] = [
@@ -211,5 +214,33 @@ export class JavaProcess {
 			});
 		});
 	}
-	async activate () { }
+	/**
+	 * Returns the list of monitors
+	 */
+	async getAlerters (folder: string, daaLogic: string): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const cmds: string[] = [
+				`cd ${folder}`,
+				`java -jar ${daaLogic} --list-alerters`
+			];
+			const cmd = cmds.join(" && ");
+			console.info("Executing " + cmd);
+			exec(cmd, (error, stdout, stderr) => {
+				if (error) {
+					console.error(`exec error: ${error}`);
+					return;
+				} else if (stderr) {
+					console.error(`stderr: ${stderr}`);  
+				}
+				console.info(`stdout: ${stdout?.trim()}`);
+				resolve(stdout.trim());
+			});
+		});
+	}
+	/**
+	 * Activates the process
+	 */
+	async activate () {
+		// no need to do anything in this implementation
+	}
 }

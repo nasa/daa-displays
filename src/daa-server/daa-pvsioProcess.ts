@@ -200,6 +200,9 @@ export class PVSioProcess {
 	async getMonitorList (wellClearFolder: string, daaLogic: string): Promise<string> {
 		return "[]";
 	}
+	async getAlerters (wellClearFolder: string, daaLogic: string): Promise<string> {
+		return "[]";
+	}
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
 		const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);
 		if (match && match.length > 1) {
