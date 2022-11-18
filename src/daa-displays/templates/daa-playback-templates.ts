@@ -419,15 +419,21 @@ export const navbarTemplate: string = `
 <style>
 .navbar-integrated-controls {
     top:15px;
-    left:630px;
+    left:34%;
     transform:scale(0.6);
     position:absolute;
+}
+.zoom-ctrl {
+    position:absolute;
+    left:20%;
+    background:#343a40;
+    z-index:1;
 }
 </style>
 <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
     <span class="navbar-brand col-sm-3 col-md-2 mr-0">DAA-Displays {{version}}</span>
     {{#if zoomables}}
-    <span style="position:absolute; left:20%;">
+    <span class="zoom-ctrl">
         <div class="input-group input-group-sm mb-3" style="margin:0px !important;">
             <div class="input-group-prepend">
                 <span class="btn-sm" style="text-align:center; color:white; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Window Zoom Level</span>

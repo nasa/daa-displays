@@ -10,6 +10,8 @@ ts:
 	npm run build
 	# copy html files
 	rsync src/*.html dist/
+	# copy images
+	rsync src/images/*.gif dist/images/
 
 npm:
 	@npm install
