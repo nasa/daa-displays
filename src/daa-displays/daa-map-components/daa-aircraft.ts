@@ -45,9 +45,12 @@
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from '../daa-utils';
+import * as conversions from '../utils/daa-math';
 import * as WorldWind from '../wwd/worldwind.min';
-import * as serverInterface from '../utils/daa-server'
+import * as serverInterface from '../utils/daa-types'
 import { LosRegion } from './daa-regions';
+import { alertLevel2symbol, symbol2alertKind } from '../daa-utils';
+import { AlertKind, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // arrow symbols, useful for labels
 const arrows = {
@@ -130,40 +133,25 @@ const colladaObjects = {
  * Aircraft interface
  */
 export declare interface AircraftInterface {
-    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): AircraftInterface;
-    setVelocity(vel: utils.Vector3D | serverInterface.Vector3D): AircraftInterface;
-    setPositionAndVelocity(pos?: utils.LatLonAlt | serverInterface.LatLonAlt, vel?: utils.Vector3D | serverInterface.Vector3D): AircraftInterface;
+    setPosition(pos: LatLonAlt<number | string>): AircraftInterface;
+    setVelocity(vel: Vector3D<number | string>): AircraftInterface;
+    setPositionAndVelocity(pos?: LatLonAlt<number | string>, vel?: Vector3D<number | string>): AircraftInterface;
     setAltitude(alt: number): AircraftInterface;
     setCallSign (callSign: string): AircraftInterface;
-    getPosition(): utils.LatLonAlt;
-    getVelocity(): utils.Vector3D;
+    getPosition(): LatLonAlt<number>;
+    getVelocity(): Vector3D<number>;
     getAltitude (): number;
     getHeading (): number;
     getCallSign (): string;
+    getAlertKind (): AlertKind;
 };
-
-/**
- * Utility function, converts an alert level to a symbol name
- */
-export function alert2symbol(daaAlert: number): string {
-    switch (daaAlert) {
-        case 1:
-            return "daa-traffic-avoid";
-        case 2:
-            return "daa-traffic-monitor";
-        case 3:
-            return "daa-alert";
-        default: // return "daa-target"
-    }
-    return "daa-target";
-}
 
 /**
  * Label interface, defines the label of an aircraft and the 
  */
 export interface AircraftLabel { 
     text: string, 
-    position: utils.LatLonAlt, 
+    position: LatLonAlt<number>, 
     offsetX: number, 
     offsetY: number
 };
@@ -173,9 +161,9 @@ export interface AircraftLabel {
  * Aircraft is a base aircraft suitable to collect information about the aircraft position, speed, heading, and call sign
  */
 export class Aircraft implements AircraftInterface {
-    protected position: utils.LatLonAlt;
+    protected position: LatLonAlt<number>;
     protected heading: number; // we keed a separate variable for heading, so this information is well defined even if velocity is 0
-    protected velocity: utils.Vector3D;
+    protected velocity: Vector3D<number>;
     protected callSign: string;
     /**
      * @function <a name="Aircraft">Aircraft</a>
@@ -189,7 +177,7 @@ export class Aircraft implements AircraftInterface {
      * @instance
      * @inner
      */
-    constructor(callSign: string, s: utils.LatLonAlt | serverInterface.LatLonAlt) {
+    constructor(callSign: string, s: LatLonAlt<number | string>) {
         this.callSign = callSign;
         this.position = {
             lat: +s.lat,
@@ -200,6 +188,12 @@ export class Aircraft implements AircraftInterface {
         this.heading = NaN;
     }
     /**
+     * This function is only for traffic aircraft, should be extended by classes that extend the base class Aircraft
+     */
+    getAlertKind (): AlertKind {
+        return AlertKind.UNKNOWN;
+    }
+    /**
      * @function <a name="Aircraft_setPosition">setPosition</a>
      * @description Sets the current position of the aircraft.
      * @param pos {Object({ lat: real, lon: real, alt: real })} Earth location shown at the center of the map, given as { lat: real, lon: real, alt: real }
@@ -207,7 +201,7 @@ export class Aircraft implements AircraftInterface {
      * @instance
      * @inner
      */
-    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): Aircraft {
+    setPosition(pos: LatLonAlt<number | string>): Aircraft {
         if (pos) {
             this.position.lat = +pos.lat; //(isNaN(+pos.lat)) ? this.position.lat: +pos.lat;
             this.position.lon = +pos.lon; //(isNaN(+pos.lon)) ? this.position.lon: +pos.lon;
@@ -223,17 +217,17 @@ export class Aircraft implements AircraftInterface {
      * @instance
      * @inner
      */
-    setVelocity(vel: utils.Vector3D | serverInterface.Vector3D): Aircraft {
+    setVelocity(vel: Vector3D<number | string>): Aircraft {
         if (vel) {
             this.velocity = this.velocity || { x: 0, y: 0, z: 0 };
             this.velocity.x = +vel.x; //(isNaN(+vel.x)) ? this.velocity.x : +vel.x;
             this.velocity.y = +vel.y; //(isNaN(+vel.y)) ? this.velocity.y : +vel.y;
             this.velocity.z = +vel.z; //(isNaN(+vel.z)) ? this.velocity.z : +vel.z;
-            this.heading = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            this.heading = conversions.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
         }
         return this;
     }
-    setPositionAndVelocity(pos?: utils.LatLonAlt | serverInterface.LatLonAlt, vel?: utils.Vector3D | serverInterface.Vector3D): Aircraft {
+    setPositionAndVelocity(pos?: LatLonAlt<number | string>, vel?: Vector3D<number | string>): Aircraft {
         if (pos) { this.setPosition(pos); }
         if (vel) { this.setVelocity(vel); }
         return this;
@@ -260,7 +254,7 @@ export class Aircraft implements AircraftInterface {
      * @instance
      * @inner
      */
-    getPosition(): utils.LatLonAlt {
+    getPosition(): LatLonAlt<number> {
         return {
             lat: this.position.lat,
             lon: this.position.lon,
@@ -275,7 +269,7 @@ export class Aircraft implements AircraftInterface {
      * @instance
      * @inner
      */
-    getVelocity (): utils.Vector3D {
+    getVelocity (): Vector3D<number> {
         return { ...this.velocity };
     }
     /**
@@ -307,7 +301,7 @@ export class Aircraft implements AircraftInterface {
      * Utility function, returns the heading described by the velocity vector passed as function parameter
      */
     static headingFromVelocity (v: { x: number | string, y: number | string }): number {
-        return v && +v.x !== 0 && +v.y !== 0 ? utils.rad2deg(Math.atan2(+v.x, +v.y)) : 0;
+        return v && +v.x !== 0 && +v.y !== 0 ? conversions.rad2deg(Math.atan2(+v.x, +v.y)) : 0;
     }
     /**
      * utility function, creates a label similar to that used in TCAS displays
@@ -450,6 +444,16 @@ export class ColladaAircraft extends Aircraft {
 
         // to load the objects, the caller needs to invoke setupRenderables
     }
+    /**
+     * @Override
+     * Returns the alert level of the aircraft
+     */
+    getAlertKind (): AlertKind {
+        return symbol2alertKind(this.symbol);
+    }
+    /**
+     * Utility function, prepares wwd renderables for the aircraft
+     */
     async setupRenderables (selectedSymbol: string, opt?: { view3D: boolean }): Promise<ColladaAircraft> {
         return new Promise ((resolve, reject) => {
             const obj = colladaObjects[this.symbol]; //colladaObjects.privateJet;
@@ -501,7 +505,7 @@ export class ColladaAircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt): ColladaAircraft {
+    setPosition(pos: LatLonAlt<number | string>): ColladaAircraft {
         if (this.renderable) {
             if (pos) {
                 super.setPosition(pos);
@@ -652,7 +656,7 @@ export class DAA_Aircraft extends Aircraft {
      * @inner
      */
     constructor(wwd: WorldWind.WorldWindow, 
-                desc: { s: utils.LatLonAlt | serverInterface.LatLonAlt, symbol?: string, callSign?: string, callSignVisible?: boolean, aircraftVisible?: boolean, v?: utils.Vector3D | serverInterface.Vector3D, ownship?: Aircraft, view3D?: boolean }, 
+                desc: { s: LatLonAlt<number | string>, symbol?: string, callSign?: string, callSignVisible?: boolean, aircraftVisible?: boolean, v?: Vector3D<number | string>, ownship?: Aircraft, view3D?: boolean }, 
                 layers: { losLayer: WorldWind.RenderableLayer, aircraftLayer: WorldWind.RenderableLayer, textLayer: WorldWind.RenderableLayer }) {
         super(desc.callSign, desc.s);
         super.setVelocity(desc.v);
@@ -718,6 +722,12 @@ export class DAA_Aircraft extends Aircraft {
             this.callSignVisible = true;
         }
         return this;
+    }
+    /**
+     * Hides/Reveals call sign
+     */
+    setCallSignVisibility (visible: boolean): DAA_Aircraft {
+        return visible ? this.revealCallSign() : this.hideCallSign();
     }
     /**
      * Internal function, adds a renderable label to the aircraft
@@ -809,7 +819,7 @@ export class DAA_Aircraft extends Aircraft {
      */
     setSymbol(daaSymbol?: string | number): DAA_Aircraft {
         if (daaSymbol) {
-            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alert2symbol(+daaSymbol);
+            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alertLevel2symbol(+daaSymbol);
             if (symbol) {
                 if (!this.renderableAircraft[this.selectedSymbol]) {
                     // console.log("Warning: still loading DAA_Aircraft symbols... :/");
@@ -892,7 +902,7 @@ export class DAA_Aircraft extends Aircraft {
             this.renderableCallSign.text = aircraftCallSign.text;
         }
         if (this.velocity) {
-            const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            const deg = conversions.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
             this.setHeading(deg);
         }
         return this;
@@ -906,7 +916,7 @@ export class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setPositionAndVelocity(pos?: utils.LatLonAlt | serverInterface.LatLonAlt, vel?: utils.Vector3D | serverInterface.Vector3D): Aircraft {
+    setPositionAndVelocity(pos?: LatLonAlt<number | string>, vel?: Vector3D<number | string>): Aircraft {
         if (pos) {
             this.setPosition(pos);
         }
@@ -924,7 +934,7 @@ export class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt, reference?: Aircraft): DAA_Aircraft {
+    setPosition(pos: LatLonAlt<number | string>, reference?: Aircraft): DAA_Aircraft {
         super.setPosition(pos);
         // update aircraft symbol
         Object.keys(this.renderableAircraft).forEach(symbol => {
@@ -937,7 +947,7 @@ export class DAA_Aircraft extends Aircraft {
         // console.log(this.name, this.position);
         return this;
     }
-    setVelocity(vel: utils.Vector3D | serverInterface.Vector3D): DAA_Aircraft {
+    setVelocity(vel: Vector3D<number | string>): DAA_Aircraft {
         super.setVelocity(vel); // this function will automatically compute the heading
         Object.keys(this.renderableAircraft).forEach(symbol => {
             this.renderableAircraft[symbol].setHeading(this.heading);
@@ -989,10 +999,17 @@ export class DAA_Aircraft extends Aircraft {
             this.renderableCallSign.enabled = this.callSignVisible;
         }
         if (this.velocity) {
-            const deg = utils.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            const deg = conversions.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
             this.setHeading(deg);
         }
         return this;
+    }
+    /**
+     * Utility function, reveal/hide aircraft (default: reveal)
+     */
+    show (reveal?: boolean): DAA_Aircraft {
+        reveal = reveal === undefined ? true : !!reveal;
+        return reveal ? this.reveal() : this.hide();
     }
     /**
      * @function <a name="DAA_Aircraft_setHeading">setHeading</a>
@@ -1045,7 +1062,7 @@ export class DAA_Aircraft extends Aircraft {
      * @instance
      * @inner
      */
-    setLoS(region: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { nmi?: number }): DAA_Aircraft {
+    setLoS(region: LatLonAlt<number | string>[], opt?: { nmi?: number }): DAA_Aircraft {
         region = region || [];
         if (this.losLayer) {
             opt = opt || {};

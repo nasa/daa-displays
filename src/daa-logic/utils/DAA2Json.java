@@ -69,6 +69,7 @@ public class DAA2Json {
 	protected boolean VERBOSE = true;
 
 	protected Daidalus daa = null;
+	protected String ownshipName = null;
 	protected String daaConfig = null;
 	protected static final int precision16 = 16;
 	protected static final int precision2 = 2;
@@ -77,10 +78,11 @@ public class DAA2Json {
 	// 1 degree longitude is ~69 miles and ~60nmi
 	// 1 nautical mile is 1.15078 miles
 
-	public DAA2Json (Daidalus daidalus) { daa = daidalus; }
+	public DAA2Json (Daidalus daidalus, String ownshipName) { daa = daidalus; this.ownshipName = ownshipName; }
 
 	protected void adjustThreshold (String input, Daidalus daidalus) {
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		if (ownshipName != null) { walker.setOwnship(ownshipName); }
 		while (!walker.atEnd()) {
 			walker.readState(daidalus);
 			TrafficState ownship = daidalus.getOwnshipState();
@@ -183,6 +185,7 @@ public class DAA2Json {
 
 		String scenario = null;
 		String output = null;
+		String ownshipName = null;
 
 		// Process args
 		int a = 0;
@@ -191,6 +194,8 @@ public class DAA2Json {
 				// printHelpMsg();
 			} else if (args[a].startsWith("--output") || args[a].startsWith("-output") || args[a].equals("-o")) {
 				output = args[++a];
+			} else if (args[a].startsWith("--ownship") || args[a].startsWith("-ownship")) {
+				ownshipName = args[++a];
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(VERSION);
 				System.exit(0);
@@ -223,9 +228,12 @@ public class DAA2Json {
 
 		// create daidalus
 		Daidalus daidalus = new Daidalus();
-		DAA2Json daa2json = new DAA2Json(daidalus);
+		DAA2Json daa2json = new DAA2Json(daidalus, ownshipName);
 
 		out.println("{\n\t\"scenarioName\": \"" + scenario + "\",");
+		if (ownshipName != null) {
+			out.println("\t\"selectedOwnship\": \"" + ownshipName + "\",");
+		}
 
 		String lla = "\t\"lla\": {\n"; // position array, grouped by aircraft type
 		String daa = "\t\"daa\": [\n"; // position array, as in the original daa file
@@ -235,6 +243,7 @@ public class DAA2Json {
 
 		// Process input file using DaidalusFileWalker
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		if (ownshipName != null) { walker.setOwnship(ownshipName); }
 		int i = 0;
 		while (!walker.atEnd()) {
 			double time = walker.getTime();

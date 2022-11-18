@@ -47,8 +47,8 @@
  **/
 import * as utils from '../daa-utils';
 import * as WorldWind from '../wwd/worldwind.min';
-import * as serverInterface from '../utils/daa-server'
 import { colladaAltitude } from './daa-aircraft';
+import { LatLonAlt } from '../utils/daa-types';
 
 class LosSector {
     protected sector: WorldWind.AbstractMesh;
@@ -66,7 +66,7 @@ class LosSector {
      * @instance
      * @inner
      */
-    constructor(layer: WorldWind.RenderableLayer, pos: utils.LatLonAlt | serverInterface.LatLonAlt, opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
+    constructor(layer: WorldWind.RenderableLayer, pos: LatLonAlt<number | string>, opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
         if (layer) {
             this.layer = layer;
             if (pos) {
@@ -195,7 +195,7 @@ class LosSector {
 export class LosRegion {
     protected region: LosSector[];
     protected layer: WorldWind.RenderableLayer;
-    constructor (layer: WorldWind.RenderableLayer, region: utils.LatLonAlt[] | serverInterface.LatLonAlt[], opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
+    constructor (layer: WorldWind.RenderableLayer, region: LatLonAlt<number | string>[], opt?: { nmi?: number, opacity?: number, color?: { r: number, g: number, b: number } }) {
         if (layer) {
             opt = opt || {};
             this.layer = layer;

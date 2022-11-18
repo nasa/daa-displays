@@ -51,8 +51,9 @@ export class JavaProcess {
 		daaLogic: string, 
 		daaConfig: string, 
 		daaScenario: string, 
-		outputFileName: string, 
-		wind: { deg: string, knot: string }
+		outputFileName: string,
+		ownshipName: string,
+		wind?: { deg?: string, knot?: string }
 	},
 	opt?: { 
 		contrib?: boolean 
@@ -63,8 +64,9 @@ export class JavaProcess {
 			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.2.jar";
 			const daaConfig: string = desc.daaConfig || "2.x/DO_365B_no_SUM.conf";
 			const daaScenario: string = desc.daaScenario || "H1.daa";
-			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
-			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
+			const ownshipName: string = desc.ownshipName;
+			const wind: { deg: string, knot: string } = { deg: desc?.wind?.deg || "0", knot: desc?.wind?.knot };
+			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, ownshipName, scenarioName: daaScenario, wind });
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
 			const f1: string = path.join("../daa-output", ver);
 			const outputFolder: string = path.join(f1, "java");
@@ -81,7 +83,7 @@ export class JavaProcess {
 				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`java -jar ${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
+					`java -jar ${daaLogic} --conf ${wellClearConfig} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);
@@ -92,7 +94,7 @@ export class JavaProcess {
 					} else if (stderr) {
 						console.error(`stderr: ${stderr}`);  
 					}
-					console.info(`stdout: ${stdout}`);
+					console.info(`stdout: ${stdout?.trim()}`);
 					const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
 					console.log(`DAIDALUSj version: ${match[1]}`);
 					if (match && match[1]) {
@@ -106,7 +108,7 @@ export class JavaProcess {
 		}
 		return Promise.resolve(null);
 	}
-	async daa2json (inputFileName: string, outputFileName: string): Promise<string> {
+	async daa2json (inputFileName: string, outputFileName: string, opt?: { ownshipName?: string }): Promise<string> {
 		if (inputFileName && outputFileName) {
 			const outputFolder: string = "../daa-scenarios/";
 			// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
@@ -116,9 +118,10 @@ export class JavaProcess {
 			const outputFilePath: string = path.join(outputFolder, outputFileName);
 			return new Promise((resolve, reject) => {
 				const scenario: string = path.join(__dirname, "../daa-scenarios", inputFileName);
+				const ownshipName: string = opt?.ownshipName;
 				const cmds: string[] = [
 					`cd ../daa-logic`,
-					`java -jar DAA2Json-2.x.jar --output ${outputFilePath} ${scenario}`
+					`java -jar DAA2Json-2.x.jar --output ${outputFilePath} ${ownshipName ? `--ownship ${ownshipName}` : ""} ${scenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);
@@ -129,7 +132,7 @@ export class JavaProcess {
 					} else if (stderr) {
 						console.error(`stderr: ${stderr}`);  
 					}
-					console.info(`stdout: ${stdout}`);
+					console.info(`stdout: ${stdout?.trim()}`);
 					resolve(stdout);
 				});
 			});
@@ -156,7 +159,7 @@ export class JavaProcess {
 					} else if (stderr) {
 						console.error(`stderr: ${stderr}`);
 					}
-					console.info(`stdout: ${stdout}`);
+					console.info(`stdout: ${stdout?.trim()}`);
 					resolve({
 						configFile: `${configFile}.pvs`,
 						scenarioFile: outputFile
@@ -183,7 +186,7 @@ export class JavaProcess {
 				} else if (stderr) {
 					console.error(`stderr: ${stderr}`);  
 				}
-				console.info(`stdout: ${stdout}`);
+				console.info(`stdout: ${stdout?.trim()}`);
 				resolve(stdout.trim());
 			});
 		});
@@ -203,7 +206,7 @@ export class JavaProcess {
 				} else if (stderr) {
 					console.error(`stderr: ${stderr}`);  
 				}
-				console.info(`stdout: ${stdout}`);
+				console.info(`stdout: ${stdout?.trim()}`);
 				resolve(stdout.trim());
 			});
 		});

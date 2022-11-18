@@ -28,39 +28,73 @@
  */
 
 /**
- * Descriptor for Java evaluation requests
+ * Structure of the execution messages accepted by the daa-server
  */ 
 export declare interface ExecMsg {
     daaLogic: string; // full path of the executable (path is relative to daa-logic)
     daaConfig: string; // todo: need to decide if we want a standard forlder for the configurations. For now it's subfolder DAIDALUS/Configurations of the well clear logic
     scenarioName: string; // all scenarios are in folder daa-scenarios/
     wind: { knot: string, deg: string }; // wind configuration
+    ownshipName: string; // the default ownship is the aircraft in position 0 in the daa file. A different ownship can be specified using this parameter.
 }
 
 export declare interface PvsioMsg {
     //..
 }
+
+/**
+ * Commands accepted by the daa-server
+ */
+export type DaaServerCommand = "exec" | "save-daa-file" | "list-ic-files" | "load-daa-file" 
+| "list-monitors" | "list-daa-files" | "list-conf-files" | "list-config-files" | "get-tail-numbers"
+| "load-conf-file" | "load-config-file" | "list-wellclear-versions" | "list-virtual-pilot-versions" 
+| "java-virtual-pilot";
+/**
+ * Messages accepted by the daa-server
+ */
 export declare interface WebSocketMessage<T> {
-    type: string;
+    type: DaaServerCommand | "start-jasmine-test-runner";
     time?: {
         client: { sent: string; },
         server?: { sent: string; }
     };
     id: string;
-    data: T;
+    data: T; // TODO: rename this field "req" and use a new field "res" for sending the response back to the client
+    res?: GetTailNumbersResponse; // TODO: update the code to send data back to the client using this field
 }
-
+/**
+ * Request to load a given scenario
+ * The default ownship is the first aircraft
+ * A different ownship can be specified in the request using the optional parameter
+ */
 export declare interface LoadScenarioRequest {
     scenarioName: string;
+    ownshipName?: string | number; // tail number or aircraft index
 }
-
+/**
+ * Request to a save scenario
+ */
 export declare interface SaveScenarioRequest {
     scenarioName: string,
     scenarioContent: string
 }
-
+/**
+ * Request to load a configuration
+ */
 export declare interface LoadConfigRequest {
     config: string;
+}
+/**
+ * Request to get tail numbers for a given scenario
+ */
+export declare interface GetTailNumbersRequest {
+    scenarioName: string
+}
+/**
+ * Response with the tail numbers for a given scenario
+ */
+ export declare interface GetTailNumbersResponse {
+    tailNumbers: string[]
 }
 
 // NOTE: strings are used in place of numbers to avoid loss of accuracy due to type conversion across different languages
@@ -86,27 +120,25 @@ export declare interface DAADataTrkGsVs {
     vs: string;
 }
 
-export declare interface LatLonAlt {
-    lat: string;
-    lon: string;
-    alt: string;
+export declare interface LatLon<T> { // T will be number or string
+    lat: T, // horizontal speed
+    lon: T // vertical speed
 }
 
-export declare interface LatLon {
-    lat: string;
-    lon: string;
+export declare interface LatLonAlt<T> extends LatLon<T> { // T will be number or string
+    alt: T // altitude
 }
 
-export declare interface Vector3D {
-    x: string;
-    y: string;
-    z: string;
+export declare interface Vector3D<T> { // T will be number or string
+    x: T;
+    y: T;
+    z: T;
 }
 
 export declare interface LLAPosition {
-    s: LatLonAlt;
-    v: Vector3D;
-    id: string;
+    s: LatLonAlt<number | string>;
+    v: Vector3D<number | string>;
+    id: string; // aircraft ID (tail number)
 }
 
 export declare interface LLAData {
@@ -153,9 +185,25 @@ export declare interface BandElement {
     resolution?: DaidalusResolution
 }
 
+export enum AlertKind {
+    NONE = "NONE",
+    MONITOR = "MONITOR", // preventive alert
+    AVOID = "AVOID", // corrective alert
+    ALERT = "ALERT", // warning alert
+    UNKNOWN = "UNKNOWN"
+}
+export enum AlertLevel {
+    NONE = 0,
+    MONITOR = 1,
+    AVOID = 2,
+    ALERT = 3,
+    UNKNOWN = -1
+}
+export type DaaSymbol = "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-target" | "ownship" | string;
+
 export declare interface Alert {
-    ac: string,
-    alert_level: number,
+    ac: string, // aircraft ID (tail number)
+    alert_level: AlertLevel,
     alert_region: string,
     // Only in DAIDALUSv2
     alerter?: string,
@@ -211,7 +259,7 @@ export declare interface ResolutionElement {
     other_resolution: ValueRegion
 }
 
-export declare type Polygon = LatLonAlt[];
+export declare type Polygon = LatLonAlt<number | string>[];
 
 export declare interface AircraftGeofenceElement {
     ac: string,
@@ -251,8 +299,8 @@ export declare interface DaidalusMetrics {
 
 export declare interface AircraftState {
     id : string,
-    s : Vector3D,
-    v : Vector3D,
+    s : Vector3D<number | string>,
+    v : Vector3D<number | string>,
     altitude : ValUnits,
     heading: ValUnits, 
     track: ValUnits,
@@ -269,6 +317,14 @@ export declare interface OwnshipState {
     gs_region : Region,
     vs_region: Region
     alt_region : Region,
+}
+
+// aircraft descriptor -- TODO: define a single type LatLonAlt that allows for both numbers and strings
+export interface DAA_AircraftDescriptor {
+    s: LatLonAlt<number | string>;
+    v: Vector3D<number | string>;
+    symbol: DaaSymbol;
+    callSign: string;
 }
 
 export declare interface AircraftMetrics {
@@ -323,6 +379,7 @@ export declare interface ScenarioDataPoint {
     Monitors: MonitorElement[],
     Metrics: MetricsElement
 }
+export declare type DaaBands = ScenarioDataPoint;
 export declare interface ScenarioDescriptor extends ScenarioData {
     Info: {
         language: string, // DAIDALUS language
@@ -350,7 +407,7 @@ export declare interface DAALosDescriptor {
     },
     Scenario: string,
     Detector: string,
-    AlertLevel: number,
+    AlertLevel: AlertLevel,
     Grid: { sectorSize: number, sectorUnits: string, xmax: number, ymax: number },
     LoS: {
         time: number,

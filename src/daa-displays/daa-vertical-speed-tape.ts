@@ -11,46 +11,7 @@
  *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
  *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
  *              <img src="images/daa-vertical-speed-tape.png" style="margin-left:8%; max-height:250px;" alt="DAA Vertical Speed Tape Widget"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpeedTape) {
-    "use strict";
-    const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", {
-        top: 210, left: 600
-    });
-    verticalSpeedTape.setVerticalSpeed(1);
-    verticalSpeedTape.setBands({
-        RECOVERY: [ { from: -1, to: 1.5 } ], 
-        NEAR: [ { from: 1.5, to: 2 }, { from: -2, to: -1 } ] 
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ * 
  * @author Paolo Masci
  * @date October 2018
  * @copyright 
@@ -89,8 +50,9 @@ require(["widgets/daa-displays/daa-vertical-speed-tape"], function (VerticalSpee
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-vertical-speed-templates';
-import { ResolutionElement } from '../daa-server/utils/daa-server';
+import { ResolutionElement } from '../daa-server/utils/daa-types';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {
@@ -146,14 +108,14 @@ class SpeedBug {
     /**
      * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
      * @desc Sets the maximum aperture of the resolution wedge.
-     * @param deg (real) Aperture of the wedge (in degrees)
+     * @param fpm (real) Aperture of the wedge (in fpm)
      * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
-    setMaxWedgeAperture (deg: number | string): void {
-        if (isFinite(+deg) && +deg >= 0) {
-            this.maxWedgeAperture = +deg;
+    setMaxWedgeAperture (fpm: number | string): void {
+        if (isFinite(+fpm) && +fpm >= 0) {
+            this.maxWedgeAperture = +fpm;
         }
     }
     /**
@@ -471,14 +433,20 @@ export class VerticalSpeedTape {
         // otherwise bands are displayed as usual
         const saturateRed: boolean = this.resolutionBug.getWedgeAperture() > 0
             && this.bands && this.bands.RECOVERY && this.bands.RECOVERY.length > 0;
-        Object.keys(this.bands).forEach(alert => {
+        const alerts: string[] = Object.keys(this.bands);
+        for (let i = 0; i < alerts?.length; i++) {
+            const alert: string = alerts[i];
             const segments: utils.FromTo[] = this.bands[alert];
             if (segments.length > 0) {
                 let segs = [];
                 // console.log("segments", segments);
-                segments.forEach((segment, i) => {
+                for (let s = 0; s < segments?.length; s++) {
+                // segments.forEach((segment, i) => {
+                    const segment: utils.FromTo = segments[s];
                     // console.log("original segment", segments[i]);
-                    ranges.forEach((range) => {
+                    for (let r = 0; r < ranges?.length; r++) {
+                    // ranges.forEach((range) => {
+                        const range = ranges[r];
                         let moduloSeg = moduloRange(segment, range);
                         if (moduloSeg) {
                             // console.log("moduloSeg", moduloSeg);
@@ -492,11 +460,11 @@ export class VerticalSpeedTape {
                                 height: height,
                                 from: moduloSeg.from,
                                 to: moduloSeg.to,
-                                id: `vspeed-band-${alert}-${i}`
+                                id: `vspeed-band-${alert}-${s}`
                             });
                         }           
-                    });
-                });
+                    }
+                }
                 theHTML += Handlebars.compile(templates.vspeedBandsTemplate)({
                     segments: segs,
                     color: (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color,
@@ -504,7 +472,7 @@ export class VerticalSpeedTape {
                 });
             }
             // console.log(theHTML);
-        });
+        }
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for updating the bug position based on the current vertical speed value
@@ -593,10 +561,10 @@ export class VerticalSpeedTape {
                     const units: string = opt.units || range.units || "fpm";
                     if (units === "x100mpm" || units === "mpm 100x") {
                         // if bands are given in 100x metres per minute, we need to convert in 100x feet per minute
-                        return { from: utils.meters2feet(range.from), to: utils.meters2feet(range.to), units };
+                        return { from: conversions.meters2feet(range.from), to: conversions.meters2feet(range.to), units };
                     } else if (units === "mpm") {
                         // if bands are given in metres per minute, we need to convert in 100x feet per minute
-                        return { from: utils.meters2feet(range.from) / 100, to: utils.meters2feet(range.to) / 100, units };
+                        return { from: conversions.meters2feet(range.from) / 100, to: conversions.meters2feet(range.to) / 100, units };
                     } else if (units === "fpm") {
                         return { from: range.from / 100, to: range.to / 100, units };
                     }
@@ -667,6 +635,10 @@ export class VerticalSpeedTape {
         this.resolutionBug.hide();
         this.resetIndicatorColor();
     }
+    /**
+     * Utility function, sets max wedge aperture
+     * @param aperture (fpm)
+     */
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();

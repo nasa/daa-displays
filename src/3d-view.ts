@@ -27,17 +27,11 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 import { AirspeedTape } from './daa-displays/daa-airspeed-tape';
-import { AltitudeTape } from './daa-displays/daa-altitude-tape';
-import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
-import { HScale } from './daa-displays/daa-hscale';
 
-import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
-import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
-
-import * as utils from './daa-displays/daa-utils';
-import { ViewOptions } from './daa-displays/daa-view-options';
+import { DaaSymbol, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 function render (data: { map: InteractiveMap }) {
     const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
@@ -131,10 +125,10 @@ player.define("step", async () => {
 player.define("init", async () => {
     // compute java output
     await player.exec({
-        alertingLogic: player.getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
-        alertingConfig: player.getSelectedConfiguration(),
+        alertingLogic: player.readSelectedDaaVersion(), //"DAAtoPVS-1.0.1.jar",
+        alertingConfig: player.readSelectedDaaConfiguration(),
         scenario: player.getSelectedScenario(),
-        wind: player.getSelectedWindSettings()
+        wind: player.getSelectedWind()
     });
     // viewOptions.applyCurrentViewOptions();
 });
@@ -201,9 +195,9 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.appendSidePanelView();
     await player.appendScenarioSelector();
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
-    await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
-    await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectConfiguration("DO_365A_no_SUM");
+    await player.appendDaaVersionSelector({ selector: "daidalus-version" });
+    await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
+    await player.selectDaaConfiguration("DO_365A_no_SUM");
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
@@ -220,7 +214,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     // auto-load scenario+config if they are specified in the browser
     if (args) {
         if (args.scenario) { player.selectScenario(args.scenario); }
-        if (args.config) { await player.selectConfiguration(args.config); }
+        if (args.config) { await player.selectDaaConfiguration(args.config); }
         await player.loadSelectedScenario();
     }
 }

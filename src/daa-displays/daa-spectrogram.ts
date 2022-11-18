@@ -7,42 +7,7 @@
  *              The x axis of the spectrogram represents the time dimension.
  *              The y axis represents the band type.</p></div>
  *              <img src="images/daa-spectrogram.png" style="margin-left:8%; max-height:207px;" alt="DAA Spectrogram"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-sspectrogram"], function (DAASpectrogram) {
-    "use strict";
-    const spectrogram = new DAASpectrogram("track-bands");
-    spectrogram.plot({
-        ...
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ *
  * @author Paolo Masci
  * @date December 2018
  * @copyright 
@@ -81,11 +46,10 @@ require(["widgets/daa-displays/daa-sspectrogram"], function (DAASpectrogram) {
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-spectrogram-templates';
-import { AlertElement } from '../daa-server/utils/daa-server';
 import { DAAPlayer } from './daa-player';
-import { stringify } from 'querystring';
-import { Alert, BandElement, BandRange, DaidalusBand, Region } from './utils/daa-server';
+import { Alert, BandElement, BandRange, DaidalusBand, Region } from './utils/daa-types';
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data: { width: number, height: number, length: number }) {
@@ -104,10 +68,10 @@ function createGrid (data: { width: number, height: number, length: number }) {
 // utility function, converts values between units
 function convert (val: number, unitsFrom: string, unitsTo: string): number {
     if (unitsFrom !== unitsTo) {
-        if (unitsFrom === "rad" && unitsTo === "deg") { return parseFloat(utils.rad2deg(val).toFixed(2)); }
-        if (unitsFrom === "msec" && unitsTo === "knots") { return parseFloat(utils.msec2knots(val).toFixed(2)); }
-        if (unitsFrom === "meters" && unitsTo === "feet") { return parseFloat(utils.meters2feet(val).toFixed(2)); }
-        if (unitsFrom === "mpm" && unitsTo === "fpm 100x") { return parseFloat(utils.meters2feet(val).toFixed(2)) / 100; }
+        if (unitsFrom === "rad" && unitsTo === "deg") { return parseFloat(conversions.rad2deg(val).toFixed(2)); }
+        if (unitsFrom === "msec" && unitsTo === "knots") { return parseFloat(conversions.msec2knots(val).toFixed(2)); }
+        if (unitsFrom === "meters" && unitsTo === "feet") { return parseFloat(conversions.meters2feet(val).toFixed(2)); }
+        if (unitsFrom === "mpm" && unitsTo === "fpm 100x") { return parseFloat(conversions.meters2feet(val).toFixed(2)) / 100; }
     }
     // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
     return Math.floor(val * 100) / 100; // [profiler] 0.1ms

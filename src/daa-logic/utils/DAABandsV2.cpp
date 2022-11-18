@@ -66,6 +66,7 @@ protected:
 	std::string ofname; // output file name
 	std::string ifname; // input file name
 	int precision;
+	std::string ownshipName; // ownship name
 
 	/* Units are loaded from configuration file */
 	std::string hs_units;
@@ -91,6 +92,7 @@ public:
 		ofname = "";
 		ifname = "";
 		precision = 2;
+		ownshipName = "";
 		hs_units = "m/s";
 		vs_units = "m/s";
 		alt_units = "m";
@@ -285,29 +287,30 @@ public:
 				&& std::abs(Units::to("deg", px.lon())) < latlonThreshold;
 	}
 
+	// @deprecated, this function was need for WWD, with LeafletJS this fix is not needed anymore
 	void adjustThreshold () {
-		std::string input = ifname;
-		Daidalus daidalus = daa;
-		DaidalusFileWalker walker(input);
-		while (!walker.atEnd()) {
-			walker.readState(daidalus);
-			TrafficState ownship = daidalus.getOwnshipState();
-			if (isBelowLLAThreshold(ownship, ownship)) {
-				llaFlag = true;
-				//System.out.println("LLA flag is TRUE");
-				return;
-			}
-			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
-				TrafficState traffic = daidalus.getAircraftStateAt(idx);
-				if (isBelowLLAThreshold(ownship, traffic)) {
-					llaFlag = true;
-					//System.out.println("LLA flag is TRUE");
-					return;
-				}
-			}
-		}
-		//System.out.println("LLA flag is FALSE");
-		llaFlag = false;
+		// std::string input = ifname;
+		// Daidalus daidalus = daa;
+		// DaidalusFileWalker walker(input);
+		// while (!walker.atEnd()) {
+		// 	walker.readState(daidalus);
+		// 	TrafficState ownship = daidalus.getOwnshipState();
+		// 	if (isBelowLLAThreshold(ownship, ownship)) {
+		// 		llaFlag = true;
+		// 		//System.out.println("LLA flag is TRUE");
+		// 		return;
+		// 	}
+		// 	for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
+		// 		TrafficState traffic = daidalus.getAircraftStateAt(idx);
+		// 		if (isBelowLLAThreshold(ownship, traffic)) {
+		// 			llaFlag = true;
+		// 			//System.out.println("LLA flag is TRUE");
+		// 			return;
+		// 		}
+		// 	}
+		// }
+		// //System.out.println("LLA flag is FALSE");
+		// llaFlag = false;
 	}
 
 	/**
@@ -739,6 +742,7 @@ public:
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker(ifname);
+		if (!equals(ownshipName,"")) { walker.setOwnship(ownshipName); }
 
 		*printWriter << "{\n" + jsonHeader() << std::endl;
 
@@ -866,6 +870,8 @@ public:
 				daaConfig = args[++a];
 			} else if (a < length - 1 && (startsWith(args[a], "--out") || startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0)) {
 				ofname = args[++a];
+			} else if (a < length - 1 && (startsWith(args[a], "--ownship") || startsWith(args[a], "-ownship"))) {
+				ownshipName = args[++a];
 			} else if (a < length - 1 && (startsWith(args[a], "--wind") || startsWith(args[a], "-wind"))) {
 				wind = args[++a];
 			} else if (startsWith(args[a], "-")) {

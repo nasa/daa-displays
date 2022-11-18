@@ -10,43 +10,6 @@
  *              textual output. Comparison operators can be customized, e.g., floating point numbers 
  *              can be compared up-to a given number of decimal digits.</p></div>
  *              <img src="images/daa-split-view.png" style="margin-left:8%; max-height:180px;" alt="DAA Split View Player"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
-    "use strict";
-    const splitView = new DAASplitView("split-view");
-    // create simulation controls
-    splitView.simulationControls({
-        top: 860
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
  * @author Paolo Masci
  * @date October 2018
  * @copyright 
@@ -84,9 +47,10 @@ require(["widgets/daa-displays/daa-split-view"], function (DAASplitView) {
  * REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
  * TERMINATION OF THIS AGREEMENT.
  **/
-import { DAAPlayer, DidSelectConfigurationData, PlayerEvents, safeSelector } from './daa-player';
-import { LLAData } from '../daa-server/utils/daa-server';
-import { ScenarioDataPoint } from './utils/daa-server';
+import { DAAPlayer, DidChangeDaaConfiguration, PlayerEvents, safeSelector } from './daa-player';
+import { LLAData } from '../daa-server/utils/daa-types';
+import { DAAScenario, OwnshipState, ScenarioDataPoint } from './utils/daa-types';
+import { configDivTemplate, daidalusVersionDivTemplate, windDivTemplate } from './templates/daa-playback-templates';
 
 export interface SplitConfig {
     scenario: string,
@@ -114,108 +78,152 @@ export function parseSplitConfigInBrowser (search?: string): SplitConfig {
     return null;
 }
 
+/**
+ * Split View Player, runs two simulations of different DAA algorithms in lockstep for the same aircraft 
+ * and shows the displays of the two simulations side-by-side
+ */
 export class DAASplitView extends DAAPlayer {
-    private players: { [key: string]: DAAPlayer };
+    // array map of players used in the view. This view has two players (referred to as "left" and "right" players)
+    protected players: { [key: string]: DAAPlayer } = {};
+    protected labels: string[] = []; // players labels (i.e., keys used in the players map)
 
     /**
      * @function <a name="DAASplitView">DAASplitView</a>
      * @description Constructor. Creates a new split view player.
-     * @param id {String} Unique player identifier (default: "daa-split-view").
      * @param opt {Object} Player options
-     *          <li>left (Object({label: string, display: Object}): configuration options for left display</li>
-     *          <li>right (Object({label: string, display: Object}): configuration options for right display</li>
-     *          <li>fs (Object): FileSystem, used for saving simulation logs.</li>
-     *          <li>scenarios (Object({ scenarioID: data })): scenarios to be simulated</li>
+     *          <li>id {String} Unique player identifier (default: "daa-split-view").</li>
+     *          <li>opt.createPlayers {boolean} Whether the players should be automatically created. 
+     *              If the players are not created, then method createPlayer needs to be invoked explicitly (default: true)</li>
      * @memberof module:DAASplitView
      * @instance
      */
-    constructor (id: string = "daa-split-view", opt?: {
-        left?: { label?: string },
-        right?: { label?: string }
+    constructor (opt?: {
+        id?: string,
+        createPlayers?: boolean // whether the players should be automatically created or not (default: true)
     }) {
-        super(id);
+        super({ id: opt?.id || "daa-split-view" });
         opt = opt || {};
+        opt.createPlayers = (opt.createPlayers === undefined || opt.createPlayers === null) ? true : !!opt.createPlayers;
+        if (opt.createPlayers) {
+            // player labels
+            this.labels = [ "left", "right" ];
+            // create players
+            this.createPlayers();
+        }
+    }
 
-        const label = {
-            left: (opt.left && opt.left.label) ? opt.left.label : "left",
-            right: (opt.right && opt.right.label) ? opt.right.label : "right"
-        };
+    /**
+     * Utility function, creates two players for the split-view
+     */
+    createPlayers (opt?: { tailNumbers?: string[] }): void {
         // create players
-        this.players = {
-            left: new DAAPlayer(`${this.id}-${label.left}`),
-            right: new DAAPlayer(`${this.id}-${label.right}`)
-        };
-        // create aliases using the provided labels
-        this.players[label.left] = this.players.left;
-        this.players[label.right] = this.players.right;
+        for (let i = 0; i < this.labels?.length; i++) {
+            this.players[this.labels[i]] = new DAAPlayer({
+                id: `${this.id}-${this.labels[i]}`,
+                ownshipName: i < opt?.tailNumbers?.length ? opt?.tailNumbers[i] : undefined
+            });
+            // add event listeners for relevant backbone events
+            this.players[this.labels[i]].on(PlayerEvents.DidChangeDaaConfiguration, (evt: DidChangeDaaConfiguration) => {
+                console.log(`[${this.id}] Player ${this.labels[i]}`, evt);
+            });
+            // create alias so "left" is also "0" and "right" is also "1"
+            this.players[i] = this.players[this.labels[i]];
+        }
+        // create bridge between players, so a step on the first leads to a step on the others
+        for (let i = 1; i < this.labels?.length; i++) {
+            console.log(`[${this.id}] Installing player bridge from ${this.labels[i - 1]} to ${this.labels[i]}`);
+            this.players[this.labels[i - 1]].bridgePlayer(this.players[this.labels[i]]);
+        }
+        // create aliases for left/right players
+        if (this.labels?.length > 0 && !this.labels.includes("left")) { this.players.left = this.players[0]; }
+        if (this.labels?.length > 1 && !this.labels.includes("right")) { this.players.right = this.players[1]; }
+        // install handlers
+        this.installHandlers();
+    }
 
-        // add event listeners for backbone events
-        this.players[label.left].on(PlayerEvents.DidSelectConfiguration, (evt: DidSelectConfigurationData) => {
-            console.log(evt);
-        });
-        this.players[label.right].on(PlayerEvents.DidSelectConfiguration, (evt: DidSelectConfigurationData) => {
-            console.log(evt);
-        });
-
-        this.step = async (opt?: { preventIncrement?: boolean }) => {
-            opt = opt || {};
-            let current_step = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
-            current_step += (current_step < this._simulationLength && !opt.preventIncrement) ? 1 : 0;
-            this.simulationStep = current_step;
-            $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-            if (this.players) {
-                if (this.players.left) {
-                    await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+    /**
+     * Internal function, install player handlers
+     */
+    protected installHandlers (): void {
+        if (this.labels?.length) {
+            // step simulation
+            this.step = async (opt?: { preventIncrement?: boolean }) => {
+                opt = opt || {};
+                let current_step = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
+                current_step += (current_step < this.getSimulationLength() && !opt.preventIncrement) ? 1 : 0;
+                this.simulationStep = current_step;
+                $(`#${this.id}-curr-sim-step`).html(`${this.simulationStep}`);
+                if (this.players && this.labels?.length) {
+                    // it is sufficient to run a step on the first player, the other players will follow because they are bridged (see createPlayers)
+                    if (this.players[this.labels[0]]) {
+                        await this.players[this.labels[0]].gotoControl(this.simulationStep);
+                    }
                 }
-            }
-        };
-        this.render = async () => {
-            if (this.players) {
-                if (this.players.left) { this.players.left.render(); }
-                if (this.players.right) { this.players.right.render(); }
-            }
-        };
-        this._defines = {
-            init: async () => {
-                console.error("Function splitView.init should not be used, please use splitView.getPlayer(..).init()");
-            },
-            step: async () => {
+            };
+            // render all the displays
+            this.render = async () => {
+                if (this.players) {
+                    for (let i = 0; i < this.labels?.length; i++) {
+                        await this.players[this.labels[i]]?.render();
+                    }
+                    // if (this.players.left) { this.players.left.render(); }
+                    // if (this.players.right) { this.players.right.render(); }
+                }
+            };
+            // @Overrides default handlers from daa-player
+            this._defines = this._defines || {};
+            this._defines.init = async () => {
+                console.error(`[${this.id}] Function init should not be used explicitely because this view uses multiple players. Please use getPlayer(..).init()`);
+            };
+            this._defines.step = async () => {
                 this.step();
-            },
-            writeLog: async () => {
+            };
+            this._defines.writeLog = async () => {
                 // if (_this.logFile && _this._log.length > 0 && _this.fs) {
                 //     console.log("Writing log file " + _this.logFile);
                 //     await writeFile(_this.fs, _this.logFile, _this._log, { overWrite: true });
                 //     console.log(_this._log.length + " event saved in log file " + _this.logFile);
                 // }
-            }
-        };
+            };
+        }
     }
+    // @override
     getCurrentFlightData (enc?: string): LLAData {
-        console.error(`splitView.getCurrentFlightData() should not be used. Please use splitView.getPlayers(..).getCurrentFlightData()`);
+        console.error(`[${this.id}] Function getCurrentFlightData should not be used explicitely because this view uses multiple players. Please use splitView.getPlayers(..).getCurrentFlightData()`);
         return null;
     }
+    // @override
     getCurrentBands (): ScenarioDataPoint {
-        console.error(`splitView.getCurrentBands() should not be used. Please use splitView.getPlayers(..).getCurrentBands()`);
+        console.error(`[${this.id}] Function getCurrentBands should not be used explicitely because this view uses multiple players. Please use splitView.getPlayers(..).getCurrentBands()`);
         return null;
     }
     // @override
     async reloadScenarioFile (): Promise<void> {
         if (this.players) {
-            if (this.players.left) { await this.players.left.reloadScenarioFile(); }
-            if (this.players.right) { await this.players.right.reloadScenarioFile(); }
+            for (let i = 0; i < this.labels.length; i++) {
+                await this.players[this.labels[i]]?.reloadScenarioFile();
+            }
+            // if (this.players.left) { await this.players.left.reloadScenarioFile(); }
+            // if (this.players.right) { await this.players.right.reloadScenarioFile(); }
         }
     }
     // @override
     async activate (opt?: { developerMode?: boolean }): Promise<void> {
+        console.log(`[${this.id}] activating player...`);
         await super.activate(opt);
         if (!this.activationControlsPresent) {
             if (this.players) {
-                if (this.players.left) { await this.players.left.activate(opt); }
-                if (this.players.right) { await this.players.right.activate(opt); }
+                for (let i = 0; i < this.labels.length; i++) {
+                    await this.players[this.labels[i]]?.activate(opt);
+                }
+                // if (this.players.left) { await this.players.left.activate(opt); }
+                // if (this.players.right) { await this.players.right.activate(opt); }
             }
         }
     }
+    /**
+     * @deprecated
+     */
     wellclearMode (): void {
         super.wellclearMode();
         if (this.players) {
@@ -223,6 +231,9 @@ export class DAASplitView extends DAAPlayer {
             if (this.players.right) { this.players.right.wellclearMode(); }
         }
     }
+    /**
+     * @deprecated
+     */
     losMode (): void {
         super.losMode();
         if (this.players) {
@@ -230,6 +241,9 @@ export class DAASplitView extends DAAPlayer {
             if (this.players.right) { this.players.right.losMode(); }
         }
     }
+    /**
+     * @deprecated
+     */
     virtualPilotMode (): void {
         super.virtualPilotMode();
         if (this.players) {
@@ -241,19 +255,44 @@ export class DAASplitView extends DAAPlayer {
     // @override
     refreshBrowserAddress (): void {
         const scenario: string = this.getSelectedScenario();
-        const leftConfig: string = this.players?.left?.getSelectedConfiguration();
-        const rightConfig: string = this.players?.right?.getSelectedConfiguration();
+        const leftConfig: string = this.players?.left?.readSelectedDaaConfiguration();
+        const rightConfig: string = this.players?.right?.readSelectedDaaConfiguration();
         const search: string = `?${scenario}+${leftConfig}+${rightConfig}`;
         const url: string = window.location.origin + window.location.pathname + search;
         history.replaceState({}, document.title, url);
     }
 
-    // @overrides
-    async selectScenarioFile (scenario: string, opt?: {
+    /**
+     * Loads the selected scenario in the view
+     * @override
+     */
+    async loadSelectedScenario(opt?: { ownshipName?: string | number, selectedScenario?: string }): Promise<void> {
+        // load the scenario
+        await super.loadSelectedScenario(opt);
+    }
+
+    /**
+     * Internal function, checks if a given scenario is already loaded in all players
+     */
+    protected scenarioIsLoadedInAllPlayers (scenario: string): boolean {
+        for (let i = 0; i < this.labels?.length; i++) {
+            if (this.players[this.labels[i]]?.getCurrentScenario(scenario)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Loads a given scenario file
+     * @override
+     */
+    async loadScenarioFile (scenario: string, opt?: {
         forceReload?: boolean,
         softReload?: boolean,
         hideLoadingAnimation?: boolean,
-        scenarioData?: string
+        scenarioData?: string,
+        ownshipNames?: string[] // can assign different ownships to different players
     }): Promise<void> {
         if (this._scenarios && !this._loadingScenario) {
             opt = opt || {};
@@ -263,55 +302,51 @@ export class DAASplitView extends DAAPlayer {
                 this.loadingAnimation();
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
-                console.log(`Scenario ${scenario} selected`);
-                if (opt.forceReload || !this._scenarios[scenario]) {
-                    console.log(`Loading scenario ${scenario}`); 
-                    opt.scenarioData = await this.loadDaaFile(scenario);
-                }
+                console.log(`[${this.id}] Scenario ${scenario} selected`);
+                // if (opt.forceReload || !this._scenarios[scenario]) {
+                //     console.log(`[${this.id}] Loading scenario ${scenario}`); 
+                //     opt.scenarioData = await this.loadDaaFile(scenario, opt);
+                // }
                 this._selectedScenario = scenario;
                 this.simulationStep = 0;
-                this._simulationLength = this._scenarios[this._selectedScenario].length;
+                // this._simulationLength = this._scenarios[this._selectedScenario].length;
                 // update DOM
-                $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-                $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
-                $(`#${this.id}-goto-time-input`).val(this.simulationStep);
-                $(`#${this.id}-tot-sim-steps`).html(this._simulationLength.toString());
+                $(`#${this.id}-curr-sim-step`).html("0");
+                $(`#${this.id}-curr-sim-time`).html("0");
+                $(`#${this.id}-goto-time-input`).val(0);
+                $(`#${this.id}-tot-sim-steps`).html("0");
                 $(`#${this.id}-selected-scenario`).html(scenario);
+                // load scenario in the players
+                const scenarioLoaded: boolean = this.scenarioIsLoadedInAllPlayers(scenario);
                 try {
-                    if (this.players) {
-                        let promises = [];
+                    if (opt.forceReload || !scenarioLoaded) {
+                        console.log(`[${this.id}] Loading scenario ${scenario}`);
                         opt.hideLoadingAnimation = true;
-                        if (this.players.left) {
-                            promises.push(new Promise<void>(async (resolve, reject) => {
-                                // await this.players.left.loadDaaFile(scenario, { scenarioData });
-                                await this.players.left.selectScenarioFile(scenario, opt);
-                                resolve();
-                            }));
+                        for (let i = 0; i < this.labels?.length && this.players; i++) {
+                            await this.players[this.labels[i]]?.loadScenarioFile(scenario, {
+                                ...opt,
+                                ownshipName: opt?.ownshipNames?.length > i ? opt.ownshipNames[i] : null
+                            });
                         }
-                        if (this.players.right) {
-                            promises.push(new Promise<void>(async (resolve, reject) => {
-                                // await this.players.right.loadDaaFile(scenario, { scenarioData });
-                                await this.players.right.selectScenarioFile(scenario, opt);
-                                resolve();
-                            }));
-                        }
-                        await Promise.all(promises);
+                        await this.gotoControl(0);
+                        $(`#${this.id}-tot-sim-steps`).html(`${this.getSimulationLength()}`);
+                        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
                     }
                 } catch (loadError) {
-                    console.error(`[daa-split-view] Warning: unable to initialize scenario ${scenario}`);
+                    console.error(`[${this.id}] Warning: unable to select scenario ${scenario}`, loadError);
                 } finally {
                     this.refreshSimulationPlots();
                     this.enableSelection();
                     this.loadingComplete();
                     this.statusReady();
                     this._loadingScenario = false;
-                    console.log(`Done!`);
+                    console.log(`[${this.id}] Done!`);
                 }
             } else {
-                console.log(`Scenario ${scenario} already selected`);
+                console.log(`[${this.id}] Scenario ${scenario} already selected`);
             }
         } else {
-            console.error(`Unable to select scenario ${scenario} :X`);
+            console.error(`[${this.id}] Unable to select scenario ${scenario} :X`);
         }
     }
     
@@ -323,51 +358,148 @@ export class DAASplitView extends DAAPlayer {
      * @memberof module:DAASplitView
      * @instance
      */
-    async gotoControl(step: number): Promise<void> {
+    async gotoControl(step?: number, opt?: { updateInputs?: boolean }): Promise<void> {
         this.clearInterval();
         // sanity check
-        step = (step > 0) ? (step < this._simulationLength) ? step : (this._simulationLength - 1) : 0;
+        step = (step > 0) ? (step < this.getSimulationLength()) ? step : (this.getSimulationLength() - 1) : 0;
         this.simulationStep = isNaN(step) ? 0 : step;
         // update DOM
-        const time: string = this.getCurrentSimulationTime();
-        $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
+        const time: string = this.getTimeAt(this.simulationStep);
+        $(`#${this.id}-curr-sim-step`).html(`${this.simulationStep}`);
         $(`#${this.id}-curr-sim-time`).html(time);
-        $(`#${this.id}-goto-input`).val(step);
-        $(`#${this.id}-goto-time-input`).val(time);
+        if (opt?.updateInputs) {
+            $(`#${this.id}-goto-input`).val(this.simulationStep);
+            $(`#${this.id}-goto-time-input`).val(time);
+        }
         // send players the control command
         if (this.players) {
-            if (this.players.left) {
-                await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            // it is sufficient to invoke the function on the first player, the other players will follow because they are bridged (see createPlayers)
+            if (this.players[this.labels[0]]) {
+                await this.players[this.labels[0]].gotoControl(this.simulationStep);
             }
-            if (this["diff"]) {
-                this["diff"]();
+            // if (this.players.left) {
+            //     await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            // }
+            if (typeof this._defines.diff === "function") {
+                this._defines.diff();
             }
         }
     }
-
-    public async stepControl(currentStep?: number): Promise<void> {
+    /**
+     * Utility function, goes to a given target simulation time
+     * @override
+     */
+    async gotoTimeControl (time?: string): Promise<DAAPlayer> {
+        if (this.players) {
+            // it is sufficient to invoke the function on the first player, the other players will follow because they are bridged (see createPlayers)
+            if (this.players[this.labels[0]]) {
+                await this.players[this.labels[0]].gotoTimeControl(time);
+                // update DOM
+                const step: number = this.getCurrentSimulationStep();
+                const tm: string = this.getTimeAt(step);
+                $(`#${this.id}-curr-sim-step`).html(`${step}`);
+                $(`#${this.id}-curr-sim-time`).html(tm);
+                $(`#${this.id}-goto-input`).val(step);
+                $(`#${this.id}-goto-time-input`).val(tm);
+            }
+        }
+        return this;
+    }
+    /**
+     * Returns the current ownship state, including position, velocity, wind, metrics, etc, see also interface OwnshipState
+     */
+    getCurrentOwnshipState (): OwnshipState {
+        console.warn(`[daa-split-view] Warning: trying to use getCurrentOwnshipState() from split-view. Please invoke the function on a specific player.`);
+        return null;
+    }
+    /**
+     * Returns the current flight data
+     * The difference between getFlightData and getCurrentFlightData is that 
+     * the former returns the entire scenario and the latter only the info for the current simulation step
+     */
+    getFlightData (): LLAData[] {
+        console.warn(`[daa-split-view] Warning: trying to use getFlightData() from split-view. Please invoke the function on a specific player.`);
+        return null;
+    }
+    /**
+     * Returns the current scenario
+     * The optional argument can be used to retrieve a specific scenario
+     */
+    getCurrentScenario (): DAAScenario {
+        console.warn(`[daa-split-view] Warning: trying to use getCurrentScenario() from split-view. Please invoke the function on a specific player.`);
+        return null;
+    }
+    /**
+     * Returns the current simulation time
+     * @override
+     */
+    getCurrentSimulationTime (): string {
+        return this.labels?.length && this.players ?
+            this.players[this.labels[0]]?.getCurrentSimulationTime()
+                : "0";
+    }
+    /**
+     * Returns the virtual time associated with a given simulation step
+     * @override
+     */
+    getTimeAt (step: number): string {
+        return this.labels?.length && this.players ?
+            this.players[this.labels[0]]?.getTimeAt(step)
+                : "0";
+    }
+    /**
+     * Returns the length of the current simulation loaded in the player
+     * @override
+     */
+    getSimulationLength(): number {
+        // return the simulation length indicated in the first player
+        // because of how the player works, the scenario loaded in all players have the same length
+        return this.labels?.length && this.players ?
+            this.players[this.labels[0]]?.getSimulationLength()
+                : 0;
+    }
+    /**
+     * Utility function, returns the current simulation step
+     * @override
+     */
+    getCurrentSimulationStep (): number {
+        return this.labels?.length && this.players ?
+            this.players[this.labels[0]]?.getCurrentSimulationStep()
+                : 0;
+    }
+    /**
+     * Utility function, programmatically advances the simulation of one step
+     * By default, the function uses the value of an input field in the UI to check the current simulation step
+     * An optional argument can be used to override the default behavior and specify a custom current step
+     */
+    public async stepControl(currentStep: number): Promise<boolean> {
         // get step number either from function argument or from DOM
         currentStep = (currentStep !== undefined && currentStep !== null) ? currentStep : parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
         // sanity check
-        currentStep = (currentStep < this._simulationLength - 1) ? currentStep : this._simulationLength - 1;
+        this.simulationStep = (currentStep < this.getSimulationLength() - 1) ? currentStep : this.getSimulationLength() - 1;
         // advance simulation step
         this.simulationStep++;
-        if (this.simulationStep < this._simulationLength) {
+        if (this.simulationStep < this.getSimulationLength()) {
             // update DOM
-            $(`#${this.id}-curr-sim-step`).html(this.simulationStep.toString());
-            $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
+            $(`#${this.id}-curr-sim-step`).html(`${this.simulationStep}`);
+            $(`#${this.id}-curr-sim-time`).html(this.getTimeAt(this.simulationStep));
             // send players the control command
-            if (this.players) { 
-                if (this.players.left) { 
-                    await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+            if (this.players) {
+                // it is sufficient to run a step on the first player, the other players will follow because they are bridged (see createPlayers)
+                if (this.players[this.labels[0]]) {
+                    await this.players[this.labels[0]].gotoControl(this.simulationStep);
                 }
+                // if (this.players.left) { 
+                //     await this.players.left.gotoControl(this.simulationStep); // right player is bridged
+                // }
                 if (this["diff"]) {
                     this["diff"]();
                 }
             }
-        } else {
-            this.clearInterval();
+            return true;
         }
+        this.clearInterval();
+        return false
     }
 
     // @override
@@ -387,81 +519,154 @@ export class DAASplitView extends DAAPlayer {
     clearInterval (): DAASplitView {
         super.clearInterval();
         if (this.players) {
-            if (this.players.right) { this.players.right.clearInterval(); }
-            if (this.players.left) { this.players.left.clearInterval(); }
+            for (let i = 0; i < this.labels?.length; i++) {
+                this.players[this.labels[i]]?.clearInterval();
+            }
+            // if (this.players.right) { this.players.right.clearInterval(); }
+            // if (this.players.left) { this.players.left.clearInterval(); }
         }
         return this;
     }
 
-    getPlayer(playerID: string): DAAPlayer {
+    /**
+     * Utility function, returns the player matching the given ID
+     */
+    getPlayer(playerID: number | string): DAAPlayer {
         if (this.players) {
             return this.players[playerID];
         }
         return null;
     }
 
+    /**
+     * Utility function, updates the visual appearance of the simulation plot (e.g., to match a new simulation length)
+     */
+    refreshSimulationPlots(): void {
+        if (this.players) {
+            for (let i = 0; i < this.labels?.length; i++) {
+                this.players[this.labels[i]]?.refreshSimulationPlots();
+            }
+        }
+    }
+
     // @overrides
     async appendWindSettings(opt?: { selector?: string, parent?: string, dropDown?: boolean, fromToSelectorVisible?: boolean }): Promise<void> {
         opt = opt || {};
-        this.windSettingsSelector = opt.selector || this.windSettingsSelector;
+        this.windDomSelector = opt.selector || this.windDomSelector;
+        // create HTML elements
+        if (this.players) {
+            for (let i = 0; i < this.labels?.length; i++) {
+                const selector: string = `daidalus-wind-${i}`;
+                const theHTML: string = Handlebars.compile(windDivTemplate, { noEscape: true })({ id: selector });
+                // append div as first child
+                $(`#daa-display-${i}`).prepend(theHTML);
+                // append input fields
+                await this.players[this.labels[i]].appendWindSettings({
+                    selector, 
+                    dropDown: opt.dropDown, 
+                    fromToSelectorVisible: opt.fromToSelectorVisible 
+                });
+            }
+        }
         // update the front-end
-        if (this.players) {
-            if (this.players.left) {
-                await this.players.left.appendWindSettings({ selector: "daidalus-wind-left", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible });
-            }
-            if (this.players.right) { 
-                await this.players.right.appendWindSettings({ selector: "daidalus-wind-right", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible }); 
-            }
-        }
+        // if (this.players) {
+        //     if (this.players.left) {
+        //         await this.players.left.appendWindSettings({ selector: "daidalus-wind-left", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible });
+        //     }
+        //     if (this.players.right) { 
+        //         await this.players.right.appendWindSettings({ selector: "daidalus-wind-right", dropDown: opt.dropDown, fromToSelectorVisible: opt.fromToSelectorVisible }); 
+        //     }
+        // }
     }
 
-    // @overrides
-    async appendWellClearVersionSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
+    /**
+     * Appends the daidalus/wellclear version selector to the DOM
+     * The default configuration selected in the dropdown menu is the newest configuration, currently "DAIDALUSv2.0.2.jar"
+     * @overrides
+     */
+    async appendDaaVersionSelector(opt?: { selector?: string, daaVersions?: string[], parent?: string }): Promise<void> {
         opt = opt || {};
-        // const selector: string = opt.selector || "split-view-wellclear-version-selector";
-        // utils.createDiv(selector, { parent: opt.parent });
         if (this.players) {
-            if (this.players.left) {
-                await this.players.left.appendWellClearVersionSelector({ selector: "daidalus-version-left" });
-            }
-            if (this.players.right) { 
-                await this.players.right.appendWellClearVersionSelector({ selector: "daidalus-version-right" }); 
+            const daaVersions: string[] = opt.daaVersions || await this.getDaaVersions();
+            for (let i = 0; i < this.labels?.length; i++) {
+                const selector: string = `daidalus-version-${i}`;
+                const theHTML: string = Handlebars.compile(daidalusVersionDivTemplate, { noEscape: true })({ id: selector });
+                // append div as first child
+                $(`#daa-display-${i}`).prepend(theHTML);
+                // append input fields
+                await this.players[this.labels[i]]?.appendDaaVersionSelector({ selector, daaVersions });
             }
         }
     }
 
     // @overrides
-    async appendWellClearConfigurationSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
+    async appendDaaConfigurationSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
         opt = opt || {};
         // const selector: string = opt.selector || "sidebar-daidalus-configuration";
         // utils.createDiv(selector, { parent: opt.parent });
         $("#sidebar-panel .single-view").css("display", "none"); // hide single-view attributes on side panel
         $("#sidebar-panel .split-view").css("display", "block"); // show split-view attributes on side panel
         if (this.players) {
-            if (this.players.left) {
-                await this.players.left.appendWellClearConfigurationSelector({
-                    selector: "daidalus-configuration-left",
-                    attributeSelector: "sidebar-daidalus-configuration-attributes-left"
+            for (let i = 0; i < this.labels?.length; i++) {
+                const selector: string = `daidalus-configuration-${i}`;
+                const theHTML: string = Handlebars.compile(configDivTemplate, { noEscape: true })({ id: selector });
+                // append div as first child
+                $(`#daa-display-${i}`).prepend(theHTML);
+                // append input fields
+                await this.players[this.labels[i]]?.appendDaaConfigurationSelector({
+                    selector,
+                    attributeSelector: `sidebar-daidalus-configuration-attributes-${i}` // this is used to render the attribute values in the side bar
                 }); 
             }
-            if (this.players.right) { 
-                await this.players.right.appendWellClearConfigurationSelector({
-                    selector: "daidalus-configuration-right",
-                    attributeSelector: "sidebar-daidalus-configuration-attributes-right"
-                }); 
-            }
+            // if (this.players.left) {
+            //     await this.players.left.appendWellClearConfigurationSelector({
+            //         selector: "daidalus-configuration-left",
+            //         attributeSelector: "sidebar-daidalus-configuration-attributes-left"
+            //     }); 
+            // }
+            // if (this.players.right) { 
+            //     await this.players.right.appendWellClearConfigurationSelector({
+            //         selector: "daidalus-configuration-right",
+            //         attributeSelector: "sidebar-daidalus-configuration-attributes-right"
+            //     }); 
+            // }
         }
     }
 
-    // @overrides
-    async selectConfiguration(configName: string): Promise<boolean> {
+    /**
+     * Selects the given configuration for all players
+     * @overrides
+     */
+    async selectDaaConfiguration(configName: string): Promise<boolean> {
         if (configName && this.players) {
             let success: boolean = true;
-            if (this.players.left) {
-                success = success && await this.players.left.selectConfiguration(configName); 
+            for (let i = 0; i < this.labels?.length; i++) {
+                console.log(`[daa-split-view] selectConfiguration`, { configName, player: this.players[this.labels[i]] });
+                const ans: boolean = await this.players[this.labels[i]]?.selectDaaConfiguration(configName);
+                success = success && ans;
             }
-            if (this.players.right) { 
-                success = success && await this.players.right.selectConfiguration(configName); 
+            // if (this.players.left) {
+            //     success = success && await this.players.left.selectConfiguration(configName); 
+            // }
+            // if (this.players.right) { 
+            //     success = success && await this.players.right.selectConfiguration(configName); 
+            // }
+            return success;
+        }
+        return false;
+    }
+
+    /**
+     * Programmatically selects the given daidalus version in the dropdown menu provided of all players
+     * @override
+     */
+    selectDaaVersion (versionName: string): boolean {
+        if (versionName && this.players) {
+            let success: boolean = true;
+            for (let i = 0; i < this.labels?.length; i++) {
+                console.log(`[daa-split-view] selectWellClearVersion`, { versionName, player: this.players[this.labels[i]] });
+                const ans: boolean = this.players[this.labels[i]]?.selectDaaVersion(versionName);
+                success = success && ans;
             }
             return success;
         }
@@ -469,7 +674,7 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    appendSimulationControls(opt?: {
+    appendSimulationControls (opt?: {
         parent?: string,
         top?: number,
         left?: number,
@@ -481,32 +686,40 @@ export class DAASplitView extends DAAPlayer {
         // await this.players.right.appendSimulationControls(opt);
         super.appendSimulationControls(opt);
         if (this.players) {
-            opt = opt || {};
-            if (this.players.left && this.players.right) {
-                this.players.left.bridgePlayer(this.players.right);
-                if (opt.displays) {
-                    if (opt.displays.length > 0) {
-                        this.players.left.setDisplays([ opt.displays[0] ]);
-                    }
-                    if (opt.displays.length > 1) {
-                        this.players.right.setDisplays([ opt.displays[1] ]);
-                    }
-                }
-            }
+            this.setDisplays(opt?.displays);
         }
     }
 
-    // @overrides
-    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string }): DAAPlayer {
-        super.appendPlotControls(opt);
-        $(`#${this.id}-plot`).off("click", this.plot);
-        // override the plot handler
-        $(`#${this.id}-plot`).on("click", async () => {
-            if (this.players) {
-                if (this.players.left) { this.players.left.plot(); }
-                if (this.players.right) { this.players.right.plot(); }
+    /**
+     * Sets the ID of the DOM element where the daa-displays elements are attached. A spinner is also attached to each display.
+     * @overrides
+     */
+    setDisplays (displays: string[]): DAAPlayer {
+        if (displays) {
+            // append loading spinner animation to the displays
+            for (let i = 0; i < this.labels.length && i < displays.length; i++) {
+                this.players[this.labels[i]]?.setDisplays([ displays[i] ]);
             }
-        });
+        }
+        return this;
+    }
+
+    // @overrides
+    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string, disableHandlers?: { plot?: boolean, reset?: boolean }}): DAAPlayer {
+        // append controls but disable the "plot" handler from the player class
+        super.appendPlotControls({ ...opt, disableHandlers: { plot: true }});
+        // override the plot handler of the player class
+        if (!opt?.disableHandlers?.plot) {
+            $(`#${this.id}-plot`).on("click", async () => {
+                if (this.players) {
+                    for (let i = 0; i < this.labels?.length; i++) {
+                        this.players[this.labels[i]]?.plot(); // async call
+                    }
+                    // if (this.players.left) { this.players.left.plot(); }
+                    // if (this.players.right) { this.players.right.plot(); }
+                }
+            });
+        }
         return this;
     }
 

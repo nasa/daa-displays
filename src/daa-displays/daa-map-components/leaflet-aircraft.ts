@@ -39,9 +39,9 @@
  **/
 
 import * as L from 'leaflet';
-import { DaaSymbol } from '../daa-interactive-map';
-import { Aircraft, AircraftInterface, AircraftLabel, alert2symbol } from "./daa-aircraft";
-import { LatLonAlt, Vector3D } from './daa-airspace';
+import { alertLevel2symbol } from '../daa-utils';
+import { DaaSymbol, LatLonAlt, Vector3D  } from '../utils/daa-types';
+import { Aircraft, AircraftInterface, AircraftLabel } from "./daa-aircraft";
 
 const icons: {[key:string]: string } = {
     "daa-alert": "daa-displays/svgs/daa-alert.svg",
@@ -55,6 +55,8 @@ const icons: {[key:string]: string } = {
 export const LEAFLET_LAT_RANGE: [ number, number] = [-90, 90];
 export const LEAFLET_LON_RANGE: [ number, number] = [-720, 720];
 export const MARKER_SIZE: number = 52; //px
+
+export const OWNSHIP_COLOR: string = "#00fdfe";
 
 /**
  * zIndex values used for traffic symbols (alerts are on top, ownship has z-index 0)
@@ -94,8 +96,8 @@ export class LeafletAircraft extends Aircraft {
      * Constructor, creates an aircraft instance and appends the aircraft to the map
      */
     constructor (map: L.Map, desc: { 
-        s: LatLonAlt,
-        v?: Vector3D,
+        s: LatLonAlt<number | string>,
+        v?: Vector3D<number | string>,
         heading: number, 
         callSign: string, 
         symbol: DaaSymbol,
@@ -146,7 +148,7 @@ export class LeafletAircraft extends Aircraft {
             case "daa-traffic-monitor": { return "yellow"; }
             case "daa-target": { return "white"; }
             case "ownship":
-            case "daa-ownship": { return "#00fdfe"; }
+            case "daa-ownship": { return OWNSHIP_COLOR; }
             default: return "transparent"
         }
     }
@@ -210,7 +212,7 @@ export class LeafletAircraft extends Aircraft {
      */
     setSymbol (daaSymbol?: string | number): LeafletAircraft {
         if (daaSymbol) {
-            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alert2symbol(+daaSymbol);
+            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alertLevel2symbol(+daaSymbol);
             if (symbol !== this.symbol) {
                 this.symbol = symbol;
                 const icon: L.DivIcon = this.createAircraftIcon();

@@ -1,4 +1,9 @@
-import { BandElement, Region, DaidalusBand } from "./utils/daa-server";
+import { deg2rad, rad2deg } from "./utils/daa-math";
+import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, LatLon, Vector3D } from "./utils/daa-types";
+import * as server from './utils/daa-types';
+
+// useful aliases
+export type DaaSymbol = server.DaaSymbol;
 
 export const color = {
     RECOVERY: "#00f500", // DASHED green
@@ -64,33 +69,48 @@ export const alertingColors = {
 };
 
 
-// units conversion functions
-export function msec2knots(msec: number): number {
-    return msec * 1.94384;
-};
-export function knots2msec(knots: number): number {
-    return knots / 1.94384;
-};
-export function rad2deg(rad: number): number {
-    return rad * 180 / Math.PI;
-};
-export function deg2rad(deg: number): number {
-    return deg * Math.PI / 180;
-};
-export function meters2feet(m: number): number {
-    return m * 3.28084;
-};
-export function feet2meters(ft: number): number {
-    return ft / 3.28084;
-};
+// daa constant
+export const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
 
+/**
+ * Utility function, converts an alert level to a symbol name
+ */
+export function alertLevel2symbol (daaAlert: AlertLevel): DaaSymbol {
+    switch (daaAlert) {
+        case AlertLevel.MONITOR: // 1
+            return "daa-traffic-monitor";
+        case AlertLevel.AVOID: // 2
+            return "daa-traffic-avoid";
+        case AlertLevel.ALERT: // 3
+            return "daa-alert";
+        case AlertLevel.NONE:
+        case AlertLevel.UNKNOWN:
+            return "daa-target"
+        default:
+            console.log(`[daa-utils] Warning: invalid daa alert level ${daaAlert}`);
+    }
+    return "daa-target";
+}
+
+/**
+ * Utility function, returns the alert kind of this aircraft
+ */
+export function symbol2alertKind (symbol: DaaSymbol): AlertKind {
+    switch (symbol) {
+        case "daa-alert": { return AlertKind.ALERT; }
+        case "daa-traffic-avoid": { return AlertKind.AVOID; }
+        case "daa-traffic-monitor": { return AlertKind.MONITOR; }
+        case "daa-target": { return AlertKind.NONE; }
+        default: { return AlertKind.UNKNOWN; }
+    }
+}
 
 /**
  * Utility functions for computing the distance between two points given as latlot
  * The returned result is in NMI
  * See also haversine formula at https://www.movable-type.co.uk/scripts/latlong.html
  */
- export function computeNmiDistance (pos1: LatLon, pos2: LatLon): number {
+ export function computeNmiDistance (pos1: LatLon<number>, pos2: LatLon<number>): number {
     const EARTH_RADIUS: number = 3443.92; //nmi
     const lat1: number = deg2rad(pos1.lat);
     const lon1: number = deg2rad(pos1.lon);
@@ -110,7 +130,7 @@ export function feet2meters(ft: number): number {
  * Computes the angle between two points given in latllot
  * The result is in degrees
  */
-export function computeBearing (pos1: LatLon, pos2: LatLon): number {
+export function computeBearing (pos1: LatLon<number>, pos2: LatLon<number>): number {
     const lat1: number = deg2rad(pos1.lat);
     const lon1: number = deg2rad(pos1.lon);
     const lat2: number = deg2rad(pos2.lat);
@@ -124,13 +144,11 @@ export function computeBearing (pos1: LatLon, pos2: LatLon): number {
 }
 
 // interface definitions
-export interface WayPoint { lla: LatLonAlt, label?: string };
+export interface WayPoint { lla: LatLonAlt<number>, label?: string };
 export type FlightPlan = WayPoint[]
-export interface Vector3D { x: number, y: number, z: number };
+export type FlightTrace = WayPoint[];
 export interface FromTo { from: number, to: number, units: string };
 export interface Val { val: number, units: string };
-export interface LatLonAlt { lat: number, lon: number, alt: number };
-export interface LatLon { lat: number, lon: number };
 export interface Bands {
     NONE?: FromTo[],
     FAR?: FromTo[],
@@ -184,7 +202,7 @@ export const BAND_NAMES: string[] = [
 // };
 
 // y axis identifies the direction of the aircraft
-export function v2rad(v3: Vector3D): number {
+export function v2rad(v3: Vector3D<number>): number {
     // the returned angle is in rads
     if (v3.y === 0 && v3.x === 0) {
         return 0; // atan2 is undefined if y and x are both zero
@@ -192,16 +210,16 @@ export function v2rad(v3: Vector3D): number {
     return Math.atan2(v3.y, v3.x);
 };
 // y axis identifies the direction of the aircraft
-export function yaw(v3: Vector3D): number {
+export function yaw(v3: Vector3D<number>): number {
     // this is the compass
     return rad2deg(Math.atan2(v3.y, v3.x)) - 90; // the rotation on 90 degs is necessary because the aircraft moves over the x axis to go ahead, but in the canvas this corresponds to the x axis
 };
 // y axis identifies the direction of the aircraft
-export function pitch(v3: Vector3D): number {
+export function pitch(v3: Vector3D<number>): number {
     return rad2deg(Math.atan2(v3.z, v3.y));
 };
 // y axis identifies the direction of the aircraft
-export function roll(v3: Vector3D): number {
+export function roll(v3: Vector3D<number>): number {
     return rad2deg(Math.atan2(v3.z, v3.x));
 };
 export function fixed3(val: number): string {
@@ -211,7 +229,7 @@ export function fixed3(val: number): string {
 export function fixed2(val: number): string {
     return (val < 10) ? "0" + val : val.toString();
 };
-export function modulo(v: Vector3D): number {
+export function modulo(v: Vector3D<number>): number {
     v = v || { x: 0, y: 0, z: 0 };
     v.x = v.x || 0;
     v.y = v.y || 0;
@@ -249,7 +267,7 @@ export function createDiv(id: string, opt?: {
     if (opt.left !== undefined && opt.left !== null) { $(div).css("left", opt.left + "px"); }
     $(div).css("height", (opt.height) ? opt.height + "px" : "0px");
     $(div).css("width", (opt.width) ? opt.width + "px" : "0px");
-    const parentDIV: JQuery<HTMLElement> = (opt.parent && $(`#${opt.parent}`).length) ? $(`#${opt.parent}`) : $('BODY');
+    const parentDIV: JQuery<HTMLElement> = $(jquerySelector(opt.parent));
     $(parentDIV).append(div);
     return $(div)[0];
 };
@@ -260,3 +278,11 @@ export const zIndex = {
     base: 0,
     interactive: 10
 };
+
+/**
+ * Utility function, returns a valid jquery selector
+ */
+export function jquerySelector (name: string): string {
+    return name === undefined || name === null || name === "" ? "body"
+        : name.startsWith(".") || name.startsWith("#") ? name : `#${name}`;
+}

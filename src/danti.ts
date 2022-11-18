@@ -34,16 +34,16 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { DaaSymbol, DAA_AircraftDescriptor, DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
-import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
-import { LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
+import { DaaConfig, DAAPlayer, DidChangeDaaAuralGuidance, DidChangeDaaVoiceName, DidChangeDaaVoicePitch, DidChangeDaaVoiceRate, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, PlayerEvents } from './daa-displays/daa-player';
+import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
-import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, computeBearing, computeNmiDistance } from './daa-displays/daa-utils';
-import { DaaVoice } from './daa-displays/daa-voice';
+import { Bands, daaSymbols } from './daa-displays/daa-utils';
+import { CommData, DaaVoice, Guidance } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
+import { TailNumberIndicator } from './daa-displays/daa-tail-number';
 
 // flag indicating whether the display should be widescreen
 const enable_widescreen: boolean = true;
@@ -51,10 +51,6 @@ const enable_sound: boolean = true;
 // display padding, used for centering the options and view controls shown at the top/bottom of the danti display
 const PADDING: number = 13; //px
 const INCLUDE_PLOTS: boolean = true;
-// voice options
-const voiceName: string = "Samantha";
-const voiceVolume: number = 50;
-const voiceRate: number = 1.1;
 /**
  * Utility function, renders the display content
  */
@@ -64,14 +60,16 @@ function render (danti: {
     airspeedTape: AirspeedTape, 
     altitudeTape: AltitudeTape, 
     verticalSpeedTape: VerticalSpeedTape,
-    sound: DaaVoice
+    voice: DaaVoice
 }) {
-    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     if (flightData && flightData.ownship) {
         danti.map.setPosition(flightData.ownship.s);
+        // set tail number
+        tailNumber.setTailNumber(flightData.ownship.id);
 
-        const bands: ScenarioDataPoint = player.getCurrentBands();
+        // get bands
+        const bands: DaaBands = player.getCurrentBands();
         if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
         const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
@@ -86,9 +84,8 @@ function render (danti: {
 
         // compute max alert and collect aircraft alert descriptors
         let max_alert: number = 0;
-        let max_alert_aircraft: DAA_AircraftDescriptor = null;
         const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
-            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+            const alert_level: number = bands?.Alerts?.alerts?.length > index ? bands.Alerts.alerts[index].alert_level : 0;
             const desc: DAA_AircraftDescriptor = {
                 callSign: data.id,
                 s: data.s,
@@ -97,7 +94,6 @@ function render (danti: {
             };
             if (alert_level > max_alert) {
                 max_alert = alert_level;
-                max_alert_aircraft = desc;
             }
             return desc;
         });
@@ -165,8 +161,8 @@ function render (danti: {
             for (let i = 0; i < bands.Contours.data.length; i++) {
                 if (bands.Contours.data[i].polygons) {
                     for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
-                        const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
-                        if (perimeter && perimeter.length) {
+                        const perimeter: LatLonAlt<number | string>[] = bands.Contours.data[i].polygons[j];
+                        if (perimeter?.length) {
                             const floor: { top: number, bottom: number } = {
                                 top: +perimeter[0].alt + 20,
                                 bottom: +perimeter[0].alt - 20
@@ -185,8 +181,8 @@ function render (danti: {
             for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
                 if (bands["Hazard Zones"].data[i].polygons) {
                     for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
-                        const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
-                        if (perimeter && perimeter.length) {
+                        const perimeter: LatLonAlt<number | string>[] = bands["Hazard Zones"].data[i].polygons[j];
+                        if (perimeter?.length) {
                             const floor: { top: number, bottom: number } = {
                                 top: +perimeter[0].alt + 20,
                                 bottom: +perimeter[0].alt - 20
@@ -208,101 +204,31 @@ function render (danti: {
         }
         
         // play sound if voice feedback is enabled and max_alert > 2 (red alert)
-        if (enable_sound && max_alert > 2) {
-            voiceFeedback(danti?.sound, flightData, max_alert_aircraft, { altitude_type: "absolute" });
-        } else {
-            player.voiceFeedback("");
+        if (enable_sound && player.voiceFeedbackEnabled() && danti?.voice) {
+            // force reading guidance if the player is not in playback mode
+            const isPlaying: boolean = player.isPlaying();
+            if (!danti.voice.isSpeaking() || !isPlaying) {
+                const guidance: Guidance = danti?.voice?.getGuidanceATC({
+                    ownship: flightData.ownship,
+                    traffic: flightData.traffic,
+                    bands
+                }, { 
+                    include_altitude: true,
+                    suppressRepeatedAlerts: isPlaying 
+                });
+                if (guidance) {
+                    danti.voice.readGuidance({ guidance }, { force: !isPlaying }); // async call
+                }
+            } else {
+                console.log(`[danti] Skipping guidance (already speaking)`);
+            }
         }
+
+        // render plots
         if (INCLUDE_PLOTS) {
             const step: number = player.getCurrentSimulationStep();
             const time: string = player.getCurrentSimulationTime();    
             plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
-        }
-    }
-}
-
-/**
- * Voice feedback for DANTi
- * Example: "Traffic, eleven o'clock, one-zero miles, southbound, converging, Boeing Seven Twenty Seven, one seven thousand."
- * See example ATC phraseology at https://www.faa.gov/air_traffic/publications/atpubs/atc_html/chap2_section_1.html
- */
-function voiceFeedback (voice: DaaVoice, flightData: LLAData, max_alert_aircraft: DAA_AircraftDescriptor, opt?: {
-    altitude_type?: "relative" | "absolute"
-}) {
-    if (voice && flightData) {
-        if (max_alert_aircraft) {
-            // text used to introduce pauses in the electronic speech
-            const pause: string = `... ... ... ...`;
-
-            // relative heading position of the intruder
-            const ownship_heading: number = utils.rad2deg(Math.atan2(+flightData.ownship.v.x, +flightData.ownship.v.y));
-            const bearing: number = computeBearing({
-                lat: +flightData.ownship.s.lat,
-                lon: +flightData.ownship.s.lon
-            }, {
-                lat: +max_alert_aircraft.s.lat,
-                lon: +max_alert_aircraft.s.lon
-            });
-            const relative_bearing: number = ((((bearing - ownship_heading) % 360) + 360) % 360);
-            console.log({ relative_bearing, bearing, heading: ownship_heading });
-            let relative_heading: string = ((relative_bearing / 360) * 12).toFixed(0);
-            if (relative_heading === "0") { relative_heading = "12"; }
-            // feedback for heading position
-            const relative_heading_msg: string = `${relative_heading} o'clock`;
-            const relative_heading_txt: string = `${relative_heading} o'clock`;
-
-            // distance between the aircraft
-            const distance: string = computeNmiDistance({
-                lat: +flightData.ownship.s.lat,
-                lon: +flightData.ownship.s.lon
-            }, {
-                lat: +max_alert_aircraft.s.lat,
-                lon: +max_alert_aircraft.s.lon
-            }).toFixed(1);
-            // feedback for distance -- round the number to the nearest integer if distance > 1NM, otherwise use two digits accuracy
-            const distance_msg: string = `${voice.readNumber(+distance > 1 ? Math.round(+distance) : +distance, { pause })} miles`;
-            const distance_txt: string = `${+distance > 1 ? Math.round(+distance) : +distance} miles`;
-
-            // feedback for direction
-            const traffic_direction: number = utils.rad2deg(Math.atan2(+max_alert_aircraft.v.x, +max_alert_aircraft.v.y));
-            const direction_msg: string = voice.readDirection(+traffic_direction);
-            const direction_txt: string = direction_msg;
-
-            // altitude of the intruder
-            // option 1: absolute altitude, e.g., one-seven thousands
-            // option 2: relative altitude, e.g., one thousand feet below you
-            const alt: { absolute: number, relative: number } = {
-                absolute: +max_alert_aircraft.s.alt,
-                relative: +max_alert_aircraft.s.alt - +flightData.ownship.s.alt 
-            }; // altitude, in ft
-            const altitude_type: "relative" | "absolute" = opt?.altitude_type || "absolute";
-            const altitude: number = altitude_type === "absolute" ? alt.absolute : Math.abs(alt.relative);
-            // feedback for altitude, number is rounded to 100xft
-            let altitude_msg: string = `${voice.readNumber(Math.floor(altitude / 100) * 100, { pause })}`; // feet is often omitted for brevity
-            let altitude_txt: string = `${Math.floor(altitude / 100) * 100}`;
-            if (altitude_type === "relative") {
-                altitude_msg += alt.relative < 0 ? " feet below you " : " feet above you ";
-                altitude_txt += alt.relative < 0 ? " feet below you " : " feet above you ";
-            }
-
-            // info from flight data
-            const info: string = `Traffic, ${relative_heading} o'clock, ${distance} NMI, ${altitude} ft`;
-
-            // feedback message read to the pilot by the electronic voice
-            const msg: string = `Traffic ${pause} ${relative_heading_msg} ${pause} ${distance_msg} ${pause} ${direction_msg} ${pause} ${altitude_msg}`; // e.g., traffic, 2 o'clock, 3 miles, 8000 ft
-            const txt: string = `Traffic, ${relative_heading_txt}, ${distance_txt}, ${direction_txt}, ${altitude_txt}`;
-            
-            // write aural annunciation in output message box
-            player.voiceFeedback(txt);
-            console.log({ info, msg });
-            // read message if voice feedback is enabled
-            if (enable_sound && player.voiceFeedbackIsEnabled()) {
-                voice?.speak(msg, { voice: voiceName, volume: voiceVolume, rate: voiceRate });
-            }
-        } else {
-            if (enable_sound) {
-                voice?.ping();
-            }
         }
     }
 }
@@ -356,6 +282,7 @@ const map: InteractiveMap = new InteractiveMap("map", {
     parent: "daa-disp", 
     widescreen: enable_widescreen,
     engine: "leafletjs",
+    trafficTraceVisible: true,
     layeringMode: LayeringMode.byAlertLevel
 });
 // wind indicator
@@ -363,10 +290,18 @@ const wind: WindIndicator = new WindIndicator("wind", {
     top: 690, 
     left: enable_widescreen ? 48 : 195 
 }, { parent: "daa-disp"});
-// map heading is controlled by the compass
+// tail number indicator
+const tailNumber: TailNumberIndicator = new TailNumberIndicator("tail", {
+    top: 100,
+    left: enable_widescreen ? 48 : 195
+}, { parent: "daa-disp"});
+// map heading is controlled by the compass, div names for compass and indicators are taken from the map display so the compass will be rendered under the alerts
 const compassDivName: string = map.getCompassDivName();
 const indicatorsDivName: string = map.getIndicatorsDivName();
-const compass: Compass = new Compass("compass", { top: 110, left: enable_widescreen ? 434 : 210 }, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map: map });
+const compass: Compass = new Compass("compass", {
+    top: 110, 
+    left: enable_widescreen ? 434 : 210
+}, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 
@@ -382,29 +317,41 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", {
         "nrthup", "vfr-map", "call-sign", "contours", "hazard-zones"
     ], parent: "daa-disp", compass, map });
 // sounds
-const sound: DaaVoice = new DaaVoice();
+const daaVoice: DaaVoice = new DaaVoice();
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: enable_widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: enable_widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: enable_widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 const player: DAAPlayer = new DAAPlayer();
+let lastSimulationStep: number = 0;
 player.define("step", async () => {
+    const step = player.getCurrentSimulationStep();
+    // reset map if we are jumping to different simulation steps (needed because of the traces, no need to reset the other widgets)
+    if (Math.abs(step - lastSimulationStep) > 1) {
+        map.resetAirspace();
+    }
+    lastSimulationStep = player.getCurrentSimulationStep();
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
         altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
-        sound
+        voice: daaVoice
     });
 });
 player.define("init", async () => {
     // compute java output
     await player.exec({
-        alertingLogic: player.getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
-        alertingConfig: player.getSelectedConfiguration(),
+        alertingLogic: player.readSelectedDaaVersion(), //"DAAtoPVS-1.0.1.jar",
+        alertingConfig: player.readSelectedDaaConfiguration(),
         scenario: player.getSelectedScenario(),
-        wind: player.getSelectedWindSettings()
+        wind: player.getSelectedWind()
     });
+    // apply view options
     viewOptions.applyCurrentViewOptions();
     player.applyCurrentResolutionOptions();
+    // reset map (needed because of the traces), no need to reset the others
+    map.resetAirspace();
+    // reset voice
+    daaVoice.reset();
 });
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", () => {
@@ -473,9 +420,9 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.appendSidePanelView();
     await player.appendScenarioSelector();
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false });
-    await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
-    await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectConfiguration("DO_365A_no_SUM");
+    await player.appendDaaVersionSelector({ selector: "daidalus-version" });
+    await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
+    await player.selectDaaConfiguration("DO_365A_no_SUM");
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]
@@ -483,13 +430,26 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     if (INCLUDE_PLOTS) {
         player.appendPlotControls({
             parent: "simulation-controls",
-            top: 47
+            top: 48
         });
     }
     player.appendActivationPanel({
         parent: "activation-controls"
     });
-    player.appendResolutionControls({
+    player.appendWedgePersistenceControls({
+        parent: "simulation-controls",
+        top: -526,
+        left: 1300,
+        width: 400,
+        callback: () => {
+            render({
+                map: map, compass: compass, airspeedTape: airspeedTape, 
+                altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
+                voice: daaVoice
+            });
+        }
+    });
+    player.appendWedgeRangeControls({
         setCompassWedgeAperture: (aperture: string) => {
             compass.setMaxWedgeAperture(aperture);
         },
@@ -502,23 +462,37 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         setVerticalSpeedWedgeAperture: (aperture: string) => {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
-    }, { top: -64, left: 752 });
+    }, { parent: "simulation-controls", top: -478, left: 1300 });
     player.appendVoiceFeedbackControls({
         parent: "simulation-controls",
-        top: 93
+        top: -748,
+        left: 1300,
+        width: 400,
+        voices: daaVoice.getVoiceDescriptors(),
+        styles: daaVoice.getGuidanceDescriptors()
     });
-    player.appendWedgePersistenceControls({
-        parent: "simulation-controls",
-        top: 140,
-        width: 308,
-        callback: () => {
-            render({
-                map: map, compass: compass, airspeedTape: airspeedTape, 
-                altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
-                sound
-            });
-        }
+    // install relevant backbone handlers
+    player.on(PlayerEvents.DidToggleDaaVoiceFeedback, (evt: DidToggleDaaVoiceFeedback) => {
+        const enabled: boolean = evt?.enabled;
+        daaVoice.enableGuidace(enabled);
     });
+    player.on(PlayerEvents.DidChangeDaaAuralGuidance, (evt: DidChangeDaaAuralGuidance) => {
+        const selected: string = evt?.selected;
+        daaVoice.selectGuidance(selected);
+    });
+    player.on(PlayerEvents.DidChangeDaaVoiceName, (evt: DidChangeDaaVoiceName) => {
+        const selected: string = evt?.selected;
+        daaVoice.selectVoice(selected);
+    });
+    player.on(PlayerEvents.DidChangeDaaVoicePitch, (evt: DidChangeDaaVoicePitch) => {
+        const selected: number = evt?.selected;
+        daaVoice.selectPitch(selected);
+    });
+    player.on(PlayerEvents.DidChangeDaaVoiceRate, (evt: DidChangeDaaVoiceRate) => {
+        const selected: number = evt?.selected;
+        daaVoice.selectRate(selected);
+    });
+    // set preferred options
     player.enableWedgeApertureOption("compass");
     player.enableWedgeApertureOption("airspeed");
     player.enableWedgeApertureOption("altitude");
@@ -529,7 +503,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     // auto-load scenario+config if they are specified in the browser
     if (args) {
         if (args.scenario) { player.selectScenario(args.scenario); }
-        if (args.config) { await player.selectConfiguration(args.config); }
+        if (args.config) { await player.selectDaaConfiguration(args.config); }
         await player.loadSelectedScenario();
     }
 }

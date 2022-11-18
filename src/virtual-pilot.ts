@@ -32,11 +32,10 @@ import { AltitudeTape } from './daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
-import { VirtualHorizon } from './daa-displays/daa-virtual-horizon';
 
-import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView } from './daa-displays/daa-split-view';
-import { DAAScenario, LLAData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { DaaSymbol, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 // import { ViewOptions } from './daa-displays/daa-view-options';
@@ -142,9 +141,9 @@ splitView.getPlayer("left").define("init", async () => {
     // init left
     await splitView.getPlayer("left").javaVirtualPilot({
         virtualPilot: splitView.getPlayer("left").getSelectedLogic(),
-        alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
+        alertingConfig: splitView.getPlayer("left").readSelectedDaaConfiguration(),
         scenario: splitView.getSelectedScenario(),
-        wind: splitView.getSelectedWindSettings()
+        wind: splitView.getSelectedWind()
     });
     // viewOptions_left.applyCurrentViewOptions();
 });
@@ -152,17 +151,17 @@ splitView.getPlayer("right").define("init", async () => {
     // init right
     await splitView.getPlayer("right").javaVirtualPilot({
         virtualPilot: splitView.getPlayer("right").getSelectedLogic(),
-        alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
+        alertingConfig: splitView.getPlayer("right").readSelectedDaaConfiguration(),
         scenario: splitView.getSelectedScenario(),
-        wind: splitView.getSelectedWindSettings()
+        wind: splitView.getSelectedWind()
     });
     // viewOptions_right.applyCurrentViewOptions();
 });
 async function createPlayer() {
     splitView.appendNavbar();
     splitView.appendSidePanelView();
-    await splitView.appendWellClearVersionSelector();
-    await splitView.appendWellClearConfigurationSelector();
+    await splitView.appendDaaVersionSelector();
+    await splitView.appendDaaConfigurationSelector();
     await splitView.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp-left", "daa-disp-right" ]

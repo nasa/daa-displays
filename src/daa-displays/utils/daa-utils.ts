@@ -27,6 +27,8 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
+import { Alert, AlertLevel, DaaBands } from "./daa-types";
+
 /**
  * Returns a unique id
  */
@@ -45,7 +47,7 @@
  * Colors
  * NOTE: worldwind uses values between 0..1, instead of 0..255
  */
- export const COLORS: { [name: string]: [ 
+export const COLORS: { [name: string]: [ 
 	number, number, number, number // rgba
 ]} = {
 	// shades of purple
@@ -60,3 +62,27 @@
 	purple:      [ 128/255, 0,       128/255, 1 ],
 	indigo:      [ 75/255,  0,       130/255, 1 ]
 };
+
+/**
+ * Utility function, returns the IDs (tail numbers) of the aicraft whose alert >= minThreshold and <= maxThreshold
+ * The default threshold is AlertLevel.ALERT
+ */
+export function getAlertingAircraftMap (bands: DaaBands, opt?: { 
+	minThreshold?: AlertLevel, maxThreshold?: AlertLevel
+}): { [ac: string]: AlertLevel } {
+	if (bands?.Alerts?.alerts?.length) {
+		const min: AlertLevel = opt?.minThreshold || AlertLevel.ALERT;
+		const max: AlertLevel = opt?.maxThreshold || AlertLevel.ALERT;
+		const alerts: Alert[] = bands.Alerts.alerts.filter(alert => {
+			return alert.alert_level >= min && alert.alert_level <= max;
+		}) || [];
+		if (alerts?.length) {
+			const alerting: { [ac: string]: AlertLevel } = {};
+			for (let i = 0; i < alerts.length; i++) {
+				alerting[alerts[i].ac] = alerts[i].alert_level;
+			}
+			return alerting;
+		}
+	}
+	return {};
+}

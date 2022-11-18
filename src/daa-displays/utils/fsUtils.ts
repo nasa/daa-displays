@@ -31,15 +31,32 @@ import * as fs from 'fs';
 
 /**
  * Generates the name of the file containing bands data.
- * The file name is built using conventions on config name, scenario name, and wind values
+ * The file name is built using conventions on config name, scenario name, wind values, and ownship name
  */
-export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, wind: { deg: string, knot: string } }) {
+export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, ownshipName: string, wind: { deg: string, knot: string } }) {
     if (desc) {
 		if (desc.wind && desc.wind.knot && +desc.wind.knot > 0) {
-			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
+			return desc?.ownshipName ? 
+				`${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}-ownship_${desc.ownshipName}.bands.json`
+				: `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
 		} else {
-			return `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
+			return desc?.ownshipName ? 
+				`${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-ownship_${desc.ownshipName}.bands.json`
+				: `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
 		}
+    }
+    return null;
+}
+
+/**
+ * Generates the name of the json file containing the daa data.
+ * The file name is built using conventions on scenario name and ownship name
+ */
+export function getDaaJsonFileName (desc: { scenarioName: string, ownshipName: string }) {
+    if (desc) {
+		return desc?.ownshipName ? 
+			`${getFilename(desc.scenarioName, { removeFileExtension: true })}-ownship_${desc.ownshipName}.json`
+			: `${getFilename(desc.scenarioName, { removeFileExtension: true })}.json`;
     }
     return null;
 }

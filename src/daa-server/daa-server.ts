@@ -35,13 +35,20 @@ import * as path from 'path';
 import { PVSioProcess } from './daa-pvsioProcess'
 import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
-import { ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, ConfigFile, ScenarioDescriptor, SaveScenarioRequest } from './utils/daa-server';
+import { 
+    ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, 
+    ConfigFile, ScenarioDescriptor, SaveScenarioRequest, GetTailNumbersRequest, GetTailNumbersResponse 
+} from './utils/daa-types';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
+import { DaaFileContent, readDaaFileContent } from '../daa-displays/utils/daa-reader';
 
 // flag for enabling verbose log, useful for debugging purposes but may reduce performance
 const VERBOSE: boolean = false;
+
+// maximum lines read in the .daa file when finding tail numbers
+const MAX_LINES: number = 20;
 
 // help message
 const helpMsg: string = `
@@ -52,6 +59,9 @@ const helpMsg: string = `
     -fast                (Enables optimizations, including caching of simulation results)
     -port <port number>  (The server will use the given port)
 `;
+
+// views supported by the server
+export const views: string[] = [ "danti", "single", "split", "multi", "top", "3d", "3D" ];
 
 /**
  * DAAServer class
@@ -233,11 +243,9 @@ export class DAAServer {
                     try {
                         // console.log(`Reading subfolder ${subfolder}`);
                         const sfiles: string[] = listFilesInFolderAndSubfolders(path.join(folderName, subfolder));
-                        if (sfiles && sfiles.length > 0) {
-                            sfiles.forEach((name: string) => {
-                                name = `${subfolder}/${name}`;
-                                files.push(name);
-                            });
+                        for (let i = 0; i < sfiles?.length; i++) {
+                            const name: string = `${subfolder}/${sfiles[i]}`;
+                            files.push(name);
                         }
                     } catch (subfolderError) {
                         console.warn(`[daa-server.listFileRecursive] ignoring subfolder ${subfolder} (read error)`, subfolderError);
@@ -248,7 +256,7 @@ export class DAAServer {
         return files;
     }
     async onMessageReceived (msg: string, wsocket: WebSocket): Promise<void> {
-        console.info(`Received new message ${msg}`);
+        console.info(`\nReceived new message ${msg}`);
         try {
             const content: WebSocketMessage<any> = JSON.parse(msg);
             // console.info("Message parsed successfully!")
@@ -289,7 +297,7 @@ export class DAAServer {
                             
                             const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
                             
-                            const outputFileName: string = fsUtils.getBandsFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName, wind });
+                            const outputFileName: string = fsUtils.getBandsFileName({ ...data, wind });
                             const outputFolder: string = path.join(__dirname, "../daa-output", wellClearVersion, impl);
                             try {
                                 if (this.useCache && fs.existsSync(path.join(outputFolder, bandsFile))) {
@@ -302,7 +310,8 @@ export class DAAServer {
                                                 daaLogic: data.daaLogic, 
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
-                                                outputFileName: outputFileName,
+                                                ownshipName: data.ownshipName,
+                                                outputFileName,
                                                 wind
                                             });
                                             break;
@@ -313,7 +322,8 @@ export class DAAServer {
                                                 daaLogic: data.daaLogic, 
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
-                                                outputFileName: outputFileName,
+                                                ownshipName: data.ownshipName,
+                                                outputFileName,
                                                 wind
                                             });
                                             break;
@@ -336,6 +346,7 @@ export class DAAServer {
                                     }
                                 }
                                 try {
+                                    console.log(`[daa-server] Reading bands file ${path.join(outputFolder, bandsFile)}`);
                                     const buf: Buffer = fs.readFileSync(path.join(outputFolder, bandsFile));
                                     const desc: ScenarioDescriptor = JSON.parse(buf.toLocaleString());
                                     // content.data = buf.toLocaleString();
@@ -365,47 +376,81 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'java-los': {
-                    const data: ExecMsg = <ExecMsg> content.data;
-                    const losFile: string = fsUtils.getLoSFileName(data);
-                    if (losFile) {
-                        await this.activateJavaProcess();
-                        const losLogic: string = data.daaLogic;
-                        const losFolder: string = path.join(__dirname, "../daa-logic");
-                        const losVersion: string = await this.javaProcess.getVersion(losFolder, losLogic);
-                        const outputFileName: string = fsUtils.getLoSFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
-                        const outputFolder: string = path.join(__dirname, "../daa-output", losVersion);
-                        const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
-                        try {
-                            if (this.useCache && fs.existsSync(path.join(outputFolder, losFile))) {
-                                console.log(`Reading daa los regions file ${losFile} from cache`);
+                case 'get-tail-numbers': {
+                    const data: GetTailNumbersRequest = <GetTailNumbersRequest> (content.data);
+                    const scenarioName: string = data.scenarioName;
+                    if (scenarioName) {
+                        const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
+                        const daaFileContent: string = await fsUtils.readFile(path.join(scenarioFolder, scenarioName));
+                        if (daaFileContent) {
+                            const info: DaaFileContent = readDaaFileContent(daaFileContent, { maxLines: MAX_LINES, tailNumbersOnly: true });
+                            const tailNumbers: string[] = [];
+                            if (info?.ownship?.length && info.ownship[0]?.name) {
+                                tailNumbers.push(info.ownship[0]?.name);
                             } else {
-                                await this.javaProcess.exec({
-                                    daaFolder: losFolder, 
-                                    daaLogic: losLogic, 
-                                    daaConfig: data.daaConfig, 
-                                    daaScenario: data.scenarioName, 
-                                    wind,
-                                    outputFileName
-                                });
+                                console.warn(`[daa-server] Warning: unable to find ownship data in ${scenarioName}`);
                             }
-                            try {
-                                const buf: Buffer = fs.readFileSync(path.join(outputFolder, losFile));
-                                content.data = buf.toLocaleString();
-                                this.trySend(wsocket, content, "daa los regions");
-                            } catch (readError) {
-                                console.error(`Error while reading daa los regions file ${path.join(outputFolder, losFile)}`);
-                                this.trySend(wsocket, null, "daa los regions");
+                            if (info?.traffic?.length && info.traffic[0]?.length) {
+                                for (let i = 0; i < info.traffic[0].length; i++) {
+                                    if (info.traffic[0][i].name) {
+                                        tailNumbers.push(info.traffic[0][i].name);
+                                    }
+                                }
+                            } else {
+                                console.warn(`[daa-server] Warning: unable to find traffic data in ${scenarioName}`);
                             }
-                        } catch (execError) {
-                            console.error(`Error while executing java process`, execError);
-                            this.trySend(wsocket, null, "daa los regions");
+                            const res: GetTailNumbersResponse = { tailNumbers };
+                            content.res = res;
+                            // send message back to the client
+                            this.trySend(wsocket, content, "tail numbers");
+                        } else {
+                            console.warn(`[daa-server] Warning: unable to open .daa file ${scenarioName}`);
                         }
-                    } else {
-                        console.error(`Error while generating daa los regions file (filename is null) :/`);
                     }
                     break;
                 }
+                // case 'java-los': {
+                //     const data: ExecMsg = <ExecMsg> content.data;
+                //     const losFile: string = fsUtils.getLoSFileName(data);
+                //     if (losFile) {
+                //         await this.activateJavaProcess();
+                //         const losLogic: string = data.daaLogic;
+                //         const losFolder: string = path.join(__dirname, "../daa-logic");
+                //         const losVersion: string = await this.javaProcess.getVersion(losFolder, losLogic);
+                //         const outputFileName: string = fsUtils.getLoSFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                //         const outputFolder: string = path.join(__dirname, "../daa-output", losVersion);
+                //         const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
+                //         try {
+                //             if (this.useCache && fs.existsSync(path.join(outputFolder, losFile))) {
+                //                 console.log(`Reading daa los regions file ${losFile} from cache`);
+                //             } else {
+                //                 await this.javaProcess.exec({
+                //                     daaFolder: losFolder, 
+                //                     daaLogic: losLogic, 
+                //                     daaConfig: data.daaConfig, 
+                //                     daaScenario: data.scenarioName,
+                //                     ownshipName: data.ownshipName,
+                //                     outputFileName,
+                //                     wind
+                //                 });
+                //             }
+                //             try {
+                //                 const buf: Buffer = fs.readFileSync(path.join(outputFolder, losFile));
+                //                 content.data = buf.toLocaleString();
+                //                 this.trySend(wsocket, content, "daa los regions");
+                //             } catch (readError) {
+                //                 console.error(`Error while reading daa los regions file ${path.join(outputFolder, losFile)}`);
+                //                 this.trySend(wsocket, null, "daa los regions");
+                //             }
+                //         } catch (execError) {
+                //             console.error(`Error while executing java process`, execError);
+                //             this.trySend(wsocket, null, "daa los regions");
+                //         }
+                //     } else {
+                //         console.error(`Error while generating daa los regions file (filename is null) :/`);
+                //     }
+                //     break;
+                // }
                 case 'java-virtual-pilot': { // generate-daa-file-from-ic
                     const data: ExecMsg = <ExecMsg> content.data;
                     const outputFile: string = data.scenarioName.replace(".ic", ".daa");
@@ -424,9 +469,10 @@ export class DAAServer {
                                 daaFolder: virtualPilotFolder, 
                                 daaLogic: virtualPilot, 
                                 daaConfig: data.daaConfig, 
-                                daaScenario: data.scenarioName, 
-                                wind,
-                                outputFileName
+                                daaScenario: data.scenarioName,
+                                ownshipName: data.ownshipName,
+                                outputFileName,
+                                wind
                             }, { contrib: true });
                             console.log("executed");
                             try {
@@ -461,7 +507,8 @@ export class DAAServer {
                                 // try to convert the file, to check if it's a valid daa file
                                 console.log(`[daa-server] Generatig JSON file...`);
                                 try {
-                                    await this.javaProcess.daa2json(scenarioName, `${scenarioName}.json`);
+                                    const outputFileName: string = fsUtils.getDaaJsonFileName({ scenarioName, ownshipName: null });
+                                    await this.javaProcess.daa2json(scenarioName, outputFileName);
                                     const jsonDaa: string = path.join(__dirname, outputFolder, `${scenarioName}.json`);
                                     content.data = await fsUtils.readFile(jsonDaa);
                                     this.trySend(wsocket, content, `scenario ${scenarioName}`);
@@ -482,13 +529,15 @@ export class DAAServer {
                 case 'load-daa-file': {
                     const data: LoadScenarioRequest = <LoadScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
+                    const ownshipName: string = data?.ownshipName ? `${data.ownshipName}` : null;
                     if (scenarioName) {
                         await this.activateJavaProcess();
                         try {
-                            await this.javaProcess.daa2json(scenarioName, `${scenarioName}.json`);
-                            const jsonDaa: string = path.join(__dirname, "../daa-scenarios", `${scenarioName}.json`);
+                            const outputFileName: string = fsUtils.getDaaJsonFileName({ scenarioName, ownshipName });
+                            await this.javaProcess.daa2json(scenarioName, outputFileName, { ownshipName });
+                            const jsonDaa: string = path.join(__dirname, "../daa-scenarios", outputFileName);
                             content.data = await fsUtils.readFile(jsonDaa);
-                            this.trySend(wsocket, content, `scenario ${scenarioName}`);
+                            this.trySend(wsocket, content, `scenario ${scenarioName} ${ownshipName ? `(ownship: ${ownshipName})` : "" }`);
                         } catch (javaError) {
                             console.error("[daa-server] Error: could not execute daa2json");
                             this.trySend(wsocket, null, `scenario ${scenarioName}`);
@@ -592,10 +641,10 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'load-copilot-file': {
-                    //...
-                    break;
-                }
+                // case 'load-copilot-file': {
+                //     //...
+                //     break;
+                // }
                 case 'load-conf-file':
                 case 'load-config-file': {
                     const data: LoadConfigRequest = <LoadConfigRequest> content.data;
@@ -681,34 +730,34 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'list-los-versions': {
-                    const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
-                    try {
-                        const allFiles: string[] = fs.readdirSync(wellclearLogicFolder);
-                        if (allFiles) {
-                            let wellclearVersions: string[] = [];
-                            try { 
-                                let jarFiles = allFiles.filter(async (name: string) => {
-                                    return fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory();
-                                });
-                                jarFiles = jarFiles.filter((name: string) => {
-                                    return name.startsWith("LoSRegion-") && name.endsWith(".jar");
-                                });
-                                wellclearVersions = jarFiles.map((name: string) => {
-                                    return name.slice(0, name.length - 4);
-                                });
-                            } catch (statError) {
-                                console.error(`Error while reading los folder ${wellclearLogicFolder} :/`);
-                            } finally {
-                                content.data = JSON.stringify(wellclearVersions);
-                                this.trySend(wsocket, content, "los versions");
-                            }
-                        }
-                    } catch (listError) {
-                        console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
-                    }
-                    break;
-                }
+                // case 'list-los-versions': {
+                //     const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
+                //     try {
+                //         const allFiles: string[] = fs.readdirSync(wellclearLogicFolder);
+                //         if (allFiles) {
+                //             let wellclearVersions: string[] = [];
+                //             try { 
+                //                 let jarFiles = allFiles.filter(async (name: string) => {
+                //                     return fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory();
+                //                 });
+                //                 jarFiles = jarFiles.filter((name: string) => {
+                //                     return name.startsWith("LoSRegion-") && name.endsWith(".jar");
+                //                 });
+                //                 wellclearVersions = jarFiles.map((name: string) => {
+                //                     return name.slice(0, name.length - 4);
+                //                 });
+                //             } catch (statError) {
+                //                 console.error(`Error while reading los folder ${wellclearLogicFolder} :/`);
+                //             } finally {
+                //                 content.data = JSON.stringify(wellclearVersions);
+                //                 this.trySend(wsocket, content, "los versions");
+                //             }
+                //         }
+                //     } catch (listError) {
+                //         console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
+                //     }
+                //     break;
+                // }
                 case 'list-virtual-pilot-versions': {
                     const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
                     try {
@@ -744,10 +793,13 @@ export class DAAServer {
                     }
                     break;
                 }
-                default: {}
+                default: {
+                    console.warn(`[daa-server] Warning: received unsupported message type ${content.type}`,  { content });
+                    break;
+                }
             }
         } catch (err) {
-            console.error(`Error while parsing message :/`);
+            console.error(`Error while parsing message :/`, err);
         }
     }
     parseCliArgs (args: string[]): void {
@@ -805,42 +857,56 @@ export class DAAServer {
         app.use(express.static(daaDisplaysRoot));
         const daaLogicFolder: string = path.join(__dirname, '../daa-logic');
         app.use(express.static(daaLogicFolder));
-        app.get('/split', (req, res) => { //lgtm [js/missing-rate-limiting]
-            res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
-        });
-        app.get('/split-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for split
-            res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
-        });
-        app.get('/single', (req, res) => { //lgtm [js/missing-rate-limiting]
-            res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
-        });
-        app.get('/single-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for single
-            res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
-        });
-        app.get('/top', (req, res) => { //lgtm [js/missing-rate-limiting]
-            res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
-        });
-        app.get('/top-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for top
-            res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
-        });
-        app.get('/3d', (req, res) => { //lgtm [js/missing-rate-limiting]
-            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
-        });
-        app.get('/3d-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
-            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
-        });
-        app.get('/3D', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
-            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
-        });
-        app.get('/3D-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
-            res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
-        });
-        app.get('/danti', (req, res) => { //lgtm [js/missing-rate-limiting]
-            res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
-        });
-        app.get('/danti-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for danti
-            res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
-        });
+        for (let i = 0; i < views?.length; i++) {
+            app.get(`/${views[i]}`, (req, res) => { //lgtm [js/missing-rate-limiting]
+                res.sendFile(path.join(daaDisplaysRoot, `${views[i]}.html`));
+            });
+            app.get(`/${views[i]}-view`, (req, res) => { //lgtm [js/missing-rate-limiting] alias for split
+                res.sendFile(path.join(daaDisplaysRoot, `${views[i]}.html`));
+            });
+        }
+        // app.get('/split', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
+        // });
+        // app.get('/split-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for split
+        //     res.sendFile(path.join(daaDisplaysRoot, 'split.html'));
+        // });
+        // app.get('/multi', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, 'multi.html'));
+        // });
+        // app.get('/multi-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for split
+        //     res.sendFile(path.join(daaDisplaysRoot, 'multi.html'));
+        // });
+        // app.get('/single', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
+        // });
+        // app.get('/single-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for single
+        //     res.sendFile(path.join(daaDisplaysRoot, 'single.html'));
+        // });
+        // app.get('/top', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
+        // });
+        // app.get('/top-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for top
+        //     res.sendFile(path.join(daaDisplaysRoot, 'top.html'));
+        // });
+        // app.get('/3d', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        // });
+        // app.get('/3d-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
+        //     res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        // });
+        // app.get('/3D', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
+        //     res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        // });
+        // app.get('/3D-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for 3d
+        //     res.sendFile(path.join(daaDisplaysRoot, '3d.html'));
+        // });
+        // app.get('/danti', (req, res) => { //lgtm [js/missing-rate-limiting]
+        //     res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
+        // });
+        // app.get('/danti-view', (req, res) => { //lgtm [js/missing-rate-limiting] alias for danti
+        //     res.sendFile(path.join(daaDisplaysRoot, 'danti.html'));
+        // });
         const daaTestFolder: string = path.join(__dirname, '../daa-test');
         app.use(express.static(daaTestFolder));
         app.get('/test', (req, res) => {
@@ -882,7 +948,7 @@ export class DAAServer {
                 this.onMessageReceived(msg, wsocket);
             });
             wsocket.on('close', () => {
-                console.info('daa-displays cliend has closed the connection');
+                console.info('daa-displays client has closed the connection');
             });
             wsocket.on('error', (err: Error) => {
                 console.error('daa-displays client connection error ', err);

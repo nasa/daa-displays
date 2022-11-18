@@ -10,7 +10,7 @@ export const indicatorsTemplate = `
 <div style="position:absolute; margin-left:-1px; margin-top:-110px; opacity:0.8;">
     <div id="{{id}}-top-hdg" style="color:#00f500; position:absolute; font-size:22px; font-family:${FONT_FAMILY}; margin-left:220px; top:58px; text-shadow:2px 2px black; opacity:0.8;">HDG</div>
     <div id="{{id}}-top-indicator" style="position:absolute;top:56px; margin-left:280px; opacity:0.8;">
-        <div id="{{id}}-top-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:78px; height: 39px;"></div>    
+        <div id="{{id}}-top-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:78px; height: 39px;"></div>
         <div id="{{id}}-top-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(45deg); width:20px; height: 20px; top:28px; left:29px;"></div>
         <div id="{{id}}-value" style="overflow:hidden; position:absolute; width:78px; height: 39px; color:white; font-size:26px; font-family:${FONT_FAMILY}; text-align: center; font-family:${FONT_FAMILY};z-index:1;">
             0
@@ -49,9 +49,9 @@ export const compassTemplate = `
     </div>
     <!-- compass -->
     <div id="{{id}}-circle" class="compass" style="transform:rotate(0deg);">
-        <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="width:635px;position:absolute;opacity:${COMPASS_OPACITY};"></object>
+        <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="position:absolute;left:0px;width:635px;opacity:${COMPASS_OPACITY};"></object>
         <!-- compass bands -->
-        <canvas id="{{id}}-bands" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute; opacity:${BANDS_OPACITY};"></canvas>
+        <canvas id="{{id}}-bands" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;left:0px;opacity:${BANDS_OPACITY};"></canvas>
         <!-- resolution bug -->
         <div id="{{id}}-resolution-bug" class="compass" style="transform:rotate(0deg); display:none;">
             <!-- indicator -->
@@ -74,7 +74,7 @@ export const compassTemplate = `
     {{/if}}
     <!-- ownship -->
     <div id="{{id}}-ownship" style="z-index:1;">
-        <div style="position:absolute; margin-left:300px; margin-top:289px;">
+        <div style="position:absolute; margin-left:301px; margin-top:289px;">
             <!-- <i class="fas fa-2x fa-location-arrow" style="color: #00fefe; transform-origin:center; transform:rotate(-45deg);"></i> -->
             <object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="height:52px;position:absolute; opacity:${OWNSHIP_OPACITY};"></object>
         </div>

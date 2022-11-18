@@ -47,10 +47,11 @@
 
 import * as utils from '../daa-utils';
 import * as WorldWind from '../wwd/worldwind.min';
-import * as serverInterface from '../utils/daa-server'
+import * as serverInterface from '../utils/daa-types'
 import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
+import { LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // standard set of locations
 export const cities = {
@@ -192,13 +193,6 @@ function _get_streetMap(t: string): WorldWind.RenderableLayer {
 }
 
 /**
- * Convenient type definitions
- */
-export type LatLon = utils.LatLon | serverInterface.LatLon;
-export type LatLonAlt = utils.LatLonAlt | serverInterface.LatLonAlt;
-export type Vector3D = utils.Vector3D | serverInterface.Vector3D;
-
-/**
  * Airspace interface, provides information on ownship and traffic
  */
 export declare interface AirspaceInterface {
@@ -214,20 +208,20 @@ export declare interface AirspaceInterface {
     view3D (): AirspaceInterface;
     recenter (pos: { lat: number, lon: number }): AirspaceInterface;
     goTo (pos: { lat: number, lon: number }): AirspaceInterface;
-    setOwnshipPosition (pos: string | LatLonAlt): AirspaceInterface;
-    setOwnshipVelocity (v: Vector3D): AirspaceInterface;
+    setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface;
+    setOwnshipVelocity (v: Vector3D<number | string>): AirspaceInterface;
     setFlightPlan (flightPlan: utils.FlightPlan): AirspaceInterface;
     setOwnshipHeading (deg: number, opt?: { nrthup?: boolean}): AirspaceInterface;
     getOwnshipHeading (): number;
     getTraffic (): AircraftInterface[];
-    setTraffic (traffic: { s: LatLonAlt, v: Vector3D, symbol: string, callSign: string }[]): AirspaceInterface;
+    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[]): AirspaceInterface;
     hideTraffic (): AirspaceInterface;
     revealTraffic (): AirspaceInterface;
     hideCallSign (): AirspaceInterface;
     revealCallSign (): AirspaceInterface;
     addGeoFencePolygon (
         id: string,
-        perimeter: LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string }, 
         opt?: {
             opacity?: number, 
@@ -237,6 +231,7 @@ export declare interface AirspaceInterface {
         }
     ) : AirspaceInterface;
     removeGeoFencePolygon (id?: string) : AirspaceInterface;
+    removeTrafficTrace (ac?: string): AirspaceInterface;
     revealFlightPlan (): AirspaceInterface;
     hideFlightPlan (): AirspaceInterface;
     revealHazardZones (): AirspaceInterface;
@@ -247,6 +242,7 @@ export declare interface AirspaceInterface {
     hideGeoFence () : AirspaceInterface;
     getCompassDivName (): string;
     getIndicatorsDivName (): string;
+    resetAirspace (): AirspaceInterface; // resets all data structures
 };
 
 /**
@@ -300,9 +296,9 @@ export class DAA_Airspace implements AirspaceInterface {
      * Constructor
      */
     constructor (opt?: { 
-        ownship?: LatLonAlt, 
-        traffic?: { s: LatLonAlt, v: Vector3D, symbol: string, callSign: string }[], 
-        flightPath?: utils.FlightPlan,
+        ownship?: LatLonAlt<number | string>, 
+        traffic?: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[], 
+        flightPlan?: utils.FlightPlan,
         canvas?: string, // canvas where the airspace will be rendered
         shader?: number, 
         godsView?: boolean, 
@@ -397,8 +393,8 @@ export class DAA_Airspace implements AirspaceInterface {
         // create flight path
         this.flightPlanVisible = !!opt.flightPlanVisible;
         this.flightPlan = new DAA_FlightPlan(this.flightPathLayer);
-        if (opt?.flightPath) {
-            this.setFlightPlan(opt.flightPath);
+        if (opt?.flightPlan) {
+            this.setFlightPlan(opt.flightPlan);
         }    
 
         // Create ownship, and make it invisible because danti renders the ownship in overlay
@@ -464,6 +460,14 @@ export class DAA_Airspace implements AirspaceInterface {
         }
     }
     /**
+     * resets all data structures
+     */
+    resetAirspace (): AirspaceInterface {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: Reset function not available in WWD, please use LeafletJS`);
+        return this;        
+    }
+    /**
      * Compass div is not supported in wwd
      */
     getCompassDivName (): string {
@@ -474,6 +478,14 @@ export class DAA_Airspace implements AirspaceInterface {
      */
     getIndicatorsDivName (): string {
         return null;
+    }
+    /**
+     * Remove traffic traces
+     */
+    removeTrafficTrace(ac?: string): AirspaceInterface {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: Traffic traces not available in WWD, please use LeafletJS`);
+        return this;
     }
     /**
      * Switch to vfr mode
@@ -579,9 +591,9 @@ export class DAA_Airspace implements AirspaceInterface {
         // wwd.navigator.range is the diagonal size of the wwd map displayed in the canvas.
         this.wwd.navigator.range = NMI * this.scaleFactor;
         if (this._traffic) {
-            this._traffic.forEach(function (aircraft) {
-                aircraft.setScale(NMI);
-            });
+            for (let i = 0; i < this._traffic?.length; i++) {
+                this._traffic[i].setScale(NMI);
+            }
         }
         if (this._ownship) {
             this._ownship.setScale(NMI);
@@ -657,20 +669,20 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Set ownship position
      */
-    setOwnshipPosition (pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): DAA_Airspace {
+    setOwnshipPosition (pos: string | LatLonAlt<number | string>): DAA_Airspace {
         if (pos) {
             if (typeof pos === "string") {
                 // remove white spaces in the name and make all small letters
                 pos = pos.replace(/\s/g, "").toLowerCase();
                 // look for the name of the city in the list of known destinations (array cities)
-                const loc: serverInterface.LatLonAlt = cities[pos];
+                const loc: LatLonAlt<number | string> = cities[pos];
                 if (loc) {
                     this._ownship.setPosition(loc);
                 } else {
                     console.error("Could not find location " + location + " :((");
                 }
             } else {
-                const position: utils.LatLonAlt = {
+                const position: LatLonAlt<number> = {
                     alt: +pos.alt,
                     lat: +pos.lat,
                     lon: +pos.lon,
@@ -687,7 +699,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Set ownship velocity
      */
-    setOwnshipVelocity (v: utils.Vector3D | serverInterface.Vector3D): DAA_Airspace {
+    setOwnshipVelocity (v: Vector3D<number | string>): DAA_Airspace {
         if (v) {
             this._ownship.setVelocity(v);
             this._ownship.refreshLabel();
@@ -758,7 +770,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Updates traffic information.
      */
-    setTraffic (traffic: { s: utils.LatLonAlt | serverInterface.LatLonAlt, v: utils.Vector3D | serverInterface.Vector3D, symbol: string, callSign: string }[]): DAA_Airspace {
+    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[]): DAA_Airspace {
         const len: number = (traffic) ? traffic.length : 0;
         if (len === undefined) {
             console.error("[daa-displays] Warning: traffic information should be an array of traffic descriptors.");
@@ -888,7 +900,7 @@ export class DAA_Airspace implements AirspaceInterface {
                 if (index < regions.length) {
                     const region: serverInterface.DAALosRegion = regions[index];
                     if (region && region.sectors) {
-                        const reg: utils.LatLonAlt[] = region.sectors.filter(reg => {
+                        const reg: LatLonAlt<number>[] = region.sectors.filter(reg => {
                             return !!reg.los;
                         }).map(reg => {
                             return { lat: +reg.lat, lon: +reg.lon, alt: +reg.alt };
@@ -911,7 +923,7 @@ export class DAA_Airspace implements AirspaceInterface {
      */
     addGeoFencePolygon (
         id: string,
-        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string }, 
         opt?: {
             opacity?: number, 

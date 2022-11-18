@@ -17,42 +17,7 @@
  *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
  *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
  *              <img src="images/daa-interactive-map.png" style="margin-left:8%; max-height:340px;" alt="DAA Interactive Map Widget (NASA Blue Matble)"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: {
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-interactive-map"], function (InteractiveMap) {
-    "use strict";
-    const map = new InteractiveMap("map", {
-        top: 54, left: 108
-    });
-    map.setPosition({ lat: 40.7128, lon: -74.0060 }); // map centered over NYC
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ * 
  * @author Paolo Masci
  * @date October 2018
  * @copyright
@@ -92,21 +57,14 @@ require(["widgets/daa-displays/daa-interactive-map"], function (InteractiveMap) 
  **/
 import * as utils from './daa-utils';
 import * as templates from './templates/daa-map-templates';
-import * as serverInterface from './utils/daa-server'
+import * as serverInterface from './utils/daa-types'
 import { AirspaceInterface, cities, DAA_Airspace } from './daa-map-components/daa-airspace';
 import { GeoFence } from './daa-map-components/daa-geofence';
 import { LeafletAirspace } from './daa-map-components/leaflet-airspace';
 import { LayeringMode } from './daa-map-components/leaflet-aircraft';
+import { DAA_AircraftDescriptor, LatLon, LatLonAlt, Vector3D } from './utils/daa-types';
 
-export type DaaSymbol = "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-target" | "ownship" | string;
-
-export interface DAA_AircraftDescriptor {
-    s: utils.LatLonAlt | serverInterface.LatLonAlt;
-    v: utils.Vector3D | serverInterface.Vector3D;
-    symbol: DaaSymbol;
-    callSign: string;
-}
-
+// useful constants
 export const colors = GeoFence.geofenceColors;
 export const MAP_WIDESCREEN_WIDTH: number = 1496; // 1334
 export const DEFAULT_MAP_WIDTH: number = 1054;
@@ -118,7 +76,7 @@ export const DEFAULT_MAP_HEIGHT: number = 842;
 export class InteractiveMap {
     id: string;
     heading: number;
-    pos: utils.LatLonAlt;
+    pos: LatLonAlt<number>;
     trafficDescriptor: DAA_AircraftDescriptor[];
     airspace: AirspaceInterface;
 
@@ -148,7 +106,7 @@ export class InteractiveMap {
         coords: { top?: number, left?: number },
         opt?: { 
             parent?: string, 
-            pos?: utils.LatLonAlt, 
+            pos?: LatLonAlt<number>, 
             offlineMap?: string, 
             terrainMap?: string, 
             streetMap?: string, 
@@ -157,10 +115,14 @@ export class InteractiveMap {
             view3D?: boolean,
             godsView?: boolean, 
             los?: boolean, 
-            callSignVisible?: boolean, 
+            callSignVisible?: boolean, // default: false
+            trafficTraceVisible?: boolean, // default: false
+            ownshipTraceVisible?: boolean, // default: false
             widescreen?: boolean,
             layeringMode?: LayeringMode,
-            engine?: "wwd" | "leafletjs"
+            scrollZoom?: boolean, // whether scroll and touch events can be used to zoom the map (default: false)
+            dragging?: boolean, // whether dragging the map is enabled (default: false)
+            engine?: "wwd" | "leafletjs" | "blank"
         }
     ) {
         opt = opt || {};
@@ -196,33 +158,28 @@ export class InteractiveMap {
         // - include leaflet.css in the html file, e.g., <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
         // - if daa-server is not used, update the list of folders served by their server, so leaflet.js is provided to the client, see daa-server.ts
         // - update the dependencies with "leaflet": "^1.7.1"
-        const engine: "leafletjs" | "wwd" = opt?.engine || "wwd";
-        this.airspace = (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
-            div: this.id + "-div",
-            godsView: opt.godsView,
-            los: opt.los,
-            callSignVisible: opt.callSignVisible,
-            widescreen: opt.widescreen,
-            layeringMode: opt.layeringMode
-        }) : new DAA_Airspace({
-            canvas: this.id + "-canvas",
-            offlineMap: opt.offlineMap,
-            terrainMap: opt.terrainMap,
-            streetMap: opt.streetMap,
-            terrainMode: opt.terrainMode,
-            atmosphere: opt.atmosphere,
-            godsView: opt.godsView,
-            view3D: opt.view3D,
-            los: opt.los,
-            callSignVisible: opt.callSignVisible,
-            widescreen: opt.widescreen
-        });
-        this.airspace.setOwnshipHeading(this.heading, { nrthup: true });
-        this.airspace.setZoomLevel(5); // NMI
+        const engine: "leafletjs" | "wwd" | "blank" = opt?.engine || "wwd";
+        this.airspace = 
+            (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
+                ...opt,
+                div: this.id + "-div"
+            }) : (engine === "wwd" && !opt.view3D) ? new DAA_Airspace({
+                ...opt,
+                canvas: this.id + "-canvas"
+            }) : null;
+        this.airspace?.setOwnshipHeading(this.heading, { nrthup: true });
+        this.airspace?.setZoomLevel(5); // NMI
         // enable/disable pointer events based on the type of view
         (opt.godsView) ? 
             this.enableMapPointerEvents()
                 : this.disableMapPointerEvents();
+    }
+    /**
+     * Resets all data structures
+     */
+    resetAirspace (): InteractiveMap {
+        this.airspace?.resetAirspace();
+        return this;
     }
     /**
      * Internal function enables pointer events on the map
@@ -262,7 +219,7 @@ export class InteractiveMap {
      */
     setHeading(deg: number, opt?: { nrthup?: boolean }): InteractiveMap {
         this.heading = deg;
-        this.airspace.setOwnshipHeading(deg, opt);
+        this.airspace?.setOwnshipHeading(deg, opt);
         return this;
     }
     /**
@@ -274,8 +231,8 @@ export class InteractiveMap {
      */
     showTraffic(flag: boolean): InteractiveMap {
         if (flag) {
-            this.airspace.revealTraffic();
-        } else { this.airspace.hideTraffic(); }
+            this.airspace?.revealTraffic();
+        } else { this.airspace?.hideTraffic(); }
         return this;
     }
     /**
@@ -287,8 +244,8 @@ export class InteractiveMap {
      */
     showCallSign(flag: boolean): InteractiveMap {
         if (flag) {
-            this.airspace.revealCallSign();
-        } else { this.airspace.hideCallSign(); }
+            this.airspace?.revealCallSign();
+        } else { this.airspace?.hideCallSign(); }
         return this;
     }
     /**
@@ -297,7 +254,7 @@ export class InteractiveMap {
      * A null pointer is returned if the map does not support the use of such div (e.g., wwd does not support this feature, while leaflet-js has it)
      */
     getCompassDivName (): string {
-        return this.airspace.getCompassDivName();
+        return this.airspace?.getCompassDivName();
     }
     /**
      * Utility function, returns the if of a DOM element that can be used for rendering compass indicators
@@ -305,7 +262,7 @@ export class InteractiveMap {
      * A null pointer is returned if the map does not support the use of such div (e.g., wwd does not support this feature, while leaflet-js has it)
      */
     getIndicatorsDivName (): string {
-        return this.airspace.getIndicatorsDivName();
+        return this.airspace?.getIndicatorsDivName();
     }
     /**
      * @function <a name="revealTraffic">revealTraffic</a>
@@ -314,7 +271,7 @@ export class InteractiveMap {
      * @instance
      */
     revealTraffic(): InteractiveMap {
-        this.airspace.revealTraffic();
+        this.airspace?.revealTraffic();
         return this;
     }
     /**
@@ -324,7 +281,7 @@ export class InteractiveMap {
      * @instance
      */
     hideTraffic(): InteractiveMap {
-        this.airspace.hideTraffic();
+        this.airspace?.hideTraffic();
         return this;
     }
     /**
@@ -339,7 +296,7 @@ export class InteractiveMap {
      * @instance
      */
     setZoomLevel(NMI: number): InteractiveMap {
-        this.airspace.setZoomLevel(NMI);
+        this.airspace?.setZoomLevel(NMI);
         return this;
     }
     /**
@@ -347,7 +304,7 @@ export class InteractiveMap {
      * Returns true if the zoom level was set correctly, otherwise false
      */
     trySetZoomLevel (NMI: number): boolean {
-        return this.airspace.trySetZoomLevel(NMI);
+        return this.airspace?.trySetZoomLevel(NMI);
     }
     /**
      * @function <a name="goTo">goTo</a>
@@ -356,7 +313,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    goTo(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): InteractiveMap {
+    goTo(pos: string | LatLonAlt<number | string>): InteractiveMap {
         if (typeof pos === "string") {
             // remove white spaces in the name and make all small letters
             pos = pos.replace(/\s/g, "").toLowerCase();
@@ -369,7 +326,7 @@ export class InteractiveMap {
                 lon: +pos?.lon, 
                 alt: +pos?.alt 
             };
-            this.airspace.goTo({ lat: this.pos.lat, lon: this.pos.lon });
+            this.airspace?.goTo({ lat: this.pos.lat, lon: this.pos.lon });
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
         }
@@ -382,7 +339,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setOwnshipPosition(pos: string | utils.LatLonAlt | serverInterface.LatLonAlt): InteractiveMap {
+    setOwnshipPosition(pos: string | LatLonAlt<number | string>): InteractiveMap {
         if (typeof pos === "string") {
             // remove white spaces in the name and make all small letters
             pos = pos.replace(/\s/g, "").toLowerCase();
@@ -395,20 +352,20 @@ export class InteractiveMap {
                 lon: +pos?.lon,
                 alt: +pos?.alt
             };
-            this.airspace.setOwnshipPosition(this.pos);
+            this.airspace?.setOwnshipPosition(this.pos);
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
         }
         return this;
     }
-    setOwnshipVelocity(v: utils.Vector3D | serverInterface.Vector3D): InteractiveMap {
+    setOwnshipVelocity(v: Vector3D<number | string>): InteractiveMap {
         if (v) {
-            const vel: utils.Vector3D = {
+            const vel: Vector3D<number> = {
                 x: +v?.x,
                 y: +v?.y,
                 z: +v?.z
             }
-            this.airspace.setOwnshipVelocity(vel);
+            this.airspace?.setOwnshipVelocity(vel);
         } else {
             console.error("Incorrect aircraft velocity :/ ", v);
         }
@@ -422,7 +379,7 @@ export class InteractiveMap {
      * @instance
      */
     recenter(pos: { lat: number, lon: number }): InteractiveMap {
-        this.airspace.recenter(pos);
+        this.airspace?.recenter(pos);
         return this;
     }
     /**
@@ -432,7 +389,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setPosition(pos: utils.LatLonAlt | serverInterface.LatLonAlt) {
+    setPosition(pos: LatLonAlt<number | string>) {
         this.setOwnshipPosition(pos);
         return this.goTo(pos);
     }
@@ -450,7 +407,7 @@ export class InteractiveMap {
      */
     setTrafficPosition(data: DAA_AircraftDescriptor[]) {
         this.trafficDescriptor = data;
-        this.airspace.setTraffic(data);
+        this.airspace?.setTraffic(data);
         return this;
     }
     /**
@@ -467,7 +424,7 @@ export class InteractiveMap {
      */
     setTraffic(data: DAA_AircraftDescriptor[]): InteractiveMap {
         this.trafficDescriptor = data;
-        this.airspace.setTraffic(data);
+        this.airspace?.setTraffic(data);
         return this;
     }
     /**
@@ -488,7 +445,7 @@ export class InteractiveMap {
      * @instance
      */
     view3D (): InteractiveMap {
-        this.airspace.view3D();
+        this.airspace?.view3D();
         return this;
     }
     /**
@@ -498,7 +455,7 @@ export class InteractiveMap {
      * @instance
      */
     view2D (): InteractiveMap {
-        this.airspace.view2D();
+        this.airspace?.view2D();
         return this;
     }
     /**
@@ -508,14 +465,14 @@ export class InteractiveMap {
      * @instance
      */
     terrainMode (): InteractiveMap {
-        this.airspace.terrainMode();
+        this.airspace?.terrainMode();
         return this;
     }
     /**
      * VFR map mode
      */
     vfrMode (): InteractiveMap {
-        this.airspace.vfrMode();
+        this.airspace?.vfrMode();
         return this;
     }
     /**
@@ -525,12 +482,12 @@ export class InteractiveMap {
      * @instance
      */
     streetMode (): InteractiveMap {
-        this.airspace.streetMode();
+        this.airspace?.streetMode();
         return this;
     }
     addGeoFence (
         id: string, 
-        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string },
         opt?: { 
             opacity?: number, 
@@ -539,12 +496,12 @@ export class InteractiveMap {
             showLabel?: boolean
         }
     ): InteractiveMap {
-        this.airspace.addGeoFencePolygon(id, perimeter, floor, opt);
+        this.airspace?.addGeoFencePolygon(id, perimeter, floor, opt);
         return this;
     }
     addContour (
         id: string, 
-        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string },
         opt?: { 
             opacity?: number, 
@@ -559,7 +516,7 @@ export class InteractiveMap {
     }
     addProtectedArea (
         id: string, 
-        perimeter: utils.LatLon[] | serverInterface.LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string },
         opt?: { 
             opacity?: number, 

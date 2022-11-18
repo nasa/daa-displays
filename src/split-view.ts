@@ -33,32 +33,36 @@ import { VerticalSpeedTape } from './daa-displays/daa-vertical-speed-tape';
 import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 
-import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
-import { DaidalusBand, LLAData, Region, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { ConfigData, DaaSymbol, LatLonAlt, LLAData, Region, ResolutionElement, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
-import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { ConfigData, ResolutionElement } from './daa-server/utils/daa-server';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
+import { DAAPlayer } from './daa-displays/daa-player';
+
+// widgets included in the rendered display
+export interface RenderableDisplay {
+    map: InteractiveMap,
+    compass: Compass,
+    airspeedTape: AirspeedTape,
+    altitudeTape: AltitudeTape,
+    verticalSpeedTape: VerticalSpeedTape
+    windIndicator: WindIndicator,
+    hscale?: HScale,
+    viewOptions?: ViewOptions
+};
 
 /**
  * Utility function, renders the display elements
  */
-function render(playerID: string, data: { 
-    map: InteractiveMap, 
-    compass: Compass, 
-    airspeedTape: AirspeedTape, 
-    altitudeTape: AltitudeTape,
-    verticalSpeedTape: VerticalSpeedTape,
-    windIndicator: WindIndicator
-}) {
+export function render(player: DAAPlayer, data: RenderableDisplay): void {
     const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
-    const flightData: LLAData = <LLAData> splitView.getPlayer(playerID).getCurrentFlightData();
+    const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
 
-    const bands: ScenarioDataPoint = splitView.getPlayer(playerID).getCurrentBands();
+    const bands: ScenarioDataPoint = player.getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
     const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
@@ -88,7 +92,7 @@ function render(playerID: string, data: {
         for (let i = 0; i < bands.Contours.data.length; i++) {
             if (bands.Contours.data[i].polygons) {
                 for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
-                    const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
+                    const perimeter: LatLonAlt<number | string>[] = bands.Contours.data[i].polygons[j];
                     if (perimeter && perimeter.length) {
                         const floor: { top: number, bottom: number } = {
                             top: +perimeter[0].alt + 20,
@@ -108,7 +112,7 @@ function render(playerID: string, data: {
         for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
             if (bands["Hazard Zones"].data[i].polygons) {
                 for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
-                    const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
+                    const perimeter: LatLonAlt<number | string>[] = bands["Hazard Zones"].data[i].polygons[j];
                     if (perimeter && perimeter.length) {
                         const floor: { top: number, bottom: number } = {
                             top: +perimeter[0].alt + 20,
@@ -139,15 +143,15 @@ function render(playerID: string, data: {
         data.windIndicator.setMagnitude(bands.Wind.knot);
     }
     
-    plot(playerID, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
+    plot(player, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
 }
 
 /**
  * Utility function, renders the plot diagrams
  */
-function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
+export function plot (player: DAAPlayer, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
     if (desc) {
-        splitView.getPlayer(playerID).getPlot("alerts").plotAlerts({
+        player.getPlot("alerts").plotAlerts({
             alerts: desc.bands?.Alerts?.alerts,
             step: desc.step,
             time: desc.time
@@ -163,7 +167,7 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
                                     : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution?.valunit?.val
                                     : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution?.valunit?.val
                                     : null;
-            splitView.getPlayer(playerID).getPlot(daaPlots[i].id).plotBands({
+            player.getPlot(daaPlots[i].id).plotBands({
                 bands: desc.bands[daaPlots[i].name],
                 step: desc.step,
                 time: desc.time,
@@ -177,53 +181,42 @@ function plot (playerID: string, desc: { ownship: { gs: number, vs: number, alt:
     }
 }
 
-// interactive map
-const map_left: InteractiveMap = new InteractiveMap("map-left", { 
-    top: 2, 
-    left: 6
-}, { 
-    parent: "daa-disp-left", 
-    engine: "leafletjs" 
-});
-// wind indicator
-const wind_left: WindIndicator = new WindIndicator("wind-left", { top: 690, left: 195 }, { parent: "daa-disp-left"});
-// map heading is controlled by the compass
-const compass_left: Compass = new Compass("compass-left", { top: 110, left: 215 }, { parent: "daa-disp-left", map: map_left, wind: wind_left });
-// map zoom is controlled by nmiSelector
-const hscale_left: HScale = new HScale("hscale-left", { top: 800, left: 13 }, { parent: "daa-disp-left", map: map_left, compass: compass_left });
-// map view options
-const viewOptions_left: ViewOptions = new ViewOptions("view-options-left", { top: 4, left: 13 }, { 
-    labels: [
-        "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
-    ], parent: "daa-disp-left", compass: compass_left, map: map_left 
-});
-const airspeedTape_left: AirspeedTape = new AirspeedTape("airspeed-left", { top: 100, left: 100 }, { parent: "daa-disp-left" });
-const altitudeTape_left: AltitudeTape = new AltitudeTape("altitude-left", { top: 100, left: 833 }, { parent: "daa-disp-left" });
-const verticalSpeedTape_left: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-left", { top: 210, left: 981 }, { parent: "daa-disp-left", verticalSpeedRange: 2000 });
 
-// interactive map
-const map_right: InteractiveMap = new InteractiveMap("map-right", { 
-    top: 2, 
-    left: 6
-}, { 
-    parent: "daa-disp-right",
-    engine: "leafletjs"
-});
-// wind indicator
-const wind_right: WindIndicator = new WindIndicator("wind-right", { top: 690, left: 195 }, { parent: "daa-disp-right"});
-// map heading is controlled by the compass
-const compass_right: Compass = new Compass("compass-right", { top: 110, left: 215 }, { parent: "daa-disp-right", map: map_right, wind: wind_right });
-// map zoom is controlled by nmiSelector
-const hscale_right: HScale = new HScale("hscale-right", { top: 800, left: 13 }, { parent: "daa-disp-right", map: map_right, compass: compass_right });
-// map view options
-const viewOptions_right: ViewOptions = new ViewOptions("view-options-right", { top: 4, left: 13 }, { 
-    labels: [
-        "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
-    ], parent: "daa-disp-right", compass: compass_right, map: map_right 
-});
-const airspeedTape_right: AirspeedTape = new AirspeedTape("airspeed-right", { top: 100, left: 100 }, { parent: "daa-disp-right" });
-const altitudeTape_right: AltitudeTape = new AltitudeTape("altitude-right", { top: 100, left: 833 }, { parent: "daa-disp-right" });
-const verticalSpeedTape_right: VerticalSpeedTape = new VerticalSpeedTape("vertical-speed-right", { top: 210, left: 981 }, { parent: "daa-disp-right", verticalSpeedRange: 2000 });
+/**
+ * Utility function, creates the display elements
+ */
+export function createDisplay (index: number | string): void {
+    const parent: string = `daa-disp-${index === 0 ? "left" : "right"}`;
+    // interactive map
+    const map: InteractiveMap = new InteractiveMap(`map-${index}`, { 
+        top: 2, 
+        left: 6
+    }, { 
+        parent, 
+        engine: "leafletjs" 
+    });
+    // wind indicator
+    const wind: WindIndicator = new WindIndicator(`wind-${index}`, { top: 690, left: 195 }, { parent });
+    // map heading is controlled by the compass, div names for compass and indicators are taken from the map display so the compass will be rendered under the alerts
+    const compassDivName: string = map.getCompassDivName();
+    const indicatorsDivName: string = map.getIndicatorsDivName();
+    const compass: Compass = new Compass(`compass-${index}`, { top: 110, left: 215 }, { parent: compassDivName, indicatorsDiv: indicatorsDivName, map, wind });
+    // map zoom is controlled by nmiSelector
+    const hscale: HScale = new HScale(`hscale-${index}`, { top: 790, left: 13 }, { parent, map, compass });
+    // map view options
+    const viewOptions: ViewOptions = new ViewOptions(`view-options-${index}`, { top: 4, left: 13 }, { 
+        labels: [
+            "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
+        ], parent, compass, map
+    });
+    const airspeedTape: AirspeedTape = new AirspeedTape(`airspeed-${index}`, { top: 100, left: 100 }, { parent });
+    const altitudeTape: AltitudeTape = new AltitudeTape(`altitude-${index}`, { top: 100, left: 833 }, { parent });
+    const verticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape(`vertical-speed-${index}`, { top: 210, left: 981 }, { parent, verticalSpeedRange: 2000 });
+    // save widgets in displays
+    displays[index] = {
+        map, windIndicator: wind, compass, hscale, viewOptions, airspeedTape, altitudeTape, verticalSpeedTape
+    };
+}
 
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
@@ -232,71 +225,58 @@ const daaPlots: { id: string, name: string, units: string, range: { from: number
     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
 ];
 
-const regionNames: string[] = [
-    "NONE",
-    "FAR",
-    "MID",
-    "NEAR",
-    "RECOVERY",
-    "UNKNOWN"
-];
-
+// split view instance
 const splitView: DAASplitView = new DAASplitView();
 
-// -- step
-splitView.getPlayer("left").define("step", async () => {
-    // render left
-    // await playback.getPlayer("left").render...
-    render("left", {
-        map: map_left, compass: compass_left, airspeedTape: airspeedTape_left, 
-        altitudeTape: altitudeTape_left, verticalSpeedTape: verticalSpeedTape_left,
-        windIndicator: wind_left
+// displays stores all rendered displays
+let displays: { [index:string]: RenderableDisplay } = {};
+// create all displays
+for (let i = 0; i < 2; i++) {
+    // create display
+    createDisplay(i);
+    // create player
+    const player: DAAPlayer = splitView.getPlayer(i);
+    // attach init handler
+    player.define("init", async () => {
+        await player.exec({
+            alertingLogic: player.readSelectedDaaVersion(),
+            alertingConfig: player.readSelectedDaaConfiguration(),
+            scenario: splitView.getSelectedScenario(),
+            wind: player.getSelectedWind()
+        });
+        displays[i]?.viewOptions?.applyCurrentViewOptions();
+        // apply selected display mode
+        (splitView.getMode() === "developerMode") ? developerMode() : normalMode();
     });
-});
-splitView.getPlayer("right").define("step", async () => {
-    // render right
-    render("right", {
-        map: map_right, compass: compass_right, airspeedTape: airspeedTape_right, 
-        altitudeTape: altitudeTape_right, verticalSpeedTape: verticalSpeedTape_right,
-        windIndicator: wind_right
+    // attach step handler
+    player.define("step", async () => {
+        render(player, displays[i]);
     });
-});
-// -- plot
-splitView.getPlayer("right").define("plot", () => {
-    const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
-    for (let step = 0; step < flightData?.length; step++) {
-        const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands(step);
-        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands(step);
-        splitView.getPlayer("right").setTimerJiffy("plot", () => {
-            const time: string = splitView.getTimeAt(step);
-            const lla: LLAData = flightData[step];
-            const hd: number = Compass.v2deg(lla.ownship.v);
-            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-            const vs: number = +lla.ownship.v.z;
-            const alt: number = +lla.ownship.s.alt;
-            plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight, step, time });
-            diff(bandsLeft, bandsRight, step, time); // 3.5ms
-        }, 8 * step);
-    }
-});
-splitView.getPlayer("left").define("plot", () => {
-    const flightData: LLAData[] = splitView.getPlayer("right").getFlightData();
-    for (let step = 0; step < flightData?.length; step++) {
-        // const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands(step);
-        const bandsLeft: ScenarioDataPoint = splitView.getPlayer("left").getCurrentBands(step);
-        splitView.getPlayer("left").setTimerJiffy("plot", () => {
-            const time: string = splitView.getTimeAt(step);
-            const lla: LLAData = flightData[step];
-            const hd: number = Compass.v2deg(lla.ownship.v);
-            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-            const vs: number = +lla.ownship.v.z;
-            const alt: number = +lla.ownship.s.alt;
-            plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsLeft, step, time });
-        }, 8 * step);
-    }
-});
+    // attach plot handler
+    player.define("plot", () => {
+        const flightData: LLAData[] = player.getFlightData();
+        for (let step = 0; step < flightData?.length; step++) {
+            const bands: ScenarioDataPoint = player.getCurrentBands(step);
+            // bandsRight are needed only for the player on the right, to perform a diff
+            const otherBands: ScenarioDataPoint = i > 0 ? splitView.getPlayer(i - 1).getCurrentBands(step) : null;
+            player.setTimerJiffy("plot", () => {
+                const time: string = splitView.getTimeAt(step);
+                const lla: LLAData = flightData[step];
+                const hd: number = Compass.v2deg(lla.ownship.v);
+                const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                const vs: number = +lla.ownship.v.z;
+                const alt: number = +lla.ownship.s.alt;
+                plot(player, { ownship: { hd, gs, vs: vs / 100, alt }, bands, step, time });
+                if (i > 0) {
+                    diff(player, otherBands, bands, step, time); // 3.5ms
+                }
+            }, 8 * step);
+        }
+    });
+}
+
 // -- diff : returns true if alerts or bands are different
-function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, step?: number, time?: string): boolean {
+function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, step?: number, time?: string): boolean {
     step = (step !== undefined) ? step : splitView.getCurrentSimulationStep();
     time = (time !== undefined) ? time : splitView.getTimeAt(step);
     bandsLeft = (bandsLeft !== undefined) ? bandsLeft : splitView.getPlayer("left").getCurrentBands();
@@ -307,20 +287,30 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
         // const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight.Alerts); // profiler 2ms
         // if (diffAlerts) {
         let alertsR: string = "";
-        if (bandsRight && bandsRight.Alerts) {
-            bandsRight.Alerts?.alerts?.forEach(alert => {
-                if (alert.alert_level > 0) {
-                    alertsR += `${alert.ac} [${alert.alert_level}]`;
+        if (bandsRight?.Alerts) {
+            for (let i = 0; i < bandsRight.Alerts?.alerts?.length; i++) {
+                if (bandsRight.Alerts.alerts[i].alert_level > 0) {
+                    alertsR += `${bandsRight.Alerts.alerts[i].ac} [${bandsRight.Alerts.alerts[i].alert_level}]`;
                 }
-            });
+            }
+            // bandsRight.Alerts?.alerts?.forEach(alert => {
+            //     if (alert.alert_level > 0) {
+            //         alertsR += `${alert.ac} [${alert.alert_level}]`;
+            //     }
+            // });
         }
         let alertsL: string = "";
-        if (bandsLeft && bandsLeft.Alerts) {
-            bandsLeft.Alerts?.alerts?.forEach(alert => {
-                if (alert.alert_level > 0) {
-                    alertsL += `${alert.ac} [${alert.alert_level}]`; 
+        if (bandsLeft?.Alerts) {
+            for (let i = 0; i < bandsLeft.Alerts?.alerts?.length; i++) {
+                if (bandsLeft.Alerts.alerts[i].alert_level > 0) {
+                    alertsL += `${bandsLeft.Alerts.alerts[i].ac} [${bandsLeft.Alerts.alerts[i].alert_level}]`; 
                 }
-            });
+            }
+            // bandsLeft.Alerts?.alerts?.forEach(alert => {
+            //     if (alert.alert_level > 0) {
+            //         alertsL += `${alert.ac} [${alert.alert_level}]`; 
+            //     }
+            // });
         }
         if (alertsR !== alertsL) { // 0.1ms
             splitView.getPlayer("left").getPlot("alerts").revealMarker({ step, tooltip: `Time ${time}<br>This run:<br>Alerts [ ${alertsL} ]<br>The other run:<br>Alerts [ ${alertsR} ]` });
@@ -337,20 +327,26 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
             let bandsL: { range: { from: number, to: number }, region: Region }[] = []
             //bandNames.forEach((band: string) => { // profiler 1.4ms
             if (bandsRight[plotName]?.bands?.length) {
-                bandsRight[plotName].bands.forEach((band: DaidalusBand) => {
+                const bands = bandsRight[plotName].bands;
+                for (let i = 0; i < bands?.length; i++) {
+                    const band = bands[i];
+                // .forEach((band: DaidalusBand) => {
                     // bandsR += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
                     if (band?.range) {
                         bandsR.push({ region: band.region, range: { from: Math.floor(band.range[0] * 100) / 100, to: Math.floor(band.range[1] * 100) / 100 } });
                     }
-                });
+                }
             }
             if (bandsLeft[plotName]?.bands?.length) {
-                bandsLeft[plotName].bands.forEach((band: DaidalusBand) => {
+                const bands = bandsLeft[plotName].bands;
+                for (let i = 0; i < bands?.length; i++) {
+                    const band = bands[i];
+                // .forEach((band: DaidalusBand) => {
                     // bandsL += `<br>${band} [${Math.floor(range.from * 100) / 100}, ${Math.floor(range.to * 100) / 100}]`;
                     if (band.range) {
                         bandsL.push({ region: band.region, range: { from: Math.floor(band.range[0] * 100) / 100, to: Math.floor(band.range[1] * 100) / 100 } });
                     }
-                });
+                }
             }
             bandsR = bandsR.sort((a, b) => {
                 return (a.range.from < b.range.from) ? -1 : 1;
@@ -405,121 +401,96 @@ function diff (bandsLeft?: ScenarioDataPoint, bandsRight?: ScenarioDataPoint, st
     return ans;
 }
 splitView.define("diff", diff);
-// -- init
-splitView.getPlayer("left").define("init", async () => {
-    // init left
-    await splitView.getPlayer("left").exec({
-        alertingLogic: splitView.getPlayer("left").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
-        alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario(),
-        wind: splitView.getPlayer("left").getSelectedWindSettings()
-    });
-    viewOptions_left.applyCurrentViewOptions();
-    // scale displays
-    if (developerMode && splitView.getMode() === "developerMode") {
-        developerMode();
-    } else {
-        normalMode();
-    }
-});
-splitView.getPlayer("right").define("init", async () => {
-    // init right
-    await splitView.getPlayer("right").exec({
-        alertingLogic: splitView.getPlayer("right").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
-        alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
-        scenario: splitView.getSelectedScenario(),
-        wind: splitView.getPlayer("right").getSelectedWindSettings()
-    });
-    viewOptions_right.applyCurrentViewOptions();
-    // scale displays
-    if (developerMode && splitView.getMode() === "developerMode") {
-        developerMode();
-    } else {
-        normalMode();
-    }
-});
+// // -- init
+// splitView.getPlayer("left").define("init", async () => {
+//     // init left
+//     await splitView.getPlayer("left").exec({
+//         alertingLogic: splitView.getPlayer("left").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
+//         alertingConfig: splitView.getPlayer("left").getSelectedConfiguration(),
+//         scenario: splitView.getSelectedScenario(),
+//         wind: splitView.getPlayer("left").getSelectedWindSettings()
+//     });
+//     viewOptions_left.applyCurrentViewOptions();
+//     // scale displays
+//     if (typeof developerMode === "function" && splitView.getMode() === "developerMode") {
+//         developerMode();
+//     } else {
+//         normalMode();
+//     }
+// });
+// splitView.getPlayer("right").define("init", async () => {
+//     // init right
+//     await splitView.getPlayer("right").exec({
+//         alertingLogic: splitView.getPlayer("right").getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
+//         alertingConfig: splitView.getPlayer("right").getSelectedConfiguration(),
+//         scenario: splitView.getSelectedScenario(),
+//         wind: splitView.getPlayer("right").getSelectedWindSettings()
+//     });
+//     viewOptions_right.applyCurrentViewOptions();
+//     // scale displays
+//     if (typeof developerMode === "function" && splitView.getMode() === "developerMode") {
+//         developerMode();
+//     } else {
+//         normalMode();
+//     }
+// });
 
 // -- normal mode
-function normalMode () {
-    // left
-    airspeedTape_left.defaultUnits();
-    airspeedTape_left.hideUnits();
-    airspeedTape_left.defaultStep();
-    airspeedTape_left.enableTapeSpinning();
+export function normalMode () {
+    for (let i = 0; i < 2; i++) {
+        displays[i].airspeedTape?.defaultUnits();
+        displays[i].airspeedTape?.hideUnits();
+        displays[i].airspeedTape?.defaultStep();
+        displays[i].airspeedTape?.enableTapeSpinning();
 
-    altitudeTape_left.defaultUnits();
-    altitudeTape_left.hideUnits();
-    altitudeTape_left.defaultStep();
-    altitudeTape_left.enableTapeSpinning();
+        displays[i].altitudeTape?.defaultUnits();
+        displays[i].altitudeTape?.hideUnits();
+        displays[i].altitudeTape?.defaultStep();
+        displays[i].altitudeTape?.enableTapeSpinning();
 
-    verticalSpeedTape_left.defaultUnits();
-    verticalSpeedTape_left.hideUnits();
-    verticalSpeedTape_left.hideValueBox();
-    verticalSpeedTape_left.defaultRange();
-
-    // right
-    airspeedTape_right.defaultUnits();
-    airspeedTape_right.hideUnits();
-    airspeedTape_right.defaultStep();
-    airspeedTape_right.enableTapeSpinning();
-
-    altitudeTape_right.defaultUnits();
-    altitudeTape_right.hideUnits();
-    altitudeTape_right.defaultStep();
-    altitudeTape_right.enableTapeSpinning();
-
-    verticalSpeedTape_right.defaultUnits();
-    verticalSpeedTape_right.hideUnits();
-    verticalSpeedTape_right.hideValueBox();
-    verticalSpeedTape_right.defaultRange();
+        displays[i].verticalSpeedTape?.defaultUnits();
+        displays[i].verticalSpeedTape?.hideUnits();
+        displays[i].verticalSpeedTape?.hideValueBox();
+        displays[i].verticalSpeedTape?.defaultRange();
+    }
 }
 
 // -- developer mode
-async function developerMode (): Promise<void> {
-    const configData_left: ConfigData = await splitView.getPlayer("left").loadSelectedConfiguration();
-    const configData_right: ConfigData = await splitView.getPlayer("right").loadSelectedConfiguration();
+export async function developerMode (): Promise<void> {
+    for (let i = 0; i < 2; i++) {
+        const configData: ConfigData = await splitView.getPlayer(i).loadSelectedConfiguration();
+        if (configData) {
+            displays[i].airspeedTape?.setUnits(configData["horizontal-speed"].units);
+            displays[i].airspeedTape?.setRange(configData["horizontal-speed"]);
+            displays[i].airspeedTape?.revealUnits();
+            displays[i].airspeedTape?.disableTapeSpinning();
 
-    // left
-    airspeedTape_left.setUnits(configData_left["horizontal-speed"].units);
-    airspeedTape_left.setRange(configData_left["horizontal-speed"]);
-    airspeedTape_left.revealUnits();
-    airspeedTape_left.disableTapeSpinning();
+            displays[i].altitudeTape?.setUnits(configData.altitude.units);
+            displays[i].altitudeTape?.setRange(configData.altitude);
+            displays[i].altitudeTape?.revealUnits();
+            displays[i].altitudeTape?.disableTapeSpinning();
 
-    altitudeTape_left.setUnits(configData_left.altitude.units);
-    altitudeTape_left.setRange(configData_left.altitude);
-    altitudeTape_left.revealUnits();
-    altitudeTape_left.disableTapeSpinning();
-
-    verticalSpeedTape_left.setUnits(configData_right["vertical-speed"].units);
-    verticalSpeedTape_left.revealUnits();
-    verticalSpeedTape_left.setRange(configData_left["vertical-speed"]);
-    verticalSpeedTape_left.showValueBox();
-
-    // right
-    airspeedTape_right.setUnits(configData_right["horizontal-speed"].units);
-    airspeedTape_right.setRange(configData_right["horizontal-speed"]);
-    airspeedTape_right.revealUnits();
-    airspeedTape_right.disableTapeSpinning();
-
-    altitudeTape_right.setUnits(configData_right.altitude.units);
-    altitudeTape_right.setRange(configData_right.altitude);
-    altitudeTape_right.revealUnits();
-    altitudeTape_right.disableTapeSpinning();
-
-    verticalSpeedTape_right.setUnits(configData_right["vertical-speed"].units);
-    verticalSpeedTape_right.revealUnits();
-    verticalSpeedTape_right.setRange(configData_right["vertical-speed"]);
-    verticalSpeedTape_right.showValueBox();
+            displays[i].verticalSpeedTape?.setUnits(configData["vertical-speed"].units);
+            displays[i].verticalSpeedTape?.revealUnits();
+            displays[i].verticalSpeedTape?.setRange(configData["vertical-speed"]);
+            displays[i].verticalSpeedTape?.showValueBox();
+        } else {
+            console.warn(`[split-view] developerMode / player ${i} -- config data is null`);
+        }
+    }
 }
 
-async function createPlayer(args: SplitConfig) {
+/**
+ * Utility function, creates the split view player elements
+ */
+async function createPlayer (args: SplitConfig) {
     splitView.appendNavbar();
     splitView.appendSidePanelView();
     await splitView.appendScenarioSelector();
     await splitView.appendWindSettings({ fromToSelectorVisible: true });
-    await splitView.appendWellClearVersionSelector();
-    await splitView.appendWellClearConfigurationSelector();
-    splitView.selectConfiguration("DO_365A_no_SUM");
+    await splitView.appendDaaVersionSelector();
+    await splitView.appendDaaConfigurationSelector();
+    await splitView.selectDaaConfiguration("DO_365A_no_SUM");
     splitView.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp-left", "daa-disp-right" ]
@@ -584,18 +555,18 @@ async function createPlayer(args: SplitConfig) {
     splitView.appendActivationPanel({
         parent: "activation-controls"
     });
+    // activate player
     await splitView.activate({ developerMode: true });
-
     // auto-load scenario+config if they are specified in the browser
     if (args) {
         if (args.scenario) {
             splitView.selectScenario(args.scenario);
         }
         if (args.configLeft) {
-            await splitView.getPlayer("left").selectConfiguration(args.configLeft);
+            await splitView.getPlayer("left").selectDaaConfiguration(args.configLeft);
         }
         if (args.configRight) {
-            await splitView.getPlayer("right").selectConfiguration(args.configRight);
+            await splitView.getPlayer("right").selectDaaConfiguration(args.configRight);
         }
         await splitView.loadSelectedScenario();
     }

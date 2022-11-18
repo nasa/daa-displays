@@ -37,19 +37,32 @@
  * TERMINATION OF THIS AGREEMENT.
  **/
 
-import { VFR_CHARTS } from "aeronav/vfr-charts";
+import { VFR_CHARTS } from "../../aeronav/vfr-charts";
 import * as utils from "../daa-utils";
-import * as server from "../utils/daa-server";
+import * as server from "../utils/daa-types";
 import { Aircraft, AircraftInterface } from "./daa-aircraft";
-import { AirspaceInterface, cities, LatLon, LatLonAlt, Vector3D } from "./daa-airspace";
+import { AirspaceInterface, cities } from "./daa-airspace";
 import * as L from "leaflet";
-import { DaaSymbol, DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
-import { LayeringMode, LeafletAircraft } from "./leaflet-aircraft";
+import { DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
+import { LayeringMode, LeafletAircraft, OWNSHIP_COLOR } from "./leaflet-aircraft";
 import { GeoFence } from "./daa-geofence";
+import { DaaSymbol } from "../daa-utils";
+import { AlertKind, LatLon, LatLonAlt, Vector3D } from "../utils/daa-types";
 
 // font size/family used for labels
 export const FONT_SIZE: number = 28; //px
 export const FONT_FAMILY: string = "sans-serif";
+
+// color of the flight plan
+export const MAGENTA_LINE_COLOR: string = "magenta";
+// width of the flight plan
+export const DEFAULT_FLIGHT_PLAN_WIDTH: number = 6; // px
+// width of the aircraft trace
+export const DEFAULT_TRACE_WIDTH: number = 3; // px
+// opacity of the aircraft trace
+export const DEFAULT_TRACE_OPACITY: number = 0.8;
+// max length of the trace
+export const MAX_TRACE_LEN: number = 32; // waypoints
 
 // openstreet providers, see https://leaflet-extras.github.io/leaflet-providers/preview/
 export interface TileProvider { server: string, credict: string };
@@ -138,17 +151,32 @@ export const ZINDEX = {
     street: 0,
     vfr: 10,
     flightPlan: 20,
+    trafficTrace: 20,
     ownship: 30,
     contour: 40,
     hazards: 50,
     traffic: 60
 };
 
+// useful types
+export interface RenderableFlightPlan { poly: L.Polyline, markers: L.Marker[], plan: utils.FlightPlan };
+export interface RenderableTrafficTrace { polys: L.Polyline[], trace: utils.FlightPlan, level?: AlertKind };
+export type TrafficTraceMap = {[id: string]: RenderableTrafficTrace }; // id is the aircraft tail number
+export type BlobsMap = {[id: string]: L.Polygon}; // id is the blob identifier
+export type WCVolumesMap = {[id: string]: L.Polygon}; // id is the wcv identifier
+
+// CSS classes
+export enum AirspaceCSS {
+    DAA_FLIGHT_PLAN = "daa-flight-plan",
+    DAA_TRAFFIC_TRACE = "daa-traffic-trace",
+    DAA_OWNSHIP_TRACE = "daa-ownship-trace"
+};
+
 /**
  * Airspace implemented with Leafletjs
  */
 export class LeafletAirspace implements AirspaceInterface {
-    // map object where the airspace layers will be renderes
+    // map object where the airspace layers will be rendered. Multiple maps are used to enable finer layering of map elements (e.g., traffic is always displayed on the top layer)
     protected lworlds: L.Map[];
 
     // airspace layers for rendering different kind of objects
@@ -157,6 +185,7 @@ export class LeafletAirspace implements AirspaceInterface {
     protected streetLayer: L.Layer; // openmap street layer
     protected vfrLayer: L.LayerGroup; // vfr charts layer
     protected flightPlanLayer: L.LayerGroup; // flight plan layer
+    protected aircraftTraceLayer: L.LayerGroup; // trace layer (traffic + ownship)
     protected contoursLayer: L.LayerGroup; // contours layer
     protected hazardZonesLayer: L.LayerGroup; // hazard zones layer
 
@@ -178,10 +207,16 @@ export class LeafletAirspace implements AirspaceInterface {
     // layering mode for traffic
     protected layeringMode: LayeringMode = LayeringMode.byAlertLevel;
 
-    // contours
-    protected contours: {[id: string]: L.Polygon} = {};
-    // hazard zones
-    protected hazardZones: {[id: string]: L.Polygon} = {};
+    // contours (blobs)
+    protected contours: BlobsMap = {};
+    // hazard zones (well-clear volumes)
+    protected hazardZones: WCVolumesMap = {};
+    // flight plan
+    protected flightPlan: RenderableFlightPlan = null;
+    // traffic traces
+    protected trafficTrace: TrafficTraceMap = {};
+    // ownship trace
+    protected ownshipTrace: RenderableTrafficTrace = null;
 
     // navigator heading, keeps track of the ownship heading in nrthup mode
     protected navigator_heading: number = 0;
@@ -190,28 +225,36 @@ export class LeafletAirspace implements AirspaceInterface {
     protected nmi: number;
 
     // flags
-    protected godsView: boolean; // whether the view is airspace-centric (true) or ownship-centric (false)
-    protected callSignVisible: boolean; // whether call signs are visible
-    protected trafficVisible: boolean; // whether traffic aircraft are visible
+    protected godsView: boolean = false; // whether the view is airspace-centric (true) or ownship-centric (false)
+    protected callSignVisible: boolean = false; // whether call signs are visible
+    protected trafficVisible: boolean = true; // whether traffic aircraft are visible
     protected hazardZonesVisible: boolean = false; // whether hazard zones are visible
     protected contoursVisible: boolean = false; // whether contours are visible
     protected flightPlanVisible: boolean = false; // whether the flight path is visible
+    protected trafficTraceVisible: boolean = false; // whether traffic traces are visible
+    protected ownshipTraceVisible: boolean = false; // whether the ownship trace is visible
 
     /**
      * Constructor
      */
     constructor(opt?: { 
-        ownship?: LatLonAlt, 
-        traffic?: { s: LatLonAlt, v: Vector3D, symbol: string, callSign: string }[], 
-        flightPath?: utils.FlightPlan,
         div?: string, // div where the airspace will be rendered
+        ownship?: LatLonAlt<number | string>, 
+        traffic?: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[], 
+        flightPlan?: utils.FlightPlan,
+        trafficTrace?: utils.FlightTrace,
+        ownshipTrace?: utils.FlightTrace,
         godsView?: boolean, 
         los?: boolean, 
         callSignVisible?: boolean, // default: false
         trafficVisible?: boolean,  // default: true
         flightPlanVisible?: boolean, // default: false
+        trafficTraceVisible?: boolean, // default: false
+        ownshipTraceVisible?: boolean, // default: false
         widescreen?: boolean, // default: false
-        layeringMode?: LayeringMode // default: byAlertLevel
+        layeringMode?: LayeringMode, // default: byAlertLevel
+        scrollZoom?: boolean, // default: false
+        dragging?: boolean // default: false
     }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -225,6 +268,8 @@ export class LeafletAirspace implements AirspaceInterface {
         this.callSignVisible = !!opt.callSignVisible;
         this.trafficVisible = opt.trafficVisible !== undefined ? !!opt.trafficVisible : true;
         this.flightPlanVisible = !!opt.flightPlanVisible;
+        this.trafficTraceVisible = !!opt.trafficTraceVisible;
+        this.ownshipTraceVisible = !!opt.ownshipTraceVisible;
         this.layeringMode = opt.layeringMode !== LayeringMode.byAltitudeLevel ? LayeringMode.byAlertLevel : LayeringMode.byAltitudeLevel;
 
         const width: number = opt?.widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH;
@@ -241,7 +286,7 @@ export class LeafletAirspace implements AirspaceInterface {
         .leaflet-tile {
             filter: brightness(55%) contrast(140%) grayscale(55%) hue-rotate(20deg);
         }
-        .daa-flight-plan {
+        .${AirspaceCSS.DAA_FLIGHT_PLAN} {
             filter: drop-shadow(2px 2px 1px black);
             -webkit-filter: drop-shadow(2px 2px 1px black);
             opacity: 0.8;
@@ -274,6 +319,15 @@ export class LeafletAirspace implements AirspaceInterface {
             top: ${this.godsView ? 0 : -height}px !important;
             left: ${this.godsView ? 0 : -width}px !important;
             background: transparent !important;
+        }
+        .leaflet-control-zoom-in {
+            text-decoration:none !important;
+        }
+        .leaflet-control-zoom-out {
+            text-decoration:none !important;
+        }
+        #${opt.div}-traffic .leaflet-control-attribution {
+            display: none;
         }
         </style>`);
 
@@ -324,6 +378,7 @@ export class LeafletAirspace implements AirspaceInterface {
         this.createContoursLayer();
         this.createHazardZonesLayer();
         this.createFlightPlanLayer();
+        this.createTrafficTraceLayer();
 
         // create leaflet view in the div
         const center: [ number, number ] = [ +opt?.ownship?.lat, +opt?.ownship?.lon ];
@@ -337,6 +392,11 @@ export class LeafletAirspace implements AirspaceInterface {
                 zoomSnap,
                 zoomDelta,
                 zoomControl: this.godsView,
+                scrollWheelZoom: !!opt?.scrollZoom,
+                touchZoom: !!opt?.scrollZoom,
+                doubleClickZoom: !!opt?.scrollZoom,
+                boxZoom: !!opt?.scrollZoom,
+                dragging: !!opt?.dragging,
                 layers: [
                     this.streetLayer,
                     this.vfrLayer
@@ -348,7 +408,13 @@ export class LeafletAirspace implements AirspaceInterface {
                 zoomSnap,
                 zoomDelta,
                 zoomControl: this.godsView,
+                scrollWheelZoom: !!opt?.scrollZoom,
+                touchZoom: !!opt?.scrollZoom,
+                doubleClickZoom: !!opt?.scrollZoom,
+                boxZoom: !!opt?.scrollZoom,
+                dragging: !!opt?.dragging,
                 layers: [
+                    this.aircraftTraceLayer,
                     this.flightPlanLayer,
                     this.ownshipLayer,
                     this.contoursLayer,
@@ -359,6 +425,18 @@ export class LeafletAirspace implements AirspaceInterface {
         ];
         // add scale to the traffic map
         L.control.scale().addTo(this.lworlds[1]);
+
+        // propagate drag and zoom events between worlds
+        this.lworlds[1].on("drag", ((evt: L.LeafletEvent) => {
+            const center: L.LatLng = this.lworlds[1].getCenter();
+            const zoom: number = this.lworlds[1].getZoom();
+            this.lworlds[0].setView(center, zoom, { animate: false });
+        }));
+        this.lworlds[1].on("zoomend", ((evt: L.LeafletEvent) => {
+            const center: L.LatLng = this.lworlds[1].getCenter();
+            const zoom: number = this.lworlds[1].getZoom();
+            this.lworlds[0].setView(center, zoom, { animate: false });
+        }));
 
         // enable/disable pointer events based on the type of view
         (this.godsView) ? 
@@ -510,6 +588,12 @@ export class LeafletAirspace implements AirspaceInterface {
         this.flightPlanLayer = L.layerGroup([]).setZIndex(ZINDEX.flightPlan);
     }
     /**
+     * Internal function, creates traffic trace layer
+     */
+    protected createTrafficTraceLayer (): void {
+        this.aircraftTraceLayer = L.layerGroup([]).setZIndex(ZINDEX.trafficTrace);
+    }
+    /**
      * Tries to set the zoom level to the given NMI
      * Valid NMI levels range between [0.08..320]
      */
@@ -603,7 +687,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     recenter(pos: { lat: number; lon: number; }): AirspaceInterface {
         if (pos) {
-            const currentPosition: LatLon = this._ownship?.getPosition();
+            const currentPosition: LatLon<number> = this._ownship?.getPosition();
             if (currentPosition) {
                 const lat: number = !isNaN(+pos.lat) ? pos.lat : currentPosition.lat;
                 const lon: number = !isNaN(+pos.lon) ? pos.lon : currentPosition.lon;
@@ -618,7 +702,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Centers the map to a given location. The ownship position is kept unchanged.
      */
-    goTo(pos: LatLon): AirspaceInterface {
+    goTo (pos: LatLon<number | string>): AirspaceInterface {
         if (pos) {
             for (let i = 0; i < this.lworlds.length; i++) {
                 this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
@@ -631,20 +715,20 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Set ownship position and centers the map on the ownship
      */
-    setPosition(pos: LatLonAlt) {
+    setPosition (pos: LatLonAlt<number | string>) {
         this.setOwnshipPosition(pos);
         return this.goTo(pos);
     }
     /**
      * Set ownship position
      */
-    setOwnshipPosition(pos: string | LatLonAlt): AirspaceInterface {
+    setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface {
         if (pos) {
             if (typeof pos === "string") {
                 // remove white spaces in the name and make all small letters
                 pos = pos.replace(/\s/g, "").toLowerCase();
                 // look for the name of the city in the list of known destinations (array cities)
-                const loc: LatLonAlt = cities[pos];
+                const loc: LatLonAlt<number> = cities[pos];
                 if (loc) {
                     this._ownship?.setPosition(loc);
                     this._ownship?.refresh();
@@ -652,13 +736,18 @@ export class LeafletAirspace implements AirspaceInterface {
                     console.error("Could not find location " + location + " :((");
                 }
             } else {
-                const position: utils.LatLonAlt = {
+                const position: LatLonAlt<number> = {
                     alt: +pos?.alt || 0,
                     lat: +pos?.lat || 0,
                     lon: +pos?.lon || 0,
                 };
                 this._ownship?.setPosition(position);
                 this._ownship?.refresh();
+                // update ownship trace
+                const waypoint: utils.WayPoint = {
+                    lla: { lat: position.lat, lon: position.lon, alt: position.alt }
+                };
+                this.updateOwnshipTrace(waypoint);
             }
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
@@ -668,7 +757,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Set ownship velocity
      */
-    setOwnshipVelocity(v: Vector3D): AirspaceInterface {
+    setOwnshipVelocity (v: Vector3D<number | string>): AirspaceInterface {
         if (v) {
             this._ownship.setVelocity(v);
         }
@@ -676,29 +765,41 @@ export class LeafletAirspace implements AirspaceInterface {
     }
     /**
      * Sets a flight plan
+     * If a current flight plan is already set, the current flight plan is replaced with those passed to the function
      */
-    setFlightPlan(flightPlan: utils.FlightPlan): AirspaceInterface {
-        if (flightPlan) {
-            const color: string = "magenta";
-            const latlngs: L.LatLngExpression[] = flightPlan?.map((elem: utils.WayPoint) => {
+    setFlightPlan (plan: utils.FlightPlan, opt?: { color: string, traceWidth?: number, traceOpacity?: number }): AirspaceInterface {
+        // remove old flight plan if any exists
+        this.clearCurrentFlightPlan();
+        // update rendered elements
+        if (plan) {
+            const color: string = opt?.color || MAGENTA_LINE_COLOR;
+            const traceWidth: number = opt?.traceWidth || DEFAULT_FLIGHT_PLAN_WIDTH;
+            const traceOpacity: number = isFinite(opt?.traceOpacity) ? opt.traceOpacity : DEFAULT_TRACE_OPACITY;
+            const latlngs: L.LatLngExpression[] = plan?.map((elem: utils.WayPoint) => {
                 return [+elem?.lla?.lat || 0, +elem?.lla?.lon || 0];
             }) || [];
-            const labels: string[] = flightPlan?.map((elem: utils.WayPoint) => {
+            const labels: string[] = plan?.map((elem: utils.WayPoint) => {
                 return elem?.label || "";
             }) || [];
-            // append polyline and waypoint
-            if (latlngs?.length) {
-                L.polyline(latlngs, {
+            // append polyline and waypoints
+            if (latlngs?.length) { // sanity check
+                const poly: L.Polyline = L.polyline(latlngs, {
                     color,
-                    weight: 6, // stroke width
-                    className: `daa-flight-plan`
-                }).addTo(this.flightPlanLayer);
+                    weight: traceWidth, // stroke width
+                    opacity: traceOpacity,
+                    className: AirspaceCSS.DAA_FLIGHT_PLAN
+                });
+                poly.addTo(this.flightPlanLayer);
+                const markers: L.Marker[] = [];
                 for (let i = 0; i < latlngs.length; i++) {
-                    const icon: L.DivIcon = this.createWaypointIcon(labels[i]);
-                    L.marker(latlngs[i], {
+                    const icon: L.DivIcon = this.createWaypointIcon({ label: labels[i] });
+                    const marker: L.Marker = L.marker(latlngs[i], {
                         zIndexOffset: -1 // this will instruct leaflet to render the label under traffic markers
                     }).setIcon(icon).addTo(this.flightPlanLayer);
+                    markers.push(marker);
                 }
+                // save flight plan
+                this.flightPlan = { poly, markers: [], plan };
             }
             // update visibility
             this.flightPlanVisible ? this.revealFlightPlan() : this.hideFlightPlan();
@@ -706,14 +807,246 @@ export class LeafletAirspace implements AirspaceInterface {
         return this;
     }
     /**
+     * Clears (i.e., removes) the current flight plan
+     */
+    clearCurrentFlightPlan (): AirspaceInterface {
+        if (this.flightPlan) {
+            // remove rendered elements
+            this.flightPlan.poly?.remove();
+            for (let i = 0; i < this.flightPlan.markers?.length; i++) {
+                this.flightPlan.markers[i].remove();
+            }
+        }
+        this.flightPlan = null;
+        return this;
+    }
+    /**
+     * Sets traffic trace
+     * If traffic trace data are already stored, the data is replaced with those passed to the function
+     */
+    setTrafficTrace (callSign: string, level: AlertKind, trace: utils.FlightTrace, opt?: {
+        traceWidth?: number,
+        traceOpacity?: number
+    }): AirspaceInterface {
+        // remove old traffic trace
+        this.clearTrafficTrace(callSign);
+        // store new trace and re-render
+        for (let i = 0; i < trace?.length; i++) {
+            // update traffic trace
+            const color: string = utils.bugColors[level] || utils.bugColors[AlertKind.UNKNOWN];
+            const traceWidth: number = opt?.traceWidth || DEFAULT_TRACE_WIDTH;
+            const traceOpacity: number = isFinite(opt?.traceOpacity) ? opt.traceOpacity : DEFAULT_TRACE_OPACITY;
+            const latlngs: L.LatLngExpression[] = trace?.map((elem: utils.WayPoint) => {
+                return [+elem?.lla?.lat || 0, +elem?.lla?.lon || 0];
+            }) || [];
+            const rtt: RenderableTrafficTrace = { level, trace, polys: [] };
+            // render polyline and waypoints
+            if (latlngs?.length) {
+                const poly: L.Polyline = L.polyline(latlngs, {
+                    color,
+                    weight: traceWidth, // stroke width
+                    opacity: traceOpacity, // opacity level
+                    className: AirspaceCSS.DAA_TRAFFIC_TRACE
+                }).addTo(this.aircraftTraceLayer);
+                rtt.polys.push(poly);
+            }
+            this.trafficTrace[callSign] = rtt;
+            // update visibility status
+            this.trafficTraceVisible ? this.revealTrafficTrace() : this.hideTrafficTrace();
+        }
+        return this;
+    }
+    /**
+     * Returns traffic trace of aircraft ac
+     */
+    getTrafficTrace (callSign: string): utils.FlightTrace {
+        if (callSign) {
+            return this.trafficTrace[callSign]?.trace;
+        }
+        return null;
+    }
+    /**
+     * Sets traffic trace
+     * If traffic trace data are already stored, the data is replaced with those passed to the function
+     */
+    setOwnshipTrace (level: AlertKind, trace: utils.FlightTrace, opt?: {
+        traceWidth?: number,
+        traceOpacity?: number
+    }): AirspaceInterface {
+        // remove old trace
+        this.clearOwnshipTrace();
+        // store new trace and re-render
+        for (let i = 0; i < trace?.length; i++) {
+            // update trace
+            const color: string = utils.bugColors[level] || utils.bugColors[AlertKind.UNKNOWN];
+            const traceWidth: number = opt?.traceWidth || DEFAULT_TRACE_WIDTH;
+            const traceOpacity: number = isFinite(opt?.traceOpacity) ? opt.traceOpacity : DEFAULT_TRACE_OPACITY;
+            const latlngs: L.LatLngExpression[] = trace?.map((elem: utils.WayPoint) => {
+                return [+elem?.lla?.lat || 0, +elem?.lla?.lon || 0];
+            }) || [];
+            const rtt: RenderableTrafficTrace = { level, trace, polys: [] };
+            // render polyline and waypoints
+            if (latlngs?.length) {
+                const poly: L.Polyline = L.polyline(latlngs, {
+                    color,
+                    weight: traceWidth, // stroke width
+                    opacity: traceOpacity, // trace opacity
+                    className: AirspaceCSS.DAA_OWNSHIP_TRACE
+                }).addTo(this.aircraftTraceLayer);
+                rtt.polys.push(poly);
+            }
+            this.ownshipTrace = rtt;
+            // update visibility status
+            this.ownshipTraceVisible ? this.revealOwnshipTrace() : this.hideOwnshipTrace();
+        }
+        return this;
+    }
+    /**
+     * Returns traffic trace of aircraft ac
+     */
+    getOwnshipTrace (): utils.FlightTrace {
+        return this.ownshipTrace?.trace;
+    }
+    /**
+     * Utility function, returns the alert level for a given aircraft
+     */
+    getAlertLevel (callSign: string): AlertKind {
+        if (callSign) {
+            const ac: AircraftInterface = this.getTrafficAircraft(callSign);
+            return ac?.getAlertKind();
+        }
+        return AlertKind.UNKNOWN;
+    }
+    /**
+     * Clears traffic trace data for aicraft ac
+     */
+    clearTrafficTrace (callSign: string): AirspaceInterface {
+        if (callSign && this.trafficTrace && this.trafficTrace[callSign]) {
+            const polys: L.Polyline[] = this.trafficTrace[callSign].polys;
+            for (let i = 0; i < polys?.length; i++) {
+                polys[i]?.remove();
+            }
+            delete this.trafficTrace[callSign];
+        }
+        return this;
+    }
+    /**
+     * Utility function, clears all traffic traces
+     */
+    clearAllTrafficTraces (): AirspaceInterface {
+        if (this.trafficTrace) {
+            const acs: string[] = Object.keys(this.trafficTrace);
+            for (let i = 0; i< acs.length; i++) {
+                this.clearTrafficTrace(acs[i]);
+            }
+        }
+        return this;
+    }
+    /**
+     * Clears ownship trace data
+     */
+    clearOwnshipTrace (): AirspaceInterface {
+        if (this.ownshipTrace?.polys?.length) {
+            const polys: L.Polyline[] = this.ownshipTrace.polys;
+            for (let i = 0; i < polys?.length; i++) {
+                polys[i]?.remove();
+            }
+            this.ownshipTrace = null;
+        }
+        return this;
+    }
+    /**
+     * Utility function, adds a new waypoint to the trace of aircraft ac
+     */
+    updateTrafficTrace (callSign: string, wp: utils.WayPoint, opt?: {
+        level?: AlertKind, traceWidth?: number, traceOpacity?: number
+    }): AirspaceInterface {
+        if (callSign && wp) {
+            const rtt: RenderableTrafficTrace = this.trafficTrace[callSign];
+            let trace: utils.FlightTrace = rtt?.trace || [];
+            // append polyline
+            let polys: L.Polyline[] = rtt?.polys || [];
+            const level: AlertKind = opt?.level || this.getAlertLevel(callSign) || AlertKind.UNKNOWN;
+            const color: string = utils.bugColors[level] || utils.bugColors[AlertKind.UNKNOWN];
+            const traceWidth: number = opt?.traceWidth || DEFAULT_TRACE_WIDTH;
+            const traceOpacity: number = isFinite(opt?.traceOpacity) ? opt.traceOpacity : DEFAULT_TRACE_OPACITY;
+            const latlng: L.LatLngExpression = [ +wp?.lla?.lat || 0, +wp?.lla?.lon || 0 ];
+            const latlngs: L.LatLngExpression[] = trace?.length > 0 && isFinite(trace[trace.length - 1]?.lla?.lat) && isFinite(trace[trace.length - 1]?.lla?.lon) ? 
+                [ [trace[trace.length - 1].lla.lat, trace[trace.length - 1].lla.lon ], latlng ]
+                    : [ latlng ];
+            const poly = L.polyline(latlngs, {
+                color,
+                weight: traceWidth, // stroke width
+                opacity: traceOpacity,
+                className: AirspaceCSS.DAA_TRAFFIC_TRACE
+            }).addTo(this.aircraftTraceLayer);
+            // append waypoint to at the end of the current trace
+            trace.push(wp);
+            polys.push(poly);
+            // trim arrays so trace length is MAX_TRACE_LEN
+            if (trace.length > MAX_TRACE_LEN) {
+                const n: number = trace.length % MAX_TRACE_LEN;
+                trace = trace.slice(n);
+                for (let i = 0; i < n; i++) { polys[i].remove(); }
+                polys = polys.slice(n);
+            }
+            // save new segment in the trace
+            this.trafficTrace[callSign] = { polys, level, trace };
+        }
+        // update visibility status
+        this.trafficTraceVisible ? this.revealTrafficTrace() : this.hideTrafficTrace();
+        return this;
+    }
+    /**
+     * Utility function, adds a new waypoint to the ownship trace
+     */
+    updateOwnshipTrace (wp: utils.WayPoint, opt?: {
+        level?: AlertKind, traceWidth?: number, traceOpacity?: number
+    }): AirspaceInterface {
+        if (wp) {
+            const rtt: RenderableTrafficTrace = this.ownshipTrace;
+            let trace: utils.FlightTrace = rtt?.trace || [];
+            let polys: L.Polyline[] = rtt?.polys || [];
+            // append polyline
+            const color: string = opt?.level ? (utils.bugColors[opt.level] || AlertKind.UNKNOWN) : OWNSHIP_COLOR;
+            const traceWidth: number = opt?.traceWidth || DEFAULT_TRACE_WIDTH;
+            const traceOpacity: number = isFinite(opt?.traceOpacity) ? opt.traceOpacity : DEFAULT_TRACE_OPACITY;
+            const latlng: L.LatLngExpression = [ +wp?.lla?.lat || 0, +wp?.lla?.lon || 0 ];
+            const latlngs: L.LatLngExpression[] = trace?.length > 0 && isFinite(trace[trace.length - 1]?.lla?.lat) && isFinite(trace[trace.length - 1]?.lla?.lon) ? 
+                [ [trace[trace.length - 1].lla.lat, trace[trace.length - 1].lla.lon ], latlng ]
+                    : [ latlng ];
+            const poly = L.polyline(latlngs, {
+                color,
+                weight: traceWidth, // stroke width
+                opacity: traceOpacity,
+                className: AirspaceCSS.DAA_OWNSHIP_TRACE
+            }).addTo(this.aircraftTraceLayer);
+            // append waypoint to at the end of the current trace
+            polys.push(poly);
+            trace.push(wp);
+            // trim arrays so trace length is MAX_TRACE_LEN
+            if (trace.length > MAX_TRACE_LEN) {
+                const n: number = trace.length % MAX_TRACE_LEN;
+                trace = trace.slice(n);
+                for (let i = 0; i < n; i++) { polys[i].remove(); }
+                polys = polys.slice(n);
+            }
+            // save new segment in the trace
+            this.ownshipTrace = { polys, trace };
+        }
+        // update visibility status
+        this.ownshipTraceVisible ? this.revealOwnshipTrace() : this.hideOwnshipTrace();
+        return this;
+    }
+    /**
      * Internal function, creates the DOM element for a waypoint marker
      */
-    protected createWaypointIcon (label?: string): L.DivIcon {
-        label = label || "";
+    protected createWaypointIcon (desc?: { label?: string, css?: AirspaceCSS }): L.DivIcon {
+        const label: string = desc?.label || "";
         const ownshipHeading: number = this._ownship?.getHeading() || 0;
         return new L.DivIcon({
             html: `
-            <div class="daa-flight-plan daa-waypoint" style="position:absolute;">
+            <div class="${desc?.css || AirspaceCSS.DAA_FLIGHT_PLAN} daa-waypoint" style="position:absolute;">
                 <div class="marker-inner" style="position:absolute; transform-origin:center; transform:rotate(${ownshipHeading}deg); border-radius:2px; padding:4px; background:magenta;">
                     ${label}
                 </div>
@@ -751,36 +1084,53 @@ export class LeafletAirspace implements AirspaceInterface {
         return this.navigator_heading;
     }
     /**
-     * Utility function, returns the traffic vector
+     * Utility function, returns all traffic aircraft
      */
     getTraffic(): AircraftInterface[] {
         return this._traffic;
     }
     /**
+     * Utility function, returns a given traffic aircraft
+     */
+    getTrafficAircraft(ac: string): AircraftInterface {
+        if (ac && this._traffic) {
+            for (let i = 0; i < this._traffic.length; i++) {
+                if (this._traffic[i].getCallSign() === ac) {
+                    return this._traffic[i]
+                }
+            }
+        }
+        return null;
+    }
+    /**
      * Internal function, removes all traffic
      */
-    protected removeAllTraffic (): void {
+    protected removeAllTraffic (opt?: { removeTraces?: boolean }): void {
         for (let i = 0; i < this._traffic?.length; i++) {
             this._traffic[i].remove();
         }
         this._traffic = [];
+        if (opt?.removeTraces) { this.clearAllTrafficTraces(); }
     }
     /**
      * Updates traffic information.
      */
-    setTraffic(traffic: { s: LatLonAlt; v: Vector3D; symbol: DaaSymbol; callSign: string; }[]): AirspaceInterface {
+    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }[]): AirspaceInterface {
         // const nmiScale: number = this.getScale();
         // remove current traffic
         this.removeAllTraffic();
         // add new traffic
         for (let i = 0; i < traffic?.length; i++) {
+            const callSign: string = 
+                (traffic[i].callSign !== null || traffic[i].callSign !== undefined) 
+                    ? traffic[i].callSign 
+                    : `target-${i}`
             const aircraft = new LeafletAircraft(this.lworlds[1], {
                 s: traffic[i].s,
                 v: traffic[i].v,
                 symbol: (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? 
                     traffic[i].symbol : "daa-target",
-                callSign: (traffic[i].callSign !== null || traffic[i].callSign !== undefined) ?
-                    traffic[i].callSign : `target-${i}`,
+                callSign,
                 heading: Aircraft.headingFromVelocity(traffic[i].v),
                 callSignVisible: this.callSignVisible,
                 aircraftVisible: this.trafficVisible,
@@ -789,6 +1139,11 @@ export class LeafletAirspace implements AirspaceInterface {
                 layeringMode: this.layeringMode
             }, this.trafficLayer);
             this._traffic.push(aircraft);
+            // update traffic trace
+            const waypoint: utils.WayPoint = {
+                lla: { lat: +traffic[i].s.lat, lon: +traffic[i].s.lon, alt: +traffic[i].s.alt }
+            };
+            this.updateTrafficTrace(callSign, waypoint);
         }
         return this;
     }
@@ -830,6 +1185,26 @@ export class LeafletAirspace implements AirspaceInterface {
         }
         return this;
     }
+    /**
+     * Remove traffic traces
+     */
+    removeTrafficTrace (ac?: string): AirspaceInterface {
+        (ac !== undefined && ac !== null) ?
+            this.clearTrafficTrace(ac)
+                : this.clearAllTrafficTraces();
+        return this;
+    }
+    /**
+     * resets all data structures and remove traces
+     */
+    resetAirspace (): AirspaceInterface {
+        this.removeAllTraffic({ removeTraces: true });
+        this.clearOwnshipTrace();
+        return this;
+    }
+    /**
+     * @deprecated To be removed
+     */
     setLoS (regions: server.DAALosRegion[], opt?: { nmi?: number; }): AirspaceInterface {
         // TODO
         return this;
@@ -840,7 +1215,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     addGeoFencePolygon (
         id: string,
-        perimeter: LatLon[], 
+        perimeter: LatLon<number | string>[], 
         floor: { top: number | string, bottom: number | string }, 
         opt?: {
             opacity?: number, 
@@ -850,8 +1225,8 @@ export class LeafletAirspace implements AirspaceInterface {
         }
     ) : AirspaceInterface {
         const color: string = utils.getHtmlColor(opt?.color || GeoFence.defaultColor);
-        const latlngs: L.LatLngExpression[] = perimeter.map((elem: LatLon) => {
-            return [+elem.lat || 0, +elem.lon || 0];
+        const latlngs: L.LatLngExpression[] = perimeter.map((elem: LatLon<number | string>) => {
+            return [ +elem.lat || 0, +elem.lon || 0 ];
         });
         if (id && id.startsWith("c-") && this.contoursLayer) {
             const polygon: L.Polygon = L.polygon(latlngs, {
@@ -901,7 +1276,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealFlightPlan (): AirspaceInterface {
         this.flightPlanVisible = true;
-        $(".daa-flight-plan").css("display", "block");
+        $(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "block");
         return this;
     }
     /**
@@ -909,7 +1284,39 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideFlightPlan (): AirspaceInterface {
         this.flightPlanVisible = false;
-        $(".daa-flight-plan").css("display", "none");
+        $(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "none");
+        return this;
+    }
+    /**
+     * Reveals traffic trace
+     */
+    revealTrafficTrace (): AirspaceInterface {
+        this.trafficTraceVisible = true;
+        $(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "block");
+        return this;
+    }
+    /**
+     * Hides flight path
+     */
+    hideTrafficTrace (): AirspaceInterface {
+        this.trafficTraceVisible = false;
+        $(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "none");
+        return this;
+    }
+    /**
+     * Reveals ownship trace
+     */
+    revealOwnshipTrace (): AirspaceInterface {
+        this.ownshipTraceVisible = true;
+        $(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "block");
+        return this;
+    }
+    /**
+     * Hides flight path
+     */
+    hideOwnshipTrace (): AirspaceInterface {
+        this.ownshipTraceVisible = false;
+        $(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "none");
         return this;
     }
     /**

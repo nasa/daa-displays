@@ -12,43 +12,7 @@
  *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
  *              <p>Google Chrome is recommended for correct rendering of the simulation controls.</p></div>
  *              <img src="images/daa-virtual-horizon.png" style="margin-left:8%; max-height:250px;" alt="DAA Virtual Horizon Widget"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-virtual-horizon"], function (VirtualHorizon) {
-    "use strict";
-    const virtualHorizon = new VirtualHorizon("virtual-horizon", {
-        top: 54, left: 108
-    });
-    virtualHorizon.setPitch(10);
-    virtualHorizon.setRoll(30);
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ * 
  * @author Paolo Masci
  * @date October 2018
  * @copyright 
@@ -87,6 +51,7 @@ require(["widgets/daa-displays/daa-virtual-horizon"], function (VirtualHorizon) 
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-virtual-horizon-templates';
 
 export class VirtualHorizon {
@@ -147,7 +112,7 @@ export class VirtualHorizon {
      */
     setPitch (deg: number, opt?) {
         opt = opt || {};
-        let angle = (opt.units === "rad") ? utils.rad2deg(deg) : deg;
+        let angle = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
         angle = angle % 180;
         let tickHeight = 110; // 110 px corresponds to 10 degrees on the linear tape, measure obtained by inspecting the DOM
         let px = angle / 10 * tickHeight;
@@ -166,7 +131,7 @@ export class VirtualHorizon {
      */
     setRoll (deg: number, opt?) {
         opt = opt || {};
-        let angle = (opt.units === "rad") ? utils.rad2deg(deg) : deg;
+        let angle = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
         $("#" + this.id + "-angle").css("transition-duration", "500ms").css("transform", "rotate(" + angle + "deg)");
         return this;
     }

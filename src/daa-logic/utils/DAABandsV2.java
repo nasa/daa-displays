@@ -81,6 +81,7 @@ public class DAABandsV2 {
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
 	protected int    precision = 2; // Precision of printed outputs
+	protected String ownshipName = null; // ownship name
 
 	/* Units are loaded from configuration file */
 	protected String hs_units = "m/s";
@@ -134,6 +135,7 @@ public class DAABandsV2 {
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
 		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
+		System.out.println("  --ownship <tailnumber>\n\tOwnship name (tail number)");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.exit(0);
 	}
@@ -273,29 +275,31 @@ public class DAABandsV2 {
 				&& Math.abs(Units.to("deg", px.lon())) < latlonThreshold;
 	}
 
+	// @deprecated, this function was need for WWD, with LeafletJS this fix is not needed anymore
 	public void adjustThreshold () {
-		String input = ifname;
-		Daidalus daidalus = daa;
-		DaidalusFileWalker walker = new DaidalusFileWalker(input);
-		while (!walker.atEnd()) {
-			walker.readState(daidalus);
-			TrafficState ownship = daidalus.getOwnshipState();
-			if (isBelowLLAThreshold(ownship, ownship)) {
-				llaFlag = true;
-				//System.out.println("LLA flag is TRUE");
-				return;
-			}
-			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
-				TrafficState traffic = daidalus.getAircraftStateAt(idx);
-				if (isBelowLLAThreshold(ownship, traffic)) {
-					llaFlag = true;
-					//System.out.println("LLA flag is TRUE");
-					return;
-				}
-			}
-		}
-		//System.out.println("LLA flag is FALSE");
-		llaFlag = false;
+		// String input = ifname;
+		// Daidalus daidalus = daa;
+		// DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		// if (this.ownshipName != null) { walker.setOwnship(ownshipName); }
+		// while (!walker.atEnd()) {
+		// 	walker.readState(daidalus);
+		// 	TrafficState ownship = daidalus.getOwnshipState();
+		// 	if (isBelowLLAThreshold(ownship, ownship)) {
+		// 		llaFlag = true;
+		// 		//System.out.println("LLA flag is TRUE");
+		// 		return;
+		// 	}
+		// 	for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
+		// 		TrafficState traffic = daidalus.getAircraftStateAt(idx);
+		// 		if (isBelowLLAThreshold(ownship, traffic)) {
+		// 			llaFlag = true;
+		// 			//System.out.println("LLA flag is TRUE");
+		// 			return;
+		// 		}
+		// 	}
+		// }
+		// //System.out.println("LLA flag is FALSE");
+		// llaFlag = false;
 	}
 
 	/**
@@ -724,6 +728,7 @@ public class DAABandsV2 {
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
+		if (this.ownshipName != null) { walker.setOwnship(ownshipName); }
 
 		printWriter.println("{\n" + jsonHeader());
 
@@ -846,6 +851,8 @@ public class DAABandsV2 {
 				daaConfig = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
 				ofname = args[++a];
+			} else if (a < args.length - 1 && (args[a].startsWith("--ownship") || args[a].startsWith("-ownship"))) {
+				ownshipName = args[++a];
 			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
 				wind = args[++a];
 			} else if (args[a].startsWith("-")) {

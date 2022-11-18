@@ -51,7 +51,8 @@ export class CppProcess {
 		daaConfig: string, 
 		daaScenario: string, 
 		outputFileName: string,
-		wind: { deg: string, knot: string }
+		ownshipName: string,
+		wind?: { deg?: string, knot?: string }
 	},
 	opt?: { 
 		contrib?: boolean 
@@ -62,8 +63,9 @@ export class CppProcess {
 			const daaLogic: string = desc.daaLogic || "DAIDALUSv2.0.2.jar";
 			const daaConfig = desc.daaConfig || "2.x/DO_365B_no_SUM.conf";
 			const daaScenario = desc.daaScenario || "H1.daa";
-			const wind: { deg: string, knot: string } = desc.wind || { deg: "0", knot: "0" };
-			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, scenarioName: daaScenario, wind: desc.wind })
+			const ownshipName: string = desc.ownshipName;
+			const wind: { deg: string, knot: string } = { deg: desc?.wind?.deg || "0", knot: desc?.wind?.knot };
+			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, ownshipName, scenarioName: daaScenario, wind });
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
 			const f1: string = path.join("../daa-output", ver);
 			const outputFolder: string = path.join(f1, "cpp");
@@ -80,7 +82,7 @@ export class CppProcess {
 				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`./${daaLogic} --conf ${wellClearConfig} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
+					`./${daaLogic} --conf ${wellClearConfig} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${wellClearScenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);

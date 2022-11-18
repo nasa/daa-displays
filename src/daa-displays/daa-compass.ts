@@ -12,47 +12,7 @@
  *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
  *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
  *              <img src="images/daa-compass.png" style="margin-left:8%; max-height:280px;" alt="DAA Compass Widget"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-compass"], function (Compass) {
-    "use strict";
-    const compass = new Compass("compass", {
-        top: 54, left: 108
-    });
-    compass.setCompass(30);
-    compass.setBug(0);
-    compass.setBands({
-        RECOVERY: [ { from: 0, to: 30 } ], 
-        NEAR: [ { from: 30, to: 60 }, { from: -30, to: 0 } ] 
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ *
  * @author Paolo Masci
  * @date October 2018
  * @copyright 
@@ -91,11 +51,12 @@ require(["widgets/daa-displays/daa-compass"], function (Compass) {
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as math from './utils/daa-math';
 import * as templates from './templates/daa-compass-templates';
-import * as server from '../daa-server/utils/daa-server';
 import { InteractiveMap } from './daa-interactive-map';
 import { WindIndicator } from './daa-wind-indicator';
 import { fixed3 } from './daa-utils';
+import { ResolutionElement, Vector3D } from './utils/daa-types';
 
 export const singleStroke: number = 8;
 export const doubleStroke: number = 20;
@@ -133,7 +94,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    setValue(deg: number | string, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], wedgeTurning?: "left" | "right" }): void {
+    setValue (deg: number | string, opt?: { wedgeAperture?: number, wedgeConstraints?: utils.FromTo[], wedgeTurning?: "left" | "right" }): void {
         opt = opt || {};
         if (isFinite(+deg)) {
             this.previousAngle = (isNaN(this.previousAngle)) ? +deg : this.currentAngle;
@@ -246,7 +207,7 @@ class ResolutionBug {
      * @instance
      * @inner
      */
-    refresh(opt?: { wedgeAperture?: number }): void {
+    refresh (opt?: { wedgeAperture?: number }): void {
         opt = opt || {};
         this.refreshWedge(opt);
 
@@ -261,8 +222,8 @@ class ResolutionBug {
             const radius: number = canvas.width / 2;
             const centerX: number = canvas.width / 2;
             const centerY: number = canvas.width / 2;
-            const from: number = (this.wedgeSide === "right") ? 0 : -utils.deg2rad(this.wedgeAperture);
-            const to: number = (this.wedgeSide === "right") ? utils.deg2rad(this.wedgeAperture) : 0;
+            const from: number = (this.wedgeSide === "right") ? 0 : -math.deg2rad(this.wedgeAperture);
+            const to: number = (this.wedgeSide === "right") ? math.deg2rad(this.wedgeAperture) : 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
@@ -395,18 +356,19 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setCompass(data: number | string | utils.Vector3D | server.Vector3D, opt?: { units?: string }): Compass {
+    setCompass (data: number | string | Vector3D<number | string>, opt?: { units?: string }): Compass {
         opt = opt || {};
         this.previousCompassAngle = this.currentCompassAngle;
         // x and y are swapped in atan2 because axes are inverted in the map view (x is the aircraft direction, and it's facing up)
         const deg = (typeof data === "number" || typeof data === "string")? +data : 
                         (opt && opt.units === "deg") ? 
-                            utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
-                            : utils.rad2deg(Math.atan2(+data.x, +data.y));
-        const targetAngle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
+                            math.rad2deg(Math.atan2(math.deg2rad(+data.x), math.deg2rad(+data.y)))
+                                : math.rad2deg(Math.atan2(+data.x, +data.y));
+        const targetAngle: number = (opt.units === "rad") ? math.rad2deg(deg) : +deg;
         const c_rotation: number = Math.abs((((targetAngle - this.previousCompassAngle) % 360) + 360) % 360); // counter-clockwise rotation
         const cC_rotation: number = Math.abs((c_rotation - 360) % 360); // clockwise rotation
-        this.currentCompassAngle = (c_rotation < cC_rotation) ? this.previousCompassAngle + c_rotation : this.previousCompassAngle - cC_rotation;
+        const newAngle: number = (c_rotation < cC_rotation) ? this.previousCompassAngle + c_rotation : this.previousCompassAngle - cC_rotation;
+        this.currentCompassAngle = isFinite(newAngle) ? newAngle : this.currentCompassAngle;
         this._update_compass();
         return this;
     }
@@ -442,28 +404,28 @@ export class Compass {
             $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + this.currentCompassAngle + "deg)" });
             // rotate map and wind indicator accordingly
             if (this.map) { this.map.setHeading(0); }
-            if (this.wind) { this.wind.setHeading(0); }
+            if (this.wind) { this.wind.currentHeading(0); }
         } else {
             $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + -this.currentCompassAngle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "block" });
             $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" });
             // rotate map and wind indicator accordingly
             if (this.map) { this.map.setHeading(this.currentCompassAngle); }
-            if (this.wind) { this.wind.setHeading(this.currentCompassAngle); }
+            if (this.wind) { this.wind.currentHeading(this.currentCompassAngle); }
         }
     }
 
     /**
      * utility function, computes the ground speed based on a given velocity vector 
      */
-    static v2deg(data: number | utils.Vector3D | server.Vector3D, opt?: { units?: string }): number {
+    static v2deg(data: number | Vector3D<number | string>, opt?: { units?: string }): number {
         opt = opt || {};
         // x and y are swapped in atan2 because axes are inverted in the map view (x is the aircraft direction, and it's facing up)
         const deg = (typeof data === "number")? data : 
                         (opt && opt.units === "deg") ? 
-                            utils.rad2deg(Math.atan2(utils.deg2rad(+data.x), utils.deg2rad(+data.y)))
-                            : utils.rad2deg(Math.atan2(+data.x, +data.y));
-        const angle: number = (opt.units === "rad") ? utils.rad2deg(deg) : +deg;
+                            math.rad2deg(Math.atan2(math.deg2rad(+data.x), math.deg2rad(+data.y)))
+                                : math.rad2deg(Math.atan2(+data.x, +data.y));
+        const angle: number = (opt.units === "rad") ? math.rad2deg(deg) : +deg;
         return (angle % 360 + 360) % 360;
     }
     setIndicatorColor (color: string): void {
@@ -484,7 +446,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    setBug(info: number | server.ResolutionElement, opt?: { 
+    setBug(info: number | ResolutionElement, opt?: { 
         wedgeConstraints?: utils.FromTo[],
         resolutionBugColor?: string,
         wedgeAperture?: number
@@ -514,6 +476,10 @@ export class Compass {
         this.resolutionBug.hide();
         this.resetIndicatorColor();
     }
+    /**
+     * Utility function, sets max wedge aperture
+     * @param aperture (deg)
+     */
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();
@@ -568,7 +534,7 @@ export class Compass {
                 let ans = b.map((range: utils.FromTo) => {
                     if (opt.units === "rad") {
                         // if bands are given in radiants, we need to convert to degrees
-                        return { from: utils.rad2deg(range.from), to: utils.rad2deg(range.to) };
+                        return { from: math.rad2deg(range.from), to: math.rad2deg(range.to) };
                     }
                     return { from: range.from, to: range.to };
                 });
@@ -604,7 +570,7 @@ export class Compass {
             } else {
                 ctx.setLineDash([]);
             }
-            ctx.arc(this.centerX, this.centerY, this.radius, utils.deg2rad(from) - Math.PI / 2, utils.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
+            ctx.arc(this.centerX, this.centerY, this.radius, math.deg2rad(from) - Math.PI / 2, math.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
             ctx.lineWidth = (saturateRed) ? doubleStroke : singleStroke;
             ctx.strokeStyle = (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color;
             ctx.stroke();
@@ -612,7 +578,9 @@ export class Compass {
         const ctx: CanvasRenderingContext2D = this.canvas.getContext("2d");
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        Object.keys(this.bands).forEach(alert => {
+        const alerts: string[] = Object.keys(this.bands);
+        for (let i = 0; i < alerts?.length; i++) {
+            const alert: string = alerts[i];
             const arcs: utils.FromTo[] = this.bands[alert];
             let segs = [];
             // console.log(arcs);
@@ -631,7 +599,7 @@ export class Compass {
                 segments: segs,
                 color: utils.bandColors[alert].color
             });                        
-        });
+        }
         $(`#${this.id}-bands`).html(theHTML);
     }
     /**
@@ -673,7 +641,7 @@ export class Compass {
      * @memberof module:Compass
      * @instance
      */
-    resetCompass(): Compass {
+    resetCompass (): Compass {
         return this.setCompass(0);
     }
     /**

@@ -13,46 +13,7 @@
  *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
  *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
  *              <img src="images/daa-altitude-tape.png" style="margin-left:8%; max-height:250px;" alt="DAA Altitude Tape Widget"></div>
- * @example
-// file index.js (to be stored in pvsio-web/examples/demos/daa-displays/)
-require.config({
-    paths: { 
-        widgets: "../../client/app/widgets",
-        text: "../../client/app/widgets/daa-displays/lib/text/text"
-    }
-});
-require(["widgets/daa-displays/daa-altitude-tape"], function (AltitudeTape) {
-    "use strict";
-    const altitudeTape = new AltitudeTape("altitude", {
-        top: 100, left: 600
-    });
-    altitudeTape.setAltitude(4000);
-    altitudeTape.setBands({
-        RECOVERY: [ { from: 3800, to: 4000 } ], 
-        NEAR: [ { from: 4000, to: 4200 } ] 
-    });
-});
-
-// file index.html (to be stored in pvsio-web/examples/demos/daa-displays/)
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible">
-        <title></title>
-        <meta name="viewport" content="width=device-width">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/css/bootstrap.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/lib/font-awesome/5.6.1/css/all.min.css">
-        <link rel="stylesheet" href="../../client/app/widgets/daa-displays/css/daa-displays.css">
-    </head>
-    <script src="../../client/app/widgets/daa-displays/lib/underscore/underscore.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/jquery/jquery-3.3.1.slim.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/popper/popper-1.14.3.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/bootstrap/4.1.3/bootstrap.min.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/handlebars/handlebars-v4.0.12.js"></script>
-    <script src="../../client/app/widgets/daa-displays/lib/requireJS/require.js" data-main="index.js"></script>
-</html>
-
+ *
  * @author Paolo Masci
  * @date October 2018
  * @copyright 
@@ -91,8 +52,9 @@ require(["widgets/daa-displays/daa-altitude-tape"], function (AltitudeTape) {
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-altitude-templates';
-import { ResolutionElement } from '../daa-server/utils/daa-server';
+import { ResolutionElement } from './utils/daa-types';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {
@@ -162,14 +124,14 @@ class SpeedBug {
     /**
      * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
      * @desc Sets the maximum aperture of the resolution wedge.
-     * @param val (real) Aperture of the wedge (in ft)
+     * @param ft (real) Aperture of the wedge (in ft)
      * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
-    setMaxWedgeAperture (val: number | string): void {
-        if (isFinite(+val) && +val >= 0) {
-            this.maxWedgeAperture = +val;
+    setMaxWedgeAperture (ft: number | string): void {
+        if (isFinite(+ft) && +ft >= 0) {
+            this.maxWedgeAperture = +ft;
         }
     }
     /**
@@ -349,7 +311,9 @@ export class AltitudeTape {
         // otherwise bands are displayed as usual
         const saturateRed: boolean = this.resolutionBug.getWedgeAperture() > 0
             && this.bands && this.bands.RECOVERY && this.bands.RECOVERY.length > 0;
-        Object.keys(this.bands).forEach(alert => {
+        const alerts: string[] = Object.keys(this.bands);
+        for (let i = 0; i < alerts?.length; i++) {
+            const alert: string = alerts[i];
             const segments: utils.FromTo[] = this.bands[alert];
             // console.log(segments);
             let segs = [];
@@ -375,7 +339,7 @@ export class AltitudeTape {
                 dash: (saturateRed) ? false : utils.bandColors[alert].style === "dash"
             });
             // console.log(theHTML);
-        });
+        }
         $(`#${this.id}-bands`).html(theHTML);
     }
     // utility function for creating altitude tick marks
@@ -545,8 +509,8 @@ export class AltitudeTape {
     // utility function, converts values between units
     static convert (val: number, unitsFrom: string, unitsTo: string): number {
         if (unitsFrom !== unitsTo) {
-            if ((unitsFrom === "meters" || unitsFrom === "m") && (unitsTo === "feet" || unitsTo === "ft")) { return parseFloat(utils.meters2feet(val).toFixed(2)); }
-            if ((unitsFrom === "feet" || unitsFrom === "ft") && (unitsTo === "meters" || unitsTo === "m")) { return parseFloat(utils.feet2meters(val).toFixed(2)) / 100; }
+            if ((unitsFrom === "meters" || unitsFrom === "m") && (unitsTo === "feet" || unitsTo === "ft")) { return parseFloat(conversions.meters2feet(val).toFixed(2)); }
+            if ((unitsFrom === "feet" || unitsFrom === "ft") && (unitsTo === "meters" || unitsTo === "m")) { return parseFloat(conversions.feet2meters(val).toFixed(2)) / 100; }
         }
         // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
         return Math.floor(val * 100) / 100; // [profiler] 0.1ms
@@ -670,6 +634,10 @@ export class AltitudeTape {
         this.resolutionBug.hide();
         this.resetIndicatorColor();
     }
+    /**
+     * Utility function, sets max wedge aperture
+     * @param aperture (ft)
+     */
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();

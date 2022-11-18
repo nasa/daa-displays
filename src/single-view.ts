@@ -34,12 +34,11 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { DaaSymbol, InteractiveMap } from './daa-displays/daa-interactive-map';
+import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, parseDaaConfigInBrowser, DAAPlayer } from './daa-displays/daa-player';
-import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint } from './daa-displays/utils/daa-server';
+import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint, DaaSymbol, LatLonAlt } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
-import * as serverInterface from './daa-server/utils/daa-server'
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands } from './daa-displays/daa-utils';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
@@ -125,8 +124,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             for (let i = 0; i < bands.Contours.data.length; i++) {
                 if (bands.Contours.data[i].polygons) {
                     for (let j = 0; j < bands.Contours.data[i].polygons.length; j++) {
-                        const perimeter: serverInterface.LatLonAlt[] = bands.Contours.data[i].polygons[j];
-                        if (perimeter && perimeter.length) {
+                        const perimeter: LatLonAlt<number | string>[] = bands.Contours.data[i].polygons[j];
+                        if (perimeter?.length) {
                             const floor: { top: number, bottom: number } = {
                                 top: +perimeter[0].alt + 20,
                                 bottom: +perimeter[0].alt - 20
@@ -145,8 +144,8 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
                 if (bands["Hazard Zones"].data[i].polygons) {
                     for (let j = 0; j < bands["Hazard Zones"].data[i].polygons.length; j++) {
-                        const perimeter: serverInterface.LatLonAlt[] = bands["Hazard Zones"].data[i].polygons[j];
-                        if (perimeter && perimeter.length) {
+                        const perimeter: LatLonAlt<number | string>[] = bands["Hazard Zones"].data[i].polygons[j];
+                        if (perimeter?.length) {
                             const floor: { top: number, bottom: number } = {
                                 top: +perimeter[0].alt + 20,
                                 bottom: +perimeter[0].alt - 20
@@ -255,7 +254,7 @@ const compassDivName: string = map.getCompassDivName();
 const indicatorsDivName: string = map.getIndicatorsDivName();
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
-const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map, compass });
+const hscale: HScale = new HScale("hscale", { top: 790, left: 13 }, { parent: "daa-disp", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
@@ -275,10 +274,10 @@ player.define("step", async () => {
 player.define("init", async () => {
     // compute java output
     await player.exec({
-        alertingLogic: player.getSelectedWellClearVersion(), //"DAAtoPVS-1.0.1.jar",
-        alertingConfig: player.getSelectedConfiguration(),
+        alertingLogic: player.readSelectedDaaVersion(), //"DAAtoPVS-1.0.1.jar",
+        alertingConfig: player.readSelectedDaaConfiguration(),
         scenario: player.getSelectedScenario(),
-        wind: player.getSelectedWindSettings()
+        wind: player.getSelectedWind()
     });
     viewOptions.applyCurrentViewOptions();
     player.applyCurrentResolutionOptions();
@@ -392,9 +391,9 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSidePanelView();
     await player.appendScenarioSelector();
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
-    await player.appendWellClearVersionSelector({ selector: "daidalus-version" });
-    await player.appendWellClearConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectConfiguration("DO_365A_no_SUM");
+    await player.appendDaaVersionSelector({ selector: "daidalus-version" });
+    await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
+    await player.selectDaaConfiguration("DO_365A_no_SUM");
     await player.appendMonitorPanel();
     await player.appendTrafficPanel();
     // handlers can be defined only after creating the monitor panel
@@ -422,7 +421,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendActivationPanel({
         parent: "activation-controls"
     });
-    player.appendResolutionControls({
+    player.appendWedgeRangeControls({
         setCompassWedgeAperture: (aperture: string) => {
             compass.setMaxWedgeAperture(aperture);
         },
@@ -453,7 +452,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     // auto-load scenario+config if they are specified in the browser
     if (args) {
         if (args.scenario) { player.selectScenario(args.scenario); }
-        if (args.config) { await player.selectConfiguration(args.config); }
+        if (args.config) { await player.selectDaaConfiguration(args.config); }
         await player.loadSelectedScenario();
     }
 }

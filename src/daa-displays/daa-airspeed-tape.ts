@@ -47,8 +47,9 @@
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
+import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-airspeed-templates';
-import * as server from '../daa-server/utils/daa-server';
+import { ResolutionElement, Vector3D } from './utils/daa-types';
 
 // internal class, renders a resolution bug over the tape
 class SpeedBug {
@@ -101,14 +102,14 @@ class SpeedBug {
     /**
      * @function <a name="ResolutionBug_setMaxWedgeAperture">setMaxWedgeAperture</a>
      * @desc Sets the maximum aperture of the resolution wedge.
-     * @param deg (real) Aperture of the wedge (in degrees)
+     * @param knot (real) Aperture of the wedge (in knots)
      * @memberof module:ResolutionBug
      * @instance
      * @inner
      */
-    setMaxWedgeAperture (deg: number | string): void {
-        if (isFinite(+deg) && +deg >= 0) {
-            this.maxWedgeAperture = +deg;
+    setMaxWedgeAperture (knot: number | string): void {
+        if (isFinite(+knot) && +knot >= 0) {
+            this.maxWedgeAperture = +knot;
         }
     }
     /**
@@ -287,8 +288,8 @@ export class AirspeedTape {
 
     static convert (val: number, unitsFrom: string, unitsTo: string): number {
         if (unitsFrom !== unitsTo) {
-            if ((unitsFrom === "knot" || unitsFrom === "kn" || unitsFrom === "knots") && (unitsTo === "msec" || unitsTo === "ms" || unitsTo === "m/s")) { return parseFloat(utils.knots2msec(val).toFixed(2)); }
-            if ((unitsFrom === "msec" || unitsFrom === "ms" || unitsFrom === "m/s") && (unitsTo === "knot" || unitsTo === "kn" || unitsTo === "knots")) { return parseFloat(utils.msec2knots(val).toFixed(2)) / 100; }
+            if ((unitsFrom === "knot" || unitsFrom === "kn" || unitsFrom === "knots") && (unitsTo === "msec" || unitsTo === "ms" || unitsTo === "m/s")) { return parseFloat(conversions.knots2msec(val).toFixed(2)); }
+            if ((unitsFrom === "msec" || unitsFrom === "ms" || unitsFrom === "m/s") && (unitsTo === "knot" || unitsTo === "kn" || unitsTo === "knots")) { return parseFloat(conversions.msec2knots(val).toFixed(2)) / 100; }
         }
         // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
         return Math.floor(val * 100) / 100; // [profiler] 0.1ms
@@ -614,7 +615,7 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBug(info: number | server.ResolutionElement, opt?: { 
+    setBug(info: number | ResolutionElement, opt?: { 
         wedgeConstraints?: utils.FromTo[],
         resolutionBugColor?: string,
         wedgeAperture?: number
@@ -645,6 +646,10 @@ export class AirspeedTape {
         this.resolutionBug.hide();
         this.resetIndicatorColor();
     }
+    /**
+     * Utility function, sets max wedge aperture
+     * @param aperture (knots)
+     */
     setMaxWedgeAperture (aperture: number | string): void {
         this.resolutionBug.setMaxWedgeAperture(aperture);
         this.resolutionBug.refresh();
@@ -723,7 +728,7 @@ export class AirspeedTape {
      */
     setWindDirection(deg: number, opt?: { units?: string }): AirspeedTape {
         opt = opt || {};
-        this.windDirection = (opt.units === "rad") ? utils.rad2deg(deg) : deg;
+        this.windDirection = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
         this.updateWind();
         // do we need to update airspeed??
         // return this.setAirSpeed(this.ground_speed - ???);
@@ -741,7 +746,7 @@ export class AirspeedTape {
      */
     setWindSpeed(val: number, opt?: { units?: string }): AirspeedTape {
         opt = opt || {};
-        this.windSpeed = (opt.units === "msec") ? utils.msec2knots(val) : val;
+        this.windSpeed = (opt.units === "msec") ? conversions.msec2knots(val) : val;
         this.updateWind();
         // ground speed and true airspeed need to be updated every time wind speed changes
         this.updateGroundSpeed();
@@ -811,7 +816,7 @@ export class AirspeedTape {
      * @return {real} Airspeed value, in knots.
      * @memberof module:AirspeedTape
      */
-    static v2gs(v: utils.Vector3D | server.Vector3D): number {
+    static v2gs(v: Vector3D<number | string>): number {
         if (v) {
             return Math.sqrt((+v.x * +v.x) + (+v.y * +v.y));
         }

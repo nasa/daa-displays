@@ -46,7 +46,8 @@
  **/
 import * as WorldWind from '../wwd/worldwind.min';
 import * as utils from '../daa-utils';
-import * as serverInterface from '../utils/daa-server'
+import * as serverInterface from '../utils/daa-types'
+import { LatLon } from '../utils/daa-types';
 
 /**
  * WWD geofence class
@@ -119,7 +120,7 @@ export class GeoFence {
      */
     addPolygon2D (
         id: string, 
-        contour: utils.LatLon[] | serverInterface.LatLon[], 
+        contour: LatLon<number | string>[], 
         floor: { 
             top: number | string, 
             bottom: number | string 

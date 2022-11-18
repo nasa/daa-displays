@@ -1,5 +1,5 @@
 /**
- * @module WindIndicator
+ * @module TailNumberIndicator
  * @description <div style="display:flex;"><div style="width:50%;">
  *              <b>Wind Indicator Widget.</b>
  *              <p>This widget presents the true wind direction as a labelled arrow.
@@ -43,14 +43,13 @@
  * TERMINATION OF THIS AGREEMENT.
  **/
 import * as utils from './daa-utils';
-import * as templates from './templates/daa-wind-templates';
+import * as templates from './templates/daa-tail-number-templates';
 
 /**
- * Renders a wind indicator box, including:
- * - a label indicating the speed magnitute
- * - an arrow indicating the speed direction
+ * Renders a tail number indicator box, including:
+ * - a label indicating the ownship tail number
  */
-export class WindIndicator {
+export class TailNumberIndicator {
     protected id: string;
     protected top: number;
     protected left: number;
@@ -58,107 +57,55 @@ export class WindIndicator {
     protected height: number;
     protected div: HTMLElement;
 
-    protected currentAngle: number = 0;
-    protected previousAngle: number = 0;
-    protected compassHeading: number = 0;
-
-    protected magnitude: number = 0;
+    protected tailNumber: string = "";
 
     /**
-     * Constructor. Renders a wind indicatorr
+     * Constructor. Renders a tail number box.
      * @param id {String} Unique identifier to be assigned to the widget.
      * @param coords { top: number, left: number, width: number, height: number } Position and size of the widget.
      */
     constructor (id: string, coords: utils.Coords, opt?: { parent?: string}) {
         opt = opt || {};
-        this.id = id || "daa-wind";
+        this.id = id || "daa-tail-number";
 
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 690 : +coords.top;
         this.left = (isNaN(+coords.left)) ? 195 : +coords.left;
-        this.height = (isNaN(+coords.height)) ? 60 : +coords.height;
+        this.height = (isNaN(+coords.height)) ? 32 : +coords.height;
         this.width = (isNaN(+coords.width)) ? 140 : +coords.width;
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
-        const theHTML = Handlebars.compile(templates.windTemplate)({
+        const theHTML = Handlebars.compile(templates.tailNumberTemplate)({
             id: this.id,
             top: this.top,
             left: this.left,
             width: this.width,
             height: this.height,
-            color: "white"
+            color: "white",
+            tailNumber: this.tailNumber
         });
         $(this.div).html(theHTML);
         this.refresh();
     }
     /**
-     * Sets the direction of the wind arrow, given in degrees, clockwise rotation, north is 0 deg.
-     * @param deg (real) True wind direction
+     * Sets the tail number
      */
-    setAngleTo(deg: number | string): void {
-        if (isFinite(+deg)) {
-            this.previousAngle = (isNaN(this.previousAngle)) ? +deg : this.currentAngle;
-            const c_rotation: number = Math.abs((((+deg - this.previousAngle) % 360) + 360) % 360); // counter-clockwise rotation
-            const cC_rotation: number = Math.abs((c_rotation - 360) % 360); // clockwise rotation
-            this.currentAngle = (c_rotation < cC_rotation) ? this.previousAngle + c_rotation : this.previousAngle - cC_rotation;
-            this.reveal();
-            this.refresh();
-        } else {
-            this.hide();
-        }
-    }
-    /**
-     * Sets the tail of the wind arrow, given in degrees, clockwise rotation, north is 0 deg.
-     * @param deg (real) Wind direction (from)
-     */
-    setAngleFrom(deg: number | string): void {
-        const trueWindDirection: number = +deg + 180;
-        this.setAngleTo(trueWindDirection);
-    }
-    /**
-     * Returns the direction of the wind, in degrees, clockwise rotation, north is 0 deg.
-     */
-    getAngleTo (): number {
-        return this.currentAngle;
-    }
-    /**
-     * Returns the origin of the wind, in degrees, clockwise rotation, north is 0 deg.
-     */
-    getAngleFrom (): number {
-        return this.currentAngle + 180;
-    }
-    /**
-     * Sets the magnitude of the wind
-     */
-    setMagnitude (knot: number | string): void {
-        this.magnitude = +knot;
+    setTailNumber (tailNumber: string): void {
+        this.tailNumber = tailNumber;
         this.refresh();
     }
     /**
-     * Returns the magnitude of the wind
+     * Returns the tail number
      */
-    getMagnitude(): number {
-        return this.magnitude;
+    getTailNumber (): string {
+        return this.tailNumber;
     }
     /**
      * Internal function, triggers re-rendering of the indicator
      */
     refresh(): void {
-        const relativeAngle: number = this.currentAngle - this.compassHeading; // angle relative to the compass
-        const animationDuration: number = 100;
-        $(`#${this.id}-arrow`).css({
-            "transition-duration": `${animationDuration}ms`, 
-            transform: `rotate(${relativeAngle}deg)`
-        });
-        const fromDirection: number = (relativeAngle + 180) % 360; // +180 gives the angle from where the wind blows -- this is the way pilots indicate wind angles
-        $(`#${this.id}-deg`).text(Math.floor(fromDirection)); // display only integer part for angles
-        $(`.${this.id}-deg`).css({ 
-            display: (this.magnitude) ? "block" : "none"  // hide arrow and rotation value if there's no wind 
-        });
-
-        const mag: number = Math.floor(this.magnitude * 100) / 100; // display max 2 decimal digits
-        $(`#${this.id}-knot`).text(mag);
+        $(`#${this.id}-tail-number`).text(this.tailNumber);
     }
     /**
      * Reveal wind indicator
@@ -171,12 +118,5 @@ export class WindIndicator {
      */
     hide (): void {
         $(`#${this.id}`).css({ "display": "none"});
-    }
-    /**
-     * Inputs the current compass heading and uses it to adjust the wind indicator
-     */
-    currentHeading (compassHeading: number): void {
-        this.compassHeading = compassHeading;
-        this.refresh();
     }
 }

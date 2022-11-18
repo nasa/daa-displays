@@ -3,19 +3,18 @@ import { AltitudeTape } from '../daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from '../daa-displays/daa-vertical-speed-tape';
 import { Compass } from '../daa-displays/daa-compass';
 import { HScale } from '../daa-displays/daa-hscale';
-import { VirtualHorizon } from '../daa-displays/daa-virtual-horizon';
+// import { VirtualHorizon } from '../daa-displays/daa-virtual-horizon';
 import { ViewOptions } from '../daa-displays/daa-view-options';
 
-import { InteractiveMap, DAA_AircraftDescriptor } from '../daa-displays/daa-interactive-map';
+import { InteractiveMap } from '../daa-displays/daa-interactive-map';
 import * as utils from '../daa-displays/daa-utils';
 import { cities } from '../daa-displays/daa-map-components/daa-airspace';
-
-const daaSymbols = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ];
 
 import * as L from 'leaflet';
 import { LeafletAircraft } from '../daa-displays/daa-map-components/leaflet-aircraft';
 import { Aircraft } from '../daa-displays/daa-map-components/daa-aircraft';
 import { VFR_CHARTS } from '../aeronav/vfr-charts';
+import { DAA_AircraftDescriptor, LatLon } from '../daa-displays/utils/daa-types';
 
 //---
 // playground utils
@@ -173,7 +172,7 @@ let others: DAA_AircraftDescriptor[] = [
     }
 ];
 
-const geofence_perimeter: utils.LatLon[] = [
+const geofence_perimeter: LatLon<number>[] = [
     { lat: cities.hampton.lat, lon: cities.hampton.lon },
     { lat: cities.newportnews.lat, lon: cities.newportnews.lon },
     { lat: cities.poquoson.lat, lon: cities.poquoson.lon }

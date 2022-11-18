@@ -27,7 +27,7 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { ScenarioDescriptor } from "./daa-server";
+import { ScenarioDescriptor } from "./daa-types";
 import { uuid } from "./daa-utils";
 export interface Token {
     type: string,
@@ -46,25 +46,42 @@ export interface Token {
  * @date Dec 2018
  */
 export class DAAClient {
-    protected ws: WebSocket;
+    // websocket connection
+    protected ws: WebSocket = null;
+    // server address
     protected href: string;
+    // internal flag, used to enable/disable profiling info for monitoring connection latency
     protected profilingEnabled: boolean = false;
-    constructor () {
-        this.ws = null;
-    }
+    /**
+     * resolveMap associates requests, responses and Promises' resolve functions
+     * it is used to ensure resolution of send requests performed by clients 
+     */
+    protected resolveMap: {
+        [id:string]: {
+            request: Token,
+            response: ScenarioDescriptor,
+            resolve: (...args: any) => void 
+        }
+    } = {};
+    /**
+     * Utility function, connects the client to the server
+     */
     async connectToServer (href?: string): Promise<WebSocket> {
         this.href = href || document.location.href;//"http://localhost";
-        if (this.ws) { 
+        // check if a connection has already been created, if so re-use the connection
+        if (this.ws) {
+            // check if the client is already trying to connect to the server, if so wait until the connection is established
             if (this.ws.readyState === this.ws.CONNECTING) {
-                return new Promise((resolve, reject) => {
+                return await new Promise((resolve, reject) => {
                     this.ws.onopen = (evt) => {
                         resolve(this.ws);
                     };
                 });
-            } else {
-                return Promise.resolve(this.ws); 
             }
+            // already connected
+            return this.ws;
         }
+        // otherwise return a new connection
         return new Promise((resolve, reject) => {
             const wsUrl = this.href.replace("http", "ws");
             this.ws = new WebSocket(wsUrl);
@@ -73,7 +90,7 @@ export class DAAClient {
             };
             this.ws.onerror = (evt: Event) => {
                 console.error("Websocket closed unexpectedly :/", evt);
-                reject(evt);
+                resolve(null);
             };
             this.ws.onclose = (evt) => {
                 console.info("Websocket closed gracefully", evt);
@@ -85,80 +102,105 @@ export class DAAClient {
             };
         });
     }
+    /**
+     * Utility function, sends a message to the server
+     */
     async send (request: Token): Promise<any> {
         if (!this.ws) {
             await this.connectToServer();
         }
         if (this.ws) {
-            return new Promise((resolve, reject) => {
-                let desc: ScenarioDescriptor = {
-                    Info: null,
-                    Ownship: null,
-                    Wind: null, // FROM
-                    Scenario: null,
-                    Alerts: null, // alerts over time
-                    "Heading Bands": null, // bands over time
-                    "Horizontal Speed Bands": null,
-                    "Vertical Speed Bands": null,
-                    "Altitude Bands": null,
-                    "Altitude Resolution": null,
-                    "Horizontal Direction Resolution": null,
-                    "Horizontal Speed Resolution": null,
-                    "Vertical Speed Resolution": null,
-                    "Contours": null,
-                    "Hazard Zones": null,
-                    Monitors: null,
-                    Metrics: null
-                };
-                if (request && request.type) {
-                    request.id = request.id || uuid();
-                    if (this.profilingEnabled) {
-                        const time: string = new Date().toISOString();
-                        request.time = { client: { sent: time } };
-                    }
-                    // if (token.data && token.data.command && typeof token.data.command === "string") {
-                    //     // removing white space is useful to reduce the message size (e.g., to prevent stdin buffer overflow)
-                    //     token.data.command = token.data.command.split(",").map((str: string) => {
-                    //         return str.trim();
-                    //     }).join(",");
-                    // }
-                    this.ws.send(JSON.stringify(request));
-                    this.ws.onmessage = (evt): void => {
+            if (request?.type) {
+                request.id = request.id || uuid();
+                // add profiling data
+                if (this.profilingEnabled) {
+                    const time: string = new Date().toISOString();
+                    request.time = { client: { sent: time } };
+                }
+                // store resolve function
+                const res: Promise<any> = new Promise ((resolve, reject) => {
+                    this.resolveMap[request.id] = {
+                        request: request,
+                        response: {
+                            Info: null,
+                            Ownship: null,
+                            Wind: null, // FROM
+                            Scenario: null,
+                            Alerts: null, // alerts over time
+                            "Heading Bands": null, // bands over time
+                            "Horizontal Speed Bands": null,
+                            "Vertical Speed Bands": null,
+                            "Altitude Bands": null,
+                            "Altitude Resolution": null,
+                            "Horizontal Direction Resolution": null,
+                            "Horizontal Speed Resolution": null,
+                            "Vertical Speed Resolution": null,
+                            "Contours": null,
+                            "Hazard Zones": null,
+                            Monitors: null,
+                            Metrics: null
+                        },
+                        resolve
+                    };
+                });
+                // send request
+                this.ws.send(JSON.stringify(request));
+                this.ws.onmessage = (evt): void => {
+                    try {
                         const response: Token = JSON.parse(evt.data);
+                        const request: Token = this.resolveMap[response.id]?.request;
                         if (response) {
+                            // add profiling data
                             if (this.profilingEnabled && response.time?.client) {
                                 const time = new Date().getTime() - +response.time.client.sent;
-                                console.log("Time to response", time, "ms");
+                                console.log("[daa-client] Time to response", time, "ms");
                             }
                             // sanity check
                             if (response?.type === request?.type) {
                                 if (response && response.type === "exec") {
-                                    // will receive DaidalusBandsDescriptor components
+                                    // the "exec" response type spans the response over multiple messages, one for each DaidalusBandsDescriptor component
+                                    // each message is read and the data component is used to fill in the blanks in this.resolveMap[request.id].response
+                                    // this is done because the amount of data may be huge (GB) and the websocket connection would break
                                     const data: { key: string, val: any, idx: number, tot: number } = 
                                         <{ key: string, val: any, idx: number, tot: number }> response.data;
-                                    desc[data.key] = data.val;
+                                    this.resolveMap[request.id].response[data.key] = data.val;
+                                    // if this was the last data chunk, resolve the promise
                                     if (data.idx === data.tot - 1) {
-                                        response.data = desc;
-                                        resolve(response);
+                                        // copy all the data collected
+                                        response.data = this.resolveMap[request.id].response
+                                        // resolve the promise
+                                        this.resolveMap[request.id].resolve(response);
+                                        // delete the entry
+                                        delete this.resolveMap[request.id];
                                     }
                                 } else {
-                                    resolve(response);
+                                    // resolve the promise
+                                    this.resolveMap[request.id].resolve(response);
+                                    // delete the entry
+                                    delete this.resolveMap[request.id];
                                 }
                             } else {
                                 console.warn(`[daa-client] Warning: mismatch between response type and request type`, request, response);
                             }
                         } else {
-                            console.warn("token does not include timestamp from client?", response);
+                            console.warn("[daa-client] Warning: null response?", response);
                         }
-                    };
-                } else {
-                    console.error("Token type is undefined", request);
-                }    
-            });
+                    } catch (error) {
+                        console.warn("[daa-client] Warning: malformed response, unable to parse JSON structure", error);
+                    }
+                }
+                return res;
+            }
+            console.error("[daa-client] Error: Unable to send request, field 'type' is undefined in the request data structure", request);
+            return null;
         }
-        console.error("Cannot send, WebSocket closed :/");
-        return Promise.resolve(null);
+        console.error("[daa-client] Cannot send, WebSocket closed :/");
+        return null;
     }
+    /**
+     * @deprecated
+     * Utility function, used for testing purposes
+     */
     async startJasmineTestRunner(): Promise<void> {
         if (this.ws) {
             this.send({
