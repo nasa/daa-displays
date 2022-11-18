@@ -62,6 +62,7 @@ protected:
 	bool llaFlag;
 
 	std::string daaConfig;
+	std::string daaAlerter;
 	std::string scenario;
 	std::string ofname; // output file name
 	std::string ifname; // input file name
@@ -88,6 +89,7 @@ public:
 	DAABandsV2 () {
 		llaFlag = false;
 		daaConfig = "";
+		daaAlerter = "";
 		scenario = "";
 		ofname = "";
 		ifname = "";
@@ -112,6 +114,9 @@ public:
 		return daaConfig;
 	}
 
+	/**
+	 * Utility function, returns the current configuration
+	 */
 	std::string getConfig () const {
 		if (!daaConfig.empty()) {
 			int slash = daaConfig.find_last_of("/");
@@ -142,6 +147,9 @@ public:
 		return json;
 	}
 
+	/**
+	 * Prints usage instructions
+	 */
 	void printHelpMsg() const {
 		std::cout << "Version: DAIDALUS " << getVersion() << std::endl;
 		std::cout << "Generates a file that can be rendered in daa-displays" << std::endl;
@@ -152,12 +160,17 @@ public:
 		std::cout << "  --version\n\tPrint DAIDALUS version" << std::endl;
 		std::cout << "  --precision <n>\n\tPrecision of output values" << std::endl;
 		std::cout << "  --config <file.conf>\n\tLoad configuration <file.conf>" << std::endl;
+		std::cout << "  --alerter <alerter_name>\n\tSelects the given alerter for all aircraft" << std::endl;
 		std::cout << "  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are eals" << std::endl;
 		std::cout << "  --output <file.json>\n\tOutput file <file.json>" << std::endl;
 		std::cout << "  --list-monitors\nReturns the list of available monitors, in JSON format" << std::endl;
+		std::cout << "  --list-alerters <file.conf>\nReturns the list of alerters for a given configuration, in JSON format" << std::endl;
 		exit(0);
 	}
 
+	/**
+	 * Returns the list of monitors in json format
+	 */
 	std::string printMonitorList() const {
 		int n = DAAMonitorsV2::getSize();
 		std::string res = "";
@@ -167,15 +180,28 @@ public:
 		}
 		return "[ " + res + " ]";
 	}
+	/**
+	 * Returns the list of alerters in json format
+	 */
+	std::string printAlerters() const {
+		int n = daa.numberOfAlerters();
+		std::string res = "";
+		for (int i = 0; i < n; i++) {
+			// alerter numbers are 1-based
+			res += "{ \"index\": " + std::to_string(i + 1) + ", \"alerter\": \"" + daa.getAlerterAt(i + 1).getId() + "\" }";
+			if (i < n - 1) { res += ", "; }
+		}
+		return "[ " + res + " ]";
+	}
 
 	std::string region2str (const BandsRegion::Region& r) const {
 		switch (r) {
-		case BandsRegion::NONE: return "0";
-		case BandsRegion::FAR: return "1";
-		case BandsRegion::MID: return "2";
-		case BandsRegion::NEAR: return "3";
-		case BandsRegion::RECOVERY: return "4";
-		default: return "-1";
+			case BandsRegion::NONE: return "0";
+			case BandsRegion::FAR: return "1";
+			case BandsRegion::MID: return "2";
+			case BandsRegion::NEAR: return "3";
+			case BandsRegion::RECOVERY: return "4";
+			default: return "-1";
 		}
 	}
 
@@ -215,8 +241,10 @@ public:
 		}
 		out << "]" << std::endl;
 	}
-
-	bool loadDaaConfig () {
+	/**
+	 * Utility function, loads the configuration indicated in daaConfig
+	 */
+	bool loadConfig () {
 		if (!daaConfig.empty()) {
 			bool paramLoaded = daa.loadFromFile(daaConfig);
 			if (paramLoaded) {
@@ -235,7 +263,19 @@ public:
 		}
 		return false;
 	}
-
+	/**
+	 * Utility function, selects the alerter indicated in daaAlerter
+	 */
+	bool loadSelectedAlerter () {
+		if (!daaAlerter.empty()) {
+			daa.setAlerter(0, daaAlerter);
+			daa.setOwnshipCentricAlertingLogic();
+		}
+		return false;
+	}
+	/**
+	 * Utility function, loads wind data indicated in wind
+	 */
 	bool loadWind () {
 		if (!wind.empty()) {
 			double deg = 0;
@@ -264,7 +304,9 @@ public:
 	std::string jsonHeader () const {
 		std::string json = "";
 		json += "\"Info\": { \"language\": \"C++\", \"version\": \"" + getVersion() + "\"";
-		json +=	", \"configuration\": \"" + getConfig()+ "\" },\n";
+		json +=	", \"configuration\": \"" + getConfig()+ "\"";
+		if (!daaAlerter.empty()) { json +=	", \"alerter\": \"" + daaAlerter + "\""; }
+		json += " },\n";
 		json += "\"Scenario\": \"" + scenario + "\",\n";
 		Velocity wind = daa.getWindVelocityFrom();
 		json += "\"Wind\": { \"deg\": \"" + fmt(wind.compassAngle("deg")) + "\"";
@@ -716,15 +758,15 @@ public:
 
 		// config
 		std::string stats = "\"hs\": { \"min\": " + fmt(daa.getMinHorizontalSpeed(hs_units))
-																												+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
-																												+ ", \"units\": \"" + hs_units + "\" },\n"
-																												+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
-																												+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
-																												+ ", \"units\": \"" + vs_units + "\" },\n"
-																												+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
-																												+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
-																												+ ", \"units\": \"" + alt_units + "\" },\n"
-																												+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
+			+ ", \"max\": " + fmt(daa.getMaxHorizontalSpeed(hs_units))
+			+ ", \"units\": \"" + hs_units + "\" },\n"
+			+ "\"vs\": { \"min\": " + fmt(daa.getMinVerticalSpeed(vs_units))
+			+ ", \"max\": " + fmt(daa.getMaxVerticalSpeed(vs_units))
+			+ ", \"units\": \"" + vs_units + "\" },\n"
+			+ "\"alt\": { \"min\": " + fmt(daa.getMinAltitude(alt_units))
+			+ ", \"max\": " + fmt(daa.getMaxAltitude(alt_units))
+			+ ", \"units\": \"" + alt_units + "\" },\n"
+			+ "\"MostSevereAlertLevel\": \"" + Fmi(daa.mostSevereAlertLevel(1)) + "\"";
 		return stats;
 	}
 
@@ -774,6 +816,7 @@ public:
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
+			if (!daaAlerter.empty()) { loadSelectedAlerter(); }
 			jsonStats = jsonBands(
 					monitors,
 					ownshipArray, alertsArray, metricsArray,
@@ -861,19 +904,27 @@ public:
 			} else if (startsWith(args[a], "--list-monitors") || startsWith(args[a], "-list-monitors")) {
 				std::cout << printMonitorList() << std::endl;
 				exit(0);
+			} else if (startsWith(args[a], "--list-alerters") || startsWith(args[a], "-list-alerters")) {
+				// list alerters for a given configuration
+				if ((a + 1) < length) { daaConfig =  args[++a]; }
+				loadConfig();
+				std::cout << printAlerters() << std::endl;
+				exit(0);
 			} else if (startsWith(args[a], "--version") || startsWith(args[a], "-version")) {
 				std::cout << getVersion() << std::endl;
 				exit(0);
 			} else if (a < length - 1 && (startsWith(args[a], "--prec") || startsWith(args[a], "-prec") || std::strcmp(args[a], "-p") == 0)) {
-				precision = std::stoi(args[++a]);
+				if ((a + 1) < length) { precision = std::stoi(args[++a]); }
 			} else if (a < length - 1 && (startsWith(args[a], "--conf") || startsWith(args[a], "-conf") || std::strcmp(args[a], "-c") == 0)) {
-				daaConfig = args[++a];
+				if ((a + 1) < length) { daaConfig = args[++a]; }
+			} else if (a < length - 1 && (startsWith(args[a], "--alerter") || startsWith(args[a], "-alerter") || std::strcmp(args[a], "-a") == 0)) {
+				if ((a + 1) < length) { daaAlerter = args[++a]; }
 			} else if (a < length - 1 && (startsWith(args[a], "--out") || startsWith(args[a], "-out") || std::strcmp(args[a], "-o") == 0)) {
-				ofname = args[++a];
+				if ((a + 1) < length) { ofname = args[++a]; }
 			} else if (a < length - 1 && (startsWith(args[a], "--ownship") || startsWith(args[a], "-ownship"))) {
-				ownshipName = args[++a];
+				if ((a + 1) < length) { ownshipName = args[++a]; }
 			} else if (a < length - 1 && (startsWith(args[a], "--wind") || startsWith(args[a], "-wind"))) {
-				wind = args[++a];
+				if ((a + 1) < length) { wind = args[++a]; }
 			} else if (startsWith(args[a], "-")) {
 				std::cerr << "** Error: Invalid option (" << args[a] << ")" << std::endl;
 			} else {
@@ -917,7 +968,7 @@ const double DAABandsV2::latlonThreshold = 0.3;
 int main(int argc, char* argv[]) {
 	DAABandsV2 daaBands;
 	daaBands.parseCliArgs(argv, argc);
-	daaBands.loadDaaConfig();
+	daaBands.loadConfig();
 	daaBands.loadWind();
 	daaBands.walkFile();
 }

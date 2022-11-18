@@ -77,6 +77,7 @@ public class DAABandsV2 {
 	protected boolean llaFlag = false;
 
 	protected String daaConfig = null;
+	protected String daaAlerter = null;
 	protected String scenario = null;
 	protected String ofname = null; // output file name
 	protected String ifname = null; // input file name
@@ -123,6 +124,9 @@ public class DAABandsV2 {
 		return ifname;
 	}
 
+	/**
+	 * Prints usage instructions
+	 */
 	public void printHelpMsg() {
 		System.out.println("Version: DAIDALUS " + getVersion());
 		System.out.println("Generates a file that can be rendered in daa-displays");
@@ -133,10 +137,12 @@ public class DAABandsV2 {
 		System.out.println("  --version\n\tPrint DAIDALUS version");
 		System.out.println("  --precision <n>\n\tPrecision of output values");
 		System.out.println("  --config <file.conf>\n\tLoad configuration <file.conf>");
+		System.out.println("  --alerter <alerter_name>\n\tSelects the given alerter for all aircraft");
 		System.out.println("  --wind <wind_info>\n\tLoad wind vector information, a JSON object enclosed in double quotes \"{ deg: d, knot: m }\", where d and m are reals");
 		System.out.println("  --output <file.json>\n\tOutput file <file.json>");
 		System.out.println("  --ownship <tailnumber>\n\tOwnship name (tail number)");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
+		System.out.println("  --list-alerters <file.conf>\nReturns the list of alerters for a given configuration, in JSON format");
 		System.exit(0);
 	}
 
@@ -165,6 +171,23 @@ public class DAABandsV2 {
 		return "[ " + res + " ]";
 	}
 
+	/**
+	 * Returns the list of alerters in json format
+	 */
+	public String printAlerters() {
+		int n = daa.numberOfAlerters();
+		String res = "";
+		for (int i = 0; i < n; i++) {
+			// alerter numbers are 1-based
+			res += "{ \"index\": " + (i + 1) + ", \"alerter\": \"" + daa.getAlerterAt(i + 1).getId() + "\" }";
+			if (i < n - 1) { res += ", "; }
+		}
+		return "[ " + res + " ]";
+	}
+
+	/**
+	 * Utility function, prints a list in output as a JSON array
+	 */
 	public static void printArray(PrintWriter out, List<String> info, String label) {
 		out.println("\"" + label + "\": [");
 		boolean comma = false;
@@ -201,6 +224,9 @@ public class DAABandsV2 {
 		out.println(" ]");
 	}
 
+	/**
+	 * Utility function, loads the configuration indicated in daaConfig
+	 */
 	public boolean loadConfig () {
 		if (daa != null) {
 			if (daaConfig != null) {
@@ -224,7 +250,24 @@ public class DAABandsV2 {
 		}
 		return false;
 	}
-
+	/**
+	 * Utility function, selects the alerter indicated in daaAlerter
+	 */
+	public boolean loadSelectedAlerter () {
+		if (daa != null) {
+			// set alerter for ownship and traffic if an alerter has been specified at the command line
+			if (daaAlerter != null) {
+				daa.setAlerter(0, daaAlerter);
+				daa.setOwnshipCentricAlertingLogic();
+			}
+		} else {
+			System.err.println("** Error: Daidalus is not initialized.");
+		}
+		return false;
+	}
+	/**
+	 * Utility function, loads wind data indicated in wind
+	 */
 	public boolean loadWind () {
 		if (daa != null) {
 			if (wind != null) {
@@ -252,7 +295,9 @@ public class DAABandsV2 {
 	public String jsonHeader () {
 		String json = "";
 		json += "\"Info\": { \"language\": \"Java\", \"version\": \"" + getVersion() + "\""; 
-		json +=	", \"configuration\": \"" + getConfig()+ "\" },\n";
+		json +=	", \"configuration\": \"" + getConfig()+ "\"";
+		if (daaAlerter != null) { json +=	", \"alerter\": \"" + daaAlerter + "\""; }
+		json += " },\n";
 		json += "\"Scenario\": \"" + scenario + "\",\n";
 		Velocity wind = daa.getWindVelocityFrom();
 		json += "\"Wind\": { \"deg\": \"" + fmt(wind.compassAngle("deg")) + "\""; 
@@ -728,7 +773,7 @@ public class DAABandsV2 {
 
 		/* Create DaidalusFileWalker */
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
-		if (this.ownshipName != null) { walker.setOwnship(ownshipName); }
+		if (ownshipName != null) { walker.setOwnship(ownshipName); }
 
 		printWriter.println("{\n" + jsonHeader());
 
@@ -760,6 +805,7 @@ public class DAABandsV2 {
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
 			walker.readState(daa);
+			if (daaAlerter != null) { loadSelectedAlerter(); }
 			jsonStats = jsonBands(
 					monitors,
 					ownshipArray, alertsArray, metricsArray,
@@ -842,19 +888,27 @@ public class DAABandsV2 {
 			} else if (args[a].startsWith("--list-monitors") || args[a].startsWith("-list-monitors")) {
 				System.out.println(printMonitorList());
 				System.exit(0);
+			} else if (args[a].startsWith("--list-alerters") || args[a].startsWith("-list-alerters")) {
+				// list alerters for a given configuration
+				if ((a + 1) < args.length) { daaConfig = args[++a]; }
+				loadConfig();
+				System.out.println(printAlerters());
+				System.exit(0);
 			} else if (args[a].startsWith("--version") || args[a].startsWith("-version")) {
 				System.out.println(getVersion());
 				System.exit(0);
 			} else if (a < args.length - 1 && (args[a].startsWith("--prec") || args[a].startsWith("-prec") || args[a].equals("-p"))) {
-				precision = Integer.parseInt(args[++a]);
+				if (a + 1 < args.length) { precision = Integer.parseInt(args[++a]); }
 			} else if (a < args.length - 1 && (args[a].startsWith("--conf") || args[a].startsWith("-conf") || args[a].equals("-c"))) {
-				daaConfig = args[++a];
+				if (a + 1 < args.length) { daaConfig = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--alerter") || args[a].startsWith("-alerter") || args[a].equals("-a"))) {
+				if (a + 1 < args.length) { daaAlerter = args[++a]; }
 			} else if (a < args.length - 1 && (args[a].startsWith("--out") || args[a].startsWith("-out") || args[a].equals("-o"))) {
-				ofname = args[++a];
+				if (a + 1 < args.length) { ofname = args[++a]; }
 			} else if (a < args.length - 1 && (args[a].startsWith("--ownship") || args[a].startsWith("-ownship"))) {
-				ownshipName = args[++a];
+				if (a + 1 < args.length) { ownshipName = args[++a]; }
 			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
-				wind = args[++a];
+				if (a + 1 < args.length) { wind = args[++a]; }
 			} else if (args[a].startsWith("-")) {
 				System.err.println("** Warning: Invalid option (" + args[a] + ")");
 			} else {
@@ -898,7 +952,7 @@ public class DAABandsV2 {
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
-		daaBands.adjustThreshold();
+		// daaBands.adjustThreshold();
 		daaBands.loadConfig();
 		daaBands.loadWind();
 		daaBands.walkFile();
