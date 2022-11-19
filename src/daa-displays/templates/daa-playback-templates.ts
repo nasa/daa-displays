@@ -430,8 +430,21 @@ export const navbarTemplate: string = `
     z-index:1;
 }
 </style>
+<script>
+function home () {
+    let home = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+    window.location.href = home;
+}
+</script>
 <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-    <span class="navbar-brand col-sm-3 col-md-2 mr-0">DAA-Displays {{version}}</span>
+    <span class="navbar-brand col-sm-3 col-md-2 mr-0">
+        <button class="btn btn-sm btn-dark" style="width:100%;"
+            alt="Goto DAA-Displays Home Screen"
+            onclick="home();">
+            <span style="margin-right:4px;"><i class="fa fa-plane" aria-hidden="true"></i></span>
+            DAA-Displays {{version}}
+        </button>
+    </span>
     {{#if zoomables}}
     <span class="zoom-ctrl">
         <div class="input-group input-group-sm mb-3" style="margin:0px !important;">
