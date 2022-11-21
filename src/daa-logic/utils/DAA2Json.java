@@ -79,29 +79,31 @@ public class DAA2Json {
 	// 1 nautical mile is 1.15078 miles
 
 	public DAA2Json (Daidalus daidalus, String ownshipName) { daa = daidalus; this.ownshipName = ownshipName; }
+	public DAA2Json (Daidalus daidalus) { daa = daidalus; }
 
+	// @deprecated -- this was needed when using WWD
 	protected void adjustThreshold (String input, Daidalus daidalus) {
-		DaidalusFileWalker walker = new DaidalusFileWalker(input);
-		if (ownshipName != null) { walker.setOwnship(ownshipName); }
-		while (!walker.atEnd()) {
-			walker.readState(daidalus);
-			TrafficState ownship = daidalus.getOwnshipState();
-			if (isBelowLLAThreshold(ownship, ownship)) {
-				llaFlag = true;
-				// System.out.println("LLA flag is TRUE");
-				return;
-			}
-			for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
-				TrafficState traffic = daidalus.getAircraftStateAt(idx);
-				if (isBelowLLAThreshold(ownship, traffic)) {
-					llaFlag = true;
-					// System.out.println("LLA flag is TRUE");
-					return;
-				}
-			}
-		}
-		// System.out.println("LLA flag is FALSE");
-		llaFlag = false;
+		// DaidalusFileWalker walker = new DaidalusFileWalker(input);
+		// if (ownshipName != null) { walker.setOwnship(ownshipName); }
+		// while (!walker.atEnd()) {
+		// 	walker.readState(daidalus);
+		// 	TrafficState ownship = daidalus.getOwnshipState();
+		// 	if (isBelowLLAThreshold(ownship, ownship)) {
+		// 		llaFlag = true;
+		// 		// System.out.println("LLA flag is TRUE");
+		// 		return;
+		// 	}
+		// 	for (int idx = 0; idx <= daidalus.lastTrafficIndex(); idx++) {
+		// 		TrafficState traffic = daidalus.getAircraftStateAt(idx);
+		// 		if (isBelowLLAThreshold(ownship, traffic)) {
+		// 			llaFlag = true;
+		// 			// System.out.println("LLA flag is TRUE");
+		// 			return;
+		// 		}
+		// 	}
+		// }
+		// // System.out.println("LLA flag is FALSE");
+		// llaFlag = false;
 	}
 	protected boolean isBelowLLAThreshold(TrafficState ownship, TrafficState intruder) {
 		// current intruder position
@@ -239,7 +241,7 @@ public class DAA2Json {
 		String daa = "\t\"daa\": [\n"; // position array, as in the original daa file
 		String steps = "\t\"steps\": [ "; // time array
 
-		daa2json.adjustThreshold(input, daidalus);
+		// daa2json.adjustThreshold(input, daidalus);
 
 		// Process input file using DaidalusFileWalker
 		DaidalusFileWalker walker = new DaidalusFileWalker(input);
