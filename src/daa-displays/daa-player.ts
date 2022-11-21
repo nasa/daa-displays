@@ -57,7 +57,7 @@ import { ExecMsg, LLAData, ScenarioDescriptor } from '../daa-server/utils/daa-ty
 import { 
     DAAScenario, WebSocketMessage, LoadScenarioRequest, LoadConfigRequest, 
     ConfigFile, ConfigData, FlightData, Alert, AircraftMetrics, ScenarioData, 
-    ScenarioDataPoint, OwnshipState, SaveScenarioRequest, ValUnits, GetTailNumbersRequest 
+    ScenarioDataPoint, OwnshipState, SaveScenarioRequest, ValUnits, GetTailNumbersRequest, DaaServerCommand 
 } from './utils/daa-types';
 
 import * as Backbone from 'backbone';
@@ -225,9 +225,7 @@ export class DAAPlayer extends Backbone.Model {
     protected windowZoomLevel: number = 100;
     readonly minZoomLevel: number = 20;
 
-    readonly appTypes: string[] = [ "wellclear", "los", "virtual-pilot" ];
-    protected selectedAppType: string = this.appTypes[0]; 
-
+    // player modes
     protected mode: "developerMode" | "normalMode" = "normalMode";
 
     /**
@@ -281,6 +279,7 @@ export class DAAPlayer extends Backbone.Model {
     protected configInfo: ConfigFile;
     protected daaMonitors: { id: number, name: string, color: string }[] = [];
 
+    // handlers for player modes
     protected developerControls: {
         normalMode?: () => Promise<void> | void,
         developerMode?: () => Promise<void> | void
@@ -595,7 +594,7 @@ export class DAAPlayer extends Backbone.Model {
         if (data && data.scenarioName && data.scenarioContent) {
             console.log("[daa-player] Saving scenario file", data);
             const res: WebSocketMessage<string> = await this.client.send({
-                type: "save-daa-file",
+                type: DaaServerCommand.saveDaaFile,
                 data
             });
             if (res && res.data) {
@@ -1157,7 +1156,7 @@ export class DAAPlayer extends Backbone.Model {
             await this.connectToServer();
             const data: LoadScenarioRequest = { scenarioName, ownshipName: this.ownshipName };
             const res: WebSocketMessage<string> = await this.client.send({
-                type: "load-daa-file",
+                type: DaaServerCommand.loadDaaFile,
                 data
             });
             if (res?.data) {
@@ -1200,7 +1199,7 @@ export class DAAPlayer extends Backbone.Model {
     async listScenarioFiles (): Promise<string[]> {
         await this.connectToServer();
         const res: WebSocketMessage<string> = await this.client.send({
-            type: `list-${this.scenarioType}-files`
+            type: DaaServerCommand.listDaaFiles
         });
         if (res?.data) {
             const daaFiles: string[] = JSON.parse(res.data) || [];
@@ -1215,10 +1214,10 @@ export class DAAPlayer extends Backbone.Model {
             //         this._scenarios[scenario] = this._scenarios[scenario] || null;
             //     });
             // }
-            console.log(`${daaFiles.length} daa files available`, daaFiles);
+            console.log(`[daa-player] ${daaFiles.length} daa files available`, daaFiles);
             return daaFiles;
         }
-        console.error(`Error while listing daa files ${res}`);
+        console.error(`[daa-player] Error while listing daa files ${res}`);
         return null;
     }
     /**
@@ -1239,7 +1238,7 @@ export class DAAPlayer extends Backbone.Model {
         await this.connectToServer();
         const data: LoadConfigRequest = { config };
         const res: WebSocketMessage<ConfigFile> = await this.client.send({
-            type: "load-config-file",
+            type: DaaServerCommand.loadConfigFile,
             data
         });
         if (res?.data) {
@@ -1267,7 +1266,7 @@ export class DAAPlayer extends Backbone.Model {
             wind: { knot: data?.wind?.knot || "0", deg: data?.wind?.deg || "0" }
         }
         const res: WebSocketMessage<string> = await this.client.send({
-            type: `list-monitors`,
+            type: DaaServerCommand.listMonitors,
             data: msg
         });
         if (res && res.data) {
@@ -1604,7 +1603,7 @@ export class DAAPlayer extends Backbone.Model {
             this._repl[msg.daaLogic] = ws;
         }
         const res = await this._repl[msg.daaLogic].send({
-            type: "exec",
+            type: DaaServerCommand.exec,
             data: msg
         });
         try {
@@ -1673,64 +1672,64 @@ export class DAAPlayer extends Backbone.Model {
     //         };
     //     }
     // }
-    /**
-     * @function <a name="javaVirtualPilot">javaVirtualPilot</a>
-     * @description Sends a java evaluation request to the server
-     * @param virtualPilot Executable for virtual pilot, e.g., SimDaidalus_2.3_1-wind.jar (Base path is contrib/virtual-pilot/)
-     * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
-     * @memberof module:DAAPlaybackPlayer
-     * @instance
-     */
-    async javaVirtualPilot (data: {
-        virtualPilot: string,
-        alertingConfig: string,
-        scenario: string,
-        wind: { deg: string, knot: string }
-    }): Promise<{
-        err: string,
-        //scenario: .... 
-        bands: ScenarioDescriptor
-    }> {
-        const msg: ExecMsg = {
-            daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
-            daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
-            scenarioName: data.scenario || "H1.ic",
-            wind: { knot: data?.wind?.knot || "0", deg: data?.wind?.deg || "0" },
-            ownshipName: null
-        };
-        console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
-        if (!this._repl[msg.daaLogic]) {
-            const ws: DAAClient = new DAAClient();
-            await ws.connectToServer();
-            this._repl[msg.daaLogic] = ws;
-        }
-        const res = await this._repl[msg.daaLogic].send({
-            type: "java-virtual-pilot",
-            data: msg
-        });
-        try {
-            if (res && res.data) {
-                const data = JSON.parse(res.data);
-                this._bands = data;
-            }
-            console.log("Flight data ready!", this._bands);
-            return {
-                err: res.err,
-                bands: (this._bands) ? this._bands : null
-            };
-        } catch (parseError) {
-            console.error("Error while parsing JSON bands: ", parseError);
-            return {
-                err: parseError,
-                bands: null
-            };
-        }
+    // /**
+    //  * @function <a name="javaVirtualPilot">javaVirtualPilot</a>
+    //  * @description Sends a java evaluation request to the server
+    //  * @param virtualPilot Executable for virtual pilot, e.g., SimDaidalus_2.3_1-wind.jar (Base path is contrib/virtual-pilot/)
+    //  * @param alertingConfig Configuration file for the WellClear alerting logic, e.g., WC_SC_228_nom_b.txt (Base path is daa-logic/)
+    //  * @memberof module:DAAPlaybackPlayer
+    //  * @instance
+    //  */
+    // async javaVirtualPilot (data: {
+    //     virtualPilot: string,
+    //     alertingConfig: string,
+    //     scenario: string,
+    //     wind: { deg: string, knot: string }
+    // }): Promise<{
+    //     err: string,
+    //     //scenario: .... 
+    //     bands: ScenarioDescriptor
+    // }> {
+    //     const msg: ExecMsg = {
+    //         daaLogic: data.virtualPilot ||  "SimDaidalus_2.3_1-wind.jar",
+    //         daaConfig: data.alertingConfig || "1.x/WC_SC_228_nom_b.conf",
+    //         scenarioName: data.scenario || "H1.ic",
+    //         wind: { knot: data?.wind?.knot || "0", deg: data?.wind?.deg || "0" },
+    //         ownshipName: null
+    //     };
+    //     console.log(`Evaluation request for java alerting logic ${msg.daaLogic} and scenario ${msg.scenarioName}`);
+    //     if (!this._repl[msg.daaLogic]) {
+    //         const ws: DAAClient = new DAAClient();
+    //         await ws.connectToServer();
+    //         this._repl[msg.daaLogic] = ws;
+    //     }
+    //     const res = await this._repl[msg.daaLogic].send({
+    //         type: DaaServerCommand.javaVirtualPilot,
+    //         data: msg
+    //     });
+    //     try {
+    //         if (res && res.data) {
+    //             const data = JSON.parse(res.data);
+    //             this._bands = data;
+    //         }
+    //         console.log("Flight data ready!", this._bands);
+    //         return {
+    //             err: res.err,
+    //             bands: (this._bands) ? this._bands : null
+    //         };
+    //     } catch (parseError) {
+    //         console.error("Error while parsing JSON bands: ", parseError);
+    //         return {
+    //             err: parseError,
+    //             bands: null
+    //         };
+    //     }
         
-    }
-    /**
-     * Returns LoS regions for the current simulation step
-     * @deprecated
-     */
+    // }
+    // /**
+    //  * Returns LoS regions for the current simulation step
+    //  * @deprecated
+    //  */
     // getCurrentLoS (): DAALosRegion[] {
     //     if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._los) {
     //         if (this._los.LoS && this.simulationStep < this._los.LoS.length) {
@@ -1742,42 +1741,12 @@ export class DAAPlayer extends Backbone.Model {
     //     return null;
     // }
     /**
-     * Returns true if the player is using a "wellclear" app
-     */
-    wellclearMode (): void {
-        this.selectedAppType = this.appTypes[0];
-        this.scenarioType = "daa";
-    }
-    /**
-     * @deprecated
-     * Returns true if the player is using a "LoS" app
-     */
-    losMode (): void {
-        this.selectedAppType = this.appTypes[1];
-        this.scenarioType = "daa";
-    }
-    /**
-     * @deprecated
-     * Returns true if the player is using a "virtual pilot" app
-     */
-    virtualPilotMode (): void {
-        this.selectedAppType = this.appTypes[2];
-        this.scenarioType = "ic";
-    }
-    /**
-     * @deprecated
-     * Returns the player mode
-     */
-    getSelectedAppType (): string {
-        return this.selectedAppType;
-    }
-    /**
      * Connects to the server to request the list of available daidalus versions 
      */
     async getDaaVersions(): Promise<string[]> {
         await this.connectToServer();
         const res = await this.client.send({
-            type: `list-${this.selectedAppType}-versions`,
+            type: DaaServerCommand.listDaaVersions,
         });
         if (res && res.data) {
             console.log(res);
@@ -1800,7 +1769,7 @@ export class DAAPlayer extends Backbone.Model {
                 scenarioName
             }
             const ans = await this.client.send({
-                type: "get-tail-numbers",
+                type: DaaServerCommand.getTailNumbers,
                 data: req
             });
             if (ans?.res?.tailNumbers) {
@@ -1816,7 +1785,7 @@ export class DAAPlayer extends Backbone.Model {
     async getDaaConfigurations (): Promise<string[]> {
         await this.connectToServer();
         const res = await this.client.send({
-            type: "list-config-files"
+            type: DaaServerCommand.listConfigFiles
         });
         if (res && res.data) {
             console.log(res);
@@ -1875,29 +1844,6 @@ export class DAAPlayer extends Backbone.Model {
         return false;
     }
     /**
-     * @deprecated
-     * Returns the LoS version currently selected in the player interface
-     */
-    getSelectedLoSVersion(): string {
-        if (this.selectedAppType === this.appTypes[1]) {
-            const sel: string = $(`#${this.daaVersionDomSelector}-list option:selected`).text();
-            return sel;
-        }
-        return null;
-    }
-    /**
-     * @deprecated
-     * Returns the virtual pilot version currently selected in the player interface
-     */
-    getSelectedVirtualPilotVersion(): string {
-        if (this.selectedAppType === this.appTypes[2]) {
-            const sel: string = $(`#${this.daaVersionDomSelector}-list option:selected`).text();
-            return sel;
-        }
-        return null;
-    }
-    /**
-     * @deprecated
      * Returns the name of the app loaded in the player
      */
     getSelectedLogic(): string {

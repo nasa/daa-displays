@@ -37,7 +37,7 @@ import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
 import { 
     ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, 
-    ConfigFile, ScenarioDescriptor, SaveScenarioRequest, GetTailNumbersRequest, GetTailNumbersResponse 
+    ConfigFile, ScenarioDescriptor, SaveScenarioRequest, GetTailNumbersRequest, GetTailNumbersResponse, DaaServerCommand 
 } from './utils/daa-types';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
@@ -97,7 +97,7 @@ export class DAAServer {
             // theory: null
         };
     }
-    protected getPvsioWellClearVersions (javaFiles: string[]): string[] {
+    protected getPvsioDaaVersions (javaFiles: string[]): string[] {
         if (this.pvsioProcessEnabled && javaFiles && javaFiles.length) { 
             let versions: string[] = [];
             const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
@@ -260,8 +260,9 @@ export class DAAServer {
         try {
             const content: WebSocketMessage<any> = JSON.parse(msg);
             // console.info("Message parsed successfully!")
-            switch (content['type']) {
-                case 'exec': {
+            const cmd: DaaServerCommand = content["type"];
+            switch (cmd) {
+                case DaaServerCommand.exec: {
                     const data: ExecMsg = <ExecMsg> content.data;
                     const bandsFile: string = fsUtils.getBandsFileName(data);
                     if (bandsFile) {
@@ -270,7 +271,7 @@ export class DAAServer {
                                                 : data.daaLogic.endsWith(".pvsio") ? "pvsio"
                                                 : null;
                         if (impl) {
-                            const wellClearFolder: string = path.join(__dirname, "../daa-logic");
+                            const daaFolder: string = path.join(__dirname, "../daa-logic");
                             switch (impl) {
                                 case "java": {
                                     await this.activateJavaProcess();
@@ -289,24 +290,24 @@ export class DAAServer {
                                     console.error("Error: unsupported implementation type :/ ", impl);
                                 }
                             }
-                            const wellClearVersion: string = 
-                                    (impl === "java") ? await this.javaProcess.getVersion(wellClearFolder, data.daaLogic)
-                                        : (impl === "cpp") ? await this.cppProcess.getVersion(wellClearFolder, data.daaLogic)
-                                        : (impl === "pvsio") ? await this.pvsioProcess.getVersion(wellClearFolder, data.daaLogic)
+                            const daaVersion: string = 
+                                    (impl === "java") ? await this.javaProcess.getVersion(daaFolder, data.daaLogic)
+                                        : (impl === "cpp") ? await this.cppProcess.getVersion(daaFolder, data.daaLogic)
+                                        : (impl === "pvsio") ? await this.pvsioProcess.getVersion(daaFolder, data.daaLogic)
                                         : null;
                             
                             const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
                             
                             const outputFileName: string = fsUtils.getBandsFileName({ ...data, wind });
-                            const outputFolder: string = path.join(__dirname, "../daa-output", wellClearVersion, impl);
+                            const outputFolder: string = path.join(__dirname, "../daa-output", daaVersion, impl);
                             try {
-                                if (this.useCache && fs.existsSync(path.join(outputFolder, bandsFile))) {
+                                if (this.useCache && fs.existsSync(outputFileName)) {
                                     console.log(`Reading bands file ${bandsFile} from cache`);
                                 } else {
                                     switch (impl) {
                                         case "java": {
                                             await this.javaProcess.exec({
-                                                daaFolder: wellClearFolder, 
+                                                daaFolder, 
                                                 daaLogic: data.daaLogic, 
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
@@ -318,7 +319,7 @@ export class DAAServer {
                                         }
                                         case "cpp": {
                                             await this.cppProcess.exec({
-                                                daaFolder: wellClearFolder, 
+                                                daaFolder, 
                                                 daaLogic: data.daaLogic, 
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
@@ -330,11 +331,11 @@ export class DAAServer {
                                         }
                                         case "pvsio": {
                                             //@TODO: implement pvs functions for setting wind
-                                            const res: { configFile: string, scenarioFile: string } = await this.javaProcess.daa2pvs(wellClearFolder, data.daaLogic, data.daaConfig, data.scenarioName, `${data.scenarioName}.pvs`);
+                                            const res: { configFile: string, scenarioFile: string } = await this.javaProcess.daa2pvs(daaFolder, data.daaLogic, data.daaConfig, data.scenarioName, `${data.scenarioName}.pvs`);
                                             try {
-                                                const contextFolder: string = path.join(wellClearFolder, `WellClear-${wellClearVersion}`, "PVS");
+                                                const contextFolder: string = path.join(daaFolder, `WellClear-${daaVersion}`, "PVS");
                                                 await this.pvsioProcess.pvsioMode(contextFolder, "DAABands");
-                                                await this.pvsioProcess.exec(wellClearFolder, data.daaLogic, res.configFile, res.scenarioFile, outputFileName);
+                                                await this.pvsioProcess.exec(daaFolder, data.daaLogic, res.configFile, res.scenarioFile, outputFileName);
                                             } catch (pvsio_error) {
                                                 console.error("[pvsio.exec] Error: ", pvsio_error);
                                             }
@@ -376,7 +377,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'get-tail-numbers': {
+                case DaaServerCommand.getTailNumbers: {
                     const data: GetTailNumbersRequest = <GetTailNumbersRequest> (content.data);
                     const scenarioName: string = data.scenarioName;
                     if (scenarioName) {
@@ -451,48 +452,48 @@ export class DAAServer {
                 //     }
                 //     break;
                 // }
-                case 'java-virtual-pilot': { // generate-daa-file-from-ic
-                    const data: ExecMsg = <ExecMsg> content.data;
-                    const outputFile: string = data.scenarioName.replace(".ic", ".daa");
-                    if (outputFile) {
-                        await this.activateJavaProcess();
-                        const virtualPilot: string = data.daaLogic;
-                        const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
-                        console.log("folder:" + virtualPilotFolder);
-                        const outputFileName: string = fsUtils.getVirtualPilotFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
-                        console.log("fileName:" + outputFileName);
-                        const outputFolder: string = path.join(__dirname, "../../daa-output/virtual_pilot");
-                        const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
-                        // use the .ic file to generate the .daa file
-                        try {
-                            await this.javaProcess.exec({
-                                daaFolder: virtualPilotFolder, 
-                                daaLogic: virtualPilot, 
-                                daaConfig: data.daaConfig, 
-                                daaScenario: data.scenarioName,
-                                ownshipName: data.ownshipName,
-                                outputFileName,
-                                wind
-                            }, { contrib: true });
-                            console.log("executed");
-                            try {
-                                const buf: Buffer = fs.readFileSync(path.join(outputFolder, outputFile));
-                                content.data = buf.toLocaleString();
-                                this.trySend(wsocket, content, "daa virtual pilot");
-                            } catch (readError) {
-                                console.error(`Error while reading daa virtual pilot file ${path.join(outputFolder, outputFile)}`);
-                                this.trySend(wsocket, null, "daa virtual pilot");
-                            }
-                        } catch (execError) {
-                            console.error(`Error while executing java process`, execError);
-                            this.trySend(wsocket, null, "daa virtual pilot");
-                        }
-                    } else {
-                        console.error(`Error while generating daa virtual pilot file (filename is null) :/`);
-                    }
-                    break;
-                }
-                case 'save-daa-file': {
+                // case DaaServerCommand.javaVirtualPilot: { // generate-daa-file-from-ic
+                //     const data: ExecMsg = <ExecMsg> content.data;
+                //     const outputFile: string = data.scenarioName.replace(".ic", ".daa");
+                //     if (outputFile) {
+                //         await this.activateJavaProcess();
+                //         const virtualPilot: string = data.daaLogic;
+                //         const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
+                //         console.log("folder:" + virtualPilotFolder);
+                //         const outputFileName: string = fsUtils.getVirtualPilotFileName({ daaConfig: data.daaConfig, scenarioName: data.scenarioName });
+                //         console.log("fileName:" + outputFileName);
+                //         const outputFolder: string = path.join(__dirname, "../../daa-output/virtual_pilot");
+                //         const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
+                //         // use the .ic file to generate the .daa file
+                //         try {
+                //             await this.javaProcess.exec({
+                //                 daaFolder: virtualPilotFolder, 
+                //                 daaLogic: virtualPilot, 
+                //                 daaConfig: data.daaConfig, 
+                //                 daaScenario: data.scenarioName,
+                //                 ownshipName: data.ownshipName,
+                //                 outputFileName,
+                //                 wind
+                //             }, { contrib: true });
+                //             console.log("executed");
+                //             try {
+                //                 const buf: Buffer = fs.readFileSync(path.join(outputFolder, outputFile));
+                //                 content.data = buf.toLocaleString();
+                //                 this.trySend(wsocket, content, "daa virtual pilot");
+                //             } catch (readError) {
+                //                 console.error(`Error while reading daa virtual pilot file ${path.join(outputFolder, outputFile)}`);
+                //                 this.trySend(wsocket, null, "daa virtual pilot");
+                //             }
+                //         } catch (execError) {
+                //             console.error(`Error while executing java process`, execError);
+                //             this.trySend(wsocket, null, "daa virtual pilot");
+                //         }
+                //     } else {
+                //         console.error(`Error while generating daa virtual pilot file (filename is null) :/`);
+                //     }
+                //     break;
+                // }
+                case DaaServerCommand.saveDaaFile: {
                     const data: SaveScenarioRequest = <SaveScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
                     if (scenarioName) {
@@ -526,7 +527,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'load-daa-file': {
+                case DaaServerCommand.loadDaaFile: {
                     const data: LoadScenarioRequest = <LoadScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
                     const ownshipName: string = data?.ownshipName ? `${data.ownshipName}` : null;
@@ -556,14 +557,14 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'list-monitors': {
+                case DaaServerCommand.listMonitors: {
                     const data: ExecMsg = <ExecMsg> content.data;
                     const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
                                             : data.daaLogic.endsWith(".exe") ? "cpp" 
                                             : data.daaLogic.endsWith(".pvsio") ? "pvsio"
                                             : null;
                     if (impl) {
-                        const wellClearFolder: string = path.join(__dirname, "../daa-logic");
+                        const daaFolder: string = path.join(__dirname, "../daa-logic");
                         switch (impl) {
                             case "java": {
                                 await this.activateJavaProcess();
@@ -583,16 +584,16 @@ export class DAAServer {
                             }
                         }
                         const monitorList: string = 
-                                (impl === "java") ? await this.javaProcess.getMonitorList(wellClearFolder, data.daaLogic)
-                                    : (impl === "cpp") ? await this.cppProcess.getMonitorList(wellClearFolder, data.daaLogic)
-                                    : (impl === "pvsio") ? await this.pvsioProcess.getMonitorList(wellClearFolder, data.daaLogic)
+                                (impl === "java") ? await this.javaProcess.getMonitorList(daaFolder, data.daaLogic)
+                                    : (impl === "cpp") ? await this.cppProcess.getMonitorList(daaFolder, data.daaLogic)
+                                    : (impl === "pvsio") ? await this.pvsioProcess.getMonitorList(daaFolder, data.daaLogic)
                                     : null;
                         content.data = monitorList;
                         this.trySend(wsocket, content, "daa monitors");
                     }
                     break;
                 }
-                case 'list-daa-files': {
+                case DaaServerCommand.listDaaFiles: {
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let daaFiles: string[] = null;
                     try {
@@ -608,7 +609,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'list-ic-files': {
+                case DaaServerCommand.listIcFiles: {
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let icFiles: string[] = null;
                     try {
@@ -624,8 +625,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'list-conf-files':
-                case 'list-config-files': {
+                case DaaServerCommand.listConfigFiles: {
                     const configurationsFolder: string = path.join(__dirname, "../daa-config");
                     let confFiles: string[] = null;
                     try {
@@ -645,8 +645,7 @@ export class DAAServer {
                 //     //...
                 //     break;
                 // }
-                case 'load-conf-file':
-                case 'load-config-file': {
+                case DaaServerCommand.loadConfigFile: {
                     const data: LoadConfigRequest = <LoadConfigRequest> content.data;
                     const configurationsFolder: string = path.join(__dirname, "../daa-config");
                     const configName: string = (data && data.config)? data.config : null;
@@ -697,36 +696,36 @@ export class DAAServer {
                     }
                     break;
                 }
-                case 'list-wellclear-versions': {
-                    const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
+                case DaaServerCommand.listDaaVersions: {
+                    const daaLogicFolder: string = path.join(__dirname, "../daa-logic");
                     try {
-                        const ls: string[] = fs.readdirSync(wellclearLogicFolder);
+                        const ls: string[] = fs.readdirSync(daaLogicFolder);
                         if (ls) {
-                            let wellclearVersions: string[] = [];
+                            let daaVersions: string[] = [];
                             try { 
                                 const allFiles: string[] = ls.filter((name: string) => {
-                                    return fs.lstatSync(path.join(wellclearLogicFolder, name)).isDirectory() === false;
+                                    return fs.lstatSync(path.join(daaLogicFolder, name)).isDirectory() === false;
                                 });
                                 const javaFiles: string[] = allFiles.filter((name: string) => {
                                     return name.startsWith("DAIDALUSv") && name.endsWith(".jar");
                                 });
-                                wellclearVersions = (javaFiles) ? wellclearVersions.concat(javaFiles) : wellclearVersions;
+                                daaVersions = (javaFiles) ? daaVersions.concat(javaFiles) : daaVersions;
                                 const cppFiles: string[] = allFiles.filter((name: string) => {
                                     return name.startsWith("DAIDALUSv") && name.endsWith(".exe");
                                 });
-                                wellclearVersions = (cppFiles) ? wellclearVersions.concat(cppFiles) : wellclearVersions;
+                                daaVersions = (cppFiles) ? daaVersions.concat(cppFiles) : daaVersions;
 
-                                const pvsioFiles: string[] = this.getPvsioWellClearVersions(javaFiles);
-                                wellclearVersions = (pvsioFiles) ? wellclearVersions.concat(pvsioFiles) : wellclearVersions;
+                                const pvsioFiles: string[] = this.getPvsioDaaVersions(javaFiles);
+                                daaVersions = (pvsioFiles) ? daaVersions.concat(pvsioFiles) : daaVersions;
                             } catch (statError) {
-                                console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
+                                console.error(`Error while reading wellclear folder ${daaLogicFolder} :/`);
                             } finally {
-                                content.data = JSON.stringify(wellclearVersions);
+                                content.data = JSON.stringify(daaVersions);
                                 this.trySend(wsocket, content, "wellclear versions");
                             }
                         }
                     } catch (listError) {
-                        console.error(`Error while reading wellclear folder ${wellclearLogicFolder} :/`);
+                        console.error(`Error while reading wellclear folder ${daaLogicFolder} :/`);
                     }
                     break;
                 }
@@ -758,35 +757,71 @@ export class DAAServer {
                 //     }
                 //     break;
                 // }
-                case 'list-virtual-pilot-versions': {
-                    const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
-                    try {
-                        const allFiles: string[] = fs.readdirSync(virtualPilotFolder);
-                        if (allFiles) {
-                            let virtualPilotVersions: string[] = [];
-                            try { 
-                                let jarFiles = allFiles.filter(async (name: string) => {
-                                    return fs.lstatSync(path.join(virtualPilotFolder, name)).isDirectory();
-                                });
-                                jarFiles = jarFiles.filter((name: string) => {
-                                    return name.startsWith("SimDaidalus_") && name.endsWith(".jar");
-                                });
-                                virtualPilotVersions = jarFiles.map((name: string) => {
-                                    return name.slice(0, name.length - 4);
-                                });
-                            } catch (statError) {
-                                console.error(`Error while reading virtual pilot folder ${virtualPilotFolder} :/`);
-                            } finally {
-                                content.data = JSON.stringify(virtualPilotVersions);
-                                this.trySend(wsocket, content, "virtual pilot versions");
+                // case DaaServerCommand.listVirtualPilotVersions: {
+                //     const virtualPilotFolder: string = path.join(__dirname, "../contrib/virtual-pilot");
+                //     try {
+                //         const allFiles: string[] = fs.readdirSync(virtualPilotFolder);
+                //         if (allFiles) {
+                //             let virtualPilotVersions: string[] = [];
+                //             try { 
+                //                 let jarFiles = allFiles.filter(async (name: string) => {
+                //                     return fs.lstatSync(path.join(virtualPilotFolder, name)).isDirectory();
+                //                 });
+                //                 jarFiles = jarFiles.filter((name: string) => {
+                //                     return name.startsWith("SimDaidalus_") && name.endsWith(".jar");
+                //                 });
+                //                 virtualPilotVersions = jarFiles.map((name: string) => {
+                //                     return name.slice(0, name.length - 4);
+                //                 });
+                //             } catch (statError) {
+                //                 console.error(`Error while reading virtual pilot folder ${virtualPilotFolder} :/`);
+                //             } finally {
+                //                 content.data = JSON.stringify(virtualPilotVersions);
+                //                 this.trySend(wsocket, content, "virtual pilot versions");
+                //             }
+                //         }
+                //     } catch (listError) {
+                //         console.error(`Error while reading wellclear folder ${virtualPilotFolder} :/`);
+                //     }
+                //     break;
+                // }
+                case DaaServerCommand.listAlertingVolumes: {
+                    const data: ExecMsg = <ExecMsg> content.data;
+                    const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
+                                            : data.daaLogic.endsWith(".exe") ? "cpp" 
+                                            : data.daaLogic.endsWith(".pvsio") ? "pvsio"
+                                            : null;
+                    if (impl) {
+                        const daaFolder: string = path.join(__dirname, "../daa-logic");
+                        switch (impl) {
+                            case "java": {
+                                await this.activateJavaProcess();
+                                break;
+                            }
+                            case "cpp": {
+                                await this.activateCppProcess();
+                                break;
+                            }
+                            case "pvsio": {
+                                await this.activateJavaProcess(); // this will be used to run utility functions converting daa configurations in pvs format
+                                await this.activatePVSioProcess();
+                                break;
+                            }
+                            default: {
+                                console.error("Error: unsupported implementation type :/ ", impl);
                             }
                         }
-                    } catch (listError) {
-                        console.error(`Error while reading wellclear folder ${virtualPilotFolder} :/`);
+                        const monitorList: string = 
+                                (impl === "java") ? await this.javaProcess.getAlerters(daaFolder, data.daaLogic)
+                                    : (impl === "cpp") ? await this.cppProcess.getAlerters(daaFolder, data.daaLogic)
+                                    : (impl === "pvsio") ? await this.pvsioProcess.getAlerters(daaFolder, data.daaLogic)
+                                    : null;
+                        content.data = monitorList;
+                        this.trySend(wsocket, content, "daa monitors");
                     }
                     break;
                 }
-                case "start-jasmine-test-runner": {
+                case DaaServerCommand.jasmine: {
                     const open = require('open');
                     if (open) {
                         open("http://localhost:8082/test.html");
@@ -799,7 +834,7 @@ export class DAAServer {
                 }
             }
         } catch (err) {
-            console.error(`Error while parsing message :/`, err);
+            console.error(`[daa-server] Error while parsing message :/`, err);
         }
     }
     parseCliArgs (args: string[]): void {

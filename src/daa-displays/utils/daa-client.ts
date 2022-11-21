@@ -27,10 +27,10 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { ScenarioDescriptor } from "./daa-types";
+import { DaaServerCommand, ScenarioDescriptor } from "./daa-types";
 import { uuid } from "./daa-utils";
 export interface Token {
-    type: string,
+    type: DaaServerCommand,
     id?: string,
     time?: { client: { sent: string } };
     data?: {
@@ -204,7 +204,7 @@ export class DAAClient {
     async startJasmineTestRunner(): Promise<void> {
         if (this.ws) {
             this.send({
-                type: "start-jasmine-test-runner",
+                type: DaaServerCommand.jasmine,
             });
             return Promise.resolve();
         }

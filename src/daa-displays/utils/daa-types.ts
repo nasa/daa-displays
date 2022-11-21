@@ -45,15 +45,27 @@ export declare interface PvsioMsg {
 /**
  * Commands accepted by the daa-server
  */
-export type DaaServerCommand = "exec" | "save-daa-file" | "list-ic-files" | "load-daa-file" 
-| "list-monitors" | "list-daa-files" | "list-conf-files" | "list-config-files" | "get-tail-numbers"
-| "load-conf-file" | "load-config-file" | "list-wellclear-versions" | "list-virtual-pilot-versions" 
-| "java-virtual-pilot";
+export enum DaaServerCommand {
+    exec = "exec",
+    saveDaaFile = "save-daa-file",
+    listIcFiles = "list-ic-files",
+    loadDaaFile = "load-daa-file",
+    listMonitors = "list-monitors",
+    listDaaFiles = "list-daa-files",
+    listConfigFiles = "list-config-files",
+    getTailNumbers = "get-tail-numbers",
+    loadConfigFile = "load-config-file",
+    listDaaVersions = "list-daa-versions",
+    // listVirtualPilotVersions = "list-virtual-pilot-versions",
+    // javaVirtualPilot = "java-virtual-pilot",
+    listAlertingVolumes = "list-alerting-volumes",
+    jasmine = "start-jasmine-test-runner"
+};
 /**
  * Messages accepted by the daa-server
  */
 export declare interface WebSocketMessage<T> {
-    type: DaaServerCommand | "start-jasmine-test-runner";
+    type: DaaServerCommand;
     time?: {
         client: { sent: string; },
         server?: { sent: string; }

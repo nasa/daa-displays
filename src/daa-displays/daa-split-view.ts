@@ -221,36 +221,6 @@ export class DAASplitView extends DAAPlayer {
             }
         }
     }
-    /**
-     * @deprecated
-     */
-    wellclearMode (): void {
-        super.wellclearMode();
-        if (this.players) {
-            if (this.players.left) { this.players.left.wellclearMode(); }
-            if (this.players.right) { this.players.right.wellclearMode(); }
-        }
-    }
-    /**
-     * @deprecated
-     */
-    losMode (): void {
-        super.losMode();
-        if (this.players) {
-            if (this.players.left) { this.players.left.losMode(); }
-            if (this.players.right) { this.players.right.losMode(); }
-        }
-    }
-    /**
-     * @deprecated
-     */
-    virtualPilotMode (): void {
-        super.virtualPilotMode();
-        if (this.players) {
-            if (this.players.left) { this.players.left.virtualPilotMode(); }
-            if (this.players.right) { this.players.right.virtualPilotMode(); }
-        }
-    }
 
     // @override
     refreshBrowserAddress (): void {
