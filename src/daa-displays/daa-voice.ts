@@ -476,7 +476,7 @@ export class DaaVoice {
      * e.g., "11" is enunciated "one-one" rather than "eleven"
      *       "12800" is enunciated "one two thousand eight hundred"
      */
-    phoneticNumber (num: string | number, opt?: { pause?: string }): string {
+    readNumber (num: string | number, opt?: { pause?: string }): string {
         const x: string = typeof num === "number" ? `${num}` : num;
         // this is the text used to introduce pauses between digits
         const pause: string = opt?.pause || " ";
@@ -545,7 +545,7 @@ export class DaaVoice {
     /**
      * Internal function, reads the direction of an intruder aircraft as ATC would read it to pilots, e.g., north bound, south bound, southeast bound, etc.
      */
-    protected getDirection (deg: number): string {
+    readDirection (deg: number): string {
         // utility function, makes sure the value is between 0..360
         const normalizeAngle = (val: number) => {
             return (val % 360 + 360) % 360;
@@ -696,7 +696,7 @@ export class DaaVoice {
                     }).toFixed(1);
 
                     // read feedback for distance -- round the number to the nearest integer if distance > 1NM, otherwise use two digits accuracy
-                    const distance_msg: string = `${this.phoneticNumber(+distance > 1 ? Math.round(+distance) : +distance)} miles`;
+                    const distance_msg: string = `${this.readNumber(+distance > 1 ? Math.round(+distance) : +distance)} miles`;
                     const distance_txt: string = `${+distance > 1 ? Math.round(+distance) : +distance} miles`;
 
                     // compute altitude of the intruder
@@ -720,7 +720,7 @@ export class DaaVoice {
                     if (opt?.include_direction) {
                         // feedback for direction
                         const traffic_direction: number = rad2deg(Math.atan2(+max_alert_aircraft.v.x, +max_alert_aircraft.v.y));
-                        const direction_msg: string = this.getDirection(+traffic_direction);
+                        const direction_msg: string = this.readDirection(+traffic_direction);
                         const direction_txt: string = direction_msg;
                         guidance.push({ text2speak: direction_msg, subtitles: direction_txt });
                     }
@@ -728,7 +728,7 @@ export class DaaVoice {
                     // include altitude, if needed
                     if (opt?.include_altitude) {
                         // read feedback for altitude, number is rounded to 100xft
-                        let altitude_msg: string = `${this.phoneticNumber(Math.floor(altitude / 100) * 100)}`; // feet is often omitted for brevity
+                        let altitude_msg: string = `${this.readNumber(Math.floor(altitude / 100) * 100)}`; // feet is often omitted for brevity
                         let altitude_txt: string = `${Math.floor(altitude / 100) * 100}`;
                         if (altitude_info === "relative") {
                             altitude_msg += alt.relative < 0 ? " feet below you " : " feet above you ";
