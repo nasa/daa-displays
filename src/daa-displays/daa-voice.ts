@@ -32,9 +32,6 @@ import { rad2deg } from "./utils/daa-math";
 import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LLAPosition } from "./utils/daa-types";
 import { getAlertingAircraftMap } from "./utils/daa-utils";
 
-// voice read back max repeat frequency
-const MAX_REPEAT_FREQUENCY: number = 2000; //msec
-
 // convenient type definitions
 export interface VoiceDescriptor {
     name: string,
@@ -70,7 +67,7 @@ export const DEFAULT_VOICE_RATE: number = 1.2;
 export const DEFAULT_VOICE_VOLUME: number = 0.5; // 50%
 export const DEFAULT_PAUSE_LEN: number = 250; //ms
 export const DEFAULT_GUIDANCE_KIND: GuidanceKind = GuidanceKind.ATC;
-export const DEFAULT_SAME_ALERTING_TIMEOUT: number = 16000; //ms
+export const DEFAULT_SAME_ALERTING_TIMEOUT: number = 32000; //ms
 
 /**
  * DaaVoice class
@@ -78,7 +75,6 @@ export const DEFAULT_SAME_ALERTING_TIMEOUT: number = 16000; //ms
 export class DaaVoice {
     protected enabled: boolean = true; // whether voice feedback is enabled
     protected can_speak_now: boolean = true; // whether a message is already being spoken
-    protected max_repeat_frequency: number = MAX_REPEAT_FREQUENCY;
     protected repeat_timer: NodeJS.Timer; // used to iintroduce pauses between spoken text chunks
     protected voices: SpeechSynthesisVoice[] = window?.speechSynthesis?.getVoices() || [];
     protected synthVoice: SpeechSynthesisUtterance = new SpeechSynthesisUtterance(); // see APIs at https://lists.w3.org/Archives/Public/public-speech-api/2012Oct/0004.html
