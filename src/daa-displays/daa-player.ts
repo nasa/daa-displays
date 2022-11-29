@@ -570,15 +570,26 @@ export class DAAPlayer extends Backbone.Model {
     protected renderSimulationControls(opt?: {
         top?: number,
         left?: number,
-        width?: number
+        width?: number,
+        multiplay?: { cssClass?: string, id: string, label: string }[]
     }) {
         opt = opt || {};
-        const theHTML = Handlebars.compile(this._simulationControls.htmlTemplate)({
+        let data = {
             id: this.id,
             top: opt.top,
             left: opt.left,
             width: opt.width
-        });
+        };
+        if (opt.multiplay) {
+            data["multiplay"] = opt.multiplay.map(elem => {
+                return {
+                    cssClass: elem.cssClass?.startsWith(".") ? elem.cssClass.substring(1) : elem.cssClass, 
+                    id: elem.id?.startsWith("#") ? elem.id.substring(1) : elem.id,
+                    label: elem.label 
+                };
+            });
+        }
+        const theHTML = Handlebars.compile(this._simulationControls.htmlTemplate)(data);
         $(this._simulationControls.parent).html(theHTML);
         $(`#${this.id}-tot-sim-steps`).html(`${this.getSimulationLength()}`);
         // activate dropdown menus
@@ -758,8 +769,8 @@ export class DAAPlayer extends Backbone.Model {
      * Utility function, loads the scenario selected in the dropdown menu "#${this.id}-scenario-selector"
      */
     async loadSelectedScenario (opt?: { ownshipName?: string | number, selectedScenario?: string }): Promise<void> {
-        this.startSpinAnimation();
         const scenario: string = opt?.selectedScenario || this.getSelectedScenario();
+        this.startSpinAnimation({ selectedScenario: scenario });
         if (scenario) {
             await this.loadScenarioFile(scenario, { ...opt, forceReload: true });
         } else {
@@ -773,8 +784,9 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * Utility function, starts a spinner animation on the button of the activation panel
      */
-    startSpinAnimation (): void {
-        $(`.load-scenario-btn`).html(`<i class="fa fa-spinner fa-pulse"></i>`);
+    startSpinAnimation (opt?: { selectedScenario?: string }): void {
+        const theHTML: string = `<i class="fa fa-spinner fa-pulse"></i>${opt?.selectedScenario ? `   Loading ${opt.selectedScenario}` : ""}`;
+        $(`.load-scenario-btn`).html(theHTML);
     }
     /**
      * Utility function, stops the spinner animation on the button of the activation panel and restores the button label
@@ -961,9 +973,17 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * utility function, renders the DOM elements necessary for plotting spectrograms
      */
-    appendPlotControls (opt?: { top?: number, left?: number, width?: number, parent?: string, disableHandlers?: { plot?: boolean, reset?: boolean }}): DAAPlayer {
+    appendPlotControls (opt?: {
+        top?: number, 
+        left?: number, 
+        width?: number, 
+        parent?: string, 
+        disableHandlers?: { plot?: boolean, reset?: boolean },
+        reuseParentDiv?: boolean,
+        buttons?: { reset?: string, plot?: string }
+    }): DAAPlayer {
         opt = opt || {};
-        opt.parent = opt.parent || this.id;
+        opt.parent = opt.parent?.startsWith("#") ? opt.parent.substring(1) : this.id;
         opt.top = (isNaN(opt.top)) ? 0 : opt.top;
         opt.left = (isNaN(opt.left)) ? 0 : opt.left;
         opt.width = (isNaN(+opt.width)) ? 374 : opt.width;
@@ -972,17 +992,21 @@ export class DAAPlayer extends Backbone.Model {
             parent: opt.parent,
             top: opt.top, left: opt.left, width: opt.width
         });
-        utils.createDiv(`${this.id}-spectrogram-controls`, { zIndex: 99, parent: opt.parent });
+        if (!opt.reuseParentDiv) {
+            utils.createDiv(`${this.id}-spectrogram-controls`, { zIndex: 99, parent: opt.parent, top: 0 });
+        }
         $(`#${this.id}-spectrogram-controls`).html(theHTML);
         // install handlers
         if (!opt?.disableHandlers?.reset) {
-            $(`#${this.id}-reset`).on("click", async () => {
+            const resetBtn: string = opt.buttons?.reset || `#${this.id}-reset`;
+            $(resetBtn).on("click", async () => {
                 const selectedScenario: string = this.getSelectedScenario();
                 await this.loadScenarioFile(selectedScenario, { softReload: true }); // async call
             });
         }
         if (!opt?.disableHandlers?.plot) {
-            $(`#${this.id}-plot`).on("click", async () => {
+            const plotBtn: string = opt.buttons?.plot || `#${this.id}-plot`;
+            $(plotBtn).on("click", async () => {
                 await this.plot();
             });
         }
@@ -1119,7 +1143,7 @@ export class DAAPlayer extends Backbone.Model {
      */
     loadingAnimation(): void {
         if (this._displays) {
-            this.startSpinAnimation();
+            this.startSpinAnimation({ selectedScenario: this.getSelectedScenario() });
             for (let i = 0; i < this._displays?.length; i++) {
                 const display: string = this._displays[i];
                 const width: number = $('.map-canvas').width() || $('.map-div').width() || 1072;
@@ -2250,13 +2274,13 @@ export class DAAPlayer extends Backbone.Model {
      * Writes an informative message in the status panel of the player, to inform the user about what is going on, e.g., loading a scenario
      */
     setStatus(msg: string) {
-        $(`#${this.id}-status`).css("display", "block").text(msg);
+        $(`.daa-loading-status`).css("display", "block").text(msg);
     }
     /**
      * Indicates player ready
      */
     statusReady() {
-        $(`#${this.id}-status`).css("display", "none").text("");
+        $(`.daa-loading-status`).css("display", "none").text("");
     }
     /**
      * Sets the ID of the DOM element where the daa-displays elements are attached
@@ -2539,6 +2563,7 @@ export class DAAPlayer extends Backbone.Model {
         left?: number,
         width?: number,
         htmlTemplate?: string,
+        multiplay?: { cssClass?: string, id: string, label: string }[]
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
     }): void {
         opt = opt || {};

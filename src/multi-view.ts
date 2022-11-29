@@ -45,12 +45,13 @@ import { ConfigData, DaaSymbol, LatLonAlt, LLAData, ScenarioDataPoint } from './
 import { RenderableDisplay } from './split-view';
 import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
 
-// const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
-//     { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
-//     { id: "horizontal-speed-bands", units: "knot", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
-//     { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
-//     { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
-// ];
+const INCLUDE_PLOTS: boolean = true;
+const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [
+    { id: "heading-bands", units: "deg", name: "Heading Bands", range: { from: 0, to: 360 } },
+    { id: "horizontal-speed-bands", units: "knot", name: "Horizontal Speed Bands", range: { from: 0, to: 1000 } },
+    { id: "vertical-speed-bands", units: "fpm", name: "Vertical Speed Bands", range: { from: -10000, to: 10000 } },
+    { id: "altitude-bands", units: "ft", name: "Altitude Bands", range: { from: -200, to: 60000 } }
+];
 
 // useful constants
 export const DEFAULT_DAIDALUS_CONFIG: string = "DO_365A_no_SUM";
@@ -154,7 +155,44 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
         display.windIndicator.setMagnitude(bands.Wind.knot);
     }
     
+    // render plots
+    if (INCLUDE_PLOTS) {
+        const step: number = player.getCurrentSimulationStep();
+        const time: string = player.getCurrentSimulationTime();    
+        plot(player, { ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
+    }
     // plot(player, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
+}
+
+/**
+ * Plot function
+ */
+function plot (player: DAAPlayer, desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
+    player.getPlot("alerts").plotAlerts({
+        alerts: desc.bands?.Alerts?.alerts,
+        step: desc.step,
+        time: desc.time
+    });
+    for (let i = 0; i < daaPlots.length; i++) {
+        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
+                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
+                                : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
+                                : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
+                                : null;
+        const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution?.valunit?.val
+                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution?.valunit?.val
+                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution?.valunit?.val
+                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution?.valunit?.val
+                                : null;
+        player.getPlot(daaPlots[i].id).plotBands({
+            bands: desc.bands[daaPlots[i].name],
+            step: desc.step,
+            time: desc.time,
+            units: daaPlots[i].units,
+            marker,
+            resolution
+        });
+    }
 }
 
 /**
@@ -226,6 +264,22 @@ async function createDisplays (tailNumbers: string[], opt?: { createMap?: boolea
         player.define("step", async () => {
             render(player, data[i]?.display);
         });
+        // attach plot handler
+        player.define("plot", () => {
+            const flightData: LLAData[] = player.getFlightData();
+            for (let step = 0; step < flightData?.length; step++) {
+                const bands: ScenarioDataPoint = player.getCurrentBands(step);
+                player.setTimerJiffy("plot", () => {
+                    const time: string = multiView.getTimeAt(step);
+                    const lla: LLAData = flightData[step];
+                    const hd: number = Compass.v2deg(lla.ownship.v);
+                    const gs: number = AirspeedTape.v2gs(lla.ownship.v);
+                    const vs: number = +lla.ownship.v.z;
+                    const alt: number = +lla.ownship.s.alt;
+                    plot(player, { ownship: { hd, gs, vs: vs / 100, alt }, bands, step, time });
+                }, 8 * step);
+            }
+        });
         // listen to relevant backbone events
         const didChangeConfigurationHandler = (evt: DidChangeDaaConfiguration) => {
             if (evt?.configName) {
@@ -247,6 +301,59 @@ async function createDisplays (tailNumbers: string[], opt?: { createMap?: boolea
         });
         player.on(PlayerEvents.DidChangeDaaVersion, (evt: DidChangeDaaVersion) => {
             didChangeDaaVersionHandler(evt);
+        });
+        // append simulation plots
+        const plotParent: string = `simulation-plot-${i}`;
+        const plotWidth: number = 1200; // px
+        player.appendSimulationPlot({
+            id: "alerts",
+            width: plotWidth,
+            label: "Alerts",
+            range: { from: 1, to: 3 },
+            player: multiView,
+            parent: plotParent
+        }, {
+            overheadLabel: true
+        });
+        player.appendSimulationPlot({
+            id: "heading-bands",
+            top: 150,
+            width: plotWidth,
+            label: "Heading Bands",
+            range: { from: 0, to: 360 },
+            units: "[deg]",
+            player: multiView,
+            parent: plotParent
+        });
+        player.appendSimulationPlot({
+            id: "horizontal-speed-bands",
+            top: 300,
+            width: plotWidth,
+            label: "Horizontal Speed Bands",
+            range: { from: 0, to: 1000 },
+            units: "[knot]",
+            player: multiView,
+            parent: plotParent
+        });
+        player.appendSimulationPlot({
+            id: "vertical-speed-bands",
+            top: 450,
+            width: plotWidth,
+            label: "Vertical Speed Bands",
+            range: { from: -10000, to: 10000 },
+            units: "[fpm]",
+            player: multiView,
+            parent: plotParent
+        });
+        player.appendSimulationPlot({
+            id: "altitude-bands",
+            top: 600,
+            width: plotWidth,
+            label: "Altitude Bands",
+            range: { from: -200, to: 60000 },
+            units: "[ft]",
+            player: multiView,
+            parent: plotParent
         });
     }
     // listen to relevant backbone events
@@ -279,6 +386,7 @@ async function createMultiView (tailNumbers: string[], opt?: { createMap?: boole
         }
     }
     multiView.setTailNumbers(tailNumbers);
+
     // create configuration cols in the sidebar
     multiView.createConfigurationAttributesViews();
     // re-create well-clear selectors
@@ -288,14 +396,20 @@ async function createMultiView (tailNumbers: string[], opt?: { createMap?: boole
     // re-create all displays
     createDisplays(tailNumbers, opt);
     // append simulation controls
-    multiView.appendSimulationControls({
-        htmlTemplate: integratedPlaybackTemplate,
-        parent: ".navbar-integrated-controls"//"simulation-controls"
-    });
-    multiView.appendActivationPanel({
-        parent: ".navbar-integrated-controls"//"activation-controls"
-    });
-    // attach developer mode handlers
+    // multiView.appendSimulationControls({
+    //     htmlTemplate: integratedPlaybackTemplate,
+    //     parent: ".navbar-integrated-simulation-controls"//"simulation-controls"
+    // });
+    // multiView.appendActivationPanel({
+    //     parent: ".navbar-integrated-simulation-controls",//"activation-controls"
+    //     width: 1500
+    // });
+    // if (INCLUDE_PLOTS) {
+    //     multiView.appendPlotControls({
+    //         parent: ".navbar-integrated-plot-controls"//"simulation-controls"
+    //     });
+    // }
+    // re-attach mode handlers
     multiView.setNormalModeHandler(() => {
         normalMode(tailNumbers.length);
     });
@@ -308,41 +422,6 @@ async function createMultiView (tailNumbers: string[], opt?: { createMap?: boole
 multiView.define("createMultiView", async (tailNumbers: string[]) => {
     await createMultiView(tailNumbers);
 });
-
-// // -- plot
-// multiView.getPlayer("right").define("plot", () => {
-//     const flightData: LLAData[] = multiView.getPlayer("right").getFlightData();
-//     for (let step = 0; step < flightData?.length; step++) {
-//         const bandsRight: ScenarioDataPoint = multiView.getPlayer("right").getCurrentBands(step);
-//         const bandsLeft: ScenarioDataPoint = multiView.getPlayer("left").getCurrentBands(step);
-//         multiView.getPlayer("right").setTimerJiffy("plot", () => {
-//             const time: string = multiView.getTimeAt(step);
-//             const lla: LLAData = flightData[step];
-//             const hd: number = Compass.v2deg(lla.ownship.v);
-//             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-//             const vs: number = +lla.ownship.v.z;
-//             const alt: number = +lla.ownship.s.alt;
-//             plot("right", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsRight, step, time });
-//         }, 8 * step);
-//     }
-// });
-// multiView.getPlayer("left").define("plot", () => {
-//     const flightData: LLAData[] = multiView.getPlayer("right").getFlightData();
-//     for (let step = 0; step < flightData?.length; step++) {
-//         // const bandsRight: ScenarioDataPoint = splitView.getPlayer("right").getCurrentBands(step);
-//         const bandsLeft: ScenarioDataPoint = multiView.getPlayer("left").getCurrentBands(step);
-//         multiView.getPlayer("left").setTimerJiffy("plot", () => {
-//             const time: string = multiView.getTimeAt(step);
-//             const lla: LLAData = flightData[step];
-//             const hd: number = Compass.v2deg(lla.ownship.v);
-//             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-//             const vs: number = +lla.ownship.v.z;
-//             const alt: number = +lla.ownship.s.alt;
-//             plot("left", { ownship: { hd, gs, vs: vs / 100, alt }, bands: bandsLeft, step, time });
-//         }, 8 * step);
-//     }
-// });
-
 
 // -- normal mode
 function normalMode (nDisplays: number) {
@@ -414,71 +493,27 @@ async function createPlayer (opt?: { loadDefaultConfiguration?: boolean }) {
     if (opt?.loadDefaultConfiguration) {
         await multiView.selectDaaConfiguration("DO_365A_no_SUM");
     }
+    // append simulation controls
     multiView.appendSimulationControls({
         htmlTemplate: integratedPlaybackTemplate,
-        parent: ".navbar-integrated-controls"//"simulation-controls"
+        parent: ".navbar-integrated-simulation-controls",//"simulation-controls"
+        multiplay: [
+            { id: "#multi-view-plot", label: "plot" },
+            { id: "#multi-view-reset", label: "reset" }
+        ]
     });
     multiView.appendActivationPanel({
-        parent: ".navbar-integrated-controls"//"activation-controls"
+        parent: ".navbar-integrated-simulation-controls",//"activation-controls"
+        width: 1160
     });
-
-    // multiView.appendPlotControls({
-    //     parent: "simulation-controls",
-    //     top: 47
-    // });
-    // multiView.appendDeveloperControls({
-    //     normalMode: null,
-    //     developerMode: null
-    // }, {
-    //     parent: "simulation-controls",
-    //     top: 48,
-    //     left: 754,
-    //     width: 344
-    // });
-    // multiView.getPlayer("left").appendSimulationPlot({
-    //     id: "alerts",
-    //     width: 1040,
-    //     label: "Alerting",
-    //     range: { from: 1, to: 3 },
-    //     player: multiView,
-    //     parent: "simulation-plot"
-    // }, {
-    //     overheadLabel: true
-    // });
-    // multiView.getPlayer("right").appendSimulationPlot({
-    //     id: "alerts",
-    //     left: 1200,
-    //     width: 1040,
-    //     label: "Alerting",
-    //     range: { from: 1, to: 3 },
-    //     player: multiView,
-    //     parent: "simulation-plot"
-    // }, {
-    //     overheadLabel: true
-    // });
-    // for (let i = 0; i < daaPlots.length; i++) {
-    //     multiView.getPlayer("left").appendSimulationPlot({
-    //         id: daaPlots[i].id,
-    //         top: 150 * (i + 1),
-    //         width: 1040,
-    //         label: daaPlots[i].name,
-    //         range: daaPlots[i].range,
-    //         player: multiView,
-    //         units: `[${daaPlots[i].units}]`,
-    //         parent: "simulation-plot"
-    //     });
-    //     multiView.getPlayer("right").appendSimulationPlot({
-    //         id: daaPlots[i].id,
-    //         top: 150 * (i + 1),
-    //         left: 1200,
-    //         width: 1040,
-    //         label: daaPlots[i].name,
-    //         range: daaPlots[i].range,
-    //         player: multiView,
-    //         units: `[${daaPlots[i].units}]`,
-    //         parent: "simulation-plot"
-    //     });    
-    // }
+    // append plot controls
+    if (INCLUDE_PLOTS) {
+        multiView.appendPlotControls({
+            parent: ".integrated-multiplay-controls", //"simulation-controls"
+            reuseParentDiv: true,
+            buttons: { plot: "#multi-view-plot", reset: "#multi-view-reset" }
+        });
+    }
 }
 
 createPlayer({ loadDefaultConfiguration: true });

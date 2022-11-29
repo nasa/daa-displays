@@ -65,14 +65,16 @@ export const COLORS: { [name: string]: [
 
 /**
  * Utility function, returns the IDs (tail numbers) of the aicraft whose alert >= minThreshold and <= maxThreshold
+ * If we want to select a specific threshold, we can either have minThreshold === maxThreshold or use option alertLevel
  * The default threshold is AlertLevel.ALERT
  */
 export function getAlertingAircraftMap (bands: DaaBands, opt?: { 
 	minThreshold?: AlertLevel, maxThreshold?: AlertLevel
-}): { [ac: string]: AlertLevel } {
+} | { alertLevel?: AlertLevel }): { [ac: string]: AlertLevel } {
 	if (bands?.Alerts?.alerts?.length) {
-		const min: AlertLevel = opt?.minThreshold || AlertLevel.ALERT;
-		const max: AlertLevel = opt?.maxThreshold || AlertLevel.ALERT;
+		opt = opt || {};
+		const min: AlertLevel = opt["alertLevel"] || opt["minThreshold"] || AlertLevel.ALERT;
+		const max: AlertLevel = opt["alertLevel"] || opt["maxThreshold"] || AlertLevel.ALERT;
 		const alerts: Alert[] = bands.Alerts.alerts.filter(alert => {
 			return alert.alert_level >= min && alert.alert_level <= max;
 		}) || [];

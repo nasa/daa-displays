@@ -106,6 +106,19 @@ export function symbol2alertKind (symbol: DaaSymbol): AlertKind {
 }
 
 /**
+ * Utility function, returns the alert kind of this aircraft
+ */
+export function symbol2alertLevel (symbol: DaaSymbol): AlertLevel {
+    switch (symbol) {
+        case "daa-alert": { return AlertLevel.ALERT; }
+        case "daa-traffic-avoid": { return AlertLevel.AVOID; }
+        case "daa-traffic-monitor": { return AlertLevel.MONITOR; }
+        case "daa-target": { return AlertLevel.NONE; }
+        default: { return AlertLevel.UNKNOWN; }
+    }
+}
+
+/**
  * Utility functions for computing the distance between two points given as latlot
  * The returned result is in NMI
  * See also haversine formula at https://www.movable-type.co.uk/scripts/latlong.html

@@ -208,12 +208,13 @@ function render (danti: {
             // force reading guidance if the player is not in playback mode
             const isPlaying: boolean = player.isPlaying();
             if (!danti.voice.isSpeaking() || !isPlaying) {
-                const guidance: Guidance = danti?.voice?.getGuidanceATC({
+                const guidance: Guidance = danti?.voice?.getGuidance({
                     ownship: flightData.ownship,
                     traffic: flightData.traffic,
                     bands
                 }, { 
                     include_altitude: true,
+                    altitude_kind: "relative",
                     suppressRepeatedAlerts: isPlaying 
                 });
                 if (guidance) {

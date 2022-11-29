@@ -47,7 +47,6 @@
 import * as utils from '../daa-utils';
 import * as conversions from '../utils/daa-math';
 import * as WorldWind from '../wwd/worldwind.min';
-import * as serverInterface from '../utils/daa-types'
 import { LosRegion } from './daa-regions';
 import { alertLevel2symbol, symbol2alertKind } from '../daa-utils';
 import { AlertKind, LatLonAlt, Vector3D } from '../utils/daa-types';

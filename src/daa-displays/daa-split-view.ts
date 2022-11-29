@@ -51,6 +51,7 @@ import { DAAPlayer, DidChangeDaaConfiguration, PlayerEvents, safeSelector } from
 import { LLAData } from '../daa-server/utils/daa-types';
 import { DAAScenario, OwnshipState, ScenarioDataPoint } from './utils/daa-types';
 import { configDivTemplate, daidalusVersionDivTemplate, windDivTemplate } from './templates/daa-playback-templates';
+import { jquerySelector } from './daa-utils';
 
 export interface SplitConfig {
     scenario: string,
@@ -149,9 +150,9 @@ export class DAASplitView extends DAAPlayer {
             // step simulation
             this.step = async (opt?: { preventIncrement?: boolean }) => {
                 opt = opt || {};
-                let current_step = parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
-                current_step += (current_step < this.getSimulationLength() && !opt.preventIncrement) ? 1 : 0;
-                this.simulationStep = current_step;
+                const current_step: number = this.getCurrentSimulationStep(); //parseInt(<string> $(`#${this.id}-curr-sim-step`).html());
+                const new_current_step = (current_step < this.getSimulationLength() && !opt.preventIncrement) ? current_step + 1 : current_step;
+                this.simulationStep = new_current_step;
                 $(`#${this.id}-curr-sim-step`).html(`${this.simulationStep}`);
                 if (this.players && this.labels?.length) {
                     // it is sufficient to run a step on the first player, the other players will follow because they are bridged (see createPlayers)
@@ -298,13 +299,13 @@ export class DAASplitView extends DAAPlayer {
                                 ownshipName: opt?.ownshipNames?.length > i ? opt.ownshipNames[i] : null
                             });
                         }
-                        await this.gotoControl(0);
-                        $(`#${this.id}-tot-sim-steps`).html(`${this.getSimulationLength()}`);
-                        $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
                     }
                 } catch (loadError) {
                     console.error(`[${this.id}] Warning: unable to select scenario ${scenario}`, loadError);
                 } finally {
+                    await this.gotoControl(0);
+                    $(`#${this.id}-tot-sim-steps`).html(`${this.getSimulationLength()}`);
+                    $(`#${this.id}-curr-sim-time`).html(this.getCurrentSimulationTime());
                     this.refreshSimulationPlots();
                     this.enableSelection();
                     this.loadingComplete();
@@ -321,12 +322,10 @@ export class DAASplitView extends DAAPlayer {
     }
     
     /**
-     * @function <a name="goto">goto</a>
-     * @description Goes to a given target simulation step
+     * Goes to a given target simulation step
      * @param step {nat} Target simulation step.
      * @return {nat} The current simulation step, which corresponds to the target step (value clipped if target is outside the simulation range). 
-     * @memberof module:DAASplitView
-     * @instance
+     * @override
      */
     async gotoControl(step?: number, opt?: { updateInputs?: boolean }): Promise<void> {
         this.clearInterval();
@@ -650,6 +649,7 @@ export class DAASplitView extends DAAPlayer {
         left?: number,
         width?: number,
         htmlTemplate?: string,
+        multiplay?: { cssClass?: string, id: string, label: string }[]
         displays?: string[] // daa display associated to the controls, a loading spinner will be attached to this DOM element
     }): void {
         // await this.players.left.appendSimulationControls(opt);
@@ -675,12 +675,22 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    appendPlotControls(opt?: { top?: number, left?: number, width?: number, parent?: string, disableHandlers?: { plot?: boolean, reset?: boolean }}): DAAPlayer {
+    appendPlotControls(opt?: {
+        top?: number, 
+        left?: number, 
+        width?: number, 
+        parent?: string, 
+        disableHandlers?: { plot?: boolean, reset?: boolean },
+        reuseParentDiv?: boolean,
+        buttons?: { plot?: string, reset?: string }
+    }): DAAPlayer {
+        opt = opt || {};
         // append controls but disable the "plot" handler from the player class
         super.appendPlotControls({ ...opt, disableHandlers: { plot: true }});
         // override the plot handler of the player class
         if (!opt?.disableHandlers?.plot) {
-            $(`#${this.id}-plot`).on("click", async () => {
+            const plotBtn: string = opt.buttons?.plot ? jquerySelector(opt.buttons.plot) : `#${this.id}-plot`;
+            $(plotBtn).on("click", async () => {
                 if (this.players) {
                     for (let i = 0; i < this.labels?.length; i++) {
                         this.players[this.labels[i]]?.plot(); // async call

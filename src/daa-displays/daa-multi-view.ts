@@ -143,7 +143,8 @@ export class DAAMultiView extends DAASplitView {
         top?: number,
         left?: number,
         width?: number,
-        htmlTemplate?: string
+        htmlTemplate?: string,
+        multiplay?: { cssClass?: string, id: string, label: string }[]
     }): void {
         super.appendSimulationControls({ ...opt, displays: [ ".multi-view-display" ] })
     }

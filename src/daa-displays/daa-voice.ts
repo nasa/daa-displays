@@ -27,9 +27,9 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { alertLevel2symbol, computeBearing, computeNmiDistance } from "./daa-utils";
+import { alertLevel2symbol, computeBearing, computeNmiDistance, symbol2alertLevel } from "./daa-utils";
 import { rad2deg } from "./utils/daa-math";
-import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LLAPosition } from "./utils/daa-types";
+import { Alert, AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D } from "./utils/daa-types";
 import { getAlertingAircraftMap } from "./utils/daa-utils";
 
 // convenient type definitions
@@ -47,7 +47,7 @@ export interface GuidanceDescriptor {
 };
 export type Guidance = {
     text2speak: string,
-    subtitles: string
+    subtitles?: string // when subtitles are not present, text2speak is used as subtitle
 }[];
 export interface CommData {
     ownship: LLAPosition,
@@ -516,30 +516,9 @@ export class DaaVoice {
         msg += decimal_msg;
 
         return msg;
-
-        // // check whether the number ends with three zeros
-        // const thousands_flag: boolean = x.endsWith("000") && !x.includes(".");
-        // // check whether the number ends with two zeros
-        // const hundreds_flag: boolean = !thousands_flag && x.endsWith("00") && !x.includes(".");
-        // // check whether the number is a decimal number -- in ATC we have decimals only in numbers < 1
-        // const decimals_flag: boolean = x.includes(".") && +x < 1;
-        // // extract the digits to be read
-        // const digits: string = 
-        //     thousands_flag ? x.slice(0, -3)
-        //     : hundreds_flag ? x.slice(0, -2) 
-        //     : `${x}`;
-        // // split the digits so they are read one-by-one
-        // const numbers: string = digits.split("").map((digit: string, index: number, array: string[]) => {
-        //     return digit === "." ? " point "
-        //         : digit + " " + (!decimals_flag && array.length - 3 === index ? " thousand" : "") + (index < array.length - 1 ? pause + " " : "");
-        // }).join("");
-        // // return the message
-        // return thousands_flag ? numbers + ` thousand`
-        //     : hundreds_flag ? numbers + ` hundred`
-        //     : numbers;
     }
     /**
-     * Internal function, reads the direction of an intruder aircraft as ATC would read it to pilots, e.g., north bound, south bound, southeast bound, etc.
+     * Utility function, reads the direction of an intruder aircraft as ATC would read it to pilots, e.g., north bound, south bound, southeast bound, etc.
      */
     readDirection (deg: number): string {
         // utility function, makes sure the value is between 0..360
@@ -557,10 +536,83 @@ export class DaaVoice {
         return "";
     }
     /**
-     * Utility function, returns the set of aircraft whose alert >= threshold
-     * default threshold is AlertLevel.ALERT
+     * Utility function, reads the relative direction of an aircraft wrt the ownship
      */
-    protected getAlertingAircraft (data: CommData, opt?: { minThreshold?: AlertLevel, maxThreshold?: AlertLevel }): DAA_AircraftDescriptor[] {
+    readRelativeDirection (data: { ac: Vector3D<number | string >}): string {
+        if (data?.ac) {
+            const traffic_direction: number = rad2deg(Math.atan2(+data.ac.x, +data.ac.y));
+            return this.readDirection(+traffic_direction);
+        }
+        return "";
+    }
+    /**
+     * Utility function, reads relative altitude of an aircraft wrt the ownship
+     */
+    readRelativeAltitude (data: { ownship: LLAPosition, ac: number }, opt?: { altitude_kind?: "relative" | "absolute" }): string {
+        // compute altitude of the intruder
+        // option 1: absolute altitude, e.g., one-seven thousands
+        // option 2: relative altitude, e.g., one thousand feet below you
+        const alt: { absolute: number, relative: number } = {
+            absolute: data.ac,
+            relative: data.ac - +data.ownship.s.alt 
+        }; // altitude, in ft
+        const altitude_info: "relative" | "absolute" = opt?.altitude_kind || "absolute";
+        const altitude_val: number = altitude_info === "absolute" ? alt.absolute : Math.abs(alt.relative);
+        // read feedback for altitude, number is rounded to 100xft
+        const altitude_rounded_val: number = Math.floor(altitude_val / 100) * 100;
+        return `${altitude_rounded_val}`;
+    }
+    /**
+     * Utility function, reads the relative heading of an aircraft wrt the ownship
+     */
+    readRelativeHeading (data: { ownship: LLAPosition, ac: LatLon<number | string> }): string {
+        if (data?.ownship && data?.ac) {
+            const ownship_heading: number = rad2deg(Math.atan2(+data.ownship.v.x, +data.ownship.v.y));
+            const bearing: number = computeBearing({
+                lat: +data.ownship.s.lat,
+                lon: +data.ownship.s.lon
+            }, {
+                lat: +data.ac.lat,
+                lon: +data.ac.lon
+            });
+            const relative_bearing: number = ((((bearing - ownship_heading) % 360) + 360) % 360);
+            // console.log({ relative_bearing, bearing, heading: ownship_heading });
+            let relative_heading: string = ((relative_bearing / 360) * 12).toFixed(0);
+            if (relative_heading === "0") { relative_heading = "12"; }
+            return `${relative_heading} o'clock`;
+        }
+        return "";
+    }
+    /**
+     * Utility function, reads the relative distance of an aircraft from the ownship
+     */
+    readRelativeDistance (data: { ownship: LLAPosition, ac: LatLon<number | string> }): string {
+        if (data?.ownship && data?.ac) {
+            // compute distance between the aircraft
+            // Note: for traffic closer than 1NM, we currently read the decimal number
+            // However, in ATC, for a traffic advisory you'd more often hear something like "less than a mile", 
+            // and if the traffic is close enough in space/time/closure rate, the advisory would likely 
+            // get elevated to an alert, e.g., "traffic, less than a mile, same altitude, opposite direction, 
+            // suggest left [or right] turn [heading nnn] immediately."
+            const distance: string = computeNmiDistance({
+                lat: +data.ownship.s.lat,
+                lon: +data.ownship.s.lon
+            }, {
+                lat: +data.ac.lat,
+                lon: +data.ac.lon
+            }).toFixed(1);
+
+            // read feedback for distance -- round the number to the nearest integer if distance > 1NM, otherwise use two digits accuracy
+            const distance_val: number = +distance > 1 ? Math.round(+distance) : +distance;
+            return `${distance_val}`;
+        }
+        return "";
+    }
+    /**
+     * Utility function, returns the set of aircraft whose alert >= threshold
+     * default minThreshold and maxThreshold are AlertLevel.ALERT
+     */
+    getAlertingAircraft (data: CommData, opt?: { minThreshold?: AlertLevel, maxThreshold?: AlertLevel } | { alertLevel?: AlertLevel }): DAA_AircraftDescriptor[] {
         const alerting: { [ac: string]: AlertLevel } = getAlertingAircraftMap(data?.bands, opt);
         if (alerting) {
             const alerting_ids: string[] = Object.keys(alerting);
@@ -581,14 +633,17 @@ export class DaaVoice {
         return null;
     }
     /**
-     * Internal function, returns the max alerting aircraft based on some ranking criteria
-     * For now, we simply return the first aircraft in the list
+     * Utility function, returns the max alerting aircraft based on some ranking criteria
+     * For now, no specifc criteria is used and we simply return the first aircraft in the list
      */
-    protected getMaxAlertingAircraft (alerting: DAA_AircraftDescriptor[], opt?: { suppressRepeatedAlerts?: boolean }): DAA_AircraftDescriptor {
+    getMaxAlertingAircraft (alerting: DAA_AircraftDescriptor[], opt?: { suppressRepeatedAlerts?: boolean, alertLevel?: AlertLevel }): DAA_AircraftDescriptor {
         if (alerting?.length) {
-            // remove last alerting aircraft to avoid repeated alerts on the same aircraft
-            const candidates: DAA_AircraftDescriptor[] = this.lastAlertingAircraft && opt?.suppressRepeatedAlerts ? alerting.filter(ac => {
-                return ac.callSign !== this.lastAlertingAircraft.callSign;
+            const level: AlertLevel = opt?.alertLevel !== undefined ? opt.alertLevel : AlertLevel.ALERT;
+            // remove last alerting aircraft to avoid repeated alerts on the same aircraft, unless the alert level for that aircraft has increased
+            const candidates: DAA_AircraftDescriptor[] = opt?.suppressRepeatedAlerts && this.lastAlertingAircraft ? alerting.filter(ac => {
+                const ac_level: AlertLevel = symbol2alertLevel(ac.symbol);
+                const last_level: AlertLevel = symbol2alertLevel(this.lastAlertingAircraft?.symbol);
+                return ac.callSign !== this.lastAlertingAircraft.callSign || ac_level > last_level;
             }) : alerting;
             // return the first aircraft in the candidates list
             const ac: DAA_AircraftDescriptor = candidates?.length ? candidates[0] : null;
@@ -596,7 +651,7 @@ export class DaaVoice {
                 // return alerting aircraft
                 return ac;
             }
-            console.log(`[daa-voice] Info: Alert suppressed for ${alerting[0]?.callSign} (alert repeated within ${this.repeatedAlertTimeout}ms)`);
+            console.log(`[daa-voice] Info: Alert suppressed for ${alerting[0]?.callSign} (alert level ${level} repeated within ${this.repeatedAlertTimeout}ms)`);
         }
         return null;
     }
@@ -614,8 +669,8 @@ export class DaaVoice {
     protected updateAlertingHistory (ac: DAA_AircraftDescriptor): void {
         if (ac) {
             this.clearAlertingHistory();
-            // store info about the alerting aircraft
-            this.lastAlertingAircraft = ac;
+            // store a copy of the alerting aircraft descriptor
+            this.lastAlertingAircraft = { ...ac };
         }
     }
     /**
@@ -638,7 +693,7 @@ export class DaaVoice {
     /**
      * Utility function, sets the value of the alerting timeout used for suppressing repeated alerts
      */
-    selectRepeatedAlertTimeout (ms: number): boolean {
+    selectRepeatedAlertSuppressionTimeout (ms: number): boolean {
         if (ms > 0) {
             this.repeatedAlertTimeout = ms;
             return true;
@@ -656,80 +711,55 @@ export class DaaVoice {
         altitude_kind?: "absolute" | "relative",
         suppressRepeatedAlerts?: boolean
     }): Guidance {
-        if (this.enabled) {
+        if (this.enabled && data?.bands && data?.ownship && data?.traffic?.length) {
             const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data);
-            if (alerting?.length && data?.bands && data?.ownship && data?.traffic?.length) {
-                const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { suppressRepeatedAlerts: opt?.suppressRepeatedAlerts });
+            if (alerting?.length) {
+                const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, opt);
                 if (max_alert_aircraft) {
                     // store info about the alerting aircraft
                     this.updateAlertingHistory(max_alert_aircraft);
 
-                    // compute relative heading position of the intruder
-                    const ownship_heading: number = rad2deg(Math.atan2(+data.ownship.v.x, +data.ownship.v.y));
-                    const bearing: number = computeBearing({
-                        lat: +data.ownship.s.lat,
-                        lon: +data.ownship.s.lon
-                    }, {
-                        lat: +max_alert_aircraft.s.lat,
-                        lon: +max_alert_aircraft.s.lon
-                    });
-                    const relative_bearing: number = ((((bearing - ownship_heading) % 360) + 360) % 360);
-                    // console.log({ relative_bearing, bearing, heading: ownship_heading });
-                    let relative_heading: string = ((relative_bearing / 360) * 12).toFixed(0);
-                    if (relative_heading === "0") { relative_heading = "12"; }
+                    // read feedback for heading
+                    const relative_heading: string = this.readRelativeHeading({ ownship: data.ownship, ac: max_alert_aircraft.s });
 
-                    // read feedback for heading position
-                    const relative_heading_msg: string = `${relative_heading} o'clock`;
-                    const relative_heading_txt: string = `${relative_heading} o'clock`;
-
-                    // compute distance between the aircraft
-                    const distance: string = computeNmiDistance({
-                        lat: +data.ownship.s.lat,
-                        lon: +data.ownship.s.lon
-                    }, {
-                        lat: +max_alert_aircraft.s.lat,
-                        lon: +max_alert_aircraft.s.lon
-                    }).toFixed(1);
-
-                    // read feedback for distance -- round the number to the nearest integer if distance > 1NM, otherwise use two digits accuracy
-                    const distance_msg: string = `${this.readNumber(+distance > 1 ? Math.round(+distance) : +distance)} miles`;
-                    const distance_txt: string = `${+distance > 1 ? Math.round(+distance) : +distance} miles`;
-
-                    // compute altitude of the intruder
-                    // option 1: absolute altitude, e.g., one-seven thousands
-                    // option 2: relative altitude, e.g., one thousand feet below you
-                    const alt: { absolute: number, relative: number } = {
-                        absolute: +max_alert_aircraft.s.alt,
-                        relative: +max_alert_aircraft.s.alt - +data.ownship.s.alt 
-                    }; // altitude, in ft
-                    const altitude_info: "relative" | "absolute" = opt?.altitude_kind || "absolute";
-                    const altitude: number = altitude_info === "absolute" ? alt.absolute : Math.abs(alt.relative);
+                    // read feedback for distance
+                    const distance: string = this.readRelativeDistance({ ownship: data.ownship, ac: max_alert_aircraft.s });
+                    const distance_msg: string = `${this.readNumber(distance)} miles`;
+                    const distance_txt: string = `${distance} miles`;
 
                     // create guidace message, e.g., traffic, 2 o'clock, 3 miles, 8000 ft
                     // the message is split into chunks to introduce short pauses between relevant chunks
                     const guidance: Guidance = [
-                        { text2speak: "Traffic", subtitles: "Traffic" },
-                        { text2speak: `${relative_heading_msg} ${distance_msg}`, subtitles: `${relative_heading_txt}, ${distance_txt}` }
+                        { text2speak: "Traffic" },
+                        { text2speak: `${relative_heading} ${distance_msg}`, subtitles: `${relative_heading}, ${distance_txt}` }
                     ];
 
                     // include direction, if needed
                     if (opt?.include_direction) {
                         // feedback for direction
-                        const traffic_direction: number = rad2deg(Math.atan2(+max_alert_aircraft.v.x, +max_alert_aircraft.v.y));
-                        const direction_msg: string = this.readDirection(+traffic_direction);
-                        const direction_txt: string = direction_msg;
-                        guidance.push({ text2speak: direction_msg, subtitles: direction_txt });
+                        const direction: string = this.readRelativeDirection({ ac: max_alert_aircraft.v });
+                        guidance.push({ text2speak: direction });
                     }
 
                     // include altitude, if needed
                     if (opt?.include_altitude) {
+                        const altitude_kind: "relative" | "absolute" = opt?.altitude_kind || "absolute";
                         // read feedback for altitude, number is rounded to 100xft
-                        let altitude_msg: string = `${this.readNumber(Math.floor(altitude / 100) * 100)}`; // feet is often omitted for brevity
-                        let altitude_txt: string = `${Math.floor(altitude / 100) * 100}`;
-                        if (altitude_info === "relative") {
-                            altitude_msg += alt.relative < 0 ? " feet below you " : " feet above you ";
-                            altitude_txt += alt.relative < 0 ? " feet below you " : " feet above you ";
-                        }
+                        const altitude: string = this.readRelativeAltitude({ ownship: data.ownship, ac: +max_alert_aircraft.s.alt }, { altitude_kind });
+                        const altitude_msg: string = 
+                            altitude_kind === "relative" ? 
+                                +altitude < 0 ? `${this.readNumber(altitude)} feet below you ` 
+                                : +altitude > 0 ? `${this.readNumber(altitude)} feet above you `
+                                : +altitude === 0 ? " same altitude"
+                                : "" // something went wrong, unable to compute relative altitude
+                            : `${altitude}`; // feet is often omitted for brevity
+                        const altitude_txt: string =
+                            altitude_kind === "relative" ? 
+                                +altitude < 0 ? `${altitude} feet below you ` 
+                                : +altitude > 0 ? `${altitude} feet above you `
+                                : +altitude === 0 ? " same altitude"
+                                : "" // something went wrong, unable to compute relative altitude
+                            : `${altitude}`; // feet is often omitted for brevity
                         guidance.push({ text2speak: altitude_msg, subtitles: altitude_txt });
                     }
 
@@ -745,15 +775,59 @@ export class DaaVoice {
      * Example: "Traffic, eleven o'clock, one-zero miles, southbound, converging, Boeing Seven Twenty Seven, one seven thousand."
      * See example ATC phraseology at https://www.faa.gov/air_traffic/publications/atpubs/atc_html/chap2_section_1.html
      */
-    getGuidanceRTCA (data: CommData): Guidance {
-        // TODO
-        if (this.enabled) {
-            return null;
+    getGuidanceRTCA (data: CommData, opt?: {
+        suppressRepeatedAlerts?: boolean
+    }): Guidance {
+        if (this.enabled && data?.bands && data?.ownship && data?.traffic?.length) {
+            const levels: AlertLevel[] = [
+                AlertLevel.ALERT,  // DO-365 warning
+                AlertLevel.AVOID,  // DO-365 corrective alert
+                AlertLevel.MONITOR // DO-365 preventive alert
+            ];
+            for (let i = 0; i < levels.length; i++) {
+                // check warnings, then corrective alerts, then preventive alerts
+                const alertLevel: AlertLevel = levels[i];
+                const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data, { alertLevel });
+                const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { ...opt, alertLevel });
+                if (max_alert_aircraft) {
+                    // store info about the alerting aircraft
+                    this.updateAlertingHistory(max_alert_aircraft);
+                    // read feedback for heading position
+                    const relative_heading: string = this.readRelativeHeading({ ownship: data.ownship, ac: max_alert_aircraft.s });
+                    const guidance: Guidance = [
+                        { text2speak: "Traffic" },
+                        { text2speak: relative_heading },
+                        { text2speak: levels[i] === AlertLevel.ALERT ? `MANEUVER NOW` : levels[i] === AlertLevel.AVOID ? `AVOID` : "MONITOR" },
+                    ];
+                    return guidance;
+                }
+            }
         }
         return null;
     }
     /**
-     * Main API for obtaining voice guidance
+     * Main API for obtaining guidance text
+     */
+    getGuidance (data: CommData, opt?: { 
+        kind?: GuidanceKind, 
+        force?: boolean,
+        include_direction?: boolean,
+        include_altitude?: boolean,
+        altitude_kind?: "absolute" | "relative",
+        suppressRepeatedAlerts?: boolean
+    }): Guidance {
+        if (this.enabled && data?.bands && data?.ownship && data?.traffic?.length) {
+            const kind: GuidanceKind = opt?.kind || this.selectedKind || DEFAULT_GUIDANCE_KIND;
+            const guidance: Guidance = 
+                kind === GuidanceKind.ATC ? this.getGuidanceATC(data, opt)
+                : kind === GuidanceKind["RTCA DO-365"] ? this.getGuidanceRTCA(data, opt)
+                : null;
+            return guidance;
+        }
+        return null;
+    }
+    /**
+     * Main API for reading the guidance with the synthetic voice
      */
     async readGuidance (desc: { data?: CommData, guidance?: Guidance }, opt?: { kind?: GuidanceKind, force?: boolean }): Promise<Guidance> {
         if (this.enabled) {
@@ -763,12 +837,7 @@ export class DaaVoice {
                     this.sayNoMore();
                 }
                 if (this.can_speak_now) {
-                    const kind: GuidanceKind = opt?.kind || this.selectedKind || DEFAULT_GUIDANCE_KIND;
-                    const guidance: Guidance = 
-                        desc?.guidance ? desc.guidance
-                        : kind === GuidanceKind.ATC ? this.getGuidanceATC(desc.data)
-                        : kind === GuidanceKind["RTCA DO-365"] ? this.getGuidanceRTCA(desc.data)
-                        : null;
+                    const guidance: Guidance = desc.guidance || this.getGuidance(desc.data, opt);
                     if (guidance) {
                         const txt: string[] = guidance.map(gd => {
                             return gd.text2speak;

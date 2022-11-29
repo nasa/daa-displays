@@ -41,6 +41,17 @@ export const playbackTemplate: string = `
                             <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-back" style="width:86px;" alt="Step backward"><i class="fa fa-step-backward"></i></button>
                             <button type="button" class="btn btn-sm btn-danger sim-control" id="{{id}}-pause" style="width:86px;">Stop</button>
                             <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-play" style="width:90px;">Play</button>
+                            {{#if multiplay}}
+                            <div class="btn-group btn-group-sm integrated-multiplay-controls" role="group">
+                                <button id="multiplay-group" type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                </button>
+                                <div class="dropdown-menu" style="padding:0px !important;" aria-labelledby="multiplay-group">
+                                {{#each multiplay}}
+                                    <a class="dropdown-item" class="{{cssClass}} btn btn-sm btn-secondary">{{label}}</a>
+                                {{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
                             <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-step" style="width:86px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
                         </div>
                     </div>
@@ -53,11 +64,11 @@ export const playbackTemplate: string = `
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3" style="display:none;">
                         <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary sim-control" style="width:84px;">GoTo</button>
-                        <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
+                        <input id="{{id}}-goto-input" class="form-control" style="text-align:center;" type="number" value="0" min="0" aria-label="goto">
                     </div>
                     <div class="input-group input-group-sm mb-3">
                         <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
-                        <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
+                        <input id="{{id}}-goto-time-input" class="form-control" style="text-align:center;" type="text" value="0" aria-label="goto-time">
                     </div>
                 </div>
                 <div class="col-sm">
@@ -109,6 +120,17 @@ export const integratedPlaybackTemplate: string = `
                             <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-back" style="width:86px;" alt="Step backward"><i class="fa fa-step-backward"></i></button>
                             <button type="button" class="btn btn-sm btn-danger sim-control" id="{{id}}-pause" style="width:86px;">Stop</button>
                             <button type="button" class="btn btn-sm btn-primary sim-control" id="{{id}}-play" style="width:90px;">Play</button>
+                            {{#if multiplay}}
+                            <div class="btn-group btn-group-sm integrated-multiplay-controls" role="group">
+                                <button id="multiplay-group" type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                </button>
+                                <div class="dropdown-menu" style="padding:0px !important;" aria-labelledby="multiplay-group">
+                                {{#each multiplay}}
+                                    <a id="{{id}}" class="dropdown-item btn btn-sm btn-secondary {{cssClass}}">{{label}}</a>
+                                {{/each}}
+                                </div>
+                            </div>
+                            {{/if}}
                             <button type="button" class="btn btn-sm btn-warning sim-control" id="{{id}}-step" style="width:86px;" alt="Step forward"><i class="fa fa-step-forward"></i></button>
                         </div>
                     </div>
@@ -117,11 +139,11 @@ export const integratedPlaybackTemplate: string = `
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3" style="display:none;">
                         <button id="{{id}}-goto" type="button" class="btn btn-sm btn-secondary sim-control" style="width:84px;">GoTo</button>
-                        <input id="{{id}}-goto-input" style="text-align:center;" type="number" value="0" min="0" aria-label="goto" class="form-control">
+                        <input id="{{id}}-goto-input" class="form-control" style="text-align:center;" type="number" value="0" min="0" aria-label="goto">
                     </div>
                     <div class="input-group input-group-sm mb-3">
                         <button id="{{id}}-goto-time" type="button" class="btn btn-sm btn-secondary sim-control">Go to Time</button>
-                        <input id="{{id}}-goto-time-input" style="text-align:center;" type="text" value="0" aria-label="goto-time" class="form-control">
+                        <input id="{{id}}-goto-time-input" class="form-control" style="text-align:center;" type="text" value="0" aria-label="goto-time">
                     </div>
                 </div>
             </div>
@@ -236,7 +258,7 @@ export const displayDivTemplate: string = `
 }
 </style>
 <script>
-function reveal (id) { $(id).css({ display: 'block'}); }
+function reveal (id, cssdisp) { $(id).css({ display: cssdisp || 'block'}); }
 function hide (id) { $(id).css({ display: 'none'}); }
 </script>
 <div style="display:grid; grid-template-columns: auto auto;">
@@ -245,37 +267,40 @@ function hide (id) { $(id).css({ display: 'none'}); }
     <div class="multi-view-display-list">
     {{#each aircraft}}
     <div id="show-daa-display-{{@index}}-btn" class="multi-view-display-btn" style="display:none;">
-        <button class="btn btn-outline-primary btn-sm multi-view-display-minimized" type="button" data-toggle="collapse" data-target="#daa-display-{{@index}}" 
-                aria-expanded="false" aria-controls="show-daa-disp-{{@index}}"
-                onclick="hide('#show-daa-display-{{@index}}-btn');reveal('#daa-disp-{{@index}}');">
+        <button class="btn btn-outline-primary btn-sm multi-view-display-minimized" type="button" 
+                onclick="hide('#show-daa-display-{{@index}}-btn');reveal('#multi-view-display-{{@index}}', 'grid');">
         Show display {{this}}
         </button>
     </div>
     {{/each}}
     </div>
 
-    <!-- display grid (3xN) -->
-    <div style="display:grid; grid-template-columns: auto auto auto;">
+    <!-- display grid (1xN) -->
+    <div>
         {{#each aircraft}}
-        <div style="position:relative;transform:scale(0.8);transform-origin:top left;">
-            <div id="daa-display-{{@index}}" class="multi-view-display collapse show">
-                <!-- display -->
-                <div id="daa-disp-{{@index}}" style="margin-top:10px;"></div>
-                <!-- tail number -->
-                <div class="multi-view-tail-number">
-                    <div class="input-group input-group-sm">
-                        <div class="input-group-prepend" style="position:absolute;">
-                            <button class="btn btn-sm btn-dark hide-multi-view-display-btn" type="button" data-toggle="collapse" data-target="#daa-display-{{@index}}" 
-                                    aria-expanded="false" aria-controls="collapse-daa-disp-{{@index}}"
-                                    onclick="reveal('#show-daa-display-{{@index}}-btn');hide('#daa-disp-{{@index}}');">
-                                Hide
-                            </button>
-                        </div>
-                        <div class="btn btn-sm tail-number-label">
-                            {{this}}
+        <div id="multi-view-display-{{@index}}" style="display:grid; grid-template-columns: auto auto;">
+            <div style="position:relative;transform:scale(0.8);transform-origin:top left;">
+                <div id="daa-display-{{@index}}" class="multi-view-display collapse show">
+                    <!-- display -->
+                    <div id="daa-disp-{{@index}}" style="margin-top:10px;"></div>
+                    <!-- tail number -->
+                    <div class="multi-view-tail-number">
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-prepend" style="position:absolute;">
+                                <button class="btn btn-sm btn-dark hide-multi-view-display-btn" type="button"
+                                        onclick="reveal('#show-daa-display-{{@index}}-btn');hide('#multi-view-display-{{@index}}');">
+                                    Hide
+                                </button>
+                            </div>
+                            <div class="btn btn-sm tail-number-label">
+                                {{this}}
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div>
+                <div id="simulation-plot-{{@index}}" style="position:relative; top:85px;"></div>
             </div>
         </div>
         {{/each}}
@@ -417,22 +442,32 @@ export const loadingTemplate: string = `
 
 export const navbarTemplate: string = `
 <style>
-.navbar-integrated-controls {
-    top:15px;
-    left:34%;
-    transform:scale(0.6);
-    position:absolute;
-}
 .zoom-ctrl {
     position:absolute;
-    left:20%;
+    left:16.5%;
     background:#343a40;
+    z-index:2;
+    transform:scale(0.8);
+}
+.navbar-integrated-simulation-controls {
+    top:15px;
+    left:30%;
+    transform:scale(0.8);
+    position:absolute;
     z-index:1;
+}
+.navbar-integrated-plot-controls {
+    top:15px;
+    left:30%;
+    transform:scale(0.8);
+    position:absolute;
+    padding-left:1006px;
+    z-index:0;
 }
 </style>
 <script>
 function home () {
-    let home = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+    let home = window.location.origin;
     window.location.href = home;
 }
 </script>
@@ -456,8 +491,9 @@ function home () {
         </div>
     </span>
     {{/if}}
-    <span id="{{id}}-integrated-controls" class="navbar-integrated-controls"></span>
-    <span id="{{id}}-status" class="animated infinite pulse navbar-text col-sm-3 col-md-2 mr-0" style="color:white; display:none; float:right; font-size:xx-small; white-space:nowrap;"></span>
+    <span id="{{id}}-integrated-controls" class="navbar-integrated-simulation-controls"></span>
+    <span id="{{id}}-integrated-controls-secondary" class="navbar-integrated-plot-controls"></span>
+    <!-- <span class="daa-loading-status animated infinite pulse navbar-text col-sm-3 col-md-2 mr-0" style="color:white; display:none; float:right; font-size:xx-small; white-space:nowrap;"></span> -->
 </nav>`;
 
 export const spectrogramControls: string = `
@@ -491,7 +527,7 @@ export const voiceFeedbackControls: string = `
                         </div>
                         <select class="custom-select" style="text-align:center;" id="{{id}}-aural-guidance-list">
                             {{#each styles}}
-                            <option value="{{id}}" {{#if @first}}selected{{/if}}>{{name}}</option>
+                            <option value="{{name}}" {{#if @first}}selected{{/if}}>{{name}}</option>
                             {{/each}}
                         </select>
                         <input class="daa-voice-text" style="text-align:center; display:none;" readonly disabled type="text" value="" aria-label="aural guidance" class="form-control">
