@@ -4,7 +4,9 @@ import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
 export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" 
-    | "contours" | "hazard-zones" | "flight-plan" | "vfr-map" | ""; // "" means empty slot
+    | "contours" | "hazard-zones"
+    | "WCV" | "blobs" 
+    | "flight-plan" | "vfr-map" | ""; // "" means empty slot
 
 export class ViewOptions {
     // widget id
@@ -153,7 +155,10 @@ export class ViewOptions {
         }    
         return this;
     }
-    protected check (inputName: ViewOptionLabels): ViewOptions {
+    /**
+     * Checks an option
+     */
+    check (inputName: ViewOptionLabels): ViewOptions {
         this.checkInput(inputName);
         switch (inputName) {
             case "nrthup": {
@@ -179,11 +184,13 @@ export class ViewOptions {
                 if (this.map) { this.map.vfrMode(); }
                 break;
             }
-            case "contours": {
+            case "contours":
+            case "WCV": {
                 if (this.map) { this.map.showContours(true); }
                 break;
             }
-            case "hazard-zones": {
+            case "hazard-zones":
+            case "blobs": {
                 if (this.map) { this.map.showHazardZones(true); }
                 break;
             }
@@ -195,7 +202,10 @@ export class ViewOptions {
         }
         return this;
     }
-    protected uncheck (inputName: ViewOptionLabels): ViewOptions {
+    /**
+     * Unchecks an option
+     */
+    uncheck (inputName: ViewOptionLabels): ViewOptions {
         this.uncheckInput(inputName);
         switch (inputName) {
             case "nrthup": {
@@ -221,11 +231,13 @@ export class ViewOptions {
                 if (this.map) { this.map.streetMode(); }
                 break;
             }
-            case "contours": {
+            case "contours":
+            case "WCV": {
                 if (this.map) { this.map.showContours(false); }
                 break;
             }
-            case "hazard-zones": {
+            case "hazard-zones":
+            case "blobs": {
                 if (this.map) { this.map.showHazardZones(false); }
                 break;
             }
@@ -237,27 +249,46 @@ export class ViewOptions {
         }
         return this;
     }
-    // showTraffic (flag: boolean): ViewOptions {
-    //     if (this.map) {
-    //         if (flag) {
-    //             this.check("traffic");
-    //         } else {
-    //             this.uncheck("traffic");
-    //         }
-    //     } else {
-    //         console.warn("Warning: ViewOptions is not linked to a map");
-    //     }
-    //     return this;
-    // }
+    /**
+     * Checks/unchecks north up view
+     */
     nrthupView (on: boolean): ViewOptions {
-        if (this.compass) {
-            if (on) {
-                this.check("nrthup");
-            } else {
-                this.uncheck("nrthup");
-            }
-        }
-        return this;
+        return on ? this.check("nrthup") : this.uncheck("nrthup");
     }
-
+    /**
+     * Checks/unchecks call sign
+     */
+    callSign (on: boolean): ViewOptions {
+        return on ? this.check("call-sign") : this.uncheck("call-sign");
+    }
+    /**
+     * Checks/unchecks vfr map
+     */
+    vfrMap (on: boolean): ViewOptions {
+        return on ? this.check("vfr-map") : this.uncheck("vfr-map");
+    }
+    /**
+     * Checks/unchecks terrain
+     */
+    terrain (on: boolean): ViewOptions {
+        return on ? this.check("terrain") : this.uncheck("terrain");
+    }
+    /**
+     * Checks/unchecks well-clear volume (formerly "contours")
+     */
+    WCV (on: boolean): ViewOptions {
+        return on ? this.check("WCV") : this.uncheck("WCV");
+    }
+    /**
+     * Checks/unchecks blobs (formerly "hazard-zones")
+     */
+    blobs (on: boolean): ViewOptions {
+        return on ? this.check("blobs") : this.uncheck("blobs");
+    }
+    /**
+     * Checks/unchecks flight plan
+     */
+    flightPlan (on: boolean): ViewOptions {
+        return on ? this.check("flight-plan") : this.uncheck("flight-plan");
+    }
 }

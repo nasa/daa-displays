@@ -14,13 +14,18 @@ export class HScale {
     protected compass: Compass;
     protected div: HTMLElement;
     readonly nRadios: number = 16;
+    scrollEnabled: boolean = true;
     protected offsets: number[];
     protected readonly nmiRadios: number[] = [ 0, // valid radio IDs start from 1
         0.02, 0.04, 0.08, 0.1, 0.2, 0.4, 0.8, 1, // display 8 elements in each screen
         2.5, 5, 10, 20, 40, 80, 160, 320
     ]; // this array must contain 17 elements --- see daa-hscale-template.ts
 
-    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, compass?: Compass, parent?: string }) {
+    /**
+     * Constructor
+     * h-scroll is enabled by default
+     */
+    constructor(id: string, coords: utils.Coords, opt?: { map?: InteractiveMap, compass?: Compass, parent?: string, hScroll?: boolean }) {
         opt = opt || {};
         this.id = id || "daa-hscale";
 
@@ -42,7 +47,9 @@ export class HScale {
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
-        const theHTML = Handlebars.compile(templates.radioButtons)({
+        this.scrollEnabled = opt?.hScroll === undefined ? true : !!opt.hScroll;
+        const template: string = this.scrollEnabled ? templates.radioButtons : templates.radioButtonsNoScroll; 
+        const theHTML = Handlebars.compile(template)({
             id: this.id,
             zIndex: 2,
             top: this.top,
@@ -65,16 +72,31 @@ export class HScale {
         // install handlers
         for (let i = 0; i < this.nRadios; i++) {
             let radioID = i + 1;
-            $(`#${this.id}-radio${radioID}-overlay`).on("click", () => {
+            $(`#${this.id}-radio${radioID}-overlay`).on("click", (evt: JQuery.ClickEvent) => {
                 this.checkRadio(radioID);
             });
         }
+        // if scroll is not enabled, prev/next can be used to change the zoom level
+        if (!this.scrollEnabled) {
+            $(`#${this.id}-carousel-control-next`).on("click", (evt: JQuery.ClickEvent) => {
+                this.selectNextZoomLevel();
+            });
+            $(`#${this.id}-carousel-control-prev`).on("click", (evt: JQuery.ClickEvent) => {
+                this.selectPrevZoomLevel();
+            });
+        }
     }
+    /**
+     * Internal function, checks a given radio button
+     */
     protected checkInput(inputID: number): HScale {
         $(`#${this.id}-radio-${inputID}`).prop("checked", true);
         this.updateBackground();
         return this;
     }
+    /**
+     * Internal function, updates the background color of the cell based on the check status of the corresponding radio button
+     */
     protected updateBackground(): HScale {
         const updateColor = (id: string, inputID: number) => {
             const isChecked = $(`#${id}-radio-${inputID}`).prop("checked");
@@ -89,6 +111,50 @@ export class HScale {
         }    
         return this;
     }
+    /**
+     * Utility function, returns the ID of the selected radio button
+     */
+    getSelectedRadio (): number {
+        return this.zoomLevel;
+    }
+    /**
+     * Utility function, returns the selected NMI zoom value
+     */
+    getSelectedNMI (): number {
+        if (this.zoomLevel >= 0 && this.zoomLevel < this.nmiRadios.length) {
+            const NMI = this.nmiRadios[this.zoomLevel];
+            return NMI;
+        }
+        // out of range
+        return NaN;
+    }
+    /**
+     * Utility function, selects the next zoom level
+     */
+    selectNextZoomLevel (): boolean {
+        const min: number = this.scrollEnabled ? 0 : 8;
+        const max: number = this.nmiRadios.length;
+        if (this.zoomLevel >= min && this.zoomLevel < max - 1) {
+            this.checkRadio(this.zoomLevel + 1);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Utility function, selects the previous zoom level
+     */
+    selectPrevZoomLevel (): boolean {
+        const min: number = this.scrollEnabled ? 0 : 8;
+        const max: number = this.nmiRadios.length;
+        if (this.zoomLevel > min && this.zoomLevel < max - 1) {
+            this.checkRadio(this.zoomLevel - 1);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Utility function, checks a radio button
+     */
     checkRadio(radioID: number): HScale {
         this.checkInput(radioID);
         this.zoomLevel = radioID;

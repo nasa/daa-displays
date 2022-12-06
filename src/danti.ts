@@ -308,7 +308,7 @@ const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 
     left: enable_widescreen ? 7 : 13, 
     width: enable_widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH - PADDING
-}, { parent: "daa-disp", map, compass });
+}, { parent: "daa-disp", map, compass, hScroll: false });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { 
     top: enable_widescreen ? -44 : 0, 
