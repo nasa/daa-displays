@@ -11,7 +11,7 @@
 	"publisher": "paolomasci",
 	"categories": [],
 	"dependencies": {
-		"express": "^4.16.1",
+		"express": "^4.17.3",
 		"node": "^14.14.41",
 		"ws": "^6.0.1"
 	},
