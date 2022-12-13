@@ -58,7 +58,7 @@ export declare interface VfrChart {
  */
 export const VFR_CHARTS: VfrChart[] = [
     {
-        file: "washington.png",
+        file: "washington.png", // Note: you can use file washington-highres.png if you want higher resolution map (16000x12000) and are not concerned about performance
         west: -79.948223, 
         east: -71.651166, 
         north: 40.279218, 
