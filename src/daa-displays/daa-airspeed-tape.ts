@@ -51,7 +51,12 @@ import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-airspeed-templates';
 import { ResolutionElement, Vector3D } from './utils/daa-types';
 
-// internal class, renders a resolution bug over the tape
+// useful constants
+const ANIMATION_DURATION: string = `${utils.DEFAULT_ANIMATION_DURATION}s`;
+
+/**
+ * internal class, renders a resolution bug over the tape
+ */
 class SpeedBug {
     protected id: string;
     protected val: number = 0;
@@ -192,12 +197,12 @@ class SpeedBug {
 
             const notchHeight: number = this.wedgeAperture * this.tickHeight / this.airspeedStep;
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": ANIMATION_DURATION, "transform": `translateY(${bugPosition}px)`});
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-indicator`).css({ "transition-duration": ANIMATION_DURATION, "transform": `translateY(${bugPosition}px)`});
         }
 
         if (this.useColors) {
@@ -254,6 +259,9 @@ class SpeedBug {
     }
 }
 
+/**
+ * Airspeed tape class
+ */
 export class AirspeedTape {
     protected id: string;
     protected top: number;
@@ -574,7 +582,7 @@ export class AirspeedTape {
     }
     protected spinTapeTo (val: number, transitionDuration: string): void {
         if (!isNaN(+val)) {
-            transitionDuration = transitionDuration || "500ms";
+            transitionDuration = transitionDuration || ANIMATION_DURATION;
             let spinValueTranslation = this.zero + val * this.tickHeight / this.airspeedStep;
             spinValueTranslation = (spinValueTranslation > 0) ? 0 : spinValueTranslation;
             $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
@@ -683,7 +691,7 @@ export class AirspeedTape {
         this.currentAirspeed = AirspeedTape.convert(val, units, this.tapeUnits);
 
         if (this.tapeCanSpin) {
-            const transitionDuration = opt.transitionDuration || "500ms";
+            const transitionDuration = opt.transitionDuration || ANIMATION_DURATION;
             this.spinTapeTo(val, transitionDuration);
             this.speedBug.hide();
         } else {
@@ -698,7 +706,7 @@ export class AirspeedTape {
         const spinGroup: number = Math.trunc(this.currentAirspeed / 10);
         const reps: number = Math.floor(((this.nAirspeedTicks - 1) * 2 * this.airspeedStep) / 100);
         const spinIndicatorTranslation: number = (-1 * reps * 100 * ratio / 2) + (spinGroup * ratio * 10) + spinIndicatorValue * ratio; // number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
-        $(`#${this.id}-indicator-spinner`).css({ "transition-duration": "500ms", "transform": `translateY(${spinIndicatorTranslation}px)`});
+        $(`#${this.id}-indicator-spinner`).css({ "transition-duration": ANIMATION_DURATION, "transform": `translateY(${spinIndicatorTranslation}px)`});
         
         // ground speed and true airspeed need to be updated every time we set air speed
         this.updateGroundSpeed();

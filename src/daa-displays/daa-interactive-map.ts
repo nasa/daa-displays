@@ -122,6 +122,8 @@ export class InteractiveMap {
             layeringMode?: LayeringMode,
             scrollZoom?: boolean, // whether scroll and touch events can be used to zoom the map (default: false)
             dragging?: boolean, // whether dragging the map is enabled (default: false)
+            animate?: boolean, //  whether to smooth animation of objects moving on the map, default: false
+            duration?: number, // duration of the animation, in seconds, default: 0.25s
             engine?: "wwd" | "leafletjs" | "blank"
         }
     ) {

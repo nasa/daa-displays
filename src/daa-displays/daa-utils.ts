@@ -2,6 +2,9 @@ import { deg2rad, rad2deg } from "./utils/daa-math";
 import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, LatLon, Vector3D } from "./utils/daa-types";
 import * as server from './utils/daa-types';
 
+// useful constants
+export const DEFAULT_ANIMATION_DURATION: number = 0.5; // seconds, e.g., can be used to set animation duration of compass and map
+
 // useful aliases
 export type DaaSymbol = server.DaaSymbol;
 

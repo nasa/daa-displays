@@ -56,7 +56,12 @@ import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-altitude-templates';
 import { ResolutionElement } from './utils/daa-types';
 
-// internal class, renders a resolution bug over the tape
+// useful constants
+const ANIMATION_DURATION: string = `${utils.DEFAULT_ANIMATION_DURATION}s`;
+
+/**
+ * internal class, renders a resolution bug over the tape
+ */
 class SpeedBug {
     protected id: string;
     protected val: number = 0;
@@ -194,12 +199,12 @@ class SpeedBug {
 
             const notchHeight: number = this.wedgeAperture * this.tickHeight / this.altitudeStep;
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": ANIMATION_DURATION, "transform": `translateY(${bugPosition}px)`});
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": "100ms", "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-indicator`).css({ "transition-duration": ANIMATION_DURATION, "transform": `translateY(${bugPosition}px)`});
         }
 
         if (this.useColors) {
@@ -255,6 +260,9 @@ class SpeedBug {
     }
 }
 
+/**
+ * Altitude tape class
+ */
 export class AltitudeTape {
     protected id: string;
     protected top: number;
@@ -656,7 +664,7 @@ export class AltitudeTape {
     }
     protected spinTapeTo (val: number, transitionDuration: string): void {
         if (!isNaN(+val)) {
-            transitionDuration = transitionDuration || "500ms";
+            transitionDuration = transitionDuration || ANIMATION_DURATION;
             const spinValueTranslation: number = this.zero + val * this.tickHeight / this.altitudeStep;
             $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
         }
@@ -707,7 +715,7 @@ export class AltitudeTape {
             const spinGroup: number = Math.trunc(val / 100);
             const reps: number = Math.floor(((this.nAltitudeTicks - 1) * 2 * this.altitudeStep) / 100);
             const spinIndicatorTranslation: number = (-1 * reps * 10 * ratio2) + (spinGroup * ratio2 * 10) + spinIndicatorValue * ratio2; // -287579 is the number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
-            $(`#${this.id}-indicator-spinner`).css({ "transition-duration": "500ms", "transform": `translateY(${spinIndicatorTranslation}px)`});
+            $(`#${this.id}-indicator-spinner`).css({ "transition-duration": ANIMATION_DURATION, "transform": `translateY(${spinIndicatorTranslation}px)`});
         } else {
             // static spinner
             const dispValue: string = (spinIndicatorValue < 10) ? `0${spinIndicatorValue}` : `${spinIndicatorValue}`;

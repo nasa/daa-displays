@@ -54,7 +54,12 @@ import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-vertical-speed-templates';
 import { ResolutionElement } from '../daa-server/utils/daa-types';
 
-// internal class, renders a resolution bug over the tape
+// useful constants
+const ANIMATION_DURATION: string = `${utils.DEFAULT_ANIMATION_DURATION}s`;
+
+/**
+ * internal class used by vertical speed tape, renders a resolution bug over the tape
+ */
 class SpeedBug {
     protected id: string;
     protected val: number = 0;
@@ -225,13 +230,13 @@ class SpeedBug {
             // FIXME: val is in x100fpm, and wedge aperture is in fpm -- make everything fpm
             const notchHeight: number = Math.abs(this.computeBugPosition(this.val + this.wedgeAperture / 100) - this.computeBugPosition(this.val));
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": "100ms", top: `${bugPosition}px` });
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": ANIMATION_DURATION, top: `${bugPosition}px` });
 
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": "100ms", top: `${bugPosition}px` });
+            $(`#${this.id}-indicator`).css({ "transition-duration": ANIMATION_DURATION, top: `${bugPosition}px` });
         }
 
         if (this.useColors) {
@@ -288,7 +293,9 @@ class SpeedBug {
     }
 }
 
-
+/**
+ * Vertical speed tape class
+ */
 export class VerticalSpeedTape {
     protected id: string;
     protected top: number;
@@ -499,7 +506,7 @@ export class VerticalSpeedTape {
     //             bug_position = 318 - ((val - this.verticalSpeedStep * 4) / this.verticalSpeedStep) * (this.tape_size[2] / 2);
     //         }
     //     }
-    //     $(`#${this.id}-bug`).css({ "transition-duration": "100ms", top: `${bug_position}px` });
+    //     $(`#${this.id}-bug`).css({ "transition-duration": ANIMATION_DURATION, top: `${bug_position}px` });
     // }
 
     getVerticalSpeedStep (): number {

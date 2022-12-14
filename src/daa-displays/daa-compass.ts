@@ -60,7 +60,6 @@ import { ResolutionElement, Vector3D } from './utils/daa-types';
 
 export const singleStroke: number = 8;
 export const doubleStroke: number = 20;
-export const animationDuration: number = 0; //ms
 
 // internal class, renders a resolution bug over the compass
 class ResolutionBug {
@@ -73,6 +72,9 @@ class ResolutionBug {
     protected wedgeAperture: number = 0; // degrees
     protected wedgeSide: "left" | "right" = "right"; // side of the wedge wrt the resolution indicator
     protected wedgeConstraints: utils.FromTo[] = null;
+    protected animate: boolean = true;
+    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; //s
+
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-compass widget.
@@ -210,8 +212,8 @@ class ResolutionBug {
     refresh (opt?: { wedgeAperture?: number }): void {
         opt = opt || {};
         this.refreshWedge(opt);
-
-        $(`#${this.id}`).css({ "transition-duration": `${animationDuration}ms`, "transform": `rotate(${this.currentAngle}deg)` });
+        const animationDuration: string = this.animate ? `${this.duration}s` : "0s";
+        $(`#${this.id}`).css({ "transition-duration": animationDuration, "transform": `rotate(${this.currentAngle}deg)` });
         $(`.${this.id}-bg`).css({ "background-color": this.color });
         $(`.${this.id}-bl`).css({ "border-left": `2px dashed ${this.color}` });
         if ((isNaN(opt.wedgeAperture) && this.maxWedgeAperture) || (!isNaN(opt.wedgeAperture) && opt.wedgeAperture > 0)) {
@@ -260,6 +262,9 @@ export class Compass {
     protected previousCompassAngle: number;
     protected nrthup: boolean;
 
+    protected animate: boolean = false; // whether compass rotations should be animated
+    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; // animation duration, in seconds
+
     protected map: InteractiveMap;
     protected wind: WindIndicator;
 
@@ -290,6 +295,8 @@ export class Compass {
         map?: InteractiveMap,
         wind?: WindIndicator,
         maxWedgeAperture?: number,
+        animate?: boolean, // whether the compass should be animated when rotate, default: true
+        duration?: number, // animation duration, in seconds
         parent?: string, // ID of the parent where the compass rose will be rendered
         indicatorsDiv?: string // ID of the div element where indicators are to be rendered
     }) {
@@ -299,6 +306,9 @@ export class Compass {
         coords = coords || {};
         this.top = (isNaN(+coords.top)) ? 150 : (+coords.top);
         this.left = (isNaN(+coords.left)) ? 209 : +coords.left;
+
+        this.animate = opt.animate === undefined ? false : !!opt.animate;
+        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_ANIMATION_DURATION;
 
         // create structure for storing resolution bands
         this.bands = { NONE: [], FAR: [], MID: [], NEAR: [], RECOVERY: [], UNKNOWN: [] };
@@ -395,7 +405,8 @@ export class Compass {
         transitionDuration?: string
     }) {
         opt = opt || {};
-        opt.transitionDuration = opt.transitionDuration || `${animationDuration}ms`;
+        const animationDuration: string = this.animate ? `${this.duration}s` : "0s";
+        opt.transitionDuration = opt.transitionDuration || animationDuration;
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
         $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
         if (this.nrthup) {

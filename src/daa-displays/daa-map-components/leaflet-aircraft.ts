@@ -193,6 +193,14 @@ export class LeafletAircraft extends Aircraft {
         });
     }
     /**
+     * moves the aircraft to the given lat lon alt
+     */
+    move (pos: LatLonAlt<number | string>): LeafletAircraft {
+        this.setPosition(pos);
+        this.marker.setLatLng([ this.position.lat, this.position.lon ]);
+        return this;
+    }
+    /**
      * deleted the aircraft (marker+label)
      */
     remove (): LeafletAircraft {

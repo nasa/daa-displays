@@ -41,7 +41,7 @@ import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, daaSymbols } from './daa-displays/daa-utils';
-import { CommData, DaaVoice, Guidance } from './daa-displays/daa-voice';
+import { DaaVoice, Guidance } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
 
@@ -199,8 +199,14 @@ function render (danti: {
         danti.map.setTraffic(traffic);
         // set wind indicator
         if (bands && bands.Wind) {
-            wind.setAngleFrom(bands.Wind.deg);
-            wind.setMagnitude(bands.Wind.knot);
+            if (+bands.Wind.deg === 0) {
+                // hide indicator
+                wind.hide();
+            } else {
+                wind.setAngleFrom(bands.Wind.deg);
+                wind.setMagnitude(bands.Wind.knot);
+                wind.reveal();
+            }
         }
         
         // play sound if voice feedback is enabled and max_alert > 2 (red alert)
@@ -284,7 +290,8 @@ const map: InteractiveMap = new InteractiveMap("map", {
     widescreen: enable_widescreen,
     engine: "leafletjs",
     trafficTraceVisible: true,
-    layeringMode: LayeringMode.byAlertLevel
+    layeringMode: LayeringMode.byAlertLevel,
+    animate: true
 });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", {
@@ -302,7 +309,7 @@ const indicatorsDivName: string = map.getIndicatorsDivName();
 const compass: Compass = new Compass("compass", {
     top: 110, 
     left: enable_widescreen ? 434 : 210
-}, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind });
+}, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind, animate: true });
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 

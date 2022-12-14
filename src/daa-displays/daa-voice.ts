@@ -29,7 +29,7 @@
 
 import { alertLevel2symbol, computeBearing, computeNmiDistance, symbol2alertLevel } from "./daa-utils";
 import { rad2deg } from "./utils/daa-math";
-import { Alert, AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D } from "./utils/daa-types";
+import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D } from "./utils/daa-types";
 import { getAlertingAircraftMap } from "./utils/daa-utils";
 
 // convenient type definitions
@@ -789,16 +789,20 @@ export class DaaVoice {
                 const alertLevel: AlertLevel = levels[i];
                 const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data, { alertLevel });
                 const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { ...opt, alertLevel });
-                if (max_alert_aircraft) {
+                // voice guidance is provided only for AVOID or ALERT if they persist in their state for at least 4 seconds (TODO)
+                if (max_alert_aircraft && symbol2alertLevel(max_alert_aircraft.symbol) >= AlertLevel.AVOID) {
                     // store info about the alerting aircraft
                     this.updateAlertingHistory(max_alert_aircraft);
-                    // read feedback for heading position
-                    const relative_heading: string = this.readRelativeHeading({ ownship: data.ownship, ac: max_alert_aircraft.s });
-                    const guidance: Guidance = [
-                        { text2speak: "Traffic" },
-                        { text2speak: relative_heading },
-                        { text2speak: levels[i] === AlertLevel.ALERT ? `MANEUVER NOW` : levels[i] === AlertLevel.AVOID ? `AVOID` : "MONITOR" },
-                    ];
+                    const guidance: Guidance = levels[i] === AlertLevel.ALERT ? [
+                        { text2speak: "TRAFFIC TRAFFIC" },
+                        { text2speak: "MANEUVER NOW" }
+                    ] : levels[i] === AlertLevel.AVOID ? [
+                        { text2speak: "TRAFFIC" },
+                        { text2speak: "AVOID" }
+                    ] : levels[i] === AlertLevel.MONITOR ? [
+                        { text2speak: "TRAFFIC" },
+                        { text2speak: "MONITOR" }
+                    ] : null;
                     return guidance;
                 }
             }

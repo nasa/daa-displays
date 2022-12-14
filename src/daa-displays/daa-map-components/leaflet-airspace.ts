@@ -172,6 +172,9 @@ export enum AirspaceCSS {
     DAA_OWNSHIP_TRACE = "daa-ownship-trace"
 };
 
+// aicrraft data interface
+export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string };
+
 /**
  * Airspace implemented with Leafletjs
  */
@@ -234,6 +237,10 @@ export class LeafletAirspace implements AirspaceInterface {
     protected trafficTraceVisible: boolean = false; // whether traffic traces are visible
     protected ownshipTraceVisible: boolean = false; // whether the ownship trace is visible
 
+    protected animate: boolean = false; // whether to smooth animation of objects moving on the map
+    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; // duration of the animation, in seconds
+    protected forceNoAnimation: boolean = false; // whether animation should be forced to be disabled, e.g., useful during zoom operations
+
     /**
      * Constructor
      */
@@ -254,7 +261,9 @@ export class LeafletAirspace implements AirspaceInterface {
         widescreen?: boolean, // default: false
         layeringMode?: LayeringMode, // default: byAlertLevel
         scrollZoom?: boolean, // default: false
-        dragging?: boolean // default: false
+        dragging?: boolean, // default: false
+        animate?: boolean, //  whether to smooth animation of objects moving on the map, default: true
+        duration?: number // duration of the animation
     }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -266,7 +275,9 @@ export class LeafletAirspace implements AirspaceInterface {
         opt.div = opt.div || "leaflet-div";
         this.godsView = !!opt.godsView;
         this.callSignVisible = !!opt.callSignVisible;
-        this.trafficVisible = opt.trafficVisible !== undefined ? !!opt.trafficVisible : true;
+        this.trafficVisible = opt.trafficVisible === undefined ? true : !!opt.trafficVisible;
+        this.animate = opt.animate === undefined ? false : !!opt.animate;
+        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_ANIMATION_DURATION;
         this.flightPlanVisible = !!opt.flightPlanVisible;
         this.trafficTraceVisible = !!opt.trafficTraceVisible;
         this.ownshipTraceVisible = !!opt.ownshipTraceVisible;
@@ -285,6 +296,11 @@ export class LeafletAirspace implements AirspaceInterface {
         }
         .leaflet-tile {
             filter: brightness(55%) contrast(140%) grayscale(55%) hue-rotate(20deg);
+        }
+        .daa-traffic div {
+            transform: scale(0.9);
+        }
+        .daa-traffic-trace {
         }
         .${AirspaceCSS.DAA_FLIGHT_PLAN} {
             filter: drop-shadow(2px 2px 1px black);
@@ -597,7 +613,7 @@ export class LeafletAirspace implements AirspaceInterface {
      * Tries to set the zoom level to the given NMI
      * Valid NMI levels range between [0.08..320]
      */
-    trySetZoomLevel(NMI: number): boolean {
+    trySetZoomLevel (NMI: number): boolean {
         if (NMI >= 0.08 && NMI <= 320) {
             this.setZoomLevel(NMI);
             return true;
@@ -605,20 +621,34 @@ export class LeafletAirspace implements AirspaceInterface {
         return false;
     }
     /**
+     * Utility function, disables all animations
+     */
+    disableAllAnimations (): void {
+        this.forceNoAnimation = true;
+    }
+    /**
+     * Utility function, disables all animations
+     */
+    restoreAllAnimations (): void {
+        this.forceNoAnimation = false;
+    }
+    /**
      * Sets zoom level of the view to the given NMI
      * In leafletjs, a zoom level of 12 is approx 5NMI
      * increasing the zoom level by 1 halves the NMI
      * decreasing the zoom level by 1 doubles the NMI
      */
-    setZoomLevel(NMI: number): AirspaceInterface {
+    setZoomLevel (NMI: number): AirspaceInterface {
         if (NMI !== this.nmi && NMI > 0) {
             const zoom: number = nmi2zoom(NMI);
             if (zoom > 0) {
+                this.disableAllAnimations();
                 for (let i = 0; i < this.lworlds.length; i++) {
                     this.lworlds[i].setZoom(zoom, {
                         animate: false
                     });
                 }
+                this.restoreAllAnimations();
                 // update nmi info
                 this.nmi = NMI;
                 return this;
@@ -706,7 +736,8 @@ export class LeafletAirspace implements AirspaceInterface {
         if (pos) {
             for (let i = 0; i < this.lworlds.length; i++) {
                 this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
-                    animate: false
+                    animate: this.animate && !this.forceNoAnimation,
+                    duration: this.duration
                 });
             }
         }
@@ -724,8 +755,8 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface {
         if (pos) {
-            if (typeof pos === "string") {
-                // remove white spaces in the name and make all small letters
+            if (typeof pos === "string") { // it's a city name
+                // match the name after removing white spaces and transforming to lower case
                 pos = pos.replace(/\s/g, "").toLowerCase();
                 // look for the name of the city in the list of known destinations (array cities)
                 const loc: LatLonAlt<number> = cities[pos];
@@ -735,7 +766,7 @@ export class LeafletAirspace implements AirspaceInterface {
                 } else {
                     console.error("Could not find location " + location + " :((");
                 }
-            } else {
+            } else { // it's lat lon
                 const position: LatLonAlt<number> = {
                     alt: +pos?.alt || 0,
                     lat: +pos?.lat || 0,
@@ -1065,10 +1096,11 @@ export class LeafletAirspace implements AirspaceInterface {
         // rotate ownship
         this._ownship.setHeading(rotation);
         // rotate map
+        const transitionDuration: string = this.animate && !this.forceNoAnimation ? `${this.duration}s` : "0ms";
         for (let i = 0; i < this.$innerDivs.length; i++) {
             this.$innerDivs[i].css({
                 transform: `rotate(${rotation}deg)`,
-                "transition-duration": `40ms`
+                "transition-duration": transitionDuration
             });
         }
         // refresh traffic
@@ -1113,32 +1145,54 @@ export class LeafletAirspace implements AirspaceInterface {
         if (opt?.removeTraces) { this.clearAllTrafficTraces(); }
     }
     /**
+     * Internal class, updates traffic animation settings
+     */
+    protected updateTrafficAnimationSettings (): void {
+        // const duration: number = (this.animate && !this.forceNoAnimation) ? this.duration : 0;
+        // $(".daa-traffic").css("transition-duration", `${duration}s`);
+    }
+    /**
      * Updates traffic information.
      */
-    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }[]): AirspaceInterface {
+    setTraffic (traffic: AircraftData[]): AirspaceInterface {
         // const nmiScale: number = this.getScale();
-        // remove current traffic
+        // remove current traffic, reuse aircraft when possible
         this.removeAllTraffic();
+        // update transition delay
+        this.updateTrafficAnimationSettings();
         // add new traffic
         for (let i = 0; i < traffic?.length; i++) {
             const callSign: string = 
                 (traffic[i].callSign !== null || traffic[i].callSign !== undefined) 
                     ? traffic[i].callSign 
-                    : `target-${i}`
-            const aircraft = new LeafletAircraft(this.lworlds[1], {
-                s: traffic[i].s,
-                v: traffic[i].v,
-                symbol: (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? 
-                    traffic[i].symbol : "daa-target",
-                callSign,
-                heading: Aircraft.headingFromVelocity(traffic[i].v),
-                callSignVisible: this.callSignVisible,
-                aircraftVisible: this.trafficVisible,
-                ownship: this._ownship,
-                mapCanRotate: !this.godsView,
-                layeringMode: this.layeringMode
-            }, this.trafficLayer);
-            this._traffic.push(aircraft);
+                    : `target-${i}`;
+            const heading: number = Aircraft.headingFromVelocity(traffic[i].v);
+            const symbol: string = (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? traffic[i].symbol : "daa-target";
+            const acSet: LeafletAircraft[] = this._traffic.filter(ac => {
+                return ac.getCallSign() === callSign;
+            });
+            if (acSet?.length === 0) {            
+                const aircraft: LeafletAircraft = new LeafletAircraft(this.lworlds[1], {
+                    s: traffic[i].s,
+                    v: traffic[i].v,
+                    symbol,
+                    callSign,
+                    heading,
+                    callSignVisible: this.callSignVisible,
+                    aircraftVisible: this.trafficVisible,
+                    ownship: this._ownship,
+                    mapCanRotate: !this.godsView,
+                    layeringMode: this.layeringMode
+                }, this.trafficLayer);
+                this._traffic.push(aircraft);
+            } else if (acSet?.length === 1) {
+                const aircraft: LeafletAircraft = acSet[0];
+                aircraft.move(traffic[i].s);
+                aircraft.setHeading(heading);
+                aircraft.setSymbol(symbol);
+            } else {
+                console.warn(`[leaflet-airspace] Warning: duplicated aircraft`, { acSet });
+            }
             // update traffic trace
             const waypoint: utils.WayPoint = {
                 lla: { lat: +traffic[i].s.lat, lon: +traffic[i].s.lon, alt: +traffic[i].s.alt }
