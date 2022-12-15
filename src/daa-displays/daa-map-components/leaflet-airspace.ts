@@ -46,7 +46,7 @@ import * as L from "leaflet";
 import { DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
 import { LayeringMode, LeafletAircraft, OWNSHIP_COLOR } from "./leaflet-aircraft";
 import { GeoFence } from "./daa-geofence";
-import { DaaSymbol } from "../daa-utils";
+import { DaaSymbol, DEFAULT_MAX_TRACE_LEN } from "../daa-utils";
 import { AlertKind, LatLon, LatLonAlt, Vector3D } from "../utils/daa-types";
 
 // font size/family used for labels
@@ -61,8 +61,6 @@ export const DEFAULT_FLIGHT_PLAN_WIDTH: number = 6; // px
 export const DEFAULT_TRACE_WIDTH: number = 3; // px
 // opacity of the aircraft trace
 export const DEFAULT_TRACE_OPACITY: number = 0.8;
-// max length of the trace
-export const MAX_TRACE_LEN: number = 32; // waypoints
 
 // openstreet providers, see https://leaflet-extras.github.io/leaflet-providers/preview/
 export interface TileProvider { server: string, credict: string };
@@ -192,6 +190,9 @@ export class LeafletAirspace implements AirspaceInterface {
     protected contoursLayer: L.LayerGroup; // contours layer
     protected hazardZonesLayer: L.LayerGroup; // hazard zones layer
 
+    // max trace length
+    protected maxTraceLen: number = DEFAULT_MAX_TRACE_LEN;
+
     // parent DOM element where the aerospace will be created
     protected $div: JQuery<HTMLElement>;
 
@@ -207,6 +208,8 @@ export class LeafletAirspace implements AirspaceInterface {
     protected _ownship: LeafletAircraft;
     // traffic
     protected _traffic: LeafletAircraft[] = [];
+    // previous traffic
+    protected previousTrafficPosition: { [tailNumber: string]: LatLonAlt<number | string> } = {};
     // layering mode for traffic
     protected layeringMode: LayeringMode = LayeringMode.byAlertLevel;
 
@@ -238,7 +241,7 @@ export class LeafletAirspace implements AirspaceInterface {
     protected ownshipTraceVisible: boolean = false; // whether the ownship trace is visible
 
     protected animate: boolean = false; // whether to smooth animation of objects moving on the map
-    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; // duration of the animation, in seconds
+    protected duration: number = utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL; // duration of the traffic animation, in seconds
     protected forceNoAnimation: boolean = false; // whether animation should be forced to be disabled, e.g., useful during zoom operations
 
     /**
@@ -258,12 +261,13 @@ export class LeafletAirspace implements AirspaceInterface {
         flightPlanVisible?: boolean, // default: false
         trafficTraceVisible?: boolean, // default: false
         ownshipTraceVisible?: boolean, // default: false
+        maxTraceLen?: number, // max trace len
         widescreen?: boolean, // default: false
         layeringMode?: LayeringMode, // default: byAlertLevel
         scrollZoom?: boolean, // default: false
         dragging?: boolean, // default: false
         animate?: boolean, //  whether to smooth animation of objects moving on the map, default: true
-        duration?: number // duration of the animation
+        duration?: number // duration of the traffic animation
     }) {
         opt = opt || {};
         opt.ownship = opt.ownship || {
@@ -277,7 +281,8 @@ export class LeafletAirspace implements AirspaceInterface {
         this.callSignVisible = !!opt.callSignVisible;
         this.trafficVisible = opt.trafficVisible === undefined ? true : !!opt.trafficVisible;
         this.animate = opt.animate === undefined ? false : !!opt.animate;
-        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_ANIMATION_DURATION;
+        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL;
+        this.maxTraceLen = isFinite(opt.maxTraceLen) ? opt.maxTraceLen : DEFAULT_MAX_TRACE_LEN;
         this.flightPlanVisible = !!opt.flightPlanVisible;
         this.trafficTraceVisible = !!opt.trafficTraceVisible;
         this.ownshipTraceVisible = !!opt.ownshipTraceVisible;
@@ -300,7 +305,8 @@ export class LeafletAirspace implements AirspaceInterface {
         .daa-traffic div {
             transform: scale(0.9);
         }
-        .daa-traffic-trace {
+        .leaflet-marker-pane {
+            transition-duration:0s !important;
         }
         .${AirspaceCSS.DAA_FLIGHT_PLAN} {
             filter: drop-shadow(2px 2px 1px black);
@@ -518,6 +524,18 @@ export class LeafletAirspace implements AirspaceInterface {
         return this.$indicatorsDiv[0] ? this.$indicatorsDiv.attr("id") : null;
     }
     /**
+     * set traffic animation duration
+     */
+    animationDuration (seconds: number): boolean {
+        // sanity check
+        console.log(`[leaflet-airspace] animationDuration`, { seconds });
+        if (seconds >= 0) {
+            this.duration = seconds;
+            return true;
+        }
+        return false;
+    }
+    /**
      * Internal function enables pointer events on the map
      */
     protected enableMapPointerEvents (): void {
@@ -715,7 +733,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Centers the map on the ownship position.
      */
-    recenter(pos: { lat: number; lon: number; }): AirspaceInterface {
+    recenter (pos: { lat: number; lon: number; }): AirspaceInterface {
         if (pos) {
             const currentPosition: LatLon<number> = this._ownship?.getPosition();
             if (currentPosition) {
@@ -732,12 +750,14 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Centers the map to a given location. The ownship position is kept unchanged.
      */
-    goTo (pos: LatLon<number | string>): AirspaceInterface {
+    goTo (pos: LatLon<number | string>, opt?: { animate?: boolean }): AirspaceInterface {
         if (pos) {
+            const animate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1; // animation performed only in real time simulations
             for (let i = 0; i < this.lworlds.length; i++) {
                 this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
-                    animate: this.animate && !this.forceNoAnimation,
-                    duration: this.duration
+                    animate,
+                    duration: animate ? this.duration : 0,
+                    easeLinearity: 1 // 1 means linear animation
                 });
             }
         }
@@ -1014,9 +1034,9 @@ export class LeafletAirspace implements AirspaceInterface {
             // append waypoint to at the end of the current trace
             trace.push(wp);
             polys.push(poly);
-            // trim arrays so trace length is MAX_TRACE_LEN
-            if (trace.length > MAX_TRACE_LEN) {
-                const n: number = trace.length % MAX_TRACE_LEN;
+            // trim arrays so trace length is this.maxTraceLen
+            if (trace.length > this.maxTraceLen) {
+                const n: number = trace.length % this.maxTraceLen;
                 trace = trace.slice(n);
                 for (let i = 0; i < n; i++) { polys[i].remove(); }
                 polys = polys.slice(n);
@@ -1055,9 +1075,9 @@ export class LeafletAirspace implements AirspaceInterface {
             // append waypoint to at the end of the current trace
             polys.push(poly);
             trace.push(wp);
-            // trim arrays so trace length is MAX_TRACE_LEN
-            if (trace.length > MAX_TRACE_LEN) {
-                const n: number = trace.length % MAX_TRACE_LEN;
+            // trim arrays so trace length is this.maxTraceLen
+            if (trace.length > this.maxTraceLen) {
+                const n: number = trace.length % this.maxTraceLen;
                 trace = trace.slice(n);
                 for (let i = 0; i < n; i++) { polys[i].remove(); }
                 polys = polys.slice(n);
@@ -1090,7 +1110,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Utility function, sets the heading of the ownship and rotates the map
      */
-    setOwnshipHeading(deg: number, opt?: { nrthup?: boolean; }): AirspaceInterface {
+    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean; }): AirspaceInterface {
         this.navigator_heading = deg;
         const rotation: number = opt?.nrthup ? 0 : -deg;
         // rotate ownship
@@ -1135,21 +1155,18 @@ export class LeafletAirspace implements AirspaceInterface {
         return null;
     }
     /**
-     * Internal function, removes all traffic
+     * Internal function, removes all traffic and optionally removes traces and previous traffic
      */
-    protected removeAllTraffic (opt?: { removeTraces?: boolean }): void {
+    protected removeAllTraffic (opt?: { removeTraces?: boolean, removePreviousTraffic?: boolean }): void {
+        this.previousTrafficPosition = {};
         for (let i = 0; i < this._traffic?.length; i++) {
             this._traffic[i].remove();
+            if (!opt?.removePreviousTraffic) {
+                this.previousTrafficPosition[this._traffic[i].getCallSign()] = this._traffic[i].getPosition();
+            }
         }
         this._traffic = [];
         if (opt?.removeTraces) { this.clearAllTrafficTraces(); }
-    }
-    /**
-     * Internal class, updates traffic animation settings
-     */
-    protected updateTrafficAnimationSettings (): void {
-        // const duration: number = (this.animate && !this.forceNoAnimation) ? this.duration : 0;
-        // $(".daa-traffic").css("transition-duration", `${duration}s`);
     }
     /**
      * Updates traffic information.
@@ -1158,8 +1175,7 @@ export class LeafletAirspace implements AirspaceInterface {
         // const nmiScale: number = this.getScale();
         // remove current traffic, reuse aircraft when possible
         this.removeAllTraffic();
-        // update transition delay
-        this.updateTrafficAnimationSettings();
+        const canAnimate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1; // animation will be performed only when running in real time
         // add new traffic
         for (let i = 0; i < traffic?.length; i++) {
             const callSign: string = 
@@ -1168,36 +1184,41 @@ export class LeafletAirspace implements AirspaceInterface {
                     : `target-${i}`;
             const heading: number = Aircraft.headingFromVelocity(traffic[i].v);
             const symbol: string = (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? traffic[i].symbol : "daa-target";
-            const acSet: LeafletAircraft[] = this._traffic.filter(ac => {
-                return ac.getCallSign() === callSign;
-            });
-            if (acSet?.length === 0) {            
-                const aircraft: LeafletAircraft = new LeafletAircraft(this.lworlds[1], {
-                    s: traffic[i].s,
-                    v: traffic[i].v,
-                    symbol,
-                    callSign,
-                    heading,
-                    callSignVisible: this.callSignVisible,
-                    aircraftVisible: this.trafficVisible,
-                    ownship: this._ownship,
-                    mapCanRotate: !this.godsView,
-                    layeringMode: this.layeringMode
-                }, this.trafficLayer);
-                this._traffic.push(aircraft);
-            } else if (acSet?.length === 1) {
-                const aircraft: LeafletAircraft = acSet[0];
-                aircraft.move(traffic[i].s);
-                aircraft.setHeading(heading);
-                aircraft.setSymbol(symbol);
-            } else {
-                console.warn(`[leaflet-airspace] Warning: duplicated aircraft`, { acSet });
+            const aircraft: LeafletAircraft = new LeafletAircraft(this.lworlds[1], {
+                s: canAnimate && this.previousTrafficPosition[callSign] ? 
+                    this.previousTrafficPosition[callSign] 
+                        : traffic[i].s, // if animation is enables, the aircraft is rendered in the original position and will be moved forward with the animation
+                v: traffic[i].v,
+                symbol,
+                callSign,
+                heading,
+                callSignVisible: this.callSignVisible,
+                aircraftVisible: this.trafficVisible,
+                ownship: this._ownship,
+                mapCanRotate: !this.godsView,
+                layeringMode: this.layeringMode
+            }, this.trafficLayer);
+            this._traffic.push(aircraft);
+            if (!canAnimate) {
+                // update traffic trace with the new waypoint
+                const waypoint: utils.WayPoint = {
+                    lla: { lat: +traffic[i].s.lat, lon: +traffic[i].s.lon, alt: +traffic[i].s.alt }
+                };
+                this.updateTrafficTrace(callSign, waypoint);
             }
-            // update traffic trace
-            const waypoint: utils.WayPoint = {
-                lla: { lat: +traffic[i].s.lat, lon: +traffic[i].s.lon, alt: +traffic[i].s.alt }
-            };
-            this.updateTrafficTrace(callSign, waypoint);
+        }
+        // move aircraft forward if animation is enabled
+        if (canAnimate) {
+            // this.updateTrafficAnimationSettings();
+            for (let i = 0; i < this._traffic?.length; i++) {
+                this._traffic[i].moveTo(traffic[i].s, { animate: true, duration: this.duration, animateCallback: (ac: { callSign: string, s: LatLonAlt<number | string> }): void => {
+                    // update traffic trace with the new waypoint
+                    const animate_waypoint: utils.WayPoint = {
+                        lla: { lat: +ac.s.lat, lon: +ac.s.lon, alt: +ac.s.alt }
+                    };
+                    this.updateTrafficTrace(ac.callSign, animate_waypoint);
+                }});
+            }
         }
         return this;
     }
@@ -1252,7 +1273,7 @@ export class LeafletAirspace implements AirspaceInterface {
      * resets all data structures and remove traces
      */
     resetAirspace (): AirspaceInterface {
-        this.removeAllTraffic({ removeTraces: true });
+        this.removeAllTraffic({ removeTraces: true, removePreviousTraffic: true });
         this.clearOwnshipTrace();
         return this;
     }

@@ -73,7 +73,7 @@ class ResolutionBug {
     protected wedgeSide: "left" | "right" = "right"; // side of the wedge wrt the resolution indicator
     protected wedgeConstraints: utils.FromTo[] = null;
     protected animate: boolean = true;
-    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; //s
+    protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION; // sec
 
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
@@ -114,6 +114,7 @@ class ResolutionBug {
             this.hide();
         }
     }
+
     /**
      * Internal functions, updates the visual appearance of the wedge
      */
@@ -263,7 +264,7 @@ export class Compass {
     protected nrthup: boolean;
 
     protected animate: boolean = false; // whether compass rotations should be animated
-    protected duration: number = utils.DEFAULT_ANIMATION_DURATION; // animation duration, in seconds
+    protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION; // animation duration, in seconds
 
     protected map: InteractiveMap;
     protected wind: WindIndicator;
@@ -308,7 +309,7 @@ export class Compass {
         this.left = (isNaN(+coords.left)) ? 209 : +coords.left;
 
         this.animate = opt.animate === undefined ? false : !!opt.animate;
-        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_ANIMATION_DURATION;
+        this.duration = isFinite(opt.duration) ? opt.duration : utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
 
         // create structure for storing resolution bands
         this.bands = { NONE: [], FAR: [], MID: [], NEAR: [], RECOVERY: [], UNKNOWN: [] };
@@ -384,6 +385,17 @@ export class Compass {
     }
 
     /**
+     * Set animation duration
+     */
+    animationDuration (sec: number): Compass {
+        if (sec >= 0 && this.duration !== sec) {
+            this.duration = sec;
+            this.map?.animationDuration(sec);
+        }
+        return this;
+    }
+
+    /**
      * @function <a name="setZoomLevel">setZoomLevel</a>
      * @description Sets the labels on the compass.
      * @param NMI {real} Zoom level, given in nautical miles.
@@ -405,8 +417,8 @@ export class Compass {
         transitionDuration?: string
     }) {
         opt = opt || {};
-        const animationDuration: string = this.animate ? `${this.duration}s` : "0s";
-        opt.transitionDuration = opt.transitionDuration || animationDuration;
+        const animationDuration: number = this.animate ? this.duration : 0;
+        opt.transitionDuration = opt.transitionDuration || `${animationDuration}s`;
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
         $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
         if (this.nrthup) {

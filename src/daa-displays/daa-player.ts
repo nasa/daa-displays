@@ -75,7 +75,8 @@ export enum PlayerEvents {
     DidChangeDaaAuralGuidance = "DidChangeDaaAuralGuidance",
     DidChangeDaaVoiceName = "DidChangeDaaVoiceName",
     DidChangeDaaVoicePitch = "DidChangeDaaVoicePitch",
-    DidChangeDaaVoiceRate = "DidChangeDaaVoiceRate"
+    DidChangeDaaVoiceRate = "DidChangeDaaVoiceRate",
+    DidChangeSimulationSpeed = "DidChangeSimulationSpeed"
 };
 export interface DidChangeDaaConfiguration {
     attributes: string[],
@@ -93,6 +94,7 @@ export type DidChangeDaaAuralGuidance = { selected: string };
 export type DidChangeDaaVoiceName = { selected: string };
 export type DidChangeDaaVoicePitch = { selected: number };
 export type DidChangeDaaVoiceRate = { selected: number };
+export type DidChangeSimulationSpeed = { sec: number };
 
 /**
  * Resolution handlers that can be defined by the user
@@ -209,6 +211,7 @@ export class DAAPlayer extends Backbone.Model {
     
     monitorEventHandlers: { [key: string]: () => void } = {};
     protected ms: number = DEFAULT_PLAYER_STEP_INTERVAL;
+    protected speed: number = DEFAULT_PLAYER_STEP_INTERVAL / 1000;
     // protected precision: number = DEFAULT_PLAYER_FRACTIONAL_PRECISION;
     protected ownshipName: string; // ownship tail number, null means default ownship indicated in the scenario (i.e., first aircraft in the list)
     protected _displays: string[] = [];
@@ -409,7 +412,7 @@ export class DAAPlayer extends Backbone.Model {
             },
             speed: () => {
                 return new Promise(async (resolve, reject) => {
-                    const speed: string = this.reaSelectedSimulationSpeed();
+                    const speed: string = this.readSelectedSimulationSpeed();
                     this.setSpeed(speed);
                     resolve();
                 });
@@ -557,12 +560,21 @@ export class DAAPlayer extends Backbone.Model {
      * Sets simulation speed
      * @param speed Simulation speed, in percentage: 100 is 1x, 1000 is 10x, etc.
      */
-    setSpeed(speed: number | string) {
-        if (!isNaN(+speed) && +speed > 0) {
-            this.ms = 1000 / +speed;
+    setSpeed (speed: number | string) {
+        if (isFinite(+speed) && +speed > 0 && this.speed !== +speed) {
+            this.speed = +speed;
+            this.ms = 1000 / this.speed;
             $(`#${this.id}-speed-input`).val(speed);
+            const evt: DidChangeSimulationSpeed = { sec: this.speed };
+            this.trigger(PlayerEvents.DidChangeSimulationSpeed, evt);
         }
         return this;
+    }
+    /**
+     * Returns the current simulation speed, in seconds
+     */
+    getSpeed (): number {
+        return this.speed;
     }
     /**
      * utility function, renders the DOM elements necessary to control a simulation (start, stop, goto, etc.)
@@ -2046,7 +2058,7 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * Utility function, reads the target simulation speed input from the corresponding DOM element
      */
-    reaSelectedSimulationSpeed (): string {
+    readSelectedSimulationSpeed (): string {
         return <string> $(`#${this.id}-speed-input`)?.val();
     }
     /**

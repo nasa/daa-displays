@@ -118,6 +118,7 @@ export class InteractiveMap {
             callSignVisible?: boolean, // default: false
             trafficTraceVisible?: boolean, // default: false
             ownshipTraceVisible?: boolean, // default: false
+            maxTraceLen?: number,
             widescreen?: boolean,
             layeringMode?: LayeringMode,
             scrollZoom?: boolean, // whether scroll and touch events can be used to zoom the map (default: false)
@@ -172,9 +173,7 @@ export class InteractiveMap {
         this.airspace?.setOwnshipHeading(this.heading, { nrthup: true });
         this.airspace?.setZoomLevel(5); // NMI
         // enable/disable pointer events based on the type of view
-        (opt.godsView) ? 
-            this.enableMapPointerEvents()
-                : this.disableMapPointerEvents();
+        (opt.godsView) ? this.enableMapPointerEvents() : this.disableMapPointerEvents();
     }
     /**
      * Resets all data structures
@@ -182,6 +181,12 @@ export class InteractiveMap {
     resetAirspace (): InteractiveMap {
         this.airspace?.resetAirspace();
         return this;
+    }
+    /**
+     * Sets animation duration
+     */
+    animationDuration (sec: number): boolean {
+        return this.airspace?.animationDuration(sec);
     }
     /**
      * Internal function enables pointer events on the map
@@ -315,7 +320,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    goTo(pos: string | LatLonAlt<number | string>): InteractiveMap {
+    goTo (pos: string | LatLonAlt<number | string>, opt?: { animate?: boolean }): InteractiveMap {
         if (typeof pos === "string") {
             // remove white spaces in the name and make all small letters
             pos = pos.replace(/\s/g, "").toLowerCase();
@@ -328,7 +333,7 @@ export class InteractiveMap {
                 lon: +pos?.lon, 
                 alt: +pos?.alt 
             };
-            this.airspace?.goTo({ lat: this.pos.lat, lon: this.pos.lon });
+            this.airspace?.goTo({ lat: this.pos.lat, lon: this.pos.lon }, opt);
         } else {
             console.error("Incorrect aircraft position :/ ", pos);
         }
@@ -393,7 +398,7 @@ export class InteractiveMap {
      */
     setPosition(pos: LatLonAlt<number | string>) {
         this.setOwnshipPosition(pos);
-        return this.goTo(pos);
+        return this.goTo(pos, { animate: true });
     }
     /**
      * @function <a name="setTrafficPosition">setTrafficPosition</a>

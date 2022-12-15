@@ -207,7 +207,7 @@ export declare interface AirspaceInterface {
     view2D (): AirspaceInterface;
     view3D (): AirspaceInterface;
     recenter (pos: { lat: number, lon: number }): AirspaceInterface;
-    goTo (pos: { lat: number, lon: number }): AirspaceInterface;
+    goTo (pos: { lat: number, lon: number }, opt?: { animate?: boolean }): AirspaceInterface;
     setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface;
     setOwnshipVelocity (v: Vector3D<number | string>): AirspaceInterface;
     setFlightPlan (flightPlan: utils.FlightPlan): AirspaceInterface;
@@ -219,6 +219,7 @@ export declare interface AirspaceInterface {
     revealTraffic (): AirspaceInterface;
     hideCallSign (): AirspaceInterface;
     revealCallSign (): AirspaceInterface;
+    animationDuration (seconds: number): boolean;
     addGeoFencePolygon (
         id: string,
         perimeter: LatLon<number | string>[], 
@@ -460,6 +461,14 @@ export class DAA_Airspace implements AirspaceInterface {
         }
     }
     /**
+     * Animation duration not available in wwd
+     */
+    animationDuration (duration: number): boolean {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: Animation duration not available in WWD, please use LeafletJS`);
+        return false;
+    }
+    /**
      * resets all data structures
      */
     resetAirspace (): AirspaceInterface {
@@ -468,7 +477,7 @@ export class DAA_Airspace implements AirspaceInterface {
         return this;        
     }
     /**
-     * Compass div is not supported in wwd
+     * Compass div is not available in wwd
      */
     getCompassDivName (): string {
         return null;
@@ -658,7 +667,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Centers the map to a given location. The ownship position is kept unchanged.
      */
-    goTo (pos: { lat: number, lon: number }): DAA_Airspace {
+    goTo (pos: { lat: number, lon: number }, opt?): DAA_Airspace {
         if (pos) {
             this.recenter(pos);
         } else {

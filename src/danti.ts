@@ -35,7 +35,7 @@ import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
-import { DaaConfig, DAAPlayer, DidChangeDaaAuralGuidance, DidChangeDaaVoiceName, DidChangeDaaVoicePitch, DidChangeDaaVoiceRate, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, PlayerEvents } from './daa-displays/daa-player';
+import { DaaConfig, DAAPlayer, DidChangeDaaAuralGuidance, DidChangeDaaVoiceName, DidChangeDaaVoicePitch, DidChangeDaaVoiceRate, DidChangeSimulationSpeed, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, PlayerEvents } from './daa-displays/daa-player';
 import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
@@ -51,6 +51,8 @@ const enable_sound: boolean = true;
 // display padding, used for centering the options and view controls shown at the top/bottom of the danti display
 const PADDING: number = 13; //px
 const INCLUDE_PLOTS: boolean = true;
+const MAX_TRACE_LEN: number = 128; // large values have an impact on performance
+const UPDATE_FREQUENCY: number = utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL; // in seconds
 /**
  * Utility function, renders the display content
  */
@@ -290,8 +292,10 @@ const map: InteractiveMap = new InteractiveMap("map", {
     widescreen: enable_widescreen,
     engine: "leafletjs",
     trafficTraceVisible: true,
+    maxTraceLen: MAX_TRACE_LEN,
     layeringMode: LayeringMode.byAlertLevel,
-    animate: true
+    animate: true,
+    duration: UPDATE_FREQUENCY
 });
 // wind indicator
 const wind: WindIndicator = new WindIndicator("wind", {
@@ -309,7 +313,15 @@ const indicatorsDivName: string = map.getIndicatorsDivName();
 const compass: Compass = new Compass("compass", {
     top: 110, 
     left: enable_widescreen ? 434 : 210
-}, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind, animate: true });
+}, { 
+    parent: compassDivName, 
+    indicatorsDiv: indicatorsDivName, 
+    maxWedgeAperture: 15, 
+    map, 
+    wind, 
+    animate: true, 
+    duration: UPDATE_FREQUENCY
+});
 // map zoom is controlled by nmiSelector
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 
@@ -338,7 +350,9 @@ player.define("step", async () => {
     if (Math.abs(step - lastSimulationStep) > 1) {
         map.resetAirspace();
     }
+    // save last simulation step
     lastSimulationStep = player.getCurrentSimulationStep();
+    // render
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
         altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
@@ -358,6 +372,10 @@ player.define("init", async () => {
     player.applyCurrentResolutionOptions();
     // reset map (needed because of the traces), no need to reset the others
     map.resetAirspace();
+    // set initial animation duration
+    const speed: number = player.getSpeed();
+    const animationDuration: number = speed === 1 ? 1 : 0;
+    compass?.animationDuration(animationDuration);
     // reset voice
     daaVoice.reset();
 });
@@ -499,6 +517,11 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.on(PlayerEvents.DidChangeDaaVoiceRate, (evt: DidChangeDaaVoiceRate) => {
         const selected: number = evt?.selected;
         daaVoice.selectRate(selected);
+    });
+    player.on(PlayerEvents.DidChangeSimulationSpeed, (evt: DidChangeSimulationSpeed) => {
+        const speed: number = evt?.sec;
+        const animationDuration: number = speed === 1 ? 1 : 0;
+        compass?.animationDuration(animationDuration);
     });
     // set preferred options
     player.enableWedgeApertureOption("compass");

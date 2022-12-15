@@ -55,7 +55,7 @@ import * as templates from './templates/daa-vertical-speed-templates';
 import { ResolutionElement } from '../daa-server/utils/daa-types';
 
 // useful constants
-const ANIMATION_DURATION: string = `${utils.DEFAULT_ANIMATION_DURATION}s`;
+const ANIMATION_DURATION: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
 
 /**
  * internal class used by vertical speed tape, renders a resolution bug over the tape
@@ -230,13 +230,13 @@ class SpeedBug {
             // FIXME: val is in x100fpm, and wedge aperture is in fpm -- make everything fpm
             const notchHeight: number = Math.abs(this.computeBugPosition(this.val + this.wedgeAperture / 100) - this.computeBugPosition(this.val));
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": ANIMATION_DURATION, top: `${bugPosition}px` });
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": `${ANIMATION_DURATION}s`, top: `${bugPosition}px` });
 
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": ANIMATION_DURATION, top: `${bugPosition}px` });
+            $(`#${this.id}-indicator`).css({ "transition-duration": `${ANIMATION_DURATION}s`, top: `${bugPosition}px` });
         }
 
         if (this.useColors) {

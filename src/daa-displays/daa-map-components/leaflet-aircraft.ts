@@ -39,7 +39,7 @@
  **/
 
 import * as L from 'leaflet';
-import { alertLevel2symbol } from '../daa-utils';
+import { alertLevel2symbol, DEFAULT_TRAFFIC_UPDATE_INTERVAL, DEFAULT_TRAFFIC_ANIMATION_NFRAMES, MIN_ANIMATION_THRESHOLD } from '../daa-utils';
 import { DaaSymbol, LatLonAlt, Vector3D  } from '../utils/daa-types';
 import { Aircraft, AircraftInterface, AircraftLabel } from "./daa-aircraft";
 
@@ -193,11 +193,81 @@ export class LeafletAircraft extends Aircraft {
         });
     }
     /**
+     * internal function, moves the aircraft to a given location using animation
+     */
+    protected tryMoveToAnimated (pos: LatLonAlt<number | string>, opt?: { 
+        animate?: boolean,
+        duration?: number,  // seconds
+        nframes?: number,
+        animateCallback?: (ac: { callSign: string, s: LatLonAlt<number | string> }) => void
+    }): boolean {
+        if (opt?.animate) {
+            // current and target positions
+            const current_pos: LatLonAlt<number> = { lat: +this.position.lat, lon: +this.position.lon, alt: +this.position.alt };
+            const target_pos: LatLonAlt<number> = { lat: +pos.lat, lon: +pos.lon, alt: +pos.alt };
+
+            // compute delta pos
+            const lat_delta: number = (target_pos.lat - current_pos.lat);
+            const lon_delta: number = (target_pos.lon - current_pos.lon);
+            const alt_delta: number = (target_pos.alt - current_pos.alt);
+
+            // compute frames
+            const nframes: number = opt?.nframes || DEFAULT_TRAFFIC_ANIMATION_NFRAMES;
+            const duration: number = opt?.duration || DEFAULT_TRAFFIC_UPDATE_INTERVAL; // sec
+            const interval: number = duration / nframes; // sec
+            const lat_inc: number = lat_delta / nframes; // deg
+            const lon_inc: number = lon_delta / nframes; // deg
+            const alt_inc: number = alt_delta / nframes; // ft
+
+            // animate only if there is more than one frame, the aircraft moved, and the animation duration is above a certain threshold
+            if (nframes > 1 && (lat_delta || lon_delta) && duration >= MIN_ANIMATION_THRESHOLD ) {
+                // create intermediate positions
+                // console.log(`[leaflet-aircraft] Simulation frames`, { nframes, duration, interval });
+                const frames: { pos: LatLonAlt<number>, future: number }[] = [];
+                for (let i = 0; i < nframes; i++) {
+                    const lat: number = (i < nframes - 1) ? current_pos.lat + (i + 1) * lat_inc : target_pos.lat; // use directly target pos for the last position, to avoid numeric errors
+                    const lon: number = (i < nframes - 1) ? current_pos.lon + (i + 1) * lon_inc : target_pos.lon;
+                    const alt: number = (i < nframes - 1) ? current_pos.alt + (i + 1) * alt_inc : target_pos.alt;
+                    const future: number = i * interval * 1000; // future is in millis
+                    frames.push({ pos: { lat, lon, alt }, future });
+                }
+                // console.log(`[leaflet-aircraft] Simulation frames`, { frames, lat_inc, lon_inc, nframes, lat_delta, lon_delta, origin_pos, target_pos });
+                // apply first frame now
+                this.setPosition(frames[0].pos);
+                this.marker.setLatLng([ frames[0].pos.lat, frames[0].pos.lon ]);
+                // schedule future frames
+                for (let i = 1; i < nframes; i++) {
+                    setTimeout(() => {
+                        this.setPosition(frames[i].pos);
+                        this.marker.setLatLng([ frames[i].pos.lat, frames[i].pos.lon ]);
+                        // invoke callback only on the last future update
+                        if (i === nframes - 1 && typeof opt?.animateCallback === "function") {
+                            opt.animateCallback({ callSign: this.callSign, s: frames[i].pos });
+                        }
+                    }, frames[i].future);
+                }
+                return true;
+            }
+        }
+        // animation was not performed
+        return false;
+    }
+    /**
      * moves the aircraft to the given lat lon alt
      */
-    move (pos: LatLonAlt<number | string>): LeafletAircraft {
-        this.setPosition(pos);
-        this.marker.setLatLng([ this.position.lat, this.position.lon ]);
+    moveTo (pos: LatLonAlt<number | string>, opt?: { 
+        animate?: boolean, 
+        duration?: number,  // seconds
+        nframes?: number,
+        animateCallback?: (ac: { callSign: string, s: LatLonAlt<number | string> }) => void
+    }): LeafletAircraft {
+        // try to animate
+        const didAnimate: boolean = this.tryMoveToAnimated(pos, opt);
+        // if animation was not performed, move the aircraft without animation
+        if (!didAnimate) {
+            this.setPosition(pos);
+            this.marker.setLatLng([ this.position.lat, this.position.lon ]);
+        }
         return this;
     }
     /**

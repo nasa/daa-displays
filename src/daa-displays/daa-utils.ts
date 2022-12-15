@@ -3,7 +3,11 @@ import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, La
 import * as server from './utils/daa-types';
 
 // useful constants
-export const DEFAULT_ANIMATION_DURATION: number = 0.5; // seconds, e.g., can be used to set animation duration of compass and map
+export const DEFAULT_INSTRUMENT_ANIMATION_DURATION: number = 0.250; // in seconds, animation duration of compass and tape displays
+export const DEFAULT_TRAFFIC_UPDATE_INTERVAL: number = 1; // in seconds, animation duration for traffic aircraft
+export const DEFAULT_TRAFFIC_ANIMATION_NFRAMES: number = 8; // number of interpolation points when using animation to move traffic aircraft
+export const MIN_ANIMATION_THRESHOLD: number = 0.125; // in seconds, aircraft are animated only if the animation interval is greated than this threshold (0.125s = 8Hz)
+export const DEFAULT_MAX_TRACE_LEN: number = 32; // max aircraft trace length
 
 // useful aliases
 export type DaaSymbol = server.DaaSymbol;
