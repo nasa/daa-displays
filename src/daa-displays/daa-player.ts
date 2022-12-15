@@ -252,7 +252,111 @@ export class DAAPlayer extends Backbone.Model {
         "yellow": "gold"
     };
     
-    protected _handlers: Handlers;
+    // internal handlers
+    protected _handlers: Handlers = {
+        init: () => {
+            return new Promise(async (resolve, reject) => {
+                this.clearInterval();
+                await this.render();
+                resolve();
+            });
+        },
+        step: () => {
+            return new Promise(async (resolve, reject) => {
+                this.clearInterval();
+                const current_step: number = this.readCurrentSimulationStep();
+                await this.stepControl(current_step);
+                resolve();
+            });
+        },
+        pause: () => {
+            return new Promise(async (resolve, reject) => {
+                this.clearInterval();
+                resolve();
+            });
+        },
+        back: () => {
+            return new Promise(async (resolve, reject) => {
+                const current_step: number = this.readCurrentSimulationStep();
+                await this._handlers.pause();
+                const prev_step: number = current_step > 0 ? current_step - 1 : current_step;
+                await this.gotoControl(prev_step);
+                resolve();
+            });
+        },
+        goto: () => {
+            return new Promise(async (resolve, reject) => {
+                await this._handlers.pause();
+                await this.gotoControl();
+                resolve();
+            });
+        },
+        gotoTime: () => {
+            return new Promise(async (resolve, reject) => {
+                const target_time: string = this.readGotoTimeInput();
+                await this._handlers.pause();
+                await this.gotoTimeControl(target_time);
+                resolve();
+            });
+        },
+        speed: () => {
+            return new Promise(async (resolve, reject) => {
+                const speed: string = this.readSelectedSimulationSpeed();
+                this.setSpeed(speed);
+                resolve();
+            });
+        },
+        identify: () => {
+            return new Promise(async (resolve, reject) => {
+                $(".daa-view-splash").css("display", "block").css("opacity", 0.5);
+                setTimeout(() => {
+                    $(".daa-view-splash").css("display", "none");
+                    resolve();
+                }, 1600);
+            });
+        },
+        daaScenarioReloader: async (scenarios: string[]) => {
+            // define handler for the refresh button
+            console.log(`Refreshing scenario list...`);
+            this.setStatus('Refreshing scenario list...');
+            // const scenarios: string[] = await this.listScenarioFiles();
+            if (scenarios && scenarios.length) {
+                // if the selected scenario has been removed from the new list, select the first scenario in the list. Otherwise, keep the current selection.
+                const scenarioStillExists: boolean = scenarios.some((name) => {
+                    return name === this._selectedScenario;
+                });
+                this._selectedScenario = (scenarioStillExists) ? this._selectedScenario : scenarios[0];
+                // await this.loadScenarioFile(this._selectedScenario, { forceReload: true });
+            }
+            this.refreshSimulationControls();
+            // await this.listConfigurations();
+            setTimeout(() => {
+                this.statusReady();
+                console.log(`Done`, scenarios);
+            }, 200)
+        },
+        daaConfigurationReloader: async () => {
+            // define handler for the refresh button
+            console.log(`Refreshing configuration list...`);
+            this.setStatus('Refreshing configurations list...');
+            const configurations: string[] = await this.getDaaConfigurations();
+            setTimeout(() => {
+                this.statusReady();
+                console.log(`Done`, configurations);
+            }, 200)
+        },
+        daaVersionReloader: async () => {
+            // define handler for the refresh button
+            console.log(`Refreshing versions list...`);
+            this.setStatus('Refreshing versions list...');
+            const versions: string[] = await this.getDaaVersions();
+            await this.getDaaConfigurations();
+            setTimeout(() => {
+                this.statusReady();
+                console.log(`Done`, versions);
+            }, 200)
+        }
+    };
     protected _defines: { [fun:string]: (...args: any[]) => Promise<void> | void};
     protected _timer_active: boolean;
     protected _simulationControls: {
@@ -364,110 +468,6 @@ export class DAAPlayer extends Backbone.Model {
         this._repl = {}; // this is a set of websockets for communication with pvsio instances, one instance for each file
         this._plot = {};
  
-        this._handlers = {
-            init: () => {
-                return new Promise(async (resolve, reject) => {
-                    this.clearInterval();
-                    await this.render();
-                    resolve();
-                });
-            },
-            step: () => {
-                return new Promise(async (resolve, reject) => {
-                    this.clearInterval();
-                    const current_step: number = this.readCurrentSimulationStep();
-                    await this.stepControl(current_step);
-                    resolve();
-                });
-            },
-            pause: () => {
-                return new Promise(async (resolve, reject) => {
-                    this.clearInterval();
-                    resolve();
-                });
-            },
-            back: () => {
-                return new Promise(async (resolve, reject) => {
-                    const current_step: number = this.readCurrentSimulationStep();
-                    await this._handlers.pause();
-                    const prev_step: number = current_step > 0 ? current_step - 1 : current_step;
-                    await this.gotoControl(prev_step);
-                    resolve();
-                });
-            },
-            goto: () => {
-                return new Promise(async (resolve, reject) => {
-                    await this._handlers.pause();
-                    await this.gotoControl();
-                    resolve();
-                });
-            },
-            gotoTime: () => {
-                return new Promise(async (resolve, reject) => {
-                    const target_time: string = this.readGotoTimeInput();
-                    await this._handlers.pause();
-                    await this.gotoTimeControl(target_time);
-                    resolve();
-                });
-            },
-            speed: () => {
-                return new Promise(async (resolve, reject) => {
-                    const speed: string = this.readSelectedSimulationSpeed();
-                    this.setSpeed(speed);
-                    resolve();
-                });
-            },
-            identify: () => {
-                return new Promise(async (resolve, reject) => {
-                    $(".daa-view-splash").css("display", "block").css("opacity", 0.5);
-                    setTimeout(() => {
-                        $(".daa-view-splash").css("display", "none");
-                        resolve();
-                    }, 1600);
-                });
-            },
-            daaScenarioReloader: async (scenarios: string[]) => {
-                // define handler for the refresh button
-                console.log(`Refreshing scenario list...`);
-                this.setStatus('Refreshing scenario list...');
-                // const scenarios: string[] = await this.listScenarioFiles();
-                if (scenarios && scenarios.length) {
-                    // if the selected scenario has been removed from the new list, select the first scenario in the list. Otherwise, keep the current selection.
-                    const scenarioStillExists: boolean = scenarios.some((name) => {
-                        return name === this._selectedScenario;
-                    });
-                    this._selectedScenario = (scenarioStillExists) ? this._selectedScenario : scenarios[0];
-                    // await this.loadScenarioFile(this._selectedScenario, { forceReload: true });
-                }
-                this.refreshSimulationControls();
-                // await this.listConfigurations();
-                setTimeout(() => {
-                    this.statusReady();
-                    console.log(`Done`, scenarios);
-                }, 200)
-            },
-            daaConfigurationReloader: async () => {
-                // define handler for the refresh button
-                console.log(`Refreshing configuration list...`);
-                this.setStatus('Refreshing configurations list...');
-                const configurations: string[] = await this.getDaaConfigurations();
-                setTimeout(() => {
-                    this.statusReady();
-                    console.log(`Done`, configurations);
-                }, 200)
-            },
-            daaVersionReloader: async () => {
-                // define handler for the refresh button
-                console.log(`Refreshing versions list...`);
-                this.setStatus('Refreshing versions list...');
-                const versions: string[] = await this.getDaaVersions();
-                await this.getDaaConfigurations();
-                setTimeout(() => {
-                    this.statusReady();
-                    console.log(`Done`, versions);
-                }, 200)
-            }
-        };
         // these functions that can re-defined by the user using, e.g., define("step", function () {...})
         this._defines = {
             init: async (f: (p: DAAPlayer) => Promise<void>, opt?) => {
@@ -575,6 +575,12 @@ export class DAAPlayer extends Backbone.Model {
      */
     getSpeed (): number {
         return this.speed;
+    }
+    /**
+     * Alias for getSpeed
+     */
+    getCurrentSimulationSpeed (): number {
+        return this.getSpeed();
     }
     /**
      * utility function, renders the DOM elements necessary to control a simulation (start, stop, goto, etc.)

@@ -352,6 +352,10 @@ player.define("step", async () => {
     }
     // save last simulation step
     lastSimulationStep = player.getCurrentSimulationStep();
+    // use animation only when speed is real time and player is playing -- TODO: improve APIS, use animate to toggle animation on/off in the widgets, and duration to set the animation duration
+    const animate: boolean = player.getSpeed() === 1 && player.isPlaying();
+    const animationDuration: number = animate ? 1 : 0;
+    compass?.animationDuration(animationDuration);
     // render
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
