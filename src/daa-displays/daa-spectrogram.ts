@@ -353,7 +353,7 @@ export class DAASpectrogram {
 
             if ($(`#${stepID}`).length === 0) { // profiler: 0.6ms (without optimisation 14.4ms)
                 const dbands: DaidalusBand[] = data?.bands?.bands;
-                const keys: string[] = Object.keys(dbands);
+
                 let tooltipData: { region: Region, range: { from: number, to: number }}[] = [];
                 for (let i = 0; i < dbands.length; i++) {
                     const dband: DaidalusBand = dbands[i];
@@ -361,7 +361,7 @@ export class DAASpectrogram {
                     const range: BandRange = dband.range;
 
                     if (region !== "NONE" && range) {
-                        band_plot_data[region] = [];
+                        band_plot_data[region] = band_plot_data[region] || [];
                         const from = convert(range[0], this.units.from, this.units.to);
                         const to = convert(range[1], this.units.from, this.units.to);
                         const height = to - from;
