@@ -204,6 +204,7 @@ export declare interface AirspaceInterface {
     autoScale (): AirspaceInterface;
     setZoomLevel (NMI: number): AirspaceInterface;
     trySetZoomLevel (NMI: number): boolean; // this is a variant of the setZoomLevel interface, returns true if the level was set correctly
+    getZoomLevel (): number;
     view2D (): AirspaceInterface;
     view3D (): AirspaceInterface;
     recenter (pos: { lat: number, lon: number }): AirspaceInterface;
@@ -220,6 +221,8 @@ export declare interface AirspaceInterface {
     hideCallSign (): AirspaceInterface;
     revealCallSign (): AirspaceInterface;
     animationDuration (seconds: number): boolean;
+    setMaxTraceLength (len: number): boolean;
+    getMaxTraceLength (): number;
     addGeoFencePolygon (
         id: string,
         perimeter: LatLon<number | string>[], 
@@ -461,6 +464,20 @@ export class DAA_Airspace implements AirspaceInterface {
         }
     }
     /**
+     * Trace not available in wwd
+     */
+    setMaxTraceLength (len: number): boolean {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: Trace not available in WWD, please use LeafletJS`);
+        return false;
+    }
+    /**
+     * Trace not available in wwd
+     */
+    getMaxTraceLength (): number {
+        return 0;
+    }
+    /**
      * Animation duration not available in wwd
      */
     animationDuration (duration: number): boolean {
@@ -614,6 +631,12 @@ export class DAA_Airspace implements AirspaceInterface {
             this.contours.setScale(NMI);
         }
         return this.redraw();
+    }
+    /**
+     * Get current zoom level
+     */
+    getZoomLevel (): number {
+        return this.nmi;
     }
     /**
      * @function <a name="DAA_Airspace_view2D">view2D</a>

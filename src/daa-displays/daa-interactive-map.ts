@@ -189,6 +189,18 @@ export class InteractiveMap {
         return this.airspace?.animationDuration(sec);
     }
     /**
+     * Sets max trace length
+     */
+    setMaxTraceLength (len: number): boolean {
+        return this.airspace?.setMaxTraceLength(len);
+    }
+    /**
+     * Gets max trace length
+     */
+    getMaxTraceLength (): number {
+        return this.airspace?.getMaxTraceLength();
+    }
+    /**
      * Internal function enables pointer events on the map
      */
     protected enableMapPointerEvents (): void {
@@ -305,6 +317,12 @@ export class InteractiveMap {
     setZoomLevel(NMI: number): InteractiveMap {
         this.airspace?.setZoomLevel(NMI);
         return this;
+    }
+    /**
+     * Get current zoom level
+     */
+    getZoomLevel (): number {
+        return this?.airspace?.getZoomLevel();
     }
     /**
      * Tries to set the zoom level to the given NMI

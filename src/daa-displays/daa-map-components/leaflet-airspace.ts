@@ -325,6 +325,9 @@ export class LeafletAirspace implements AirspaceInterface {
             -webkit-filter: drop-shadow(2px 2px 1px black);
             white-space:nowrap;
         }
+        .${AirspaceCSS.DAA_TRAFFIC_TRACE} {
+            transform: translate(${-DEFAULT_TRACE_WIDTH}px);
+        }
         .leaflet-top {
             margin-top: 40px;
         }
@@ -526,14 +529,31 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * set traffic animation duration
      */
-    animationDuration (seconds: number): boolean {
+    animationDuration (sec: number): boolean {
         // sanity check
-        console.log(`[leaflet-airspace] animationDuration`, { seconds });
-        if (seconds >= 0) {
-            this.duration = seconds;
+        // console.log(`[leaflet-airspace] animationDuration`, { sec });
+        if (sec >= 0) {
+            this.duration = sec;
             return true;
         }
         return false;
+    }
+    /**
+     * Set max trace length
+     */
+    setMaxTraceLength (len: number): boolean {
+        // console.log(`[leaflet-airspace] setMaxTraceLength`, { len });
+        if (Math.floor(len) >= 0) {
+            this.maxTraceLen = Math.floor(len);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Returns max trace length
+     */
+    getMaxTraceLength (): number {
+        return this.maxTraceLen;
     }
     /**
      * Internal function enables pointer events on the map
@@ -637,6 +657,12 @@ export class LeafletAirspace implements AirspaceInterface {
             return true;
         }
         return false;
+    }
+    /**
+     * Get current zoom level
+     */
+    getZoomLevel (): number {
+        return this.nmi;
     }
     /**
      * Utility function, disables all animations

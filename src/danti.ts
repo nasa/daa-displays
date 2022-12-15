@@ -252,6 +252,13 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 /**
+ * Utility function, computes the appropriate trace length for a given NMI zoom level
+ */
+function getTraceLen (nmi: number): number {
+    const val: number = Math.floor(utils.DEFAULT_MAX_TRACE_LEN * nmi / 2);
+    return val > MAX_TRACE_LEN ? MAX_TRACE_LEN : val;
+}
+/**
  * Plot function
  */
 function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
@@ -376,10 +383,12 @@ player.define("init", async () => {
     player.applyCurrentResolutionOptions();
     // reset map (needed because of the traces), no need to reset the others
     map.resetAirspace();
-    // set initial animation duration
+    // set initial animation duration and trace length
     const speed: number = player.getSpeed();
     const animationDuration: number = speed === 1 ? 1 : 0;
     compass?.animationDuration(animationDuration);
+    const nmi: number = map.getZoomLevel();
+    map.setMaxTraceLength(getTraceLen(nmi));
     // reset voice
     daaVoice.reset();
 });
@@ -526,6 +535,8 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         const speed: number = evt?.sec;
         const animationDuration: number = speed === 1 ? 1 : 0;
         compass?.animationDuration(animationDuration);
+        const nmi: number = map.getZoomLevel();
+        map.setMaxTraceLength(getTraceLen(nmi));
     });
     // set preferred options
     player.enableWedgeApertureOption("compass");
