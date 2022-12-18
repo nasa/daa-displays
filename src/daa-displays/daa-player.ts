@@ -61,7 +61,7 @@ import {
 } from './utils/daa-types';
 
 import * as Backbone from 'backbone';
-import { GuidanceDescriptor, VoiceDescriptor } from './daa-voice';
+import { GuidanceDescriptor, GuidanceKind, VoiceDescriptor } from './daa-voice';
 
 /**
  * DAA Player events and types
@@ -72,8 +72,8 @@ export enum PlayerEvents {
     DidChangeDaaScenarioSelection = "DidChangeDaaScenarioSelection",
     DidUploadDaaScenarioFile = "DidUploadDaaScenarioFile",
     DidToggleDaaVoiceFeedback = "DidToggleDaaVoiceFeedback",
-    DidChangeDaaAuralGuidance = "DidChangeDaaAuralGuidance",
-    DidChangeDaaVoiceName = "DidChangeDaaVoiceName",
+    DidChangeDaaGuidanceKind = "DidChangeDaaGuidanceKind",
+    DidChangeDaaVoice = "DidChangeDaaVoice",
     DidChangeDaaVoicePitch = "DidChangeDaaVoicePitch",
     DidChangeDaaVoiceRate = "DidChangeDaaVoiceRate",
     DidChangeSimulationSpeed = "DidChangeSimulationSpeed"
@@ -1055,11 +1055,11 @@ export class DAAPlayer extends Backbone.Model {
         });        
         $(`#${this.id}-aural-guidance-list`).on("change", () => {
             const selected: string = this.readSelectedAuralGuidance();
-            this.trigger(PlayerEvents.DidChangeDaaAuralGuidance, { selected });
+            this.trigger(PlayerEvents.DidChangeDaaGuidanceKind, { selected });
         });
         $(`#${this.id}-voice-name-list`).on("change", () => {
             const selected: string = this.readSelectedVoiceName();
-            this.trigger(PlayerEvents.DidChangeDaaVoiceName, { selected });
+            this.trigger(PlayerEvents.DidChangeDaaVoice, { selected });
         });
         $(`#${this.id}-voice-pitch-input`).on("change", () => {
             const selected: number = this.readSelectedVoicePitch();
@@ -1089,6 +1089,34 @@ export class DAAPlayer extends Backbone.Model {
      */
     enableVoiceFeedback (): void {
         $(`#${this.id}-voice-feedback-checkbox`).prop("checked", true);
+    }
+    /**
+     * Selects a given guidance kind
+     */
+    selectGuidance (guidance: GuidanceKind): boolean {
+        if (guidance) {
+            const $selected: JQuery<HTMLElement> = $(`#${this.id}-aural-guidance-list option:contains("${guidance}")`);
+            if ($selected?.text()) {
+                $selected.prop("selected", true);
+                this.trigger(PlayerEvents.DidChangeDaaGuidanceKind, { selected: $selected.text() });
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Selects a given voice
+     */
+    selectVoice (name: string): boolean {
+        if (name) {
+            const $selected: JQuery<HTMLElement> = $(`#${this.id}-voice-name-list option:contains("${name}")`);
+            if ($selected?.text()) {
+                $selected.prop("selected", true);
+                this.trigger(PlayerEvents.DidChangeDaaVoice, { selected: $selected.text() });
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Writes the given message in the voice feedback output box

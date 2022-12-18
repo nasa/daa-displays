@@ -789,12 +789,12 @@ export class DaaVoice {
                 const alertLevel: AlertLevel = levels[i];
                 const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data, { alertLevel });
                 const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { ...opt, alertLevel });
-                // voice guidance is provided only for AVOID or ALERT if they persist in their state for at least 4 seconds (TODO)
-                if (max_alert_aircraft && symbol2alertLevel(max_alert_aircraft.symbol) >= AlertLevel.AVOID) {
+                // voice guidance is provided only the alerts persist for at least 4 seconds (TODO)
+                if (max_alert_aircraft && symbol2alertLevel(max_alert_aircraft.symbol) >= AlertLevel.MONITOR) {
                     // store info about the alerting aircraft
                     this.updateAlertingHistory(max_alert_aircraft);
                     const guidance: Guidance = levels[i] === AlertLevel.ALERT ? [
-                        { text2speak: "TRAFFIC TRAFFIC" },
+                        { text2speak: "TRAFFIC, TRAFFIC" },
                         { text2speak: "MANEUVER NOW" }
                     ] : levels[i] === AlertLevel.AVOID ? [
                         { text2speak: "TRAFFIC" },

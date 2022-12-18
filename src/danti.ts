@@ -41,7 +41,7 @@ import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, daaSymbols } from './daa-displays/daa-utils';
-import { DaaVoice, Guidance } from './daa-displays/daa-voice';
+import { DaaVoice, Guidance, GuidanceKind } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
 
@@ -515,11 +515,11 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         const enabled: boolean = evt?.enabled;
         daaVoice.enableGuidace(enabled);
     });
-    player.on(PlayerEvents.DidChangeDaaAuralGuidance, (evt: DidChangeDaaAuralGuidance) => {
+    player.on(PlayerEvents.DidChangeDaaGuidanceKind, (evt: DidChangeDaaAuralGuidance) => {
         const selected: string = evt?.selected;
         daaVoice.selectGuidance(selected);
     });
-    player.on(PlayerEvents.DidChangeDaaVoiceName, (evt: DidChangeDaaVoiceName) => {
+    player.on(PlayerEvents.DidChangeDaaVoice, (evt: DidChangeDaaVoiceName) => {
         const selected: string = evt?.selected;
         daaVoice.selectVoice(selected);
     });
@@ -544,6 +544,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.enableWedgeApertureOption("altitude");
     player.enableWedgeApertureOption("vspeed");
     player.enableWedgePersistence();
+    player.selectGuidance(GuidanceKind['RTCA DO-365']);
     await player.activate();
 
     // auto-load scenario+config if they are specified in the browser
