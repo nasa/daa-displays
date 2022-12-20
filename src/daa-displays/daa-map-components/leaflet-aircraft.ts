@@ -56,7 +56,8 @@ export const LEAFLET_LAT_RANGE: [ number, number] = [-90, 90];
 export const LEAFLET_LON_RANGE: [ number, number] = [-720, 720];
 export const MARKER_SIZE: number = 52; //px
 
-export const OWNSHIP_COLOR: string = "#00fdfe";
+export const OWNSHIP_COLOR: string = "#00fdfe"; // blue
+export const TRAFFIC_YELLOW_COLOR: string = "#ffc107"; // amber
 
 /**
  * zIndex values used for traffic symbols (alerts are on top, ownship has z-index 0)
@@ -144,8 +145,8 @@ export class LeafletAircraft extends Aircraft {
     protected getAircraftColor (): string {
         switch (this.symbol) {
             case "daa-alert": { return "red"; }
-            case "daa-traffic-avoid": { return "yellow"; }
-            case "daa-traffic-monitor": { return "yellow"; }
+            case "daa-traffic-avoid": { return TRAFFIC_YELLOW_COLOR; }
+            case "daa-traffic-monitor": { return TRAFFIC_YELLOW_COLOR; }
             case "daa-target": { return "white"; }
             case "ownship":
             case "daa-ownship": { return OWNSHIP_COLOR; }
@@ -170,17 +171,19 @@ export class LeafletAircraft extends Aircraft {
                 : this.createTrafficLabel({ ownship: this._own });
         const labelRotation: number = this.mapCanRotate ? -(ownshipHeading + aircraftHeading) : -aircraftHeading;
         const marginLeft: number = (this.symbol == "ownship" || this.symbol == "daa-ownship" || this.symbol === "daa-target") ? 9 : 0;
+        const scale: number = (this.symbol === "daa-target") ? 0.9 : 1;
         const lineHeight: number = label.offsetY < 0 ? 1.2 * MARKER_SIZE : 4.8 * MARKER_SIZE;
         const oppositeLineHeight: number = label.offsetY < 0 ? 4.8 * MARKER_SIZE : 1.2 * MARKER_SIZE;
         const labelSize: number = 3 * MARKER_SIZE;
+        const labelScale: number = this.symbol === "daa-alert" ? 1.2 : 1;
         
         // all symbols have a square form factor, except ownship and target, and we need to take that into account when positioning the icon
         return new L.DivIcon({
             html: `
             <div style="position:absolute; top:-30px; left:-28px;">
                 <div class="marker-inner" style="position:absolute; transform-origin:center; transform:rotate(${aircraftHeading}deg); width:${MARKER_SIZE}px; height:${MARKER_SIZE}px;">
-                    <img src="${icons[this.symbol]}" height=${MARKER_SIZE} style="position:absolute; margin-left:${marginLeft}px;"></img>
-                    <div class="daa-label" style="position:absolute; text-align:center; width:${labelSize}px; height:${labelSize}px; top:${-MARKER_SIZE}px; left:${-MARKER_SIZE}px; line-height:${lineHeight}px; transform-origin:center; transform:rotate(${labelRotation}deg);">
+                    <img src="${icons[this.symbol]}" height=${MARKER_SIZE} style="position:absolute; margin-left:${marginLeft}px;transform:scale(${scale});"></img>
+                    <div class="daa-label" style="position:absolute; text-align:center; width:${labelSize}px; height:${labelSize}px; top:${-MARKER_SIZE}px; left:${-MARKER_SIZE}px; line-height:${lineHeight}px; transform-origin:center; transform:rotate(${labelRotation}deg)scale(${labelScale});">
                         <div style="color:${this.getAircraftColor()}">${label.text}</div>
                     </div>
                     <div class="daa-label call-sign" style="display:${this.callSignVisible ? "block" : "none"}; position:absolute; text-align:center; width:${labelSize}px; height:${labelSize}px; top:${-MARKER_SIZE}px; left:${-MARKER_SIZE}px; line-height:${oppositeLineHeight}px; transform-origin:center; transform:rotate(${labelRotation}deg);">

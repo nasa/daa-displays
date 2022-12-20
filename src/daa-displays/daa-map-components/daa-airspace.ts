@@ -246,6 +246,7 @@ export declare interface AirspaceInterface {
     hideGeoFence () : AirspaceInterface;
     getCompassDivName (): string;
     getIndicatorsDivName (): string;
+    getOwnshipDivName (): string;
     resetAirspace (): AirspaceInterface; // resets all data structures
 };
 
@@ -503,6 +504,12 @@ export class DAA_Airspace implements AirspaceInterface {
      * Indicators div is not supported in wwd
      */
     getIndicatorsDivName (): string {
+        return null;
+    }
+    /**
+     * Indicators div is not supported in wwd
+     */
+    getOwnshipDivName (): string {
         return null;
     }
     /**

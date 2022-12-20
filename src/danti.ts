@@ -317,12 +317,14 @@ const tailNumber: TailNumberIndicator = new TailNumberIndicator("tail", {
 // map heading is controlled by the compass, div names for compass and indicators are taken from the map display so the compass will be rendered under the alerts
 const compassDivName: string = map.getCompassDivName();
 const indicatorsDivName: string = map.getIndicatorsDivName();
+const ownshipDivName: string = map.getOwnshipDivName();
 const compass: Compass = new Compass("compass", {
     top: 110, 
     left: enable_widescreen ? 434 : 210
 }, { 
     parent: compassDivName, 
-    indicatorsDiv: indicatorsDivName, 
+    indicatorsDiv: indicatorsDivName, // indicators will be renderd above traffic and compass
+    ownshipDiv: ownshipDivName, // the ownship will be rendered above traffic and compass
     maxWedgeAperture: 15, 
     map, 
     wind, 

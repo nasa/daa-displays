@@ -203,6 +203,8 @@ export class LeafletAirspace implements AirspaceInterface {
     protected $compassDiv: JQuery<HTMLElement>;
     // indicators div
     protected $indicatorsDiv: JQuery<HTMLElement>;
+    // ownship div
+    protected $ownshipDiv: JQuery<HTMLElement>;
 
     // ownship
     protected _ownship: LeafletAircraft;
@@ -320,7 +322,7 @@ export class LeafletAirspace implements AirspaceInterface {
         .daa-label {
             font: ${FONT_SIZE}px ${FONT_FAMILY}; 
             color: white;
-            text-shadow: 1px 1px black;
+            text-shadow: 1px 1px 4px black;
             filter: drop-shadow(2px 2px 1px black);
             -webkit-filter: drop-shadow(2px 2px 1px black);
             white-space:nowrap;
@@ -378,6 +380,12 @@ export class LeafletAirspace implements AirspaceInterface {
             top: 0,
             left: 0
         });
+        const ownshipLayer: HTMLElement = utils.createDiv(`${opt.div}-ownship`, {
+            parent: opt.div,
+            top: 0,
+            left: 0
+        });
+        this.$ownshipDiv = $(ownshipLayer);
         const indicatorsLayer: HTMLElement = utils.createDiv(`${opt.div}-indicators`, {
             parent: opt.div,
             top: 0,
@@ -427,6 +435,19 @@ export class LeafletAirspace implements AirspaceInterface {
                     this.vfrLayer
                 ]
             }),
+            // (RTCA-365B, sec 2.2.5.9.1)
+            // To ensure visibility of the most important symbols and they data tags, the following
+            // prioritization should be followed for information overlay (from highest to lowest)
+            // 1. Ownship
+            // 2. Traffic prioritized according to sec 2.2.4.3.5.4
+            // (RTCA-365B, sec 2.2.4.3.5.4)
+            // Intruders shall be prioritized in the following order for display:
+            // 1. Resolution Advisory
+            // 2. Warning Alert
+            // 3. Corrective Alert
+            // 4. Preventive Alert
+            // 5. Maneuver Guidance
+            // 6. Remaining Traffic
             L.map(`${opt.div}-traffic`, {
                 center,
                 zoom,
@@ -440,11 +461,11 @@ export class LeafletAirspace implements AirspaceInterface {
                 dragging: !!opt?.dragging,
                 layers: [
                     this.aircraftTraceLayer,
-                    this.flightPlanLayer,
-                    this.ownshipLayer,
                     this.contoursLayer,
                     this.hazardZonesLayer,
-                    this.trafficLayer
+                    this.trafficLayer,
+                    this.flightPlanLayer,
+                    this.ownshipLayer
                 ]
             })
         ];
@@ -527,6 +548,12 @@ export class LeafletAirspace implements AirspaceInterface {
         return this.$indicatorsDiv[0] ? this.$indicatorsDiv.attr("id") : null;
     }
     /**
+     * Utility function, returns a pointer to the indicators div
+     */
+    getOwnshipDivName (): string {
+        return this.$ownshipDiv[0] ? this.$ownshipDiv.attr("id") : null;
+    }
+    /**
      * set traffic animation duration
      */
     animationDuration (sec: number): boolean {
@@ -569,7 +596,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     protected disableMapPointerEvents (): void {
         for (let i = 0; i < this.$innerDivs.length; i++) {
-            this.$innerDivs[i].find(`#map-div`).css({
+            this.$innerDivs[i].find(`.map-div`).css({
                 "pointer-events": "none",
                 "touch-action": "none"
             });

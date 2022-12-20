@@ -58,11 +58,11 @@
        rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata>
 
 <path
-   style="opacity:1;fill:#ffff00;fill-opacity:1;stroke:#ffffff;stroke-width:5.32103109;stroke-opacity:0"
+   style="opacity:1;fill:#ffc107;fill-opacity:1;stroke:#ffffff;stroke-width:5.32103109;stroke-opacity:0"
    d="m 689.54356,813.45359 c -77.6293,-75.3329 -143.3619,-136.969 -146.0724,-136.969 -2.7106,0 -67.9147,60.6244 -144.8982,134.721 -76.9834,74.0966 -140.7571,133.94255 -141.7192,132.99125 -1.4541,-1.4379 79.6662,-255.47935 256.4109,-802.99306 15.6558,-48.497903 29.2035,-87.451378 30.106,-86.563308 2.2415,2.20544 289.4923,893.992068 288.282,894.987968 -0.5308,0.4371 -64.4799,-60.84175 -142.1091,-136.17485 z"
    id="path814-6"
    inkscape:connector-curvature="0" /><ellipse
-   style="opacity:1;fill:#000000;fill-opacity:0;stroke:#ffff00;stroke-width:40.80849457;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+   style="opacity:1;fill:#000000;fill-opacity:0;stroke:#ffc107;stroke-width:40.80849457;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
    id="path1143"
    cx="540.12695"
    cy="545.42352"

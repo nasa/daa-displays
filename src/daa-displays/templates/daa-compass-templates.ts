@@ -1,6 +1,6 @@
 import { FONT_FAMILY } from "./daa-constant-templates";
-export const COMPASS_OPACITY: number = 0.6;
-export const BANDS_OPACITY: number = 0.7;
+export const COMPASS_LABELS_OPACITY: number = 0.6;
+export const BANDS_OPACITY: number = 0.8;
 export const WEDGE_OPACITY: number = 0.6;
 export const COMPASS_SIZE: number = 634; //px
 export const OWNSHIP_OPACITY: number = 0.6;
@@ -33,7 +33,7 @@ export const compassTemplate = `
             -webkit-filter: drop-shadow(2px 2px 1px black);
             font-family: ${FONT_FAMILY};
             font-size:16px;
-            opacity:${COMPASS_OPACITY};
+            opacity:${COMPASS_LABELS_OPACITY};
             color:white;
             position:absolute;
         }
@@ -49,7 +49,7 @@ export const compassTemplate = `
     </div>
     <!-- compass -->
     <div id="{{id}}-circle" class="compass" style="transform:rotate(0deg);">
-        <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="position:absolute;left:0px;width:635px;opacity:${COMPASS_OPACITY};"></object>
+        <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="position:absolute;left:0px;width:635px;opacity:${COMPASS_LABELS_OPACITY};"></object>
         <!-- compass bands -->
         <canvas id="{{id}}-bands" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;left:0px;opacity:${BANDS_OPACITY};"></canvas>
         <!-- resolution bug -->
@@ -72,14 +72,16 @@ export const compassTemplate = `
     {{else}}
     ${indicatorsTemplate}
     {{/if}}
-    <!-- ownship -->
-    <div id="{{id}}-ownship" style="z-index:1;">
-        <div style="position:absolute; margin-left:301px; margin-top:289px;">
-            <!-- <i class="fas fa-2x fa-location-arrow" style="color: #00fefe; transform-origin:center; transform:rotate(-45deg);"></i> -->
-            <object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="height:52px;position:absolute; opacity:${OWNSHIP_OPACITY};"></object>
-        </div>
-    </div>
 </div>`;
 
 export const compassBandsTemplate = `{{#each segments}}<div id={{id}} from={{from}} to={{to}} style="top:{{top}}px; height:{{height}}px;{{#if ../dash}} background-image: repeating-linear-gradient(0deg,transparent,transparent 7px,{{../color}} 0px,{{../color}} 14px);{{else}} background-color:{{../color}};{{/if}} position:absolute; width:8px; left:{{left}}px;"></div>
 {{/each}}`;
+
+export const ownshipTemplate = `
+<!-- ownship -->
+<div id="{{id}}-ownship" style="z-index:1;">
+    <div style="position:absolute; margin-left:301px; margin-top:289px;">
+        <object id="{{id}}-daa-ownship" data="{{baseUrl}}svgs/ownship.svg" type="image/svg+xml" style="height:52px;position:absolute; opacity:${OWNSHIP_OPACITY};"></object>
+    </div>
+</div>
+`;

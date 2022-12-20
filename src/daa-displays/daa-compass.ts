@@ -58,8 +58,8 @@ import { WindIndicator } from './daa-wind-indicator';
 import { fixed3 } from './daa-utils';
 import { ResolutionElement, Vector3D } from './utils/daa-types';
 
-export const singleStroke: number = 8;
-export const doubleStroke: number = 20;
+export const SINGLE_STROKE: number = 8;
+export const DOUBLE_STROKE: number = 16;
 
 // internal class, renders a resolution bug over the compass
 class ResolutionBug {
@@ -271,7 +271,7 @@ export class Compass {
 
     protected bands: utils.Bands;
     protected canvas: HTMLCanvasElement;
-    protected strokeWidth: number = singleStroke;
+    protected strokeWidth: number = SINGLE_STROKE;
     protected radius: number;
     protected centerX: number;
     protected centerY: number;
@@ -299,7 +299,8 @@ export class Compass {
         animate?: boolean, // whether the compass should be animated when rotate, default: true
         duration?: number, // animation duration, in seconds
         parent?: string, // ID of the parent where the compass rose will be rendered
-        indicatorsDiv?: string // ID of the div element where indicators are to be rendered
+        indicatorsDiv?: string, // ID of the div element where indicators will be rendered
+        ownshipDiv?: string //  ID of the div element where the ownship will be rendered
     }) {
         opt = opt || {};
         this.id = id || "daa-compass";
@@ -347,6 +348,19 @@ export class Compass {
             });
             $(indicatorsDiv)?.html(indicatorsHTML);
         }
+        // attach ownship
+        const ownshipDiv: HTMLElement = utils.createDiv(`${this.id}-ownship-outer`, {
+            parent: opt.ownshipDiv || $(this.div).attr("id"), 
+            zIndex: 2,
+            top: this.top,
+            left: this.left
+        });
+        const ownshipHTML: string = Handlebars.compile(templates.ownshipTemplate)({
+            id: this.id,
+            baseUrl: utils.baseUrl
+        });
+        $(ownshipDiv)?.html(ownshipHTML);
+
         this.canvas = <HTMLCanvasElement> document.getElementById(id + "-bands");
         this.radius = this.canvas.width / 2 - this.strokeWidth + 1;
         this.centerX = this.centerY = this.canvas.width / 2;
@@ -594,7 +608,7 @@ export class Compass {
                 ctx.setLineDash([]);
             }
             ctx.arc(this.centerX, this.centerY, this.radius, math.deg2rad(from) - Math.PI / 2, math.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
-            ctx.lineWidth = (saturateRed) ? doubleStroke : singleStroke;
+            ctx.lineWidth = (saturateRed) ? DOUBLE_STROKE : SINGLE_STROKE;
             ctx.strokeStyle = (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color;
             ctx.stroke();
         }
