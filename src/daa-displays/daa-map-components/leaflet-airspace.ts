@@ -1163,13 +1163,15 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Utility function, sets the heading of the ownship and rotates the map
      */
-    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean; }): AirspaceInterface {
+    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean, duration?: number }): AirspaceInterface {
         this.navigator_heading = deg;
         const rotation: number = opt?.nrthup ? 0 : -deg;
         // rotate ownship
         this._ownship.setHeading(rotation);
         // rotate map
-        const transitionDuration: string = this.animate && !this.forceNoAnimation ? `${this.duration}s` : "0ms";
+        const transitionDuration: string = isFinite(opt?.duration) ? `${opt.duration}s`
+            : this.animate && !this.forceNoAnimation ? `${this.duration}s` 
+            : "0ms";
         for (let i = 0; i < this.$innerDivs.length; i++) {
             this.$innerDivs[i].css({
                 transform: `rotate(${rotation}deg)`,

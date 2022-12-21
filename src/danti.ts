@@ -35,7 +35,11 @@ import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { DEFAULT_MAP_WIDTH, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
-import { DaaConfig, DAAPlayer, DidChangeDaaAuralGuidance, DidChangeDaaVoiceName, DidChangeDaaVoicePitch, DidChangeDaaVoiceRate, DidChangeSimulationSpeed, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, PlayerEvents } from './daa-displays/daa-player';
+import {
+     DaaConfig, DAAPlayer, DidChangeDaaAuralGuidance, DidChangeDaaVoiceName, DidChangeDaaVoicePitch, 
+     DidChangeDaaVoiceRate, DidChangeSimulationSpeed, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, 
+     PlayerEvents 
+} from './daa-displays/daa-player';
 import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
@@ -215,7 +219,10 @@ function render (danti: {
         if (enable_sound && player.voiceFeedbackEnabled() && danti?.voice) {
             // force reading guidance if the player is not in playback mode
             const isPlaying: boolean = player.isPlaying();
-            if (!danti.voice.isSpeaking() || !isPlaying) {
+            if (!isPlaying) {
+                danti.voice.reset();
+            }
+            if (!danti.voice.isSpeaking()) {
                 const guidance: Guidance = danti?.voice?.getGuidance({
                     ownship: flightData.ownship,
                     traffic: flightData.traffic,
@@ -362,8 +369,8 @@ player.define("step", async () => {
     // save last simulation step
     lastSimulationStep = player.getCurrentSimulationStep();
     // use animation only when speed is real time and player is playing -- TODO: improve APIS, use animate to toggle animation on/off in the widgets, and duration to set the animation duration
-    const animate: boolean = player.getSpeed() === 1 && player.isPlaying();
-    const animationDuration: number = animate ? 1 : 0;
+    const isPlaying: boolean = player.getSpeed() === 1 && player.isPlaying();
+    const animationDuration: number = isPlaying ? 1 : 0;
     compass?.animationDuration(animationDuration);
     // render
     render({
@@ -392,7 +399,7 @@ player.define("init", async () => {
     const nmi: number = map.getZoomLevel();
     map.setMaxTraceLength(getTraceLen(nmi));
     // reset voice
-    daaVoice.reset();
+    daaVoice?.reset();
 });
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", () => {
@@ -509,29 +516,29 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         top: -748,
         left: 1300,
         width: 400,
-        voices: daaVoice.getVoiceDescriptors(),
-        styles: daaVoice.getGuidanceDescriptors()
+        voices: daaVoice?.getVoiceDescriptors(),
+        styles: daaVoice?.getGuidanceDescriptors()
     });
     // install relevant backbone handlers
     player.on(PlayerEvents.DidToggleDaaVoiceFeedback, (evt: DidToggleDaaVoiceFeedback) => {
         const enabled: boolean = evt?.enabled;
-        daaVoice.enableGuidace(enabled);
+        daaVoice?.enableGuidace(enabled);
     });
     player.on(PlayerEvents.DidChangeDaaGuidanceKind, (evt: DidChangeDaaAuralGuidance) => {
         const selected: string = evt?.selected;
-        daaVoice.selectGuidance(selected);
+        daaVoice?.selectGuidance(selected);
     });
     player.on(PlayerEvents.DidChangeDaaVoice, (evt: DidChangeDaaVoiceName) => {
         const selected: string = evt?.selected;
-        daaVoice.selectVoice(selected);
+        daaVoice?.selectVoice(selected);
     });
     player.on(PlayerEvents.DidChangeDaaVoicePitch, (evt: DidChangeDaaVoicePitch) => {
         const selected: number = evt?.selected;
-        daaVoice.selectPitch(selected);
+        daaVoice?.selectPitch(selected);
     });
     player.on(PlayerEvents.DidChangeDaaVoiceRate, (evt: DidChangeDaaVoiceRate) => {
         const selected: number = evt?.selected;
-        daaVoice.selectRate(selected);
+        daaVoice?.selectRate(selected);
     });
     player.on(PlayerEvents.DidChangeSimulationSpeed, (evt: DidChangeSimulationSpeed) => {
         const speed: number = evt?.sec;
@@ -547,6 +554,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.enableWedgeApertureOption("vspeed");
     player.enableWedgePersistence();
     player.selectGuidance(GuidanceKind['RTCA DO-365']);
+    player.setSpeed(1);
     await player.activate();
 
     // auto-load scenario+config if they are specified in the browser

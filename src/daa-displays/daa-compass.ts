@@ -432,22 +432,23 @@ export class Compass {
     }) {
         opt = opt || {};
         const animationDuration: number = this.animate ? this.duration : 0;
-        opt.transitionDuration = opt.transitionDuration || `${animationDuration}s`;
+        const transitionDuration: string = opt.transitionDuration || `${animationDuration}s`;
+        const duration: number = parseFloat(transitionDuration) / (transitionDuration.endsWith("ms") ? 1000 : 1); // sec
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
         $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
         if (this.nrthup) {
-            $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
+            $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });
-            $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + this.currentCompassAngle + "deg)" });
+            $(`#${this.id}-daa-ownship`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + this.currentCompassAngle + "deg)" });
             // rotate map and wind indicator accordingly
-            if (this.map) { this.map.setHeading(0); }
+            if (this.map) { this.map.setHeading(0, { duration }); }
             if (this.wind) { this.wind.currentHeading(0); }
         } else {
-            $(`#${this.id}-circle`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(" + -this.currentCompassAngle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
+            $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + -this.currentCompassAngle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "block" });
-            $(`#${this.id}-daa-ownship`).css({ "transition-duration": opt.transitionDuration, "transform": "rotate(0deg)" });
+            $(`#${this.id}-daa-ownship`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" });
             // rotate map and wind indicator accordingly
-            if (this.map) { this.map.setHeading(this.currentCompassAngle); }
+            if (this.map) { this.map.setHeading(this.currentCompassAngle, { duration }); }
             if (this.wind) { this.wind.currentHeading(this.currentCompassAngle); }
         }
     }

@@ -212,7 +212,7 @@ export declare interface AirspaceInterface {
     setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface;
     setOwnshipVelocity (v: Vector3D<number | string>): AirspaceInterface;
     setFlightPlan (flightPlan: utils.FlightPlan): AirspaceInterface;
-    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean}): AirspaceInterface;
+    setOwnshipHeading (deg: number, opt?: { nrthup?: boolean, duration?: number }): AirspaceInterface;
     getOwnshipHeading (): number;
     getTraffic (): AircraftInterface[];
     setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[]): AirspaceInterface;

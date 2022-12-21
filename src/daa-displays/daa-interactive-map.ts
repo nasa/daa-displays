@@ -236,7 +236,7 @@ export class InteractiveMap {
      * @memberof module:InteractiveMap
      * @instance
      */
-    setHeading(deg: number, opt?: { nrthup?: boolean }): InteractiveMap {
+    setHeading(deg: number, opt?: { nrthup?: boolean, duration?: number }): InteractiveMap {
         this.heading = deg;
         this.airspace?.setOwnshipHeading(deg, opt);
         return this;

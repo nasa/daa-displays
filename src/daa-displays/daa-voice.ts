@@ -27,7 +27,7 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { alertLevel2symbol, computeBearing, computeNmiDistance, symbol2alertLevel } from "./daa-utils";
+import { alertLevel2symbol, computeBearing, computeNmiDistance, DaaSymbol, symbol2alertLevel } from "./daa-utils";
 import { rad2deg } from "./utils/daa-math";
 import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D } from "./utils/daa-types";
 import { getAlertingAircraftMap } from "./utils/daa-utils";
@@ -70,6 +70,17 @@ export const DEFAULT_GUIDANCE_KIND: GuidanceKind = GuidanceKind.ATC;
 export const DEFAULT_SAME_ALERTING_TIMEOUT: number = 32000; //ms
 
 /**
+ * Utility function, checks if two voices are the same
+ */
+export function sameVoice (v1: GuidanceVoice, v2: GuidanceVoice): boolean {
+    if (!v1 || !v2) { return false; }
+    const name1: string = typeof v1 === "string" ? v1 : v1?.name;
+    const name2: string = typeof v2 === "string" ? v2 : v2?.name;
+    return name1 === name2;
+}
+
+
+/**
  * DaaVoice class
  */
 export class DaaVoice {
@@ -89,7 +100,7 @@ export class DaaVoice {
     protected selectedPause: number = DEFAULT_PAUSE_LEN; // ms
 
     // info about last alerting aircraft, used to avoid repeated alerts on the same aircraft
-    protected lastAlertingAircraft: DAA_AircraftDescriptor = null;
+    protected lastAlertingAircraft: { callSign: string, symbol: DaaSymbol } = null;
     protected repeatedAlertTimer: NodeJS.Timeout = null;
     protected repeatedAlertTimeout: number = DEFAULT_SAME_ALERTING_TIMEOUT;
 
@@ -178,7 +189,7 @@ export class DaaVoice {
                     this.selectVolume(opt?.volume === undefined ? this.selectedVolume : opt.volume); // volume values: 0..1
                     this.selectRate(opt?.rate || this.selectedRate);
                     this.selectPitch(opt?.pitch || this.selectedPitch);
-                    console.log(`[daa-voice] speaking: ${msg}`);
+                    console.log(`[daa-voice] speaking: ${this.chunks.join("; ")}`);
                     // speak all chunks, and introduce a small pause between each chunk
                     for (let i = 0; i < this.chunks?.length; i++) {
                         await this.speakNow(this.chunks[i]);
@@ -216,7 +227,7 @@ export class DaaVoice {
      */
     sayNoMore (): void {
         if (this.isSpeaking()) {
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // The cancel() method removes all utterances from the utterance queue. If an utterance is currently being spoken, speaking will stop immediately.
             this.chunks = null;
             this.can_speak_now = true;
         }
@@ -329,11 +340,17 @@ export class DaaVoice {
             console.log(`[daa-voice] Trying to set voice to`, voice);
             const v: SpeechSynthesisVoice = this.getVoice(voice);
             if (v) {
-                console.log(`[daa-voice] Setting voice to ${v.name}`);
-                this.selectedVoice = v;
-                this.synthVoice.voice = v;
-                this.synthVoice.rate = this.selectedRate;
-                this.synthVoice.pitch = this.selectedPitch;
+                if (!this.synthVoice.voice || !sameVoice(this.selectedVoice, v)) {
+                    console.log(`[daa-voice] Setting voice to ${v.name}`);
+                    if (this.synthVoice.voice) {
+                        // reset history when voice was initialized and is going to change
+                        this.clearAlertingHistory();
+                    }
+                    this.selectedVoice = v;
+                    this.synthVoice.voice = v;
+                    this.synthVoice.rate = this.selectedRate;
+                    this.synthVoice.pitch = this.selectedPitch;
+                }
                 return true;
             }
         }
@@ -373,9 +390,13 @@ export class DaaVoice {
                 rate < 0.1 ? 0.1
                 : rate > 3 ? 3
                 : rate;
-            console.log(`[daa-voice] Setting rate to ${target}`);
-            this.selectedRate = target;
-            this.synthVoice.rate = target;
+            if (target !== this.selectedRate) {
+                console.log(`[daa-voice] Setting rate to ${target}`);
+                this.selectedRate = target;
+                this.synthVoice.rate = target;
+                // reset history
+                this.clearAlertingHistory();
+            }
             return true;
         }
         return false;
@@ -396,8 +417,12 @@ export class DaaVoice {
                 : pitch > 2 ? 2
                 : pitch;
             console.log(`[daa-voice] Setting pitch to ${target}`);
-            this.selectedPitch = target;
-            this.synthVoice.pitch = target;
+            if (target !== this.selectedPitch) {
+                this.selectedPitch = target;
+                this.synthVoice.pitch = target;
+                // reset history
+                this.clearAlertingHistory();
+            }
             return true;
         }
         return false;
@@ -412,8 +437,12 @@ export class DaaVoice {
                 : name === GuidanceKind["RTCA DO-365"] ? GuidanceKind["RTCA DO-365"]
                 : null;
             if (guidance) {
-                this.selectedKind = guidance;
-                console.log(`[daa-voice] Setting guidance to ${guidance}`);
+                if (guidance !== this.selectedKind) {
+                    this.selectedKind = guidance;
+                    console.log(`[daa-voice] Setting guidance to ${guidance}`);
+                    // reset history
+                    this.clearAlertingHistory();
+                }
                 return true;
             }
             console.warn(`[daa-voice] Warning: Unable to set guidance (unsupported guidance kind ${name})`);
@@ -651,7 +680,7 @@ export class DaaVoice {
                 // return alerting aircraft
                 return ac;
             }
-            console.log(`[daa-voice] Info: Alert suppressed for ${alerting[0]?.callSign} (alert level ${level} repeated within ${this.repeatedAlertTimeout}ms)`);
+            console.log(`[daa-voice] Alert suppressed for ${alerting[0]?.callSign} (alert level ${level} repeated within ${this.repeatedAlertTimeout}ms)`);
         }
         return null;
     }
@@ -659,19 +688,31 @@ export class DaaVoice {
      * Internal function, clears stored info about the last alerting aircraft
      */
     protected clearAlertingHistory (): void {
+        console.log(`[daa-voice] Clearing alerting history`, { lastAlertingAircraft: this.lastAlertingAircraft });
         clearTimeout(this.repeatedAlertTimer)
         this.repeatedAlertTimer = null;
         this.lastAlertingAircraft = null;
     }
     /**
      * Internal function, updates the alerting history
+     * History is updated when
+     * - the history is empty
+     * - or when the callsign of the alerting aircraft is different than that in the history
+     * - or when the same aircraft is alerting but the alert level has increased
      */
-    protected updateAlertingHistory (ac: DAA_AircraftDescriptor): void {
-        if (ac) {
+    protected updateAlertingHistory (ac: DAA_AircraftDescriptor): boolean {
+        if (ac && (!this.lastAlertingAircraft 
+                    || this.lastAlertingAircraft?.callSign !== ac?.callSign 
+                    || symbol2alertLevel(this.lastAlertingAircraft?.symbol) < symbol2alertLevel(ac?.symbol))) {
             this.clearAlertingHistory();
             // store a copy of the alerting aircraft descriptor
-            this.lastAlertingAircraft = { ...ac };
+            this.lastAlertingAircraft = {
+                callSign: ac.callSign,
+                symbol: ac.symbol
+            };
+            return true;
         }
+        return false;
     }
     /**
      * Internal function, schedules an action to clear the stored info about the last alerting aircraft after a given timeout
@@ -774,6 +815,11 @@ export class DaaVoice {
      * Voice guidance for DANTi
      * Example: "Traffic, eleven o'clock, one-zero miles, southbound, converging, Boeing Seven Twenty Seven, one seven thousand."
      * See example ATC phraseology at https://www.faa.gov/air_traffic/publications/atpubs/atc_html/chap2_section_1.html
+     * RTCA DO365B, sec 2.2.5.12.1 (DAA Aural Alerts - en-route and non-cooperative)
+     * When an intruder triggers
+     * - a DAA preventive alert, "TRAFFIC, MONITOR" shall be audibly annunciated (Note: DAA preventive alerts are not issued against non-cooperative traffic)
+     * - a DAA corrective alert, "TRAFFIC, AVOID" shall be audibly annunciated
+     * - a DAA warning alert, "TRAFFIC, MANEUVER NOW; TRAFFIC, MANEUVER NOW" shall be audibly annunciated 
      */
     getGuidanceRTCA (data: CommData, opt?: {
         suppressRepeatedAlerts?: boolean
@@ -794,14 +840,12 @@ export class DaaVoice {
                     // store info about the alerting aircraft
                     this.updateAlertingHistory(max_alert_aircraft);
                     const guidance: Guidance = levels[i] === AlertLevel.ALERT ? [
-                        { text2speak: "TRAFFIC, TRAFFIC" },
-                        { text2speak: "MANEUVER NOW" }
+                        { text2speak: "TRAFFIC, MANEUVER NOW" },
+                        { text2speak: "TRAFFIC, MANEUVER NOW" }
                     ] : levels[i] === AlertLevel.AVOID ? [
-                        { text2speak: "TRAFFIC" },
-                        { text2speak: "AVOID" }
+                        { text2speak: "TRAFFIC, AVOID" }
                     ] : levels[i] === AlertLevel.MONITOR ? [
-                        { text2speak: "TRAFFIC" },
-                        { text2speak: "MONITOR" }
+                        { text2speak: "TRAFFIC, MONITOR" }
                     ] : null;
                     return guidance;
                 }
@@ -839,6 +883,8 @@ export class DaaVoice {
                 if (opt?.force) {
                     // stop speaking so new message can be spoken
                     this.sayNoMore();
+                    // clear history
+                    this.clearAlertingHistory();
                 }
                 if (this.can_speak_now) {
                     const guidance: Guidance = desc.guidance || this.getGuidance(desc.data, opt);

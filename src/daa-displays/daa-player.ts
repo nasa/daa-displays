@@ -560,7 +560,7 @@ export class DAAPlayer extends Backbone.Model {
      * Sets simulation speed
      * @param speed Simulation speed, in percentage: 100 is 1x, 1000 is 10x, etc.
      */
-    setSpeed (speed: number | string) {
+    setSpeed (speed: number | string): DAAPlayer {
         if (isFinite(+speed) && +speed > 0 && this.speed !== +speed) {
             this.speed = +speed;
             this.ms = 1000 / this.speed;
@@ -1089,6 +1089,16 @@ export class DAAPlayer extends Backbone.Model {
      */
     enableVoiceFeedback (): void {
         $(`#${this.id}-voice-feedback-checkbox`).prop("checked", true);
+    }
+    /**
+     * Selected a given simulation speed
+     */
+    selectSimulationSpeed (speed: number | string): boolean {
+        if (+speed > 0) {
+            this.setSpeed(speed);
+            return +this.speed === +speed;
+        }
+        return false;
     }
     /**
      * Selects a given guidance kind
