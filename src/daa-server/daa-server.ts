@@ -262,10 +262,11 @@ export class DAAServer {
             // console.info("Message parsed successfully!")
             const cmd: DaaServerCommand = content["type"];
             switch (cmd) {
-                case DaaServerCommand.exec: {
+                case DaaServerCommand.exec: { // execute the logic for generatating bands
                     const data: ExecMsg = <ExecMsg> content.data;
-                    const bandsFile: string = fsUtils.getBandsFileName(data);
-                    if (bandsFile) {
+                    const wind: { deg: string, knot: string } = data?.wind || { deg: "0", knot: "0" };
+                    const bandsFileName: string = fsUtils.getBandsFileName({ ...data, wind });
+                    if (bandsFileName) {
                         const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
                                                 : data.daaLogic.endsWith(".exe") ? "cpp" 
                                                 : data.daaLogic.endsWith(".pvsio") ? "pvsio"
@@ -296,14 +297,14 @@ export class DAAServer {
                                         : (impl === "pvsio") ? await this.pvsioProcess.getVersion(daaFolder, data.daaLogic)
                                         : null;
                             
-                            const wind: { deg: string, knot: string } = data.wind || { deg: "0", knot: "0" };
-                            
-                            const outputFileName: string = fsUtils.getBandsFileName({ ...data, wind });
                             const outputFolder: string = path.join(__dirname, "../daa-output", daaVersion, impl);
+                            const bandsFile: string = path.resolve(outputFolder, bandsFileName);
+                            // console.log(`[daa-server] Bands file`, { bandsFile });
                             try {
-                                if (this.useCache && fs.existsSync(outputFileName)) {
-                                    console.log(`Reading bands file ${bandsFile} from cache`);
+                                if (this.useCache && fs.existsSync(bandsFile)) {
+                                    console.log(`Reading bands file from cache`, { bandsFile });
                                 } else {
+                                    // invoke the corresponding process to generate the bands file
                                     switch (impl) {
                                         case "java": {
                                             await this.javaProcess.exec({
@@ -312,7 +313,7 @@ export class DAAServer {
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
                                                 ownshipName: data.ownshipName,
-                                                outputFileName,
+                                                outputFileName: bandsFileName,
                                                 wind
                                             });
                                             break;
@@ -324,7 +325,7 @@ export class DAAServer {
                                                 daaConfig: data.daaConfig, 
                                                 daaScenario: data.scenarioName, 
                                                 ownshipName: data.ownshipName,
-                                                outputFileName,
+                                                outputFileName: bandsFileName,
                                                 wind
                                             });
                                             break;
@@ -335,7 +336,7 @@ export class DAAServer {
                                             try {
                                                 const contextFolder: string = path.join(daaFolder, `WellClear-${daaVersion}`, "PVS");
                                                 await this.pvsioProcess.pvsioMode(contextFolder, "DAABands");
-                                                await this.pvsioProcess.exec(daaFolder, data.daaLogic, res.configFile, res.scenarioFile, outputFileName);
+                                                await this.pvsioProcess.exec(daaFolder, data.daaLogic, res.configFile, res.scenarioFile, bandsFileName);
                                             } catch (pvsio_error) {
                                                 console.error("[pvsio.exec] Error: ", pvsio_error);
                                             }
@@ -347,8 +348,8 @@ export class DAAServer {
                                     }
                                 }
                                 try {
-                                    console.log(`[daa-server] Reading bands file ${path.join(outputFolder, bandsFile)}`);
-                                    const buf: Buffer = fs.readFileSync(path.join(outputFolder, bandsFile));
+                                    console.log(`[daa-server] Reading bands file ${bandsFile}`);
+                                    const buf: Buffer = fs.readFileSync(bandsFile);
                                     const desc: ScenarioDescriptor = JSON.parse(buf.toLocaleString());
                                     // content.data = buf.toLocaleString();
                                     const keys: string[] = Object.keys(desc);
@@ -362,7 +363,7 @@ export class DAAServer {
                                         this.trySend(wsocket, content, `daa bands (part ${i + 1} of ${keys.length}, ${keys[i]})`);
                                     }
                                 } catch (readError) {
-                                    console.error(`Error while reading daa bands file ${path.join(outputFolder, bandsFile)}`);
+                                    console.error(`Error while reading daa bands file ${bandsFile}`);
                                     this.trySend(wsocket, null, "daa bands");
                                 }
                             } catch (execError) {
@@ -377,7 +378,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.getTailNumbers: {
+                case DaaServerCommand.getTailNumbers: { // get tail numbers from a scenario file
                     const data: GetTailNumbersRequest = <GetTailNumbersRequest> (content.data);
                     const scenarioName: string = data.scenarioName;
                     if (scenarioName) {
@@ -493,7 +494,7 @@ export class DAAServer {
                 //     }
                 //     break;
                 // }
-                case DaaServerCommand.saveDaaFile: {
+                case DaaServerCommand.saveDaaFile: { // save a .daa scenario file
                     const data: SaveScenarioRequest = <SaveScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
                     if (scenarioName) {
@@ -527,7 +528,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.loadDaaFile: {
+                case DaaServerCommand.loadDaaFile: { // load a .daa scenario file
                     const data: LoadScenarioRequest = <LoadScenarioRequest> content.data;
                     const scenarioName: string = (data && data.scenarioName)? data.scenarioName : null;
                     const ownshipName: string = data?.ownshipName ? `${data.ownshipName}` : null;
@@ -557,7 +558,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.listMonitors: {
+                case DaaServerCommand.listMonitors: { // return the list of available monitors
                     const data: ExecMsg = <ExecMsg> content.data;
                     const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
                                             : data.daaLogic.endsWith(".exe") ? "cpp" 
@@ -593,7 +594,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.listDaaFiles: {
+                case DaaServerCommand.listDaaFiles: { // returns the list of available .daa scenario files
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let daaFiles: string[] = null;
                     try {
@@ -609,7 +610,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.listIcFiles: {
+                case DaaServerCommand.listIcFiles: { // returns the list of available .ic scenario files
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let icFiles: string[] = null;
                     try {
@@ -625,7 +626,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.listConfigFiles: {
+                case DaaServerCommand.listConfigFiles: { // returns the list of available daa configuration files
                     const configurationsFolder: string = path.join(__dirname, "../daa-config");
                     let confFiles: string[] = null;
                     try {
@@ -645,7 +646,7 @@ export class DAAServer {
                 //     //...
                 //     break;
                 // }
-                case DaaServerCommand.loadConfigFile: {
+                case DaaServerCommand.loadConfigFile: { // loads a daa configuration file
                     const data: LoadConfigRequest = <LoadConfigRequest> content.data;
                     const configurationsFolder: string = path.join(__dirname, "../daa-config");
                     const configName: string = (data && data.config)? data.config : null;
@@ -696,7 +697,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.listDaaVersions: {
+                case DaaServerCommand.listDaaVersions: { // returns the list of available daa logic
                     const daaLogicFolder: string = path.join(__dirname, "../daa-logic");
                     try {
                         const ls: string[] = fs.readdirSync(daaLogicFolder);
@@ -785,7 +786,7 @@ export class DAAServer {
                 //     }
                 //     break;
                 // }
-                case DaaServerCommand.listAlertingVolumes: {
+                case DaaServerCommand.listAlertingVolumes: { // returns the list of alerting volumes indicated in a configuration file
                     const data: ExecMsg = <ExecMsg> content.data;
                     const impl: string = data.daaLogic.endsWith(".jar") ? "java" 
                                             : data.daaLogic.endsWith(".exe") ? "cpp" 
@@ -821,7 +822,7 @@ export class DAAServer {
                     }
                     break;
                 }
-                case DaaServerCommand.jasmine: {
+                case DaaServerCommand.jasmine: { // run test cases with jasmine
                     const open = require('open');
                     if (open) {
                         open("http://localhost:8082/test.html");
@@ -837,6 +838,9 @@ export class DAAServer {
             console.error(`[daa-server] Error while parsing message :/`, err);
         }
     }
+    /**
+     * Utility function, parses command line arguments passed to the server
+     */
     parseCliArgs (args: string[]): void {
         if (args) {
             for (let i = 0; i < args.length; i++) {
@@ -877,6 +881,9 @@ export class DAAServer {
             }
         }
     }
+    /**
+     * Utility function, actvates the server functionalities
+     */
     async activate () {
         // try to load configuration file
         await this.loadDaaServerConfiguration("daa-server.json");
@@ -995,5 +1002,6 @@ export class DAAServer {
     }
 }
 
+// instantiates & activates the server
 const server = new DAAServer();
 server.activate();
