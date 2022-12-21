@@ -68,19 +68,17 @@ export class JavaProcess {
 			const wind: { deg: string, knot: string } = { deg: desc?.wind?.deg || "0", knot: desc?.wind?.knot };
 			const outputFileName: string = desc.outputFileName || fsUtils.getBandsFileName({ daaConfig, ownshipName, scenarioName: daaScenario, wind });
 			const ver: string = await this.getVersion(daaFolder, daaLogic);
-			const f1: string = path.join("../daa-output", ver);
-			const outputFolder: string = path.join(f1, "java");
+			const daaOutput: string = path.resolve("../daa-output");
+			const f1: string = path.resolve(daaOutput, ver);
+			const outputFolder: string = path.resolve(f1, "java");
 			// make sure the output folder exists, otherwise the Java files will generate an exception while trying to write the output
-			if (!fs.existsSync(f1)) {
-				fs.mkdirSync(f1);
-			}
-			if (!fs.existsSync(outputFolder)) {
-				fs.mkdirSync(outputFolder);
-			}
-			const outputFilePath: string = opt.contrib ? path.join("..", outputFolder, outputFileName) : path.join(outputFolder, outputFileName);
+			if (!fs.existsSync(daaOutput)) { fs.mkdirSync(daaOutput); }
+			if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
+			if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
+			const outputFilePath: string = opt.contrib ? path.resolve("..", outputFolder, outputFileName) : path.resolve(outputFolder, outputFileName);
 			return new Promise((resolve, reject) => {
-				const scenario: string = path.join(__dirname, "../daa-scenarios", daaScenario);
-				const config: string = path.join(__dirname, "../daa-config", daaConfig);
+				const scenario: string = path.resolve(__dirname, "../daa-scenarios", daaScenario);
+				const config: string = path.resolve(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
 					`java -jar ${daaLogic} --conf ${config} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${scenario}`
