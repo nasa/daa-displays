@@ -5,7 +5,7 @@ import { Compass } from './daa-compass';
 
 export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" 
     | "contours" | "hazard-zones"
-    | "WCV" | "blobs" 
+    | "well-clear" | "WCV" | "blobs" 
     | "flight-plan" | "vfr-map" | ""; // "" means empty slot
 
 export class ViewOptions {
@@ -185,6 +185,7 @@ export class ViewOptions {
                 break;
             }
             case "contours":
+            case "well-clear":
             case "WCV": {
                 if (this.map) { this.map.showContours(true); }
                 break;

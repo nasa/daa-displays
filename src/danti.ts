@@ -350,7 +350,7 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", {
     left: enable_widescreen ? 7 : 13, 
     width: enable_widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH - PADDING }, {
     labels: [
-        "nrthup", "vfr-map", "call-sign", "contours", "hazard-zones"
+        "nrthup", "vfr-map", "call-sign", "well-clear", "blobs"
     ], parent: "daa-disp", compass, map });
 // sounds
 const daaVoice: DaaVoice = new DaaVoice();

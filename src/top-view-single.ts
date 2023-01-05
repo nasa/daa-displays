@@ -277,7 +277,7 @@ const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "d
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
     labels: [
-        "vfr-map", "call-sign", "contours", "hazard-zones"
+        "vfr-map", "call-sign", "well-clear", "blobs"
     ], parent: "daa-disp", compass, map });
 // create remaining display widgets
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp-hidden", maxWedgeAperture: 50 });

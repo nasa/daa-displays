@@ -217,7 +217,7 @@ function createDisplay (index: number, tailNumber: string, opt?: { daaVersion: s
     // map view options
     const viewOptions: ViewOptions = new ViewOptions(`view-options-${index}`, { top: 4, left: 13 }, { 
         labels: [
-            "nrthup", "call-sign", "vfr-map", "contours", "hazard-zones"
+            "nrthup", "call-sign", "vfr-map", "well-clear", "blobs"
         ], parent, compass, map
     });
     const airspeedTape: AirspeedTape = new AirspeedTape(`airspeed-${index}`, { top: 100, left: 100 }, { parent });
