@@ -185,13 +185,13 @@ export class ViewOptions {
                 break;
             }
             case "contours":
-            case "well-clear":
-            case "WCV": {
+            case "blobs": {
                 if (this.map) { this.map.showContours(true); }
                 break;
             }
             case "hazard-zones":
-            case "blobs": {
+            case "well-clear":
+            case "WCV": {
                 if (this.map) { this.map.showHazardZones(true); }
                 break;
             }
