@@ -363,7 +363,7 @@ export class DAAServer {
                                         this.trySend(wsocket, content, `daa bands (part ${i + 1} of ${keys.length}, ${keys[i]})`);
                                     }
                                 } catch (readError) {
-                                    console.error(`Error while reading daa bands file ${bandsFile}`);
+                                    console.error(`Error while reading daa bands file ${bandsFile}`, readError);
                                     this.trySend(wsocket, null, "daa bands");
                                 }
                             } catch (execError) {
