@@ -1893,6 +1893,8 @@ export class DAAPlayer extends Backbone.Model {
      */
     async selectDaaConfiguration (configName: string): Promise<boolean> {
         if (configName) {
+            // by convention, configuration have an extension .conf
+            if (!configName.endsWith(".conf")) { configName = configName + ".conf"; }
             const prev: string = this.readSelectedDaaConfiguration();
             const selected: string = $(`#${this.daaConfigurationDomSelector}-list option:contains("${configName}")`).text();
             console.log(`[daa-player] selectConfiguration`, { prev, selected, configName });
