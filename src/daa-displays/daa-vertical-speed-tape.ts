@@ -54,9 +54,6 @@ import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-vertical-speed-templates';
 import { ResolutionElement } from '../daa-server/utils/daa-types';
 
-// useful constants
-const ANIMATION_DURATION: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
-
 /**
  * internal class used by vertical speed tape, renders a resolution bug over the tape
  */
@@ -74,6 +71,8 @@ class SpeedBug {
     protected maxWedgeAperture: number = 0;
     protected wedgeAperture: number = 0;
     protected wedgeConstraints: utils.FromTo[] = null;
+    // animation duration
+    protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
 
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
@@ -87,6 +86,15 @@ class SpeedBug {
     constructor (id: string, tape: VerticalSpeedTape) {
         this.id = id;
         this.tape = tape;
+    }
+    /**
+     * Utility function, sets the animation duration
+     */
+    animationDuration (sec: number): SpeedBug {
+        if (sec >=0 && this.duration !== sec) {
+            this.duration = sec < utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION ? utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION : sec;
+        }
+        return this;
     }
     /**
      * @function <a name="ResolutionBug_setValue">setValue</a>
@@ -230,13 +238,13 @@ class SpeedBug {
             // FIXME: val is in x100fpm, and wedge aperture is in fpm -- make everything fpm
             const notchHeight: number = Math.abs(this.computeBugPosition(this.val + this.wedgeAperture / 100) - this.computeBugPosition(this.val));
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": `${ANIMATION_DURATION}s`, top: `${bugPosition}px` });
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": `${this.duration}s`, top: `${bugPosition}px` });
 
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": `${ANIMATION_DURATION}s`, top: `${bugPosition}px` });
+            $(`#${this.id}-indicator`).css({ "transition-duration": `${this.duration}s`, top: `${bugPosition}px` });
         }
 
         if (this.useColors) {
@@ -508,7 +516,13 @@ export class VerticalSpeedTape {
     //     }
     //     $(`#${this.id}-bug`).css({ "transition-duration": ANIMATION_DURATION, top: `${bug_position}px` });
     // }
-
+    /**
+     * Utility function, sets the animation duration
+     */
+    animationDuration (sec: number): VerticalSpeedTape {
+        this.speedBug?.animationDuration(sec);
+        return this;
+    }
     getVerticalSpeedStep (): number {
         return this.verticalSpeedStep;
     }

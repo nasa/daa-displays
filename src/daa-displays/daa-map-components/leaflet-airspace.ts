@@ -560,7 +560,7 @@ export class LeafletAirspace implements AirspaceInterface {
     animationDuration (sec: number): boolean {
         // sanity check
         // console.log(`[leaflet-airspace] animationDuration`, { sec });
-        if (sec >= 0) {
+        if (sec >= 0 && this.duration !== sec) {
             this.duration = sec;
             return true;
         }
@@ -806,7 +806,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     goTo (pos: LatLon<number | string>, opt?: { animate?: boolean }): AirspaceInterface {
         if (pos) {
-            const animate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1; // animation performed only in real time simulations
+            const animate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1;
             for (let i = 0; i < this.lworlds.length; i++) {
                 this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
                     animate,
@@ -1176,7 +1176,8 @@ export class LeafletAirspace implements AirspaceInterface {
         for (let i = 0; i < this.$innerDivs.length; i++) {
             this.$innerDivs[i].css({
                 transform: `rotate(${rotation}deg)`,
-                "transition-duration": transitionDuration
+                "transition-duration": transitionDuration,
+                "transition-timing-function" : "linear"
             });
         }
         // refresh traffic

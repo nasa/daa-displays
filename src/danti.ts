@@ -371,8 +371,10 @@ player.define("step", async () => {
     // use animation only when speed is real time and player is playing -- TODO: improve APIS, use animate to toggle animation on/off in the widgets, and duration to set the animation duration
     const isPlaying: boolean = player.getSpeed() === 1 && player.isPlaying();
     const animationDuration: number = isPlaying ? 1 : 0;
-    compass?.animationDuration(animationDuration);
+    compass?.animationDuration(animationDuration); // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
     map?.animationDuration(animationDuration);
+    airspeedTape?.animationDuration(animationDuration);
+    verticalSpeedTape?.animationDuration(animationDuration);
     // render
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
@@ -396,8 +398,10 @@ player.define("init", async () => {
     // set initial animation duration and trace length
     const speed: number = player.getSpeed();
     const animationDuration: number = speed === 1 ? 1 : 0;
-    compass?.animationDuration(animationDuration);
+    compass?.animationDuration(animationDuration); // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
     map?.animationDuration(animationDuration);
+    airspeedTape?.animationDuration(animationDuration);
+    verticalSpeedTape?.animationDuration(animationDuration);
     const nmi: number = map.getZoomLevel();
     map.setMaxTraceLength(getTraceLen(nmi));
     // reset voice
@@ -547,6 +551,8 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         const animationDuration: number = speed === 1 ? 1 : 0;
         compass?.animationDuration(animationDuration);
         map?.animationDuration(animationDuration);
+        airspeedTape?.animationDuration(animationDuration);
+        verticalSpeedTape?.animationDuration(animationDuration);
         const nmi: number = map.getZoomLevel();
         map.setMaxTraceLength(getTraceLen(nmi));
     });
