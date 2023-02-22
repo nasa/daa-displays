@@ -632,7 +632,7 @@ export class DAAServer {
                     try {
                         confFiles = this.listFilesRecursive(configurationsFolder, ['.conf', '.txt']);
                     } catch (confError) {
-                        console.error(`Error while reading configuratios folder`, confError);
+                        console.error(`Error while reading configuration folder`, confError);
                     } finally {
                         content.data = JSON.stringify(confFiles);
                         if (VERBOSE) {
@@ -685,7 +685,7 @@ export class DAAServer {
                             };
                             content.data = data;
                         } catch (loadConfFileError) {
-                            console.error(`Error while reading configuratios file ${configName}`, loadConfFileError);
+                            console.error(`Error while reading configuration file ${configName}`, loadConfFileError);
                         } finally {
                             if (VERBOSE) {
                                 console.dir(content.data, { depth: null });
