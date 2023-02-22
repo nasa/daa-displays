@@ -112,8 +112,8 @@ function render (danti: {
             danti.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
             const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
             danti.verticalSpeedTape.setBands(vspeedBands);
-            const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
-            danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
+            // const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
+            // danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
 
             // checks whether resolution wedges are persistent when there is an alerting aircraft
             const wedgePersistenceEnabled: boolean = player.wedgePersistenceIsEnabled();
@@ -140,16 +140,16 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
-                danti.altitudeTape.setBug(bands["Altitude Resolution"], {
-                    wedgeConstraints: altitudeBands.RECOVERY,
-                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
-                });
-            } else {
-                danti.altitudeTape.setBug(bands["Altitude Resolution"], {
-                    wedgeAperture: 0
-                });
-            }
+            // if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
+            //     danti.altitudeTape.setBug(bands["Altitude Resolution"], {
+            //         wedgeConstraints: altitudeBands.RECOVERY,
+            //         resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
+            //     });
+            // } else {
+            //     danti.altitudeTape.setBug(bands["Altitude Resolution"], {
+            //         wedgeAperture: 0
+            //     });
+            // }
             if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
                 danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: vspeedBands.RECOVERY,
@@ -305,7 +305,7 @@ const map: InteractiveMap = new InteractiveMap("map", {
     parent: "daa-disp", 
     widescreen: enable_widescreen,
     engine: "leafletjs",
-    trafficTraceVisible: true,
+    trafficTraceVisible: false,
     maxTraceLen: MAX_TRACE_LEN,
     layeringMode: LayeringMode.byAlertLevel,
     animate: true,
@@ -372,6 +372,7 @@ player.define("step", async () => {
     const isPlaying: boolean = player.getSpeed() === 1 && player.isPlaying();
     const animationDuration: number = isPlaying ? 1 : 0;
     compass?.animationDuration(animationDuration);
+    map?.animationDuration(animationDuration);
     // render
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
@@ -396,6 +397,7 @@ player.define("init", async () => {
     const speed: number = player.getSpeed();
     const animationDuration: number = speed === 1 ? 1 : 0;
     compass?.animationDuration(animationDuration);
+    map?.animationDuration(animationDuration);
     const nmi: number = map.getZoomLevel();
     map.setMaxTraceLength(getTraceLen(nmi));
     // reset voice
@@ -544,6 +546,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         const speed: number = evt?.sec;
         const animationDuration: number = speed === 1 ? 1 : 0;
         compass?.animationDuration(animationDuration);
+        map?.animationDuration(animationDuration);
         const nmi: number = map.getZoomLevel();
         map.setMaxTraceLength(getTraceLen(nmi));
     });
@@ -552,7 +555,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.enableWedgeApertureOption("airspeed");
     player.enableWedgeApertureOption("altitude");
     player.enableWedgeApertureOption("vspeed");
-    player.enableWedgePersistence();
+    // player.enableWedgePersistence();
     player.selectGuidance(GuidanceKind['RTCA DO-365']);
     player.setSpeed(1);
     await player.activate();

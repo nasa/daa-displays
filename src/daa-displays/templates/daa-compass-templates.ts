@@ -48,7 +48,7 @@ export const compassTemplate = `
         <div id="{{id}}-compass-label-inner" style="position: absolute; left:378px; top:247px;">1.25</div>
     </div>
     <!-- compass -->
-    <div id="{{id}}-circle" class="compass" style="transform:rotate(0deg);">
+    <div id="{{id}}-circle" class="compass" style="transform:rotate(0deg); transition-timing-function:linear;">
         <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="position:absolute;left:0px;width:635px;opacity:${COMPASS_LABELS_OPACITY};"></object>
         <!-- compass bands -->
         <canvas id="{{id}}-bands" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;left:0px;opacity:${BANDS_OPACITY};"></canvas>

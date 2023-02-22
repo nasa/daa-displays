@@ -338,6 +338,7 @@ export class LeafletAirspace implements AirspaceInterface {
             height: ${this.godsView ? height : 3 * height}px !important;
             top: ${this.godsView ? 0 : -height}px !important;
             left: ${this.godsView ? 0 : -width}px !important;
+            transition-timing-function: linear !important;
             background: black;
         }
         #${opt.div}-traffic {
@@ -1151,7 +1152,7 @@ export class LeafletAirspace implements AirspaceInterface {
         return new L.DivIcon({
             html: `
             <div class="${desc?.css || AirspaceCSS.DAA_FLIGHT_PLAN} daa-waypoint" style="position:absolute;">
-                <div class="marker-inner" style="position:absolute; transform-origin:center; transform:rotate(${ownshipHeading}deg); border-radius:2px; padding:4px; background:magenta;">
+                <div class="marker-inner" style="position:absolute; transform-origin:center; transition-timing-function:linear; transform:rotate(${ownshipHeading}deg); border-radius:2px; padding:4px; background:magenta;">
                     ${label}
                 </div>
                 <div class="marker-inner" style="position:absolute; left:0; top:0; width:10px; height:10px; background:blue; border-radius:10px;"></div>
