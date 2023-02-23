@@ -221,6 +221,7 @@ export declare interface AirspaceInterface {
     hideCallSign (): AirspaceInterface;
     revealCallSign (): AirspaceInterface;
     animationDuration (seconds: number): boolean;
+    animation (flag: boolean): boolean;
     setMaxTraceLength (len: number): boolean;
     getMaxTraceLength (): number;
     addGeoFencePolygon (
@@ -484,6 +485,14 @@ export class DAA_Airspace implements AirspaceInterface {
     animationDuration (duration: number): boolean {
         // not available
         console.warn(`[daa-interactive-map] Warning: Animation duration not available in WWD, please use LeafletJS`);
+        return false;
+    }
+    /**
+     * Enables/disables animation
+     */
+    animation (flag: boolean): boolean {
+        // not available
+        console.warn(`[daa-interactive-map] Warning: Animation not available in WWD, please use LeafletJS`);
         return false;
     }
     /**

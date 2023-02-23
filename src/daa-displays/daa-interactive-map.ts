@@ -189,6 +189,12 @@ export class InteractiveMap {
         return this.airspace?.animationDuration(sec);
     }
     /**
+     * Enables/disables animation
+     */
+    animation (flag: boolean): boolean {
+        return this.airspace?.animation(flag);
+    }
+    /**
      * Sets max trace length
      */
     setMaxTraceLength (len: number): boolean {

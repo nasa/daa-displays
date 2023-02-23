@@ -567,6 +567,13 @@ export class LeafletAirspace implements AirspaceInterface {
         return false;
     }
     /**
+     * Enables/disabled animation
+     */
+    animation (flag: boolean): boolean {
+        this.animate = !!flag;
+        return this.animate;
+    }
+    /**
      * Set max trace length
      */
     setMaxTraceLength (len: number): boolean {
@@ -806,7 +813,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     goTo (pos: LatLon<number | string>, opt?: { animate?: boolean }): AirspaceInterface {
         if (pos) {
-            const animate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1;
+            const animate: boolean = this.animate && !this.forceNoAnimation;
             for (let i = 0; i < this.lworlds.length; i++) {
                 this.lworlds[i].panTo([ +pos.lat, +pos.lon ], {
                     animate,
@@ -1232,7 +1239,7 @@ export class LeafletAirspace implements AirspaceInterface {
         // const nmiScale: number = this.getScale();
         // remove current traffic, reuse aircraft when possible
         this.removeAllTraffic();
-        const canAnimate: boolean = this.animate && !this.forceNoAnimation && this.duration === 1; // animation will be performed only when running in real time
+        const canAnimate: boolean = this.animate && !this.forceNoAnimation; // animation will be performed only when running in real time
         // add new traffic
         for (let i = 0; i < traffic?.length; i++) {
             const callSign: string = 

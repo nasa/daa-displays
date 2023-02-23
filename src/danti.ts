@@ -369,10 +369,14 @@ player.define("step", async () => {
     // save last simulation step
     lastSimulationStep = player.getCurrentSimulationStep();
     // use animation only when speed is real time and player is playing -- TODO: improve APIS, use animate to toggle animation on/off in the widgets, and duration to set the animation duration
-    const isPlaying: boolean = player.getSpeed() === 1 && player.isPlaying();
-    const animationDuration: number = isPlaying ? 1 : 0;
-    compass?.animationDuration(animationDuration); // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
+    const isPlaying: boolean = player.isPlaying();
+    const speed: number = player.getSpeed();
+    const animate: boolean = isPlaying && speed === 1;
+    // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
+    const animationDuration: number = animate ? 2 * speed : 0;
+    compass?.animationDuration(animationDuration);
     map?.animationDuration(animationDuration);
+    map?.animation(animate);
     airspeedTape?.animationDuration(animationDuration);
     verticalSpeedTape?.animationDuration(animationDuration);
     // render
@@ -397,8 +401,11 @@ player.define("init", async () => {
     map.resetAirspace();
     // set initial animation duration and trace length
     const speed: number = player.getSpeed();
-    const animationDuration: number = speed === 1 ? 1 : 0;
-    compass?.animationDuration(animationDuration); // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
+    const isPlaying: boolean = player.isPlaying();
+    const animate: boolean = isPlaying && speed === 1;
+    // to produce a smooth compass animation we need a duration that is longer twice the simulation interval (in this case, we are using the animation only when the simulation interval is 1s, so animation duration is 2s)
+    const animationDuration: number = animate ? 2 * speed : 0;
+    compass?.animationDuration(animationDuration);
     map?.animationDuration(animationDuration);
     airspeedTape?.animationDuration(animationDuration);
     verticalSpeedTape?.animationDuration(animationDuration);
@@ -548,9 +555,12 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     });
     player.on(PlayerEvents.DidChangeSimulationSpeed, (evt: DidChangeSimulationSpeed) => {
         const speed: number = evt?.sec;
-        const animationDuration: number = speed === 1 ? 1 : 0;
+        const isPlaying: boolean = player.isPlaying();
+        const animate: boolean = isPlaying && speed === 1;
+        const animationDuration: number = animate ? 2 * speed : 0;
         compass?.animationDuration(animationDuration);
         map?.animationDuration(animationDuration);
+        map?.animation(animate);
         airspeedTape?.animationDuration(animationDuration);
         verticalSpeedTape?.animationDuration(animationDuration);
         const nmi: number = map.getZoomLevel();
