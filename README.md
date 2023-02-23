@@ -5,7 +5,7 @@ displays. It provides simulations tools designed to support the analysis of cock
 ![](src/images/danti.gif "")
 
 ## Latest version
-daa-displays-1.0.13 (2022.01.25)
+daa-displays-1.0.15 (2023.02.23)
 
 ## Publications
 Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requirements for Detect and Avoid Systems](https://doi.org/10.1007/978-3-030-50995-8_9), Proceedings of the 14th International Conference on Tests and Proofs (TAP 2020), Lecture Notes in Computer Science, Vol. 12165, pp. 155-166, 2020 [[PDF](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.pdf)][[BibTex](https://shemesh.larc.nasa.gov/fm/papers/TAP2020-MM.bib)]

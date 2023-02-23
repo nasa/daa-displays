@@ -1,4 +1,9 @@
 ## ChangeLog
+### 1.0.15 (2023.02.23)
+- Improved animation of traffic display, compass and speed tapes
+- Fix for display options
+- Improved debugging messages
+
 ### 1.0.14 (2022.10.26)
 - Improved aural annunciations
 - Improved DANTi app (wedge persistence + compass rotation)
