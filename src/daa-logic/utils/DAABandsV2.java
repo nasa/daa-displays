@@ -43,6 +43,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import gov.nasa.larcfm.ACCoRD.Alerter;
 import gov.nasa.larcfm.ACCoRD.BandsRegion;
@@ -183,6 +184,16 @@ public class DAABandsV2 {
 			if (i < n - 1) { res += ", "; }
 		}
 		return "[ " + res + " ]";
+	}
+
+	/**
+	 * Utility function, prints parameters data
+	 */
+	public String printParameters() {
+		if (daa != null && daa.getParameterData() != null) { 
+			return daa.getParameterData().toString();
+		}
+		return null;
 	}
 
 	/**
@@ -467,7 +478,8 @@ public class DAABandsV2 {
 		int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac_idx);
 		Alerter alerter = daa.getAlerterAt(alerter_idx);
 		int corrective_level = daa.correctiveAlertLevel(alerter_idx);
-		Detection3D detector = alerter.getDetector(corrective_level).get();
+		Optional<Detection3D> d3d = alerter.getDetector(corrective_level);
+		Detection3D detector = !d3d.isEmpty() ? d3d.get() : null;
 		double taumod = (detector instanceof WCV_tvar) ? daa.modifiedTau(ac_idx,((WCV_tvar)detector).getDTHR()) : Double.NaN;
 		String json = "{ ";
 		json += "\"separation\": { "+jsonValUnits("horizontal",daa.currentHorizontalSeparation(ac_idx),hrec_units) + 
@@ -952,8 +964,9 @@ public class DAABandsV2 {
 	public static void main(String[] args) {
 		DAABandsV2 daaBands = new DAABandsV2();
 		daaBands.parseCliArgs(args);
-		// daaBands.adjustThreshold();
+		// daaBands.adjustThreshold(); // deprecated, this was needed for WWD
 		daaBands.loadConfig();
+		System.out.println(daaBands.printParameters()); // useful for debugging purposes
 		daaBands.loadWind();
 		daaBands.walkFile();
 	}
