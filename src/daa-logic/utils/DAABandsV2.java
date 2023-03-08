@@ -187,6 +187,13 @@ public class DAABandsV2 {
 	}
 
 	/**
+	 * Utility function, prints the loaded configuration parameters
+	 */
+	public String printConfig () {
+		return daa.getParameterData().toString();
+	}
+
+	/**
 	 * Utility function, prints parameters data
 	 */
 	public String printParameters() {
@@ -966,7 +973,7 @@ public class DAABandsV2 {
 		daaBands.parseCliArgs(args);
 		// daaBands.adjustThreshold(); // deprecated, this was needed for WWD
 		daaBands.loadConfig();
-		System.out.println(daaBands.printParameters()); // useful for debugging purposes
+		System.out.println(daaBands.printConfig()); // useful for debugging purposes
 		daaBands.loadWind();
 		daaBands.walkFile();
 	}
