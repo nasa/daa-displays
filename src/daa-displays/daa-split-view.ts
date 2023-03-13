@@ -55,13 +55,15 @@ import { jquerySelector } from './daa-utils';
 
 export interface SplitConfig {
     scenario: string,
+    daaLogicLeft: string,
     configLeft: string,
-    configRight: string
+    configRight: string,
+    daaLogicRight: string
 }
 /**
  * Parse arguments indicated in the browser address.
- * Arguments are a search string indicating scenario + config_left + config_right
- * e.g., http://localhost:8082/split?H1.daa+2.x/DO_365A_no_SUM.conf+2.x/CD3D.conf
+ * Arguments are a search string in the following form: "scenario + daa_config_left:config_left + daa_config_right:config_right"
+ * e.g., http://localhost:8082/split?H1.daa+DAIDALUSv2.0.3.jar:2.x/DO_365A_no_SUM.conf+DAIDALUSv2.0.2.jar:2.x/CD3D.conf
  */
 export function parseSplitConfigInBrowser (search?: string): SplitConfig {
     search = search || window?.location?.search || "";
@@ -69,10 +71,14 @@ export function parseSplitConfigInBrowser (search?: string): SplitConfig {
     if (args && args.length > 2) {
         // args[0] is scenario, args[1] is config left, args[2] is config right
         args[0] = args[0].substring(1); // this is necessary to remove the ? at the beginning of the search string
+        const left: string[] = args[1].split(":");
+        const right: string[] = args[2].split(":");
         const ans: SplitConfig = {
             scenario: args[0],
-            configLeft: args[1], 
-            configRight: args[2]
+            daaLogicLeft: left?.length > 0 ? left[0] : null,
+            configLeft: left?.length > 1 ? left[1] : null,
+            daaLogicRight: right?.length > 0 ? right[0] : null,
+            configRight: right?.length > 1 ? right[1] : null
         };
         return ans;
     }
@@ -228,7 +234,9 @@ export class DAASplitView extends DAAPlayer {
         const scenario: string = this.getSelectedScenario();
         const leftConfig: string = this.players?.left?.readSelectedDaaConfiguration();
         const rightConfig: string = this.players?.right?.readSelectedDaaConfiguration();
-        const search: string = `?${scenario}+${leftConfig}+${rightConfig}`;
+        const leftDaaLogic: string = this.players?.left?.readSelectedDaaVersion();
+        const rightDaaLogic: string = this.players?.right?.readSelectedDaaVersion();
+        const search: string = `?${scenario}+${leftDaaLogic}:${leftConfig}+${rightDaaLogic}:${rightConfig}`;
         const url: string = window.location.origin + window.location.pathname + search;
         history.replaceState({}, document.title, url);
     }

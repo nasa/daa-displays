@@ -585,6 +585,12 @@ async function createPlayer (args: SplitConfig) {
         if (args.configRight) {
             await splitView.getPlayer("right").selectDaaConfiguration(args.configRight);
         }
+        if (args.daaLogicLeft) {
+            await splitView.getPlayer("left").selectDaaVersion(args.daaLogicLeft);
+        }
+        if (args.daaLogicRight) {
+            await splitView.getPlayer("right").selectDaaVersion(args.daaLogicRight);
+        }
         await splitView.loadSelectedScenario();
     }
     
