@@ -40,11 +40,11 @@ import {
      DidChangeDaaVoiceRate, DidChangeSimulationSpeed, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, 
      PlayerEvents 
 } from './daa-displays/daa-player';
-import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
+import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, daaSymbols } from './daa-displays/daa-utils';
+import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts, THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './daa-displays/daa-utils';
 import { DaaVoice, Guidance, GuidanceKind } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
@@ -57,6 +57,8 @@ const PADDING: number = 13; //px
 const INCLUDE_PLOTS: boolean = true;
 const MAX_TRACE_LEN: number = 128; // large values have an impact on performance
 const UPDATE_FREQUENCY: number = utils.DEFAULT_TRAFFIC_UPDATE_INTERVAL; // in seconds
+
+
 /**
  * Utility function, renders the display content
  */
@@ -82,16 +84,24 @@ function render (danti: {
         const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
         const vspeed: number = +flightData.ownship.v.z;
         const alt: number = +flightData.ownship.s.alt;
-
         danti.compass.setCompass(heading);
         danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
         danti.verticalSpeedTape.setVerticalSpeed(vspeed);
         danti.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
 
+        // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
+        const selected_config: string = player.readSelectedDaaConfiguration();
+        const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+        if (force_caution) {
+            downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+            inhibit_bands({ bands });
+            inhibit_resolutions({ bands });
+        }
+
         // compute max alert and collect aircraft alert descriptors
         let max_alert: number = 0;
         const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
-            const alert_level: number = bands?.Alerts?.alerts?.length > index ? bands.Alerts.alerts[index].alert_level : 0;
+            const alert_level: number = bands.Alerts.alerts[index].alert_level 
             const desc: DAA_AircraftDescriptor = {
                 callSign: data.id,
                 s: data.s,
@@ -120,7 +130,7 @@ function render (danti: {
 
             // set resolutions
             // show wedge only for recovery bands
-            if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
+            if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
                 danti.compass.setBug(bands["Horizontal Direction Resolution"], {
                     wedgeConstraints: compassBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -130,7 +140,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
+            if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
                 danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: airspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -140,7 +150,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            // if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
+            // if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
             //     danti.altitudeTape.setBug(bands["Altitude Resolution"], {
             //         wedgeConstraints: altitudeBands.RECOVERY,
             //         resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -150,7 +160,7 @@ function render (danti: {
             //         wedgeAperture: 0
             //     });
             // }
-            if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert > 2)) {
+            if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
                 danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: vspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -161,7 +171,7 @@ function render (danti: {
                 });
             }
         }
-        // set contours
+        // render contours
         danti.map.removeGeoFence();
         if (bands && bands.Contours && bands.Contours.data) {
             for (let i = 0; i < bands.Contours.data.length; i++) {
@@ -182,7 +192,7 @@ function render (danti: {
                 }
             }
         }
-        // set hazard zones
+        // render hazard zones
         if (bands && bands["Hazard Zones"] && bands["Hazard Zones"].data) {
             for (let i = 0; i < bands["Hazard Zones"].data.length; i++) {
                 if (bands["Hazard Zones"].data[i].polygons) {
@@ -203,7 +213,7 @@ function render (danti: {
             }
         }
         danti.map.setTraffic(traffic);
-        // set wind indicator
+        // render wind indicator
         if (bands && bands.Wind) {
             if (+bands.Wind.deg === 0) {
                 // hide indicator
@@ -417,15 +427,22 @@ player.define("init", async () => {
 //TODO: implement a function plotAll in spectrogram
 player.define("plot", () => {
     const flightData: LLAData[] = player.getFlightData();
+    const selected_config: string = player.readSelectedDaaConfiguration();
     for (let step = 0; step < flightData?.length; step++) {
-        const bandsData: ScenarioDataPoint = player.getCurrentBands(step);
+        const bands: ScenarioDataPoint = player.getCurrentBands(step);
         player.setTimerJiffy("plot", () => {
             const lla: LLAData = flightData[step];
             const hd: number = Compass.v2deg(lla.ownship.v);
             const gs: number = AirspeedTape.v2gs(lla.ownship.v);
             const vs: number = +lla.ownship.v.z / 100;
             const alt: number = +lla.ownship.s.alt;
-            plot({ ownship: { hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });
+            const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+            if (force_caution) {
+                downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                inhibit_bands({ bands: bands });
+                inhibit_resolutions({ bands });
+            }
+            plot({ ownship: { hd, gs, vs, alt }, bands: bands, step, time: player.getTimeAt(step) });
         }, step);
     }
 });
@@ -567,10 +584,10 @@ async function createPlayer(args: DaaConfig): Promise<void> {
         map.setMaxTraceLength(getTraceLen(nmi));
     });
     // set preferred options
-    player.enableWedgeApertureOption("compass");
-    player.enableWedgeApertureOption("airspeed");
-    player.enableWedgeApertureOption("altitude");
-    player.enableWedgeApertureOption("vspeed");
+    // player.enableWedgeApertureOption("compass");
+    // player.enableWedgeApertureOption("airspeed");
+    // player.enableWedgeApertureOption("altitude");
+    // player.enableWedgeApertureOption("vspeed");
     // player.enableWedgePersistence();
     player.selectGuidance(GuidanceKind['RTCA DO-365']);
     player.setSpeed(1);

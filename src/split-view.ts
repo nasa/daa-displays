@@ -35,12 +35,13 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
-import { ConfigData, DaaSymbol, LatLonAlt, LLAData, Region, ResolutionElement, ScenarioDataPoint } from './daa-displays/utils/daa-types';
+import { AlertLevel, ConfigData, DaaSymbol, LatLonAlt, LLAData, Region, ResolutionElement, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 import { DAAPlayer } from './daa-displays/daa-player';
+import { inhibit_bands, downgrade_alerts, inhibit_resolutions, THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './daa-displays/daa-utils';
 
 // widgets included in the rendered display
 export interface RenderableDisplay {
@@ -69,12 +70,21 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
     const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
     const vspeed: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
     const alt: number = +flightData.ownship.s.alt;
-
     data.compass.setCompass(heading);
     data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
     data.verticalSpeedTape.setVerticalSpeed(vspeed);
     data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
     // console.log(`Flight data`, flightData);
+
+    // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
+    const selected_config: string = player.readSelectedDaaConfiguration();
+    const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+    if (force_caution) {
+        downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+        inhibit_bands({ bands });
+        inhibit_resolutions({ bands });
+    }
+    
     if (bands) {
         data.compass.setBands(utils.bandElement2Bands(bands["Heading Bands"]));
         data.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]), AirspeedTape.units.knots);
@@ -255,6 +265,7 @@ for (let i = 0; i < 2; i++) {
     // attach plot handler
     player.define("plot", () => {
         const flightData: LLAData[] = player.getFlightData();
+        const selected_config: string = player.readSelectedDaaConfiguration();
         for (let step = 0; step < flightData?.length; step++) {
             const bands: ScenarioDataPoint = player.getCurrentBands(step);
             // bandsRight are needed only for the player on the right, to perform a diff
@@ -266,6 +277,12 @@ for (let i = 0; i < 2; i++) {
                 const gs: number = AirspeedTape.v2gs(lla.ownship.v);
                 const vs: number = +lla.ownship.v.z;
                 const alt: number = +lla.ownship.s.alt;
+                const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+                if (force_caution) {
+                    downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                    inhibit_bands({ bands });
+                    inhibit_resolutions({ bands });
+                }    
                 plot(player, { ownship: { hd, gs, vs: vs / 100, alt }, bands, step, time });
                 if (i > 0) {
                     diff(player, otherBands, bands, step, time); // 3.5ms

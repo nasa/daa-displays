@@ -1,5 +1,5 @@
 import { deg2rad, rad2deg } from "./utils/daa-math";
-import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, LatLon, Vector3D } from "./utils/daa-types";
+import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, LatLon, Vector3D, Alert, DaaBands } from "./utils/daa-types";
 import * as server from './utils/daa-types';
 
 // useful constants
@@ -305,4 +305,62 @@ export const zIndex = {
 export function jquerySelector (name: string): string {
     return name === undefined || name === null || name === "" ? "body"
         : name.startsWith(".") || name.startsWith("#") ? name : `#${name}`;
+}
+
+export const USE_TCAS_SL3: boolean = true;
+// altitude threshold below which we suppress warning alerts
+// TODO: the altitude threshold should not be absolute altitude but above ground level (AGL) altitude
+export const THRESHOLD_ALT_SL3: number = 1000; //ft
+
+/**
+ * Utility function, downgrades alerts to a given level
+ */
+export function downgrade_alerts (desc: { to: AlertLevel, alerts: Alert[] }): void {
+    if (desc?.to && desc?.alerts?.length) {
+        for (let i = 0; i < desc.alerts.length; i++) {
+            if (desc.alerts[i].alert_level > desc.to) {
+                desc.alerts[i].alert_level = desc.to;
+            }
+        }
+    }
+}
+/**
+ * Utility function, inhibits bands guidance
+ */
+export function inhibit_bands (desc: { bands: DaaBands }): void {
+    return conceal_bands(desc);
+}
+export function conceal_bands (desc: { bands: DaaBands }): void {
+    const band_names: string[] = [
+        "Heading Bands", "Horizontal Speed Bands", "Vertical Speed Bands", "Altitude Bands"
+    ];
+    for (let i = 0; i < band_names.length; i++) {
+        if (desc?.bands?.[band_names[i]]?.bands) {
+            desc.bands[band_names[i]].bands = [];
+        }
+    }
+}
+/**
+ * Utility function, inhibits resolution guidance
+ */
+export function inhibit_resolutions (desc: { bands: DaaBands }): void {
+    return conceal_resolutions(desc);
+}
+export function conceal_resolutions (desc: { bands: DaaBands }): void {
+    const resolution_names: string[] = [
+        "Horizontal Direction Resolution",
+        "Horizontal Speed Resolution",
+        "Vertical Speed Resolution",
+        "Altitude Resolution"
+    ];
+    const resolution_fields: string[] = [
+        "flags", "recovery", "preferred_resolution", "other_resolution"
+    ];
+    for (let i = 0; i < resolution_names.length; i++) {
+        for (let j = 0; j < resolution_fields.length; j++) {
+            if (desc?.bands?.[resolution_names[i]]?.[resolution_fields[j]]) {
+                desc.bands[resolution_names[i]][resolution_fields[j]] = [];
+            }
+        }
+    }
 }
