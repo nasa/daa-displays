@@ -9,10 +9,6 @@
  *              display showing the current value in numeric form. A small graduated linear
  *              string is used for the least significant digit of the digital display.
  *              The tape unit is 100 feet.</p>
- *              <p>This implementation requires the installation of the pvsio-web toolkit 
- *              (<a href="http://www.pvsioweb.org" target=_blank>www.pvsioweb.org</a>).</p>
- *              <p>Google Chrome is recommended for correct rendering of the widget.</p></div>
- *              <img src="images/daa-altitude-tape.png" style="margin-left:8%; max-height:250px;" alt="DAA Altitude Tape Widget"></div>
  *
  * @author Paolo Masci
  * @date October 2018
@@ -56,9 +52,6 @@ import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-altitude-templates';
 import { ResolutionElement } from './utils/daa-types';
 
-// useful constants
-const ANIMATION_DURATION: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION; // sec
-
 /**
  * internal class, renders a resolution bug over the tape
  */
@@ -75,6 +68,8 @@ class SpeedBug {
     protected maxWedgeAperture: number = 0;
     protected wedgeAperture: number = 0;
     protected wedgeConstraints: utils.FromTo[] = null;
+    // animation duration
+    protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION; // s
     /**
      * @function <a name="ResolutionBug">ResolutionBug</a>
      * @description Constructor. Renders a resolution bug over a daa-airspeed-tape widget.
@@ -109,6 +104,18 @@ class SpeedBug {
             this.hide();
         }
     }
+    /**
+     * Utility function, sets the animation duration
+     */
+    animationDuration (sec: number): SpeedBug {
+        if (sec >=0 && this.duration !== sec) {
+            this.duration = sec < utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION ? utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION : sec;
+        }
+        return this;
+    }
+    /**
+     * Internal function, re-renders directive guidance (i.e., the wedge)
+     */
     protected refreshWedge (opt?: { wedgeAperture?: number }): void {
         opt = opt || {};
         this.wedgeAperture = (!isNaN(opt.wedgeAperture)) ? opt.wedgeAperture : this.maxWedgeAperture;
@@ -199,12 +206,12 @@ class SpeedBug {
 
             const notchHeight: number = this.wedgeAperture * this.tickHeight / this.altitudeStep;
             if (this.wedgeSide === "up") { bugPosition -= notchHeight; }
-            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": `${ANIMATION_DURATION}s`, "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-notch`).css({ "height": notchHeight, "transition-duration": `${this.duration}s`, "transform": `translateY(${bugPosition}px)`});
         } else {
             $(`#${this.id}-notch`).css({ display: "none"});
             $(`#${this.id}-indicator`).css({ display: "block"});
 
-            $(`#${this.id}-indicator`).css({ "transition-duration": `${ANIMATION_DURATION}s`, "transform": `translateY(${bugPosition}px)`});
+            $(`#${this.id}-indicator`).css({ "transition-duration": `${this.duration}s`, "transform": `translateY(${bugPosition}px)`});
         }
 
         if (this.useColors) {
@@ -278,6 +285,13 @@ export class AltitudeTape {
     protected bands: utils.Bands;
     protected div: HTMLElement;
 
+    static readonly units = {
+        meters: "meters",
+        m: "m",
+        feet: "feet",
+        ft: "ft"
+    };
+
     protected resolutionBug: SpeedBug;
     protected speedBug: SpeedBug; // this is visible when tapeCanSpin === false
     protected indicatorColor: string = utils.bugColors["NONE"];
@@ -285,34 +299,43 @@ export class AltitudeTape {
     protected tapeCanSpin: boolean = true;
     protected range: { from: number, to: number };
     protected spinnerBox: boolean = true;
-    protected tapeUnits: string = "feet";
+    protected tapeUnits: string = AltitudeTape.units.feet;
+    // animation duration
+    protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
 
-    static readonly defaultTapeUnits: string = "feet";
+    static readonly defaultTapeUnits: string = AltitudeTape.units.feet;
     static readonly defaultTapeStep: number = 100;
 
-    static readonly units = {
-        meters: "meters",
-        m: "meters",
-        feet: "feet",
-        ft: "feet"
-    };
-
+    /**
+     * Sets the units of the tape
+     * Supported units (see AltitudeTape.units)
+     * - "meters" (can be abbreviated with "m")
+     * - "feet" ("ft")
+     */
     setUnits (units: string): void {
         this.tapeUnits = units;
     }
+    /**
+     * Sets the tape with the default units (feet)
+     */
     defaultUnits (): void {
         this.tapeUnits = AltitudeTape.defaultTapeUnits;
     }
+    /**
+     * Shows units information on the tape
+     */
     revealUnits (): void {
         $(".altitude-units").css("display", "block");
     }
+    /**
+     * Hides units information on the tape
+     */
     hideUnits (): void {
         $(".altitude-units").css("display", "none");
     }
-
-    
-
-    // utility function for drawing resolution bands
+    /**
+     * Internal function for drawing resolution bands on the tape
+     */
     protected draw_bands(): void {
         let theHTML = "";
         // if wedge > 0 then band saturates red and notch is displayed on top
@@ -388,7 +411,7 @@ export class AltitudeTape {
             $(this).css("height", (n * this.tickHeight * 2) + "px");
         });
     }
-    // utility function for creating altiude spinner
+    // utility function for creating altitude spinner
     protected create_altitude_spinner (): boolean {
         const tickHeight: number = 36; //px
         const base: string[] = [ "90", "80", "70", "60", "50", "40", "30", "20", "10", "00" ];
@@ -517,8 +540,8 @@ export class AltitudeTape {
     // utility function, converts values between units
     static convert (val: number, unitsFrom: string, unitsTo: string): number {
         if (unitsFrom !== unitsTo) {
-            if ((unitsFrom === "meters" || unitsFrom === "m") && (unitsTo === "feet" || unitsTo === "ft")) { return parseFloat(conversions.meters2feet(val).toFixed(2)); }
-            if ((unitsFrom === "feet" || unitsFrom === "ft") && (unitsTo === "meters" || unitsTo === "m")) { return parseFloat(conversions.feet2meters(val).toFixed(2)) / 100; }
+            if ((unitsFrom === AltitudeTape.units.meters || unitsFrom === AltitudeTape.units.m) && (unitsTo === AltitudeTape.units.feet || unitsTo === AltitudeTape.units.ft)) { return parseFloat(conversions.meters2feet(val).toFixed(2)); }
+            if ((unitsFrom === AltitudeTape.units.feet || unitsFrom === AltitudeTape.units.ft) && (unitsTo === AltitudeTape.units.meters || unitsTo === AltitudeTape.units.m)) { return parseFloat(conversions.feet2meters(val).toFixed(2)) / 100; }
         }
         // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
         return Math.floor(val * 100) / 100; // [profiler] 0.1ms
@@ -546,7 +569,7 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBands(bands: utils.Bands, units: string): AltitudeTape {
+    setBands (bands: utils.Bands, units: string): AltitudeTape {
         // opt = opt || {};
         const tapeUnits: string = this.tapeUnits;
         function normaliseAltitudeBand(b: utils.FromTo[]) {
@@ -611,7 +634,7 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBug(info: number | ResolutionElement, opt?: { 
+    setBug (info: number | ResolutionElement, opt?: { 
         wedgeConstraints?: utils.FromTo[],
         resolutionBugColor?: string,
         wedgeAperture?: number
@@ -664,7 +687,7 @@ export class AltitudeTape {
     }
     protected spinTapeTo (val: number, transitionDuration: string): void {
         if (!isNaN(+val)) {
-            transitionDuration = transitionDuration || `${ANIMATION_DURATION}s`;
+            transitionDuration = transitionDuration || `${this.duration}s`;
             const spinValueTranslation: number = this.zero + val * this.tickHeight / this.altitudeStep;
             $(`#${this.id}-spinner`).css({ "transition-duration": transitionDuration, "transform": `translateY(${spinValueTranslation}px)`});
         }
@@ -715,13 +738,14 @@ export class AltitudeTape {
             const spinGroup: number = Math.trunc(val / 100);
             const reps: number = Math.floor(((this.nAltitudeTicks - 1) * 2 * this.altitudeStep) / 100);
             const spinIndicatorTranslation: number = (-1 * reps * 10 * ratio2) + (spinGroup * ratio2 * 10) + spinIndicatorValue * ratio2; // -287579 is the number of pixels necessary to reach value 0 in the spinner; this number was obtained by manually inspecting the DOM
-            $(`#${this.id}-indicator-spinner`).css({ "transition-duration": `${ANIMATION_DURATION}s`, "transform": `translateY(${spinIndicatorTranslation}px)`});
+            $(`#${this.id}-indicator-spinner`).css({ "transition-duration": `${this.duration}s`, "transform": `translateY(${spinIndicatorTranslation}px)`});
         } else {
             // static spinner
             const dispValue: string = (spinIndicatorValue < 10) ? `0${spinIndicatorValue}` : `${spinIndicatorValue}`;
-            const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
-                ticks: [ { label: dispValue, top: 0 } ]
-            });
+            const spinner: string = `<div style='top:0px; position:absolute; width:100%; height:36px;'>${dispValue}</div>`;
+            // Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
+            //     ticks: [ { label: dispValue, top: 0 } ]
+            // });
             $(`#${this.id}-indicator-spinner`).html(spinner);
         }
         return this;
@@ -733,7 +757,7 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setStep(val: number): AltitudeTape {
+    setStep (val: number): AltitudeTape {
         if (isNaN(val)) {
             console.error("Warning: trying to set an invalid altitude step", val);
             return this;
