@@ -57,10 +57,10 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     
         const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
         const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-        const vspeed: number = +flightData.ownship.v.z; // airspeed tape units is 100fpm
+        const vspeed: number = +flightData.ownship.v.z;
         const alt: number = +flightData.ownship.s.alt;
 
-        data.compass.setCompass(flightData.ownship.v);
+        data.compass.setCompass(heading);
         data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
         data.verticalSpeedTape.setVerticalSpeed(vspeed);
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
