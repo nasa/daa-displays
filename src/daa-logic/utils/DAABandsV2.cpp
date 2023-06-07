@@ -465,7 +465,7 @@ public:
 		json += ", "+jsonVect3("v",ac.get_v());
 		json += ", "+jsonValUnits("altitude",ac.altitude(),alt_units);
 		json += ", "+jsonValUnits("track",gv.compassAngle(),hdir_units);
-		json += ", "+jsonValUnits("heading",av.compassAngle(),hdir_units);
+		json += ", "+jsonValUnits("heading",ac.horizontalDirection(),hdir_units);
 		json += ", "+jsonValUnits("groundspeed",gv.gs(),hs_units);
 		json += ", "+jsonValUnits("airspeed",av.gs(),hs_units);
 		json += ", "+jsonValUnits("verticalspeed",ac.verticalSpeed(),vs_units);
