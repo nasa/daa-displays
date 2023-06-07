@@ -435,7 +435,7 @@ export class Compass {
         const transitionDuration: string = opt.transitionDuration || `${animationDuration}s`;
         const duration: number = parseFloat(transitionDuration) / (transitionDuration.endsWith("ms") ? 1000 : 1); // sec
         const posangle: number = ((this.currentCompassAngle % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
-        $(`#${this.id}-value`).html(`${fixed3(Math.floor(posangle))}`);
+        $(`#${this.id}-value`).html(`${fixed3(Math.round(posangle))}`); // display only integer, round to the nearest integer
         if (this.nrthup) {
             $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });

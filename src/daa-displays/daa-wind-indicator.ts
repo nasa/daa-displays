@@ -145,14 +145,14 @@ export class WindIndicator {
      * Internal function, triggers re-rendering of the indicator
      */
     refresh(): void {
-        const relativeAngle: number = this.currentAngle - this.compassHeading; // angle relative to the compass
+        const relativeAngle: number = this.currentAngle - Math.round(this.compassHeading); // angle relative to the compass
         const animationDuration: number = 100;
         $(`#${this.id}-arrow`).css({
             "transition-duration": `${animationDuration}ms`, 
             transform: `rotate(${relativeAngle}deg)`
         });
         const fromDirection: number = (relativeAngle + 180) % 360; // +180 gives the angle from where the wind blows -- this is the way pilots indicate wind angles
-        $(`#${this.id}-deg`).text(Math.floor(fromDirection)); // display only integer part for angles
+        $(`#${this.id}-deg`).text(Math.floor(fromDirection)); // display only integer part for angles, round to the nearest integer
         $(`.${this.id}-deg`).css({ 
             display: (this.magnitude) ? "block" : "none"  // hide arrow and rotation value if there's no wind 
         });
