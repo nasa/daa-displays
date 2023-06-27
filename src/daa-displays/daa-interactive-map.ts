@@ -166,7 +166,7 @@ export class InteractiveMap {
             (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
                 ...opt,
                 div: this.id + "-div"
-            }) : (engine === "wwd" && !opt.view3D) ? new DAA_Airspace({
+            }) : (engine === "wwd" || opt.view3D) ? new DAA_Airspace({
                 ...opt,
                 canvas: this.id + "-canvas"
             }) : null;
