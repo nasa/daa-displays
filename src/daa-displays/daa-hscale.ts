@@ -60,8 +60,8 @@ export class HScale {
             offsets: this.offsets
         });
         $(this.div).html(theHTML);
-        // @ts-ignore // .carousel is added by bootstrap
-        $('.carousel').carousel({
+        // .carousel is added by bootstrap
+        $('.carousel')["carousel"]({
             interval: 0,
             ride: false,
             wrap: false
@@ -71,17 +71,17 @@ export class HScale {
         this.checkRadio(this.zoomLevel);
         // install handlers
         for (let i = 0; i < this.nRadios; i++) {
-            let radioID = i + 1;
-            $(`#${this.id}-radio${radioID}-overlay`).on("click", (evt: JQuery.ClickEvent) => {
+            const radioID = i + 1;
+            $(`#${this.id}-radio${radioID}-overlay`).on("click", () => {
                 this.checkRadio(radioID);
             });
         }
         // if scroll is not enabled, prev/next can be used to change the zoom level
         if (!this.scrollEnabled) {
-            $(`#${this.id}-carousel-control-next`).on("click", (evt: JQuery.ClickEvent) => {
+            $(`#${this.id}-carousel-control-next`).on("click", () => {
                 this.selectNextZoomLevel();
             });
-            $(`#${this.id}-carousel-control-prev`).on("click", (evt: JQuery.ClickEvent) => {
+            $(`#${this.id}-carousel-control-prev`).on("click", () => {
                 this.selectPrevZoomLevel();
             });
         }

@@ -13,6 +13,7 @@
 		"types": [
 			"handlebars", "jquery", "node", "express", "ws", "connect", "body-parser"
 		],
+		"skipLibCheck": true,
 		"diagnostics": true
 	},
 	"include": [

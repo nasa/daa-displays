@@ -230,7 +230,7 @@ export class DAAMultiView extends DAASplitView {
                 // append handlers
                 const optionsNames: string[] = Object.keys(this.multiviewOptions);
                 for (let i = 0; i < optionsNames?.length; i++) {
-                    $(`#${selector}-${optionsNames[i]}-btn`).on("click", (evt: JQuery.ClickEvent) => {
+                    $(`#${selector}-${optionsNames[i]}-btn`).on("click", () => {
                         this.selectOption(optionsNames[i]);
                     });
                 }
@@ -296,6 +296,7 @@ export class DAAMultiView extends DAASplitView {
     /**
      * @override
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     define (fname: "init" | "step" | "plot" | "diff" | "createMultiView" | string, fbody: (...args: any) => any): DAAPlayer {
         return super.define(fname, fbody);
     }

@@ -197,8 +197,8 @@ class SpeedBug {
         let bugPosition = this.zero;
         const verticalSpeedStep: number = this.tape.getVerticalSpeedStep();
         const tape_size: number[] = this.tape.getTapeSize();
-        let range1 = verticalSpeedStep * 2;
-        let range2 = range1 * 2;
+        const range1 = verticalSpeedStep * 2;
+        const range2 = range1 * 2;
         // let max = range2 * 3;
         if (val >= 0) {
             if (val <= range1) {
@@ -253,11 +253,9 @@ class SpeedBug {
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
 
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100 * 100) / 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${Math.floor(this.val * 100 * 100) / 100}</div>` }).tooltip();
         }
     }
     reveal (flag?: boolean): void {
@@ -287,17 +285,14 @@ class SpeedBug {
     }
     enableToolTip (flag?: boolean): void {
         this.tooltipActive = (flag === false) ? flag : true;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val * 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${this.val * 100}</div>` }).tooltip();
         }
     }
     disableToolTip (): void {
         this.tooltipActive = false;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
     }
 }
 
@@ -379,7 +374,7 @@ export class VerticalSpeedTape {
 
         // create DOM elements
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
-        let theHTML = Handlebars.compile(templates.vspeedTemplate)({
+        const theHTML = Handlebars.compile(templates.vspeedTemplate)({
             id: this.id,
             zIndex: 2,
             top: this.top,
@@ -422,7 +417,7 @@ export class VerticalSpeedTape {
     // utility function for drawing resolution bands
     protected draw_bands(): void {
         let theHTML = "";
-        let ranges = [
+        const ranges = [
             { from: this.verticalSpeedStep * 4, to: this.verticalSpeedStep * 12, zero: 60, tickHeight: this.tape_size[2] / 2, tapeLength: this.tape_size[2], step: this.verticalSpeedStep },
             { from: this.verticalSpeedStep * 2, to: this.verticalSpeedStep * 4, zero: 163, tickHeight: this.tape_size[1] / 2, tapeLength: this.tape_size[1], step: this.verticalSpeedStep },
             { from: 0, to: this.verticalSpeedStep * 2, zero: 192, tickHeight: this.tape_size[0] / 2, tapeLength: this.tape_size[0], step: this.verticalSpeedStep },
@@ -435,8 +430,8 @@ export class VerticalSpeedTape {
             if (scaled.to > range.from && scaled.from <= range.to) {
                     // (scaled.from >= range.from && scaled.from <= range.to
                     //     || scaled.from <= range.from && scaled.to >= range.to)) {
-                let p = (scaled.from >= range.from) ? scaled.from : range.from;
-                let q = (scaled.to < range.to) ? scaled.to : range.to;
+                const p = (scaled.from >= range.from) ? scaled.from : range.from;
+                const q = (scaled.to < range.to) ? scaled.to : range.to;
                 return (p < q) ? { from: p, to: q } : { from: q, to: p };
             }
             return null;
@@ -453,7 +448,7 @@ export class VerticalSpeedTape {
             const alert: string = alerts[i];
             const segments: utils.FromTo[] = this.bands[alert];
             if (segments.length > 0) {
-                let segs = [];
+                const segs = [];
                 // console.log("segments", segments);
                 for (let s = 0; s < segments?.length; s++) {
                 // segments.forEach((segment, i) => {
@@ -462,10 +457,10 @@ export class VerticalSpeedTape {
                     for (let r = 0; r < ranges?.length; r++) {
                     // ranges.forEach((range) => {
                         const range = ranges[r];
-                        let moduloSeg = moduloRange(segment, range);
+                        const moduloSeg = moduloRange(segment, range);
                         if (moduloSeg) {
                             // console.log("moduloSeg", moduloSeg);
-                            let height = (moduloSeg.to - moduloSeg.from) / this.verticalSpeedStep * range.tickHeight;
+                            const height = (moduloSeg.to - moduloSeg.from) / this.verticalSpeedStep * range.tickHeight;
                             // console.log("height", height);
                             // place the segment in the right place on the tape
                             segs.push({

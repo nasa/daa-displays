@@ -195,7 +195,7 @@ export class DAASplitView extends DAAPlayer {
         }
     }
     // @override
-    getCurrentFlightData (enc?: string): LLAData {
+    getCurrentFlightData (): LLAData {
         console.error(`[${this.id}] Function getCurrentFlightData should not be used explicitely because this view uses multiple players. Please use splitView.getPlayers(..).getCurrentFlightData()`);
         return null;
     }
@@ -578,6 +578,7 @@ export class DAASplitView extends DAAPlayer {
 
     // @overrides
     async appendDaaConfigurationSelector (opt?: { selector?: string, parent?: string }): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         opt = opt || {};
         // const selector: string = opt.selector || "sidebar-daidalus-configuration";
         // utils.createDiv(selector, { parent: opt.parent });

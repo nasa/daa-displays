@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AirspeedTape } from '../daa-displays/daa-airspeed-tape';
 import { AltitudeTape } from '../daa-displays/daa-altitude-tape';
 import { VerticalSpeedTape } from '../daa-displays/daa-vertical-speed-tape';
@@ -113,7 +114,7 @@ class Playground {
 }
 
 // example traffic data
-let ownship = {
+const ownship = {
         "id": "AC0",
         "s": {
         "lat": 28.496733,
@@ -127,7 +128,7 @@ let ownship = {
         }
     };
 
-let others: DAA_AircraftDescriptor[] = [
+const others: DAA_AircraftDescriptor[] = [
     {
         callSign: "AC1",
         s: {

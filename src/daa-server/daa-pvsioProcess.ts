@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable no-async-promise-executor */
 /**
  * @module PvsioProcess
  * @version 2019.02.07
@@ -47,8 +49,9 @@ import * as fs from 'fs';
 interface PvsResponse {
     res: string;
     error: string;
-};
+}
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cmds: { [key: string]: string } = {
     'disable-gc-printout': '(setq *disable-gc-printout* t)'
 };
@@ -63,7 +66,7 @@ class PvsLispParser {
 		// see also regexp from emacs-src/ilisp/ilisp-acl.el
 		const PVS_COMINT_PROMPT_REGEXP: RegExp = /\s*pvs\(\d+\):|([\w\W\s]*)\spvs\(\d+\):/g;
 		const PVSIO_PROMPT: RegExp = /\s<PVSio>/g;
-		let ready: boolean = PVS_COMINT_PROMPT_REGEXP.test(data)
+		const ready: boolean = PVS_COMINT_PROMPT_REGEXP.test(data)
 								|| PVSIO_PROMPT.test(data);
 		if (ready && cb) {
 			const res: string = this.pvsOut;
@@ -113,7 +116,7 @@ export class PVSioProcess {
 		const pvslispParser = new PvsLispParser();
 		// console.info("Executing command " + cmd);
 		console.log(cmd);
-		return new Promise(async (resolve, reject) => {
+		return new Promise(async (resolve) => {
 			const listener = (data: string) => {
 				console.log(data); // this is the crude pvs lisp output, useful for debugging
 				pvslispParser.parse(data, async (pvsOut: PvsResponse) => {
@@ -148,15 +151,17 @@ export class PVSioProcess {
 	protected async spawnProcess (): Promise<void> {
 		if (!this.pvsProcess) {
             this.pvsProcessBusy = true;
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
                 console.info("Spawning PVS process " + this.pvsExecutable); 
 				const proc = spawn(this.pvsExecutable, ["-raw"]);
 				proc.stdout.setEncoding("utf8");
                 proc.stderr.setEncoding("utf8");
 				const pvsLispParser: PvsLispParser = new PvsLispParser();
+				// eslint-disable-next-line @typescript-eslint/no-this-alias
 				const _this = this;
 				function listener (data: string) {
 					// console.log(data); // this is the crude pvs lisp output, useful for debugging
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					pvsLispParser.parse(data, (ans: PvsResponse) => {
 						// console.info(ans.res);
 						proc.stdout.removeListener("data", listener); // remove listener otherwise this will capture the output of other commands
@@ -164,7 +169,7 @@ export class PVSioProcess {
 						console.log("PVS ready!");
 						resolve();
 					});
-				};
+				}
 				proc.stdout.on("data", (data: string) => {
 					listener(data);
 				});
@@ -197,12 +202,15 @@ export class PVSioProcess {
 		}
 		return "";
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async getMonitorList (wellClearFolder: string, daaLogic: string): Promise<string> {
 		return "[]";
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async getAlerters (wellClearFolder: string, daaLogic: string): Promise<string> {
 		return "[]";
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async exec (daaFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string, opt?: { contrib?: boolean }): Promise<string> {
 		const match: RegExpMatchArray = /\w+\-([\w\.]+)\.pvsio/.exec(daaLogic);
 		if (match && match.length > 1) {

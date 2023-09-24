@@ -219,11 +219,9 @@ class SpeedBug {
             $(`#${this.id}-pointer`).css({ "border-bottom": `2px solid ${this.color}`, "border-right": `2px solid ${this.color}` });
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
         }
     }
     reveal (flag?: boolean): void {
@@ -253,17 +251,14 @@ class SpeedBug {
     }
     enableToolTip (flag?: boolean): void {
         this.tooltipActive = (flag === false) ? flag : true;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${this.val}</div>` }).tooltip();
         }
     }
     disableToolTip (): void {
         this.tooltipActive = false;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
     }
 }
 
@@ -347,7 +342,7 @@ export class AltitudeTape {
             const alert: string = alerts[i];
             const segments: utils.FromTo[] = this.bands[alert];
             // console.log(segments);
-            let segs = [];
+            const segs = [];
             for (let i = 0; i < segments.length; i++) {
                 // compute the hight of the segment
                 const height: number = (segments[i].to - segments[i].from) / this.altitudeStep * this.tickHeight;
@@ -375,9 +370,9 @@ export class AltitudeTape {
     }
     // utility function for creating altitude tick marks
     protected create_altitude_ticks (): void {
-        let ticks: { top: number, label?: string, units?: string }[] = [];
-        let n = this.nAltitudeTicks + this.trailerTicks;
-        let maxAltitudeValue = (this.nAltitudeTicks - 1) * 2 * this.altitudeStep;
+        const ticks: { top: number, label?: string, units?: string }[] = [];
+        const n = this.nAltitudeTicks + this.trailerTicks;
+        const maxAltitudeValue = (this.nAltitudeTicks - 1) * 2 * this.altitudeStep;
         for (let i = 0; i < n; i++) {
             let tickValue: string = "";
             if (i < this.nAltitudeTicks) {

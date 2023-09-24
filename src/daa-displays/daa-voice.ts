@@ -37,14 +37,14 @@ export interface VoiceDescriptor {
     name: string,
     lang: string,
     localService: boolean
-};
+}
 export enum GuidanceKind {
     "RTCA DO-365" = "RTCA DO-365",
     ATC = "ATC"
-};
+}
 export interface GuidanceDescriptor {
     name: GuidanceKind
-};
+}
 export type Guidance = {
     text2speak: string,
     subtitles?: string // when subtitles are not present, text2speak is used as subtitle
@@ -58,7 +58,7 @@ export enum FeedbackInfo {
     position = "position",
     distance = "distance",
     direction = "direction"
-};
+}
 export type GuidanceVoice = SpeechSynthesisVoice | "Alex" | "Samantha" | string;
 // convenient constants
 export const DEFAULT_VOICE_NAME: GuidanceVoice = "Samantha";
@@ -213,8 +213,8 @@ export class DaaVoice {
                 this.synthVoice.text = msg;
                 window.speechSynthesis.speak(this.synthVoice);
                 // return control only when the voice has finished speaking
-                return new Promise<void> ((resolve, reject) => {
-                    this.synthVoice.onend = (evt) => {
+                return new Promise<void> ((resolve) => {
+                    this.synthVoice.onend = () => {
                         resolve();
                     };
                 });
@@ -237,7 +237,7 @@ export class DaaVoice {
      */
     protected async wait (ms: number): Promise<void> {
         if (ms > 0) {
-            return new Promise ((resolve, reject) => {
+            return new Promise ((resolve) => {
                 setTimeout (() => {
                     resolve();
                 }, ms);

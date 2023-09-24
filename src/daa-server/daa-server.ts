@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /**
  * ## Notices
  * Copyright 2019 United States Government as represented by the Administrator 
@@ -100,7 +101,7 @@ export class DAAServer {
     }
     protected getPvsioDaaVersions (javaFiles: string[]): string[] {
         if (this.pvsioProcessEnabled && javaFiles && javaFiles.length) { 
-            let versions: string[] = [];
+            const versions: string[] = [];
             const wellclearLogicFolder: string = path.join(__dirname, "../daa-logic");
             for (let i = 0; i < javaFiles.length; i++) {
                 const candidate: string = javaFiles[i].replace(".jar", "");
@@ -159,7 +160,7 @@ export class DAAServer {
         }
         return true;
     }
-    protected trySend (wsocket: WebSocket, content: WebSocketMessage<any>, msg?: string) {
+    protected trySend (wsocket: WebSocket, content: WebSocketMessage<unknown>, msg?: string) {
         msg = msg || "data";
         try {
             if (content && wsocket) {
@@ -202,7 +203,7 @@ export class DAAServer {
                     
                 }
                 if (allSubfolders) {
-                    for (let i in allSubfolders) {
+                    for (const i in allSubfolders) {
                         const subf: string = path.join(folder, allSubfolders[i]);
                         const files: string[] = listFilesInFolder(subf);
                         if (files) {
@@ -266,7 +267,7 @@ export class DAAServer {
     async onMessageReceived (msg: string, wsocket: WebSocket): Promise<void> {
         console.info(`\nReceived new message ${msg?.length > 100 ? msg.substring(0, 100) + "..." : msg}`);
         try {
-            const content: WebSocketMessage<any> = JSON.parse(msg);
+            const content: WebSocketMessage<unknown> = JSON.parse(msg);
             // console.info("Message parsed successfully!")
             const cmd: DaaServerCommand = content["type"];
             switch (cmd) {
@@ -833,6 +834,7 @@ export class DAAServer {
                     break;
                 }
                 case DaaServerCommand.jasmine: { // run test cases with jasmine
+                    // eslint-disable-next-line @typescript-eslint/no-var-requires
                     const open = require('open');
                     if (open) {
                         open("http://localhost:8082/test.html");
@@ -874,6 +876,7 @@ export class DAAServer {
                         } else {
                             console.warn("Warning: port number not provided, using default port " + this.config.port);
                         }
+                        break;
                     }
                     case "-fast": {
                         this.useCache = true;
@@ -883,9 +886,11 @@ export class DAAServer {
                     case "-help": {
                         console.log(helpMsg);
                         process.exit(1);
+                        break;
                     }
                     default: {
                         console.warn("[daa-server] Warning: unrecognized option ", args[i]);
+                        break;
                     }
                 }
             }

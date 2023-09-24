@@ -48,7 +48,7 @@ export declare interface VfrChart {
     offset?: { west?: number, east?: number, north?: number, south?: number, x?: number, y?: number },
     // optional description of the sectional chart
     description?: string
-};
+}
 
 /**
  * List of VFR sectional charts used in daa-displays

@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 /**
  * @module DAAPlayer
  * @version 2.0.0
@@ -77,17 +78,17 @@ export enum PlayerEvents {
     DidChangeDaaVoicePitch = "DidChangeDaaVoicePitch",
     DidChangeDaaVoiceRate = "DidChangeDaaVoiceRate",
     DidChangeSimulationSpeed = "DidChangeSimulationSpeed"
-};
+}
 export interface DidChangeDaaConfiguration {
     attributes: string[],
     configName: string
-};
+}
 export interface DidChangeDaaVersion {
     versionName: string
-};
+}
 export interface DidChangeDaaScenarioSelection {
     selectedScenario: string
-};
+}
 export type DidUploadDaaScenarioFile = SaveScenarioRequest;
 export type DidToggleDaaVoiceFeedback = { enabled: boolean };
 export type DidChangeDaaAuralGuidance = { selected: string };
@@ -104,7 +105,7 @@ export enum ResolutionHandler {
     setAirspeedWedgeAperture = "setAirspeedWedgeAperture",
     setAltitudeWedgeAperture = "setAltitudeWedgeAperture",
     setVerticalSpeedWedgeAperture = "setVerticalSpeedWedgeAperture"
-};
+}
 
 /**
  * DAA Player interfaces
@@ -204,10 +205,10 @@ export class DAAPlayer extends Backbone.Model {
      * An implementation of these functions must be provided by the user through player.define
      * e.g., player.define("init", <function defn>)
      */
-    init: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
-    step: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
-    render: (args?: any) => Promise<void> = async function () { console.warn("[daa-player] Warning: rendering function has not been defined :/"); };
-    plot: (args?: any) => Promise<void> = async function () { console.error("[daa-player] Warning: plot function has not been defined :/"); };
+    init: (args?: unknown) => Promise<void> = async function () { console.warn("[daa-player] Warning: init function has not been defined :/"); };
+    step: (args?: unknown) => Promise<void> = async function () { console.warn("[daa-player] Warning: step function has not been defined :/"); };
+    render: (args?: unknown) => Promise<void> = async function () { console.warn("[daa-player] Warning: rendering function has not been defined :/"); };
+    plot: (args?: unknown) => Promise<void> = async function () { console.error("[daa-player] Warning: plot function has not been defined :/"); };
     
     monitorEventHandlers: { [key: string]: () => void } = {};
     protected ms: number = DEFAULT_PLAYER_STEP_INTERVAL;
@@ -255,14 +256,14 @@ export class DAAPlayer extends Backbone.Model {
     // internal handlers
     protected _handlers: Handlers = {
         init: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 this.clearInterval();
                 await this.render();
                 resolve();
             });
         },
         step: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 this.clearInterval();
                 const current_step: number = this.readCurrentSimulationStep();
                 await this.stepControl(current_step);
@@ -270,13 +271,13 @@ export class DAAPlayer extends Backbone.Model {
             });
         },
         pause: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 this.clearInterval();
                 resolve();
             });
         },
         back: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 const current_step: number = this.readCurrentSimulationStep();
                 await this._handlers.pause();
                 const prev_step: number = current_step > 0 ? current_step - 1 : current_step;
@@ -285,14 +286,14 @@ export class DAAPlayer extends Backbone.Model {
             });
         },
         goto: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 await this._handlers.pause();
                 await this.gotoControl();
                 resolve();
             });
         },
         gotoTime: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 const target_time: string = this.readGotoTimeInput();
                 await this._handlers.pause();
                 await this.gotoTimeControl(target_time);
@@ -300,14 +301,14 @@ export class DAAPlayer extends Backbone.Model {
             });
         },
         speed: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 const speed: string = this.readSelectedSimulationSpeed();
                 this.setSpeed(speed);
                 resolve();
             });
         },
         identify: () => {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 $(".daa-view-splash").css("display", "block").css("opacity", 0.5);
                 setTimeout(() => {
                     $(".daa-view-splash").css("display", "none");
@@ -357,7 +358,7 @@ export class DAAPlayer extends Backbone.Model {
             }, 200)
         }
     };
-    protected _defines: { [fun:string]: (...args: any[]) => Promise<void> | void};
+    protected _defines: { [fun:string]: (...args: unknown[]) => Promise<void> | void};
     protected _timer_active: boolean;
     protected _simulationControls: {
         htmlTemplate: string,
@@ -471,6 +472,7 @@ export class DAAPlayer extends Backbone.Model {
         // these functions that can re-defined by the user using, e.g., define("step", function () {...})
         this._defines = {
             init: async (f: (p: DAAPlayer) => Promise<void>, opt?) => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 opt = opt || {};
                 try {
                     this.clearInterval();
@@ -592,7 +594,7 @@ export class DAAPlayer extends Backbone.Model {
         multiplay?: { cssClass?: string, id: string, label: string }[]
     }) {
         opt = opt || {};
-        let data = {
+        const data = {
             id: this.id,
             top: opt.top,
             left: opt.left,
@@ -611,8 +613,7 @@ export class DAAPlayer extends Backbone.Model {
         $(this._simulationControls.parent).html(theHTML);
         $(`#${this.id}-tot-sim-steps`).html(`${this.getSimulationLength()}`);
         // activate dropdown menus
-        //@ts-ignore -- dropdown function is introduced by bootstrap
-        $('.dropdown-toggle').dropdown();
+        $('.dropdown-toggle')["dropdown"]();
     }
     /**
      * Uploads an external daa file to the server
@@ -627,7 +628,7 @@ export class DAAPlayer extends Backbone.Model {
                 data
             });
             if (res && res.data) {
-                let scenarioData: string = res.data;
+                const scenarioData: string = res.data;
                 return scenarioData;
             }
         }
@@ -647,6 +648,7 @@ export class DAAPlayer extends Backbone.Model {
         $(`#${this.id}-external-scenario-file`).on("input", (evt: JQuery.ChangeEvent) => {
             const file: File = evt?.currentTarget?.files[0];
             const reader: FileReader = new FileReader();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             reader.addEventListener("loadend", async (evt: ProgressEvent<FileReader>) => {
                 const scenarioContent: string = reader.result?.toString();
                 $(`#${this.id}-external-scenario-file-form`).trigger("reset");
@@ -690,7 +692,7 @@ export class DAAPlayer extends Backbone.Model {
                 }
             });
         });
-        $(document).on("mouseup", (e: JQuery.MouseUpEvent) => {
+        $(document).on("mouseup", () => {
             clearTimeout(timer);
             $(document).off("mousemove");
             $('html').css({ cursor: "default" });
@@ -1451,6 +1453,7 @@ export class DAAPlayer extends Backbone.Model {
      * @memberof module:DAAPlaybackPlayer
      * @instance
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     define (fname: "init" | "step" | "plot" | "diff" | string, fbody: (...args: any) => any): DAAPlayer {
         if (fname === "init") {
             this.init = async () => {
@@ -1488,14 +1491,12 @@ export class DAAPlayer extends Backbone.Model {
                     // const len: number = Object.keys(this.daaMonitors).length;
                     const selector: string = `${this.id}-monitor-${id}-checkbox`;
                     $(`#${selector}`).on("change", () => {
-                        //@ts-ignore
-                        $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
+                        $(`.spectrogram-monitor-element`)["tooltip"]("dispose"); // delete tooltips
                         $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
                         if ($(`#${selector}`).is(":checked")) {
                             $(`.spectrogram-monitor-marker`).css("display", "block");
                             ebody();
                         } else {
-                            //@ts-ignore
                             // $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips
                             // $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
                         }
@@ -2204,7 +2205,7 @@ export class DAAPlayer extends Backbone.Model {
         step = (step === undefined) ? this.getCurrentSimulationStep() : step;
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
             if (this._bands) {
-                for (let key in res) {
+                for (const key in res) {
                     switch (key) {
                         case "Monitors": {
                             res[key] = this._bands[key];
@@ -2236,7 +2237,7 @@ export class DAAPlayer extends Backbone.Model {
         // conf can be std, nomA, nomB
         conf = conf || "std";
         console.log(`loading configuration ${conf}`);
-        let params = [];
+        const params = [];
         // this._scenarios[this._selectedScenario].params[conf].split(",").forEach((assignment) => {
         //     let data = assignment.split(":=");
         //     if (data.length > 1 && !isNaN(+data[1])) {   
@@ -2288,7 +2289,7 @@ export class DAAPlayer extends Backbone.Model {
             this.ms = ms || this.ms || 1000;
             this._timer_active = true;
             while (this._timer_active) {
-                let promises = [
+                const promises = [
                     new Promise<void>((resolve) => { setTimeout(resolve, this.ms); }),
                     new Promise<void>((resolve) => {
                         fun();
@@ -2586,7 +2587,7 @@ export class DAAPlayer extends Backbone.Model {
      */
     protected appendEncounterData (data: { ownship: OwnshipState, traffic: AircraftMetrics[], bands: ScenarioDataPoint }): void {
         Handlebars.registerHelper("printValUnits", function(valunits:ValUnits) {
-            var html = "";
+            let html = "";
             html += valunits.val;
             if (isNaN(+valunits.val)) {
                 return html;
@@ -2713,7 +2714,6 @@ export class DAAPlayer extends Backbone.Model {
      * @instance
      */
     appendSimulationPlot(desc: PlotDescriptor, opt?: { overheadLabel?: boolean }): DAAPlayer {
-        desc.id = desc.id;
         desc.type = desc.type || "spectrogram";
         opt = opt || {};
         if (desc.type === "spectrogram") {

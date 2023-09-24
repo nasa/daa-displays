@@ -88,7 +88,7 @@ export class VirtualHorizon {
             baseUrl: utils.baseUrl
         });
         $(this.div).html(theHTML);
-        let levels = [];
+        const levels = [];
         for (let i = 1; i < 36; i++) {
             levels.push({
                 name: (i % 19) ? (i % 19) * 10 : "", // level 0 does not have a label
@@ -114,8 +114,8 @@ export class VirtualHorizon {
         opt = opt || {};
         let angle = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
         angle = angle % 180;
-        let tickHeight = 110; // 110 px corresponds to 10 degrees on the linear tape, measure obtained by inspecting the DOM
-        let px = angle / 10 * tickHeight;
+        const tickHeight = 110; // 110 px corresponds to 10 degrees on the linear tape, measure obtained by inspecting the DOM
+        const px = angle / 10 * tickHeight;
         $("." + this.id + "-pitch").css("transition-duration", "500ms").css("transform", "translateY(" + px + "px)");
         return this;
     }
@@ -131,7 +131,7 @@ export class VirtualHorizon {
      */
     setRoll (deg: number, opt?) {
         opt = opt || {};
-        let angle = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
+        const angle = (opt.units === "rad") ? conversions.rad2deg(deg) : deg;
         $("#" + this.id + "-angle").css("transition-duration", "500ms").css("transform", "rotate(" + angle + "deg)");
         return this;
     }

@@ -219,11 +219,9 @@ class SpeedBug {
             $(`#${this.id}-box`).css({ "border": `2px solid ${this.color}` });
         }
         
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${Math.floor(this.val * 100) / 100}</div>` }).tooltip();
         }    
     }
     reveal (flag?: boolean): void {
@@ -253,17 +251,14 @@ class SpeedBug {
     }
     enableToolTip (flag?: boolean): void {
         this.tooltipActive = (flag === false) ? flag : true;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
         if (this.tooltipActive) {
-            //@ts-ignore
-            $(`.${this.id}-tooltip`).tooltip({ title: `<div>${this.val}</div>` }).tooltip();
+            $(`.${this.id}-tooltip`)["tooltip"]({ title: `<div>${this.val}</div>` }).tooltip();
         }
     }
     disableToolTip (): void {
         this.tooltipActive = false;
-        //@ts-ignore
-        $(`.${this.id}-tooltip`).tooltip("dispose");
+        $(`.${this.id}-tooltip`)["tooltip"]("dispose");
     }
 }
 
@@ -328,7 +323,7 @@ export class AirspeedTape {
 
     // utility function for creating airspeed tick marks
     protected create_airspeed_ticks (): void {
-        let ticks: { top: number, label?: string, units?: string }[] = [];
+        const ticks: { top: number, label?: string, units?: string }[] = [];
         const n = this.nAirspeedTicks + this.trailerTicks;
         const maxAirspeedValue = (this.nAirspeedTicks - 1) * 2 * this.airspeedStep;
         for (let i = 0; i < n; i++) {
@@ -396,7 +391,7 @@ export class AirspeedTape {
             const alert: string = keys[i];
             const segments: utils.FromTo[] = this.bands[alert];
             // console.log(segments);
-            let segs = [];
+            const segs = [];
             for (let i = 0; i < segments.length; i++) {
                 // compute the hight of the segment
                 const height: number = (segments[i].to - segments[i].from) / this.airspeedStep * this.tickHeight;
@@ -425,12 +420,12 @@ export class AirspeedTape {
     // utility function for updating ground speed display (if any is rendered)
     protected updateGroundSpeed(): void {
         // ground speed is obtained from airspeed and windspeed (groundspeed = currentAirspeed + windspeed)
-        let gs = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // the indicator can render only integer numbers, and they have always 3 digits
+        const gs = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // the indicator can render only integer numbers, and they have always 3 digits
         $(`#${this.id}-ground-speed`).html(gs);
     }
     // utility function for updating true airspeed display (if any is rendered)
     protected updateTAS(): void {
-        let tas = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // FIXME: what is the formula???
+        const tas = utils.fixed3(Math.trunc(this.currentAirspeed + this.windSpeed)); // FIXME: what is the formula???
         $(`#${this.id}-tas`).html(tas);
     }
     // utility function for updating wind speed and direction (if any is rendered)

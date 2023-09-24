@@ -98,4 +98,13 @@ split:
 		node dist/daa-displays/utils/daa-split.js $(file) \
 	)
 
+eslint:
+	npx eslint src/**/*.ts
+
+eslint-log:
+	npx eslint src/**/*.ts > eslint.log
+
+eslint-fix:
+	npx eslint --fix src/**/*.ts
+
 .PHONY: dist

@@ -550,11 +550,11 @@ export class Compass {
         const normaliseCompassBand = (b: utils.FromTo[]) => {
             // normaliseRange converts range in bands to positive degrees (e.g., -10..0 becomes 350..360), and range.from is always < range.to 
             const normaliseBand = (rg: { from: number, to: number }[]) => {
-                let range = [];
+                const range = [];
                 if (rg) {
                     for (let i = 0; i < rg.length; i++) {
                         let from = rg[i].from;
-                        let to = rg[i].to;
+                        const to = rg[i].to;
                         // negative degrees are converted to positive values in the range 0..360
                         if (from < 0) { from = from % 360 + 360; }
                         // if range.from is greater than range.to (e.g., { from: 330, to: 20 }), we need to split the range in two sub-ranges (e.g., in this case [{ from: 330, to: 360 }, { from: 0, to: 20 } ] )
@@ -569,7 +569,7 @@ export class Compass {
                 return range;
             }
             if (b && b.length > 0) {
-                let ans = b.map((range: utils.FromTo) => {
+                const ans = b.map((range: utils.FromTo) => {
                     if (opt.units === "rad") {
                         // if bands are given in radiants, we need to convert to degrees
                         return { from: math.rad2deg(range.from), to: math.rad2deg(range.to) };
@@ -620,11 +620,11 @@ export class Compass {
         for (let i = 0; i < alerts?.length; i++) {
             const alert: string = alerts[i];
             const arcs: utils.FromTo[] = this.bands[alert];
-            let segs = [];
+            const segs = [];
             // console.log(arcs);
             for (let i = 0; i < arcs.length; i++) {
-                let from = arcs[i].from || 0;
-                let to = arcs[i].to || 360;
+                const from = arcs[i].from || 0;
+                const to = arcs[i].to || 360;
                 drawArc(ctx, from, to, alert);
                 // the following info is attached to the html to better support debugging
                 segs.push({

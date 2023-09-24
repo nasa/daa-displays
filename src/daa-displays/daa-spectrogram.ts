@@ -53,8 +53,8 @@ import { Alert, AlertLevel, BandElement, BandRange, DaidalusBand, Region } from 
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data: { width: number, height: number, length: number }) {
-    let barWidth = data.width / data.length;
-    let grid = [];
+    const barWidth = data.width / data.length;
+    const grid = [];
     for (let i = 0; i < data.length; i++) {
         grid.push({
             left: i * barWidth,
@@ -173,8 +173,7 @@ export class DAASpectrogram {
         if (this.player) {
             const stepID = `${this.id}-step-${step}`;
             $(`#${stepID}`).on("click", async () => {
-                // @ts-ignore
-                $('[data-toggle="tooltip"]').tooltip('hide');
+                $('[data-toggle="tooltip"]')["tooltip"]('hide');
                 await this.player.gotoControl(step, { updateInputs: true });
             });
             $(`#${stepID}`).css("cursor", "pointer");
@@ -326,9 +325,8 @@ export class DAASpectrogram {
                 });
                 $(`#${stepID}`).remove();
                 $(`#${this.id}-spectrogram-data`).append(theHTML);
-                // @ts-ignore -- method tooltip is added by bootstrap
-                // $('[data-toggle="tooltip"]').tooltip(); // this activates tooltips // 7.2ms
-                $(`#${stepID}`).tooltip();
+                // $('[data-toggle="tooltip"]')["tooltip"](); // this activates all tooltips // 7.2ms
+                $(`#${stepID}`)["tooltip"]();
                 this.installGotoHandler(data.step);
             }
             $(`#${this.id}-cursor`).css("left", leftMargin );
@@ -393,7 +391,7 @@ export class DAASpectrogram {
                                 : `<br>Resolution: ${data.resolution}`);
                                     
                 } else {
-                    tooltip += `<br>Resolution: N\A`;
+                    tooltip += `<br>Resolution: N/A`;
                 }
                 for (let i = 0; i < tooltipData.length; i++) {
                     tooltip += `<br>${tooltipData[i].region}: [${Math.floor(tooltipData[i].range.from * 100) / 100}, ${Math.floor(tooltipData[i].range.to * 100) / 100}]`;
@@ -431,9 +429,9 @@ export class DAASpectrogram {
                 });
                 $(`#${stepID}`).remove(); 
                 $(`#${this.id}-spectrogram-data`).append(theHTML);
-                // @ts-ignore -- method tooltip is added by bootstrap
-                //$('[data-toggle="tooltip"]').tooltip(); // this activates tooltips
-                $(`#${stepID}`).tooltip();
+                // method tooltip is added by bootstrap
+                //$('[data-toggle="tooltip"]')["tooltip"](); // this activates tooltips
+                $(`#${stepID}`)["tooltip"]();
                 this.installGotoHandler(data.step);
             }
             $(`#${this.id}-cursor`).css("left", leftMargin );
@@ -455,8 +453,8 @@ export class DAASpectrogram {
         if (desc) {
             const selector: string = `#${this.id}-monitor-${desc.step}`;
             $(selector).css("display", "block");
-            // @ts-ignore -- method tooltip is added by bootstrap
-            $(selector).tooltip("dispose"); // remove old tooltip, if any
+            // method tooltip is added by bootstrap
+            $(selector)["tooltip"]("dispose"); // remove old tooltip, if any
             if (desc.color) {
                 $(`${selector} .fa`).css("color", desc.color);
             }
@@ -471,8 +469,8 @@ export class DAASpectrogram {
             $(selector).on("click", async () => {
                 await this.player.gotoControl(desc.step, { updateInputs: true });
             });
-            // @ts-ignore -- method tooltip is added by bootstrap
-            $(selector).tooltip();
+            // method tooltip is added by bootstrap
+            $(selector)["tooltip"]();
         }
     }
     hideMarker (i: number): void {
@@ -480,12 +478,11 @@ export class DAASpectrogram {
     }
     deleteMarker (i: number): void {
         this.hideMarker(i);
-        // @ts-ignore -- method tooltip is added by bootstrap
-        $(`#${this.id}-monitor-${i}`).tooltip("dispose"); // clear tooltip
+        // method tooltip is added by bootstrap
+        $(`#${this.id}-monitor-${i}`)["tooltip"]("dispose"); // clear tooltip
     }
     deleteMarkers (): void {
         $(`.spectrogram-monitor-marker`).css("display", "none"); // hide markers
-        // @ts-ignore
-        $(`.spectrogram-monitor-element`).tooltip("dispose"); // delete tooltips        
+        $(`.spectrogram-monitor-element`)["tooltip"]("dispose"); // delete tooltips        
     }
 }

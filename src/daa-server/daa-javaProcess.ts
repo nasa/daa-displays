@@ -76,7 +76,7 @@ export class JavaProcess {
 			if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
 			if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
 			const outputFilePath: string = opt.contrib ? path.resolve("..", outputFolder, outputFileName) : path.resolve(outputFolder, outputFileName);
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				const scenario: string = path.resolve(__dirname, "../daa-scenarios", daaScenario);
 				const config: string = path.resolve(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
@@ -114,7 +114,7 @@ export class JavaProcess {
 				fs.mkdirSync(outputFolder);
 			}
 			const outputFilePath: string = path.join(outputFolder, outputFileName);
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				const scenario: string = path.join(__dirname, "../daa-scenarios", inputFileName);
 				const ownshipName: string = opt?.ownshipName;
 				const cmds: string[] = [
@@ -144,7 +144,7 @@ export class JavaProcess {
 	// conveerts configuration file and .daa scenario file in pvs format
 	async daa2pvs (wellClearFolder: string, daaLogic: string, daaConfig: string, scenarioName: string, outputFileName: string): Promise<{ configFile: string, scenarioFile: string }> {
 		if (daaLogic) {
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				const configFile: string = path.join(__dirname, "../daa-config", daaConfig);
 				const outputFile: string = path.join(__dirname, "../daa-scenarios", outputFileName);
 				const scenarioFile: string = path.join(__dirname, "../daa-scenarios", scenarioName);
@@ -157,7 +157,7 @@ export class JavaProcess {
 				exec(cmd, { maxBuffer: 1024 * 5000 }, (error, stdout, stderr) => {
 					if (error) {
 						console.error(`exec error: ${error}`);
-						return reject(error);
+						return resolve(null);
 					} else if (stderr) {
 						console.error(`stderr: ${stderr}`);
 					}
@@ -174,7 +174,7 @@ export class JavaProcess {
 		return Promise.resolve(null);
 	}
 	async getVersion (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`java -jar ${daaLogic} --version`
@@ -197,7 +197,7 @@ export class JavaProcess {
 	 * Returns the list of monitors
 	 */
 	async getMonitorList (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`java -jar ${daaLogic} --list-monitors`
@@ -220,7 +220,7 @@ export class JavaProcess {
 	 * Returns the list of monitors
 	 */
 	async getAlerters (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`java -jar ${daaLogic} --list-alerters`

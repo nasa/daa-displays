@@ -75,7 +75,7 @@ export class CppProcess {
 			if (!fs.existsSync(f1)) { fs.mkdirSync(f1); }
 			if (!fs.existsSync(outputFolder)) { fs.mkdirSync(outputFolder); }
 			const outputFilePath: string = opt.contrib ? path.join("..", outputFolder, outputFileName) : path.join(outputFolder, outputFileName);
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve) => {
 				const wellClearScenario: string = path.join(__dirname, "../daa-scenarios", daaScenario);
 				const wellClearConfig: string = path.join(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
@@ -106,7 +106,7 @@ export class CppProcess {
 		return Promise.resolve(null);
 	}
 	async getVersion (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`./${daaLogic} --version`
@@ -129,7 +129,7 @@ export class CppProcess {
 	 * Returns the list of monitors
 	 */
 	async getMonitorList (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`./${daaLogic} --list-monitors`
@@ -152,7 +152,7 @@ export class CppProcess {
 	 * Returns the list of alerters
 	 */
 	async getAlerters (folder: string, daaLogic: string): Promise<string> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const cmds: string[] = [
 				`cd ${folder}`,
 				`./${daaLogic} --list-alerters`
