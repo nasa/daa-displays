@@ -43,6 +43,7 @@ import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
 import { DaaFileContent, readDaaFileContent } from '../daa-displays/utils/daa-reader';
+import { DAA_FILE_EXTENSIONS } from '../config';
 
 // flag for enabling verbose log, useful for debugging purposes but may reduce performance
 const VERBOSE: boolean = false;
@@ -607,7 +608,7 @@ export class DAAServer {
                     const scenarioFolder: string = path.join(__dirname, "../daa-scenarios");
                     let daaFiles: string[] = null;
                     try {
-                        daaFiles = this.listFilesRecursive(scenarioFolder, ['.daa', '.txt']);
+                        daaFiles = this.listFilesRecursive(scenarioFolder, DAA_FILE_EXTENSIONS);
                     } catch (listError) {
                         console.error(`Error while reading scenario folder`, listError);
                     } finally {

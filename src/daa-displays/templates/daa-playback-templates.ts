@@ -1,4 +1,5 @@
 import { DEFAULT_VOICE_PITCH, DEFAULT_VOICE_RATE } from "../daa-voice";
+import { DAA_FILE_EXTENSIONS } from "../../config";
 
 export const playbackTemplate: string = `
 <div id="{{id}}" class="simulation-controls" style="position:absolute;">
@@ -384,7 +385,7 @@ export const sidePanelTemplate: string = `
                     <div class="input-group input-group-sm" style="width:112px;">
                         <form id="{{id}}-external-scenario-file-form">
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="{{id}}-external-scenario-file" accept=".daa,.txt">
+                                <input type="file" class="custom-file-input" id="{{id}}-external-scenario-file" accept="${DAA_FILE_EXTENSIONS.join(",")}">
                                 <label class="custom-file-label" for="{{id}}-external-scenario-file"><i class="fa fa-upload" aria-hidden="true"></i></label>
                             </div>
                         </form>
