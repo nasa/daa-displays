@@ -374,7 +374,7 @@ export class DAAPlayer extends Backbone.Model {
     protected bridgedPlayer: DAAPlayer;
 
     protected _daaVersions: string[];
-    protected _wellClearConfigurations: string[];
+    protected _daaConfigurations: string[];
     protected client: DAAClient;
 
     protected daaVersionDomSelector: string = "sidebar-daidalus-version";
@@ -655,7 +655,11 @@ export class DAAPlayer extends Backbone.Model {
                     scenarioName,
                     scenarioContent
                 };
+                // upload the selected file in the scenarios folder
                 const scenarioData: string = await this.uploadDaaFile(data);
+                // refresh the view shoding the scenario files
+                await this.refreshScenarioFiles();
+                // load the uploaded file
                 await this.loadScenarioFile(scenarioName, { scenarioData, forceReload: true });
             });
             reader.readAsText(file);
@@ -1197,9 +1201,9 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * Shows an animation indicating that the backend is loading scenario data
      */
-    loadingAnimation(): void {
+    loadingAnimation(opt?: { scenario?: string }): void {
         if (this._displays) {
-            this.startSpinAnimation({ selectedScenario: this.getSelectedScenario() });
+            this.startSpinAnimation({ selectedScenario: opt?.scenario || this.getSelectedScenario() });
             for (let i = 0; i < this._displays?.length; i++) {
                 const display: string = this._displays[i];
                 const width: number = $('.map-canvas').width() || $('.map-div').width() || 1072;
@@ -1385,7 +1389,7 @@ export class DAAPlayer extends Backbone.Model {
             if (this._selectedScenario !== scenario || opt.forceReload || opt.softReload) {
                 this._loadingScenario = true;
                 if (!opt.hideLoadingAnimation) {
-                    this.loadingAnimation();
+                    this.loadingAnimation({ scenario });
                 }
                 this.setStatus(`Loading ${scenario}`);
                 this.disableSelection();
@@ -1869,16 +1873,16 @@ export class DAAPlayer extends Backbone.Model {
         });
         if (res && res.data) {
             console.log(res);
-            const currentConfigurations: string = JSON.stringify(this._wellClearConfigurations);
+            const currentConfigurations: string = JSON.stringify(this._daaConfigurations);
             if (currentConfigurations !== res.data) {
-                this._wellClearConfigurations = JSON.parse(res.data);
+                this._daaConfigurations = JSON.parse(res.data);
                 // refresh front-end
                 await this.refreshConfigurationView();
             } else {
                 console.log(`[daa-player] Configurations already loaded`, res.data);
             }
         }
-        return this._wellClearConfigurations;
+        return this._daaConfigurations;
     }
     /**
      * Returns the daidalus configuration currently selected in the player interface
@@ -2403,7 +2407,7 @@ export class DAAPlayer extends Backbone.Model {
     /**
      * Appends the daidalus/wellclear configuration selector to the DOM
      */
-    async appendDaaConfigurationSelector(opt?: { selector?: string, attributeSelector?: string }): Promise<void> {
+    async appendDaaConfigurationSelector (opt?: { selector?: string, attributeSelector?: string }): Promise<void> {
         opt = opt || {};
         this.daaConfigurationDomSelector = opt.selector || "sidebar-daidalus-configuration";
         this.daaAttributesDomSelector = opt.attributeSelector || "sidebar-daidalus-configuration-attributes";
@@ -2411,6 +2415,36 @@ export class DAAPlayer extends Backbone.Model {
         await this.getDaaConfigurations();
         // update the front-end
         await this.refreshConfigurationView();
+    }
+    /**
+     * Reveal/Hide daa configuration selector
+     */
+    revealDaaConfigurationSelector (show?: boolean): boolean {
+        show = show === undefined ? true : !!show;
+        $(`#${this.daaConfigurationDomSelector}-list`).css({ display: show ? "block" : "none" });
+        return show;
+    }
+    /**
+     * Reveal/Hide daa configuration selector
+     */
+    hideDaaConfigurationSelector (hide?: boolean): boolean {
+        hide = hide === undefined ? true : !!hide;
+        return !this.revealDaaConfigurationSelector(!hide);
+    }
+    /**
+     * Reveal/Hide daa logic selector
+     */
+    revealDaaLogicSelector (show?: boolean): boolean {
+        show = show === undefined ? true : !!show;
+        $(`#${this.daaVersionDomSelector}-list`).css({ display: show ? "block" : "none" });
+        return show;
+    }
+    /**
+     * Reveal/Hide daa logic selector
+     */
+    hideDaaLogicSelector (hide?: boolean): boolean {
+        hide = hide === undefined ? true : !!hide;
+        return !this.revealDaaLogicSelector(!hide);
     }
     /**
      * Appends the wind input element to the DOM
@@ -2704,12 +2738,18 @@ export class DAAPlayer extends Backbone.Model {
         return this;
     }
     /**
+     * Refresh the list of scenario files
+     */
+    async refreshScenarioFiles (): Promise<void> {
+        return await this.appendScenarioSelector();
+    }
+    /**
      * Appends scenario selector to the DOM
      */
     async appendScenarioSelector(): Promise<void> {
         try {
             const scenarios: string[] = await this.listScenarioFiles();
-            const theHTML: string = Handlebars.compile(templates.daaScenariosTemplate)({
+            const theHTML: string = Handlebars.compile(templates.daaScenariosListTemplate)({
                 scenarios: scenarios.map((name: string, index: number) => {
                     return {
                         id: safeSelector(name),
@@ -2875,10 +2915,11 @@ export class DAAPlayer extends Backbone.Model {
      */
     protected async refreshConfigurationView(): Promise<void> {
         const theHTML: string = Handlebars.compile(templates.daidalusConfigurationsTemplate)({
-            configurations: this._wellClearConfigurations,
+            configurations: this._daaConfigurations,
             id: this.daaConfigurationDomSelector
         });
         $(`#${this.daaConfigurationDomSelector}-list`).remove();
+        $(`#${this.daaConfigurationDomSelector}-global-list`).remove();
         $(`#${this.daaConfigurationDomSelector}`).append(theHTML);
         $(`#${this.daaConfigurationDomSelector}`).css({ display: "flex" });
 

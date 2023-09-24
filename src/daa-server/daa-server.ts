@@ -137,25 +137,32 @@ export class DAAServer {
             console.error(`Configuration file ${fileName} not provided, using default server configuration.`);
         }
     }
-    protected async activatePVSioProcess () {
+    protected async activatePVSioProcess (): Promise<boolean> {
         if (this.pvsioPath) {
             this.pvsioProcess = new PVSioProcess(path.join(this.pvsioPath, "pvs"));
             await this.pvsioProcess.activate();
-        } else {
-            console.error("[daa-server] Error: unable to activate pvsio process (pvs path is null)");
+            return true;
         }
+        console.error("[daa-server] Error: unable to activate pvsio process (pvs path is null)");
+        return false;
     }
-    protected async activateJavaProcess () {
-        this.javaProcess = new JavaProcess();
+    protected async activateJavaProcess (): Promise<boolean> {
+        if (!this.javaProcess) {
+            this.javaProcess = new JavaProcess();
+        }
+        return true
     }
-    protected async activateCppProcess () {
-        this.cppProcess = new CppProcess();
+    protected async activateCppProcess (): Promise<boolean> {
+        if (!this.cppProcess) {
+            this.cppProcess = new CppProcess();
+        }
+        return true;
     }
     protected trySend (wsocket: WebSocket, content: WebSocketMessage<any>, msg?: string) {
         msg = msg || "data";
         try {
             if (content && wsocket) {
-                console.log(`sending ${msg} to client...`);
+                console.log(`Sending ${msg} to client...`);
                 if (content.time) {
                     content.time.server = { sent: new Date().toISOString() };
                 }
@@ -163,7 +170,7 @@ export class DAAServer {
                     console.dir(content, { depth: null });
                 }
                 wsocket.send(JSON.stringify(content));
-                console.log(`${msg} sent`);
+                console.log(`Sent: ${msg}`);
             }
         } catch (sendError) {
             console.error(`Error while sending ${msg} :/`);
@@ -256,7 +263,7 @@ export class DAAServer {
         return files;
     }
     async onMessageReceived (msg: string, wsocket: WebSocket): Promise<void> {
-        console.info(`\nReceived new message ${msg}`);
+        console.info(`\nReceived new message ${msg?.length > 100 ? msg.substring(0, 100) + "..." : msg}`);
         try {
             const content: WebSocketMessage<any> = JSON.parse(msg);
             // console.info("Message parsed successfully!")
@@ -507,16 +514,18 @@ export class DAAServer {
                                 console.log(`[daa-server] Writing scenario file ${fname}`);
                                 fs.writeFileSync(fname, fileContent);
                                 // try to convert the file, to check if it's a valid daa file
-                                console.log(`[daa-server] Generatig JSON file...`);
+                                console.log(`[daa-server] Generating JSON file...`);
                                 try {
+                                    await this.activateJavaProcess();
                                     const outputFileName: string = fsUtils.getDaaJsonFileName({ scenarioName, ownshipName: null });
                                     await this.javaProcess.daa2json(scenarioName, outputFileName);
-                                    const jsonDaa: string = path.join(__dirname, outputFolder, `${scenarioName}.json`);
-                                    content.data = await fsUtils.readFile(jsonDaa);
+                                    const jsonDaa: string = path.join(__dirname, outputFolder, `${fsUtils.getFilename(scenarioName, { removeFileExtension: true })}.json`);
+                                    console.info(`Reading scenario data from ${jsonDaa} ...`);
+                                    content.data = fsUtils.readFile(jsonDaa);
                                     this.trySend(wsocket, content, `scenario ${scenarioName}`);
                                     console.log(`[daa-server] Done!`);
                                 } catch (conversionError) {
-                                    console.error(`[daa-server] Error: unable to convert file ${fname}`);
+                                    console.error(`[daa-server] Error: unable to convert file ${fname}`, conversionError);
                                     fs.unlinkSync(fname);
                                     this.trySend(wsocket, null, `scenario ${scenarioName}`);    
                                 }
