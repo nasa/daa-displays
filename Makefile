@@ -1,4 +1,5 @@
-version = 1.0.14a
+version=1.0.14a
+file=""
 
 all: npm dist daidalus compile install-dependencies
 	@echo "\033[0;32m** To start DAA-Displays, type ./restart.sh in the command prompt and open a browser at http://localhost:8082 **\033[0m"
@@ -90,5 +91,11 @@ audit:
 audit-fix:
 	npm audit fix
 	cd src/daa-server && npm audit fix
+
+# make split file=xxx.daa
+split:
+	@( \
+		node dist/daa-displays/utils/daa-split.js $(file) \
+	)
 
 .PHONY: dist

@@ -224,6 +224,14 @@ export const displayDivTemplate: string = `
     min-height:{{dispHeight}}px;
     margin-top:102px;
 }
+.multi-view-display-options {
+    width:120px;
+    position:absolute;
+    min-height:{{dispHeight}}px;
+    margin-top:42px;
+    transform: scale(0.84);
+    transform-origin: top left;
+}
 .multi-view-display-minimized {
     margin:6px;
 }
@@ -263,16 +271,18 @@ function hide (id) { $(id).css({ display: 'none'}); }
 </script>
 <div style="display:grid; grid-template-columns: auto auto;">
 
+    <!-- display options -->
+    <div class="multi-view-display-options"></div>
     <!-- display list -->
     <div class="multi-view-display-list">
-    {{#each aircraft}}
-    <div id="show-daa-display-{{@index}}-btn" class="multi-view-display-btn" style="display:none;">
-        <button class="btn btn-outline-primary btn-sm multi-view-display-minimized" type="button" 
-                onclick="hide('#show-daa-display-{{@index}}-btn');reveal('#multi-view-display-{{@index}}', 'grid');">
-        Show display {{this}}
-        </button>
-    </div>
-    {{/each}}
+        {{#each aircraft}}
+        <div id="show-daa-display-{{@index}}-btn" class="multi-view-display-btn" style="display:none;">
+            <button class="btn btn-outline-primary btn-sm multi-view-display-minimized" type="button" 
+                    onclick="hide('#show-daa-display-{{@index}}-btn');reveal('#multi-view-display-{{@index}}', 'grid');">
+            Show display {{this}}
+            </button>
+        </div>
+        {{/each}}
     </div>
 
     <!-- display grid (1xN) -->
@@ -328,7 +338,7 @@ export const windSettingsInputGroupTemplate: string = `
     <input type="number" id="{{id}}-list-knots" class="form-control {{id}}-list" aria-label="magnitude" aria-describedby="{{id}}-knot-label">
 </div>`;
 
-export const daaScenariosTemplate: string = `
+export const daaScenariosListTemplate: string = `
 <select id={{id}}-scenarios-list class="form-control" size="20" style="overflow:auto;">
     {{#each scenarios}}
     <option {{#if this.selected}}selected {{/if}}id="{{../id}}-scenario-{{this.id}}">{{this.name}}</option>
@@ -512,10 +522,24 @@ export const spectrogramControls: string = `
     </div>
 </div>`;
 
+export const multiViewOptions: string = `
+<div id="{{id}}-use-same-inner" class="sim-option" style="position:absolute;width:100%;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding-top:1px;">
+            <div class="row">
+                <button id="{{id}}-use-same-config-btn" class="btn-sm use-same-config" style="width:{{innerWidth}}px; text-align:left; border:1px solid lightgray; margin-bottom:1px; white-space:nowrap;vertical-align: middle;">Use this config in all views</button>
+            </div>
+            <div class="row">
+                <button id="{{id}}-use-same-logic-btn" class="btn-sm use-same-logic" style="width:{{innerWidth}}px; text-align:left; border:1px solid lightgray; margin-bottom:1px; white-space:nowrap;vertical-align: middle;">Use this version in all views</button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
 export const voiceFeedbackControls: string = `
 <div id="{{id}}-voice-feedback-controls-inner" class="simulation-controls" style="position:absolute;width:100%;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
-        <div class="container-fluid" style="padding:0px;">
+        <div class="container-fluid" style="padding:1px;">
             <div class="row">
                 <div class="col-sm">
                     <div class="input-group input-group-sm mb-3">

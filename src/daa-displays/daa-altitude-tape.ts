@@ -742,10 +742,9 @@ export class AltitudeTape {
         } else {
             // static spinner
             const dispValue: string = (spinIndicatorValue < 10) ? `0${spinIndicatorValue}` : `${spinIndicatorValue}`;
-            const spinner: string = `<div style='top:0px; position:absolute; width:100%; height:36px;'>${dispValue}</div>`;
-            // Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
-            //     ticks: [ { label: dispValue, top: 0 } ]
-            // });
+            const spinner: string = Handlebars.compile(templates.altitudeIndicatorSpinnerTemplate)({
+                ticks: [ { label: dispValue, top: 0 } ]
+            });
             $(`#${this.id}-indicator-spinner`).html(spinner);
         }
         return this;

@@ -49,7 +49,15 @@ import { DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH } from './daa-interactive-map';
 import { DAAPlayer, DidChangeDaaScenarioSelection, PlayerEvents } from './daa-player';
 import { DAASplitView } from './daa-split-view';
 import { jquerySelector } from './daa-utils';
-import { displayDivTemplate, sidebarAttributesColums } from './templates/daa-playback-templates';
+import { displayDivTemplate, multiViewOptions, sidebarAttributesColums } from './templates/daa-playback-templates';
+
+/**
+ * Multi-view options:
+ * - use same configuration for all views
+ * - use same daa logic for all views
+ * These options are shown only on the first view/player
+ */
+export type DAAMultiViewOptions = "use-same-logic" | "use-same-config" | string;
 
 /**
  * Multi view player, shows multiple DAA views on a grid view.
@@ -65,6 +73,10 @@ import { displayDivTemplate, sidebarAttributesColums } from './templates/daa-pla
 export class DAAMultiView extends DAASplitView {
     protected parent: string = "body"; // this should be a valid jQuery selector, e.g., "body" or "#daa-disp"
     protected tailNumbers: string[];
+    public readonly multiviewOptions: { [name: string]: boolean } = {
+        "use-same-logic": false,
+        "use-same-config": false
+    };
 
     /**
      * @function <a name="DAASplitView">DAASplitView</a>
@@ -194,6 +206,86 @@ export class DAAMultiView extends DAASplitView {
         await this.loadScenarioFile(selectedScenario, { forceReload: true, ownshipNames: tailNumbers });
         // enable simulation controls
         this.enableSimulationControls();
+    }
+    /**
+     * Utility function, appends multi-view specific options
+     * Options include:
+     * - use same configuration for all views
+     * - use same daa logic for all views
+     * These options are shown only on the first view/player
+     */
+    async appendMultiViewOptions (opt?: { selector?: string, parent?: string, width?: number, left?: number, top?: number }): Promise<void> {
+        if (this.players) {
+            if (this.labels?.length) {
+                const selector: string = `multi-view-${this.labels[0]}`;
+                const theHTML: string = Handlebars.compile(multiViewOptions, { noEscape: true })({
+                    id: selector,
+                    width: isFinite(opt?.width) ? `${opt.width}` : "300",
+                    innerWidth: isFinite(opt?.width) ? `${opt.width - 100}` : "200",
+                    left: isFinite(opt?.left) ? `${opt.left}` : "-45",
+                    top: isFinite(opt?.top) ? `${opt.top}` : "0"
+                });
+                // append multiview display options
+                $(`.multi-view-display-options`).prepend(theHTML);
+                // append handlers
+                const optionsNames: string[] = Object.keys(this.multiviewOptions);
+                for (let i = 0; i < optionsNames?.length; i++) {
+                    $(`#${selector}-${optionsNames[i]}-btn`).on("click", (evt: JQuery.ClickEvent) => {
+                        this.selectOption(optionsNames[i]);
+                    });
+                }
+            }
+        }
+    }
+    /**
+     * Utility function, selects the given option in the user interface
+     */
+    selectOption (option: DAAMultiViewOptions): boolean {
+        switch(option) {
+            case "use-same-logic": { // use daa version selected in the first player on all players
+                const globalVersion: string = this.players[0]?.readSelectedDaaVersion();
+                if (globalVersion) {
+                    // select the configuration in all players
+                    this.selectDaaVersion(globalVersion);
+                } else {
+                    console.warn(`[daa-multi-view] Warning: unable to select global daa version`, globalVersion);
+                }
+                break;
+            }
+            case "use-same-config": { // use daa configuration selected in the first player on all players
+                const globalConfiguration: string = this.players[0]?.readSelectedDaaConfiguration();
+                if (globalConfiguration) {
+                    // select the configuration in all players
+                    this.selectDaaConfiguration(globalConfiguration);
+                } else {
+                    console.warn(`[daa-multi-view] Warning: unable to select global daa configuration`, globalConfiguration);
+                }
+                break;
+            }
+            default: {
+                console.warn(`[daa-multi-view] Warning: trying to select unsupported option ${option}`);
+                break;
+            }
+        }
+        const selector: string = `multi-view-${this.labels[0]}`;
+        if ($(`#${selector}-${option}-checkbox`)[0]) {
+            $(`#${selector}-${option}-checkbox`).prop("checked", true);
+            return true;
+        }
+        console.warn(`[daa-multi-view] Warning, option ${option} is not available`);
+        return false;
+    }
+    /**
+     * Utility function, deselects the given option in the user interface
+     */
+    deselectOption (option: DAAMultiViewOptions): boolean {
+        const selector: string = `multi-view-${this.labels[0]}`;
+        if ($(`#${selector}-${option}-checkbox`)[0]) {
+            $(`#${selector}-${option}-checkbox`).prop("checked", false);
+            return true;
+        }
+        console.warn(`[daa-multi-view] Warning, option ${option} is not available`);
+        return false;
     }
     /**
      * @override

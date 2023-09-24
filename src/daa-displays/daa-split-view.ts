@@ -577,7 +577,7 @@ export class DAASplitView extends DAAPlayer {
     }
 
     // @overrides
-    async appendDaaConfigurationSelector(opt?: { selector?: string, parent?: string }): Promise<void> {
+    async appendDaaConfigurationSelector (opt?: { selector?: string, parent?: string }): Promise<void> {
         opt = opt || {};
         // const selector: string = opt.selector || "sidebar-daidalus-configuration";
         // utils.createDiv(selector, { parent: opt.parent });
@@ -609,7 +609,56 @@ export class DAASplitView extends DAAPlayer {
             // }
         }
     }
-
+    /**
+     * Reveal/Hide daa configuration selector
+     * @override
+     */
+    revealDaaConfigurationSelectors (show?: boolean, opt?: { excludeFirst?: boolean, exclude?: number[] }): boolean {
+        if (this.players) {
+            opt = opt || {};
+            for (let i = 0; i < this.labels?.length; i++) {
+                if (!(opt.exclude?.length && opt.exclude.includes(i)) && !(opt.excludeFirst && i === 0)) {
+                    this.players[this.labels[i]]?.revealDaaConfigurationSelector(show);
+                }
+            }
+        }
+        return show;
+    }
+    /**
+     * Reveal/Hide daa configuration selector
+     * @override
+     */
+    hideDaaConfigurationSelectors (hide?: boolean, opt?: { excludeFirst?: boolean, exclude?: number[] }): boolean {
+        if (this.players) {
+            this.revealDaaConfigurationSelectors(!hide, opt);
+        }
+        return hide;
+    }
+    /**
+     * Reveal/Hide daa logic selector
+     * @override
+     */
+    revealDaaLogicSelectors (show?: boolean, opt?: { excludeFirst?: boolean, exclude?: number[] }): boolean {
+        if (this.players) {
+            opt = opt || {};
+            for (let i = 0; i < this.labels?.length; i++) {
+                if (!(opt.exclude?.length && opt.exclude.includes(i)) && !(opt.excludeFirst && i === 0)) {
+                    this.players[this.labels[i]]?.revealDaaLogicSelector(show);
+                }
+            }
+        }
+        return show;
+    }
+    /**
+     * Reveal/Hide daa logic selector
+     * @override
+     */
+    hideDaaLogicSelectors (hide?: boolean, opt?: { excludeFirst?: boolean, exclude?: number[] }): boolean {
+        if (this.players) {
+            this.revealDaaLogicSelectors(!hide, opt);
+        }
+        return hide;
+    }
     /**
      * Selects the given configuration for all players
      * @overrides

@@ -247,8 +247,8 @@ const multiView: DAAMultiView = new DAAMultiView(0, {
     parent: "#daa-cockpit"
 });
 
-// utility function, creates the displays
-async function createDisplays (tailNumbers: string[], opt?: { createMap?: boolean }): Promise<void> {
+// utility function, creates one display for each tail number
+async function createAllDisplays (tailNumbers: string[], opt?: { createMap?: boolean }): Promise<void> {
     // re-create all displays
     for (let i = 0; i < tailNumbers?.length; i++) {
         // create display
@@ -411,7 +411,7 @@ async function createMultiView (tailNumbers: string[], opt?: { createMap?: boole
     // multiView.selectWellClearVersion("DAIDALUSv2.0.2.jar");
     await multiView.appendDaaConfigurationSelector();
     // re-create all displays
-    createDisplays(tailNumbers, opt);
+    createAllDisplays(tailNumbers, opt);
     // append simulation controls
     // multiView.appendSimulationControls({
     //     htmlTemplate: integratedPlaybackTemplate,
@@ -500,11 +500,12 @@ async function createPlayer (opt?: { loadDefaultConfiguration?: boolean }) {
     // create multiview players
     multiView.setTailNumbers(tailNumbers);
     // create displays, one for each tail number
-    createDisplays(tailNumbers, { createMap: false });
+    createAllDisplays(tailNumbers, { createMap: false });
     
     // await multiView.appendWindSettings({ fromToSelectorVisible: true });
     await multiView.appendDaaVersionSelector();
     await multiView.appendDaaConfigurationSelector();
+    // await multiView.appendMultiViewOptions(); // disabled for now, the implementation of this functionality is not complete yet
     // create configuration cols in the sidebar
     multiView.createConfigurationAttributesViews();
     if (opt?.loadDefaultConfiguration) {

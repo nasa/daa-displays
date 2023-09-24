@@ -102,7 +102,7 @@ export async function readDir(folder: string): Promise<string[]> {
 /**
  * Reads a text file
  */
-export async function readFile(fname: string): Promise<string | null> {
+export function readFile(fname: string): string {
 	try {
 		return fs.readFileSync(fname).toString('utf8');
 	} catch (fileReadError) {

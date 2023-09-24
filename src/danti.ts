@@ -500,7 +500,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false });
     await player.appendDaaVersionSelector({ selector: "daidalus-version" });
     await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectDaaConfiguration("DO_365A_no_SUM");
+    await player.selectDaaConfiguration("DANTi_SL3"); // was "DO_365A_no_SUM"
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

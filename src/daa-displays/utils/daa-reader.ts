@@ -28,6 +28,7 @@
  */
 
 import { deg2rad, knots2msec, rad2deg } from "./daa-math";
+import * as fsUtils from './fsUtils';
 
 // daa header values
 export const time_header: string[] = [ "time", "tm", "clock", "st" ];
@@ -310,7 +311,7 @@ export function computeDaaLines (ownship: DaaAircraft[], traffic: DaaTraffic[]):
 /**
  * Utility function, converts .daa file content into a DaaFileContent
  */
-export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: boolean, maxLines?: number, tailNumbersOnly?: boolean }): DaaFileContent {
+export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: boolean, maxLines?: number, tailNumbersOnly?: boolean }): DaaFileContent | null {
     const lines: string[] = fileContent?.trim()?.split("\n");
     if (lines?.length > 2) {
         console.log(`[daa-reader] Reading .daa file`, { lines: lines.length });
@@ -319,7 +320,7 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
         // the first two lines are labels and units
         const labels: string = lines[0];
         const units: string = lines[1];
-        const content: string[] = opt?.maxLines > 2 ? lines.slice(2, opt.maxLines) : lines.slice(2);
+        const content: string[] = opt?.maxLines && opt.maxLines > 2 ? lines.slice(2, opt.maxLines) : lines.slice(2);
 
         // find the aircraft names
         console.log(`[daa-reader] Finding heading...`, { name_header, labels });
@@ -526,4 +527,55 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
     }
     console.warn(`[daa-reader] Warning: malformed .daa file content ${fileContent}`);
     return null;
+}
+
+/**
+ * Utility function, splits a large .daa file into multiple smaller daa files
+ * Assumes the rows are ordered by time stamps, first column is the aircraft name and the first aircraft is the ownship
+ */
+export function splitDaaFile (fname: string, opt?: { maxLines?: number }): number {
+    if (fname) {
+        const DEFAULT_MAX_LINES: number = 4000;
+        // the .daa file should have at least 2 lines (the header labels and units)
+        const MAX_DAA_LINES: number = opt?.maxLines && opt.maxLines > 3 ? opt.maxLines : DEFAULT_MAX_LINES;
+        const daaFileContent: string = fsUtils.readFile(fname) || "";
+        const lines: string[] = daaFileContent?.split("\n") || [];
+        if (lines.length > 3) {
+            const labels: string = lines[0];
+            const units: string = lines[1];
+            const cols: string[] = lines[2].split(/[,\s]/).filter((elem) => { return elem?.trim()?.length > 0 });
+            const ownship_name: string = cols?.length > 0 ? cols[0] : "";
+            const data: string[] = lines.slice(2);
+            console.log(`[daa-reader] (splitDaaFile) Ownship name: ${ownship_name}`);
+            console.log(`[daa-reader] (splitDaaFile) Lines in the original .daa file: ${data.length}`);
+            if (ownship_name && data.length > MAX_DAA_LINES) {
+                console.log(`[daa-reader] (splitDaaFile) Splitting into chunks of approx ${MAX_DAA_LINES} lines`);
+                const fname_base: string = fname.endsWith(".daa") ? fname.substring(0, fname.length - 4) : fname;
+                let chunk: number = 0;
+                let split_points: number[] = [ 0 ];
+                // identify split points (i.e., rows with ownship data
+                for (let i = MAX_DAA_LINES; i < data.length; i += MAX_DAA_LINES) {
+                    // advance line number until ownship data is found
+                    while (!data[i]?.trim()?.startsWith(ownship_name)) { i++; }
+                    // add line as split point
+                    split_points.push(i);
+                }
+                if (split_points[split_points.length - 1] < data.length) {
+                    split_points.push(data.length);
+                }
+                // split the daa file using the computed split points
+                chunk = 0;
+                for (let i = 1; i < split_points.length; i++) {
+                    let daaFile: string = `${fname_base}-${chunk < 10 ? `00${chunk}` : chunk < 100 ? `0${chunk}` : chunk}.daa`;
+                    let daaFileContent: string = labels + "\n" + units + "\n" + data.slice(split_points[i - 1], split_points[i]).join("\n");
+                    fsUtils.writeFile(daaFile, daaFileContent);
+                    console.log(`[daa-reader] (splitDaaFile) DAA file written: ${daaFile} (lines ${split_points[i - 1]}-${split_points[i] - 1})`);
+                    // increment chunk number
+                    chunk++;
+                }
+                return chunk;
+            }
+        }
+    }
+    return 0;
 }

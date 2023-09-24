@@ -123,16 +123,20 @@ export class JavaProcess {
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);
-				exec(cmd, (error, stdout, stderr) => {
-					if (error) {
-						console.error(`exec error: ${error}`);
-						return;
-					} else if (stderr) {
-						console.error(`stderr: ${stderr}`);  
-					}
-					console.info(`stdout: ${stdout?.trim()}`);
-					resolve(stdout);
-				});
+				try {
+					exec(cmd, (error, stdout, stderr) => {
+						if (error) {
+							console.error(`exec error: ${error}`);
+							return;
+						} else if (stderr) {
+							console.error(`stderr: ${stderr}`);  
+						}
+						console.info(`stdout: ${stdout?.trim()}`);
+						resolve(stdout);
+					});
+				} catch (err) {
+					console.error(`[daa-javaProcess] Error while converting daa file to json`, err);
+				}
 			});
 		}
 		return Promise.resolve(null);

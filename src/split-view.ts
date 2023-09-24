@@ -68,7 +68,7 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
     
     const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
     const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-    const vspeed: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
+    const vspeed: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
     data.compass.setCompass(heading);
     data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
