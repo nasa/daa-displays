@@ -3,4 +3,7 @@ node_modules
 .DS_Store
 .pvscontext
 .vscode
+*~
+*.old
 dist/
+tmp/

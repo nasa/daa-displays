@@ -5,4 +5,4 @@
 [submodule "daidalus-submodules/v2.0.2"]
 	path = daidalus-submodules/v2.0.2
 	url = https://github.com/nasa/daidalus.git
-	branch = master
+	branch = v2.0.2
