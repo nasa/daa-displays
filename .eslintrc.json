@@ -18,6 +18,7 @@
     "rules": {
         "no-useless-escape": "warn",
         "no-extra-semi": "warn",
+        "@typescript-eslint/no-unused-vars": "warn",
         "@typescript-eslint/no-explicit-any": "warn"
     }
 }
