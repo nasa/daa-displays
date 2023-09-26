@@ -41,7 +41,7 @@ import { Alert, AlertLevel, DaaBands } from "./daa-types";
 		return (c === 'x' ? r : (r & 0x7 | 0x8)).toString(16);
 	});
 	return uuid;
-};
+}
 
 /**
  * Colors

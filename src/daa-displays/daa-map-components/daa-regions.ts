@@ -45,7 +45,6 @@
  * REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL
  * TERMINATION OF THIS AGREEMENT.
  **/
-import * as utils from '../daa-utils';
 import * as WorldWind from '../wwd/worldwind.min';
 import { colladaAltitude } from './daa-aircraft';
 import { LatLonAlt } from '../utils/daa-types';
@@ -125,7 +124,7 @@ class LosSector {
 
                 const numRadialPositions: number = meshPositions.length - 1;
                 // Create mesh indices.
-                for (var i = 1; i < numRadialPositions; i++) {
+                for (let i = 1; i < numRadialPositions; i++) {
                     meshIndices.push(0);
                     meshIndices.push(i);
                     meshIndices.push(i + 1);
@@ -136,20 +135,20 @@ class LosSector {
                 meshIndices.push(1);
 
                 // Create the outline indices.
-                for (var j = 1; j <= numRadialPositions; j++) {
+                for (let j = 1; j <= numRadialPositions; j++) {
                     outlineIndices.push(j);
                 }
                 // Close the outline.
                 outlineIndices.push(1);
 
                 // Create the mesh's attributes. Light this mesh.
-                var meshAttributes = new WorldWind.ShapeAttributes(null);
+                const meshAttributes = new WorldWind.ShapeAttributes(null);
                 // meshAttributes.outlineColor = WorldWind.Color.RED;
                 meshAttributes.interiorColor = new WorldWind.Color(color.r, color.g, color.b, opacity);
                 meshAttributes.applyLighting = false;
 
                 // Create the mesh.
-                var mesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
+                const mesh = new WorldWind.TriangleMesh(meshPositions, meshIndices, meshAttributes);
                 // mesh.outlineIndices = outlineIndices;
                 mesh.enabled = true;
                 mesh.displayName = `LoS Sector`;

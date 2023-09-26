@@ -83,8 +83,8 @@ export declare class DrawContext {
 export declare class Renderable {
     displayName: string;
     enabled: boolean;
-    pickDelegate: Object;
-    userProperties: Object;
+    pickDelegate: object;
+    userProperties: object;
     constructor();
     render(dc: DrawContext): void;
 }
@@ -115,7 +115,7 @@ export declare class Navigator {
 export declare class RenderableLayer extends Layer {
     constructor (displayName?: string)
     time: Date;
-    readonly renderables: any[];
+    readonly renderables: unknown[];
     addRenderable (renderable: Renderable): void;
     removeRenderable(renderable: Renderable): void;
     removeAllRenderables(): void;
@@ -126,7 +126,7 @@ export declare class ColladaLoader {
     load(url: string, cb: (scene: ColladaScene) => void): void;
 }
 export declare class ColladaScene extends Renderable {
-    constructor(position: Position, sceneData: { root: { children: any }, meshes: any, materials: any, images: any, upAxis: any, dirPath: string });
+    constructor(position: Position, sceneData: { root: { children: unknown }, meshes: unknown, materials: unknown, images: unknown, upAxis: unknown, dirPath: string });
     scale: number;
     altitudeMode: string;
     xRotation: number;
@@ -292,7 +292,7 @@ export declare class GeographicMesh extends AbstractMesh {
     attributes: ShapeAttributes;
 }
 export declare class ElevationModel {
-    coverages: any[];
+    coverages: unknown[];
 }
 export declare class GeographicProjection {
     constructor (displayName: string, continuous: boolean, projectionLimits: Sector);

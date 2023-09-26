@@ -46,7 +46,6 @@
  **/
 import * as WorldWind from '../wwd/worldwind.min';
 import * as utils from '../daa-utils';
-import * as serverInterface from '../utils/daa-types'
 import { LatLon } from '../utils/daa-types';
 
 /**

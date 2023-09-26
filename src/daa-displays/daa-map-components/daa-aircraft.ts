@@ -143,7 +143,7 @@ export declare interface AircraftInterface {
     getHeading (): number;
     getCallSign (): string;
     getAlertKind (): AlertKind;
-};
+}
 
 /**
  * Label interface, defines the label of an aircraft and the 
@@ -153,7 +153,7 @@ export interface AircraftLabel {
     position: LatLonAlt<number>, 
     offsetX: number, 
     offsetY: number
-};
+}
 
 
 /**
@@ -318,7 +318,7 @@ export class Aircraft implements AircraftInterface {
                 return (val < 10) ? "0" + val : val.toString();
             }
             return (val > -10) ? "-0" + (-val) : val.toString();
-        };
+        }
         const label: AircraftLabel = {
             text: "",
             // position: new WorldWind.Position(this.position.lat, this.position.lon, colladaAltitude(this.position.alt)),
@@ -454,7 +454,7 @@ export class ColladaAircraft extends Aircraft {
      * Utility function, prepares wwd renderables for the aircraft
      */
     async setupRenderables (selectedSymbol: string, opt?: { view3D: boolean }): Promise<ColladaAircraft> {
-        return new Promise ((resolve, reject) => {
+        return new Promise ((resolve) => {
             const obj = colladaObjects[this.symbol]; //colladaObjects.privateJet;
             this.colladaLoader.load(obj.fileName, (colladaScene: WorldWind.ColladaScene) => {
                 if (colladaScene) {

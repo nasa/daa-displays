@@ -44,7 +44,8 @@ import * as utils from './daa-displays/daa-utils';
 import { AlertLevel, ConfigData, DaaSymbol, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 import { RenderableDisplay } from './split-view';
 import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
-import { downgrade_alerts, inhibit_bands, inhibit_resolutions, THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './daa-displays/daa-utils';
+import { downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
+import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 const INCLUDE_PLOTS: boolean = true;
 const daaPlots: { id: string, name: string, units: string, range: { from: number, to: number } }[] = [

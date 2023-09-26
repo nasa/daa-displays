@@ -35,6 +35,7 @@ export interface Token {
     time?: { client: { sent: string } };
     data?: {
         command?: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [key: string]: any
     }
 }
@@ -47,7 +48,7 @@ export interface Token {
  */
 export class DAAClient {
     // websocket connection
-    protected ws: WebSocket = null;
+    protected ws: WebSocket | null = null;
     // server address
     protected href: string;
     // internal flag, used to enable/disable profiling info for monitoring connection latency
@@ -60,32 +61,37 @@ export class DAAClient {
         [id:string]: {
             request: Token,
             response: ScenarioDescriptor,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             resolve: (...args: any) => void 
         }
     } = {};
     /**
      * Utility function, connects the client to the server
      */
-    async connectToServer (href?: string): Promise<WebSocket> {
+    async connectToServer (href?: string): Promise<WebSocket | null> {
         this.href = href || document.location.href;//"http://localhost";
         // check if a connection has already been created, if so re-use the connection
         if (this.ws) {
             // check if the client is already trying to connect to the server, if so wait until the connection is established
             if (this.ws.readyState === this.ws.CONNECTING) {
-                return await new Promise((resolve, reject) => {
-                    this.ws.onopen = (evt) => {
-                        resolve(this.ws);
-                    };
+                return await new Promise((resolve) => {
+                    if (this.ws) {
+                        this.ws.onopen = () => {
+                            resolve(this.ws);
+                        };
+                    } else {
+                        resolve(null);
+                    }
                 });
             }
             // already connected
             return this.ws;
         }
         // otherwise return a new connection
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const wsUrl = this.href.replace("http", "ws");
             this.ws = new WebSocket(wsUrl);
-            this.ws.onopen = (evt) => {
+            this.ws.onopen = () => {
                 resolve(this.ws);
             };
             this.ws.onerror = (evt: Event) => {
@@ -98,13 +104,14 @@ export class DAAClient {
                 resolve(null);
             };
             this.ws.onmessage = (evt: MessageEvent) => {
-                console.error("Warning, client has not defined a callback function");
+                console.error("Warning, client has not defined a callback function", evt);
             };
         });
     }
     /**
      * Utility function, sends a message to the server
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async send (request: Token): Promise<any> {
         if (!this.ws) {
             await this.connectToServer();
@@ -118,8 +125,9 @@ export class DAAClient {
                     request.time = { client: { sent: time } };
                 }
                 // store resolve function
-                const res: Promise<any> = new Promise ((resolve, reject) => {
-                    this.resolveMap[request.id] = {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const res: Promise<any> = new Promise ((resolve) => {
+                    this.resolveMap[<string>request.id] = {
                         request: request,
                         response: {
                             Info: null,
@@ -148,7 +156,7 @@ export class DAAClient {
                 this.ws.onmessage = (evt): void => {
                     try {
                         const response: Token = JSON.parse(evt.data);
-                        const request: Token = this.resolveMap[response.id]?.request;
+                        const request: Token = this.resolveMap[<string>response.id]?.request;
                         if (response) {
                             // add profiling data
                             if (this.profilingEnabled && response.time?.client) {
@@ -161,23 +169,23 @@ export class DAAClient {
                                     // the "exec" response type spans the response over multiple messages, one for each DaidalusBandsDescriptor component
                                     // each message is read and the data component is used to fill in the blanks in this.resolveMap[request.id].response
                                     // this is done because the amount of data may be huge (GB) and the websocket connection would break
-                                    const data: { key: string, val: any, idx: number, tot: number } = 
-                                        <{ key: string, val: any, idx: number, tot: number }> response.data;
-                                    this.resolveMap[request.id].response[data.key] = data.val;
+                                    const data: { key: string, val: unknown, idx: number, tot: number } = 
+                                        <{ key: string, val: unknown, idx: number, tot: number }> response.data;
+                                    this.resolveMap[<string>request.id].response[data.key] = data.val;
                                     // if this was the last data chunk, resolve the promise
                                     if (data.idx === data.tot - 1) {
                                         // copy all the data collected
-                                        response.data = this.resolveMap[request.id].response
+                                        response.data = this.resolveMap[<string>request.id].response
                                         // resolve the promise
-                                        this.resolveMap[request.id].resolve(response);
+                                        this.resolveMap[<string>request.id].resolve(response);
                                         // delete the entry
-                                        delete this.resolveMap[request.id];
+                                        delete this.resolveMap[<string>request.id];
                                     }
                                 } else {
                                     // resolve the promise
-                                    this.resolveMap[request.id].resolve(response);
+                                    this.resolveMap[<string>request.id].resolve(response);
                                     // delete the entry
-                                    delete this.resolveMap[request.id];
+                                    delete this.resolveMap[<string>request.id];
                                 }
                             } else {
                                 console.warn(`[daa-client] Warning: mismatch between response type and request type`, request, response);

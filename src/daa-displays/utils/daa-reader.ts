@@ -101,7 +101,7 @@ export interface DaaLines {
     labels: string,
     units: string,
     content: string[]
-};
+}
 
 /**
  * Structure representing an aircraft
@@ -118,7 +118,7 @@ export interface DaaAircraft {
     roll: number | string, // roll (bank angle) [deg]
     "animation-frame"?: boolean, // whether this is an animation frame introduced for smoother rendering, can be used in the case these frames needs to be handled differently from the others
     dbg?: string // optional field, used for debugging purposes
-};
+}
 /**
  * Structure representing traffic aircraft
  */
@@ -138,7 +138,7 @@ export interface DaaFileContent {
     steps: number, // number of scenario steps
     stepSize: number, // step size, in seconds
     daa: DaaLines
-};
+}
 /**
  * Utility function, computes the roll (bank angle) [deg] based on the given turn rate [deg/sec] and ground speed [knot]
  */
@@ -184,7 +184,7 @@ export function deltaHeading (deg: number, previousAngle: number): number {
  * position, heading and bank angle are interpolated linearly
  */
 export function animateAircraft (ac_series: DaaAircraft[], n: number): DaaAircraft[] {
-    let extra_steps: number = parseInt(`${n}`); // make sure n is an integer
+    const extra_steps: number = parseInt(`${n}`); // make sure n is an integer
     if (ac_series?.length && extra_steps > 0) {
         extra_steps;
         // add intermediate steps for the aircraft
@@ -221,7 +221,7 @@ export function animateAircraft (ac_series: DaaAircraft[], n: number): DaaAircra
  * Utility function, animates a given traffic array simulation series by adding n intermediate simulation steps using a linear interpolator
  */
 export function animateTraffic (trf_series: DaaTraffic[], n: number): DaaTraffic[] {
-    let extra_steps: number = parseInt(`${n}`); // make sure n is an integer
+    const extra_steps: number = parseInt(`${n}`); // make sure n is an integer
     if (trf_series?.length && extra_steps > 0) {
         // add intermediate steps for each aircraft
         const animated_series: DaaTraffic[] = [ trf_series[0] ];
@@ -312,7 +312,9 @@ export function computeDaaLines (ownship: DaaAircraft[], traffic: DaaTraffic[]):
  * Utility function, converts .daa file content into a DaaFileContent
  */
 export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: boolean, maxLines?: number, tailNumbersOnly?: boolean }): DaaFileContent | null {
-    const lines: string[] = fileContent?.trim()?.split("\n");
+    const lines: string[] = fileContent?.replace(/\bunitless\b/g, "[none]").trim()?.split("\n")?.map((line: string) => {
+        return line.trim();
+    });
     if (lines?.length > 2) {
         console.log(`[daa-reader] Reading .daa file`, { lines: lines.length });
         const computeRoll: boolean = !!opt?.computeRoll;
@@ -323,7 +325,7 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
         const content: string[] = opt?.maxLines && opt.maxLines > 2 ? lines.slice(2, opt.maxLines) : lines.slice(2);
 
         // find the aircraft names
-        console.log(`[daa-reader] Finding heading...`, { name_header, labels });
+        console.log(`[daa-reader] Finding aircraft names...`, { name_header, labels, units });
         const colNum: number = findColFromName(name_header, labels);
         console.log(`[daa-reader] Heading is on col ${colNum}`);
         if (colNum >= 0) {
@@ -435,11 +437,11 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
                     return null;
                 }
                 // we assume constant step size
-                let step_size: number = delta(timeCol, ownship_lines, 0); // sec
+                const step_size: number = delta(timeCol, ownship_lines, 0); // sec
                 // create data structures
                 const ownship_daa: DaaAircraft[] = [];
                 const traffic_daa: DaaAircraft[][] = [];
-                let ac_line: number[] = Array(traffic.length).fill(0); // indexes for traffic lines
+                const ac_line: number[] = Array(traffic.length).fill(0); // indexes for traffic lines
                 for (let own_line = 0; own_line < ownship_lines.length; own_line++) {
                     // console.log(ownship_lines[own_line]);
                     const name: string =  getCol(colNum, ownship_lines[own_line]);
@@ -456,7 +458,7 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
                     const ownship: DaaAircraft = { name, lat, lon, alt, trk: heading, gs, vs, roll, time: ms ? +time/1000 : time };
 
                     // traffic aircraft
-                    let traffic: DaaAircraft[] = [];
+                    const traffic: DaaAircraft[] = [];
                     for (let t = 0; t < traffic_lines.length; t++) {
                         const ln: number = ac_line[t]; // index of the traffic line to be processed
                         if (ln < traffic_lines[t].length) {
@@ -552,7 +554,7 @@ export function splitDaaFile (fname: string, opt?: { maxLines?: number }): numbe
                 console.log(`[daa-reader] (splitDaaFile) Splitting into chunks of approx ${MAX_DAA_LINES} lines`);
                 const fname_base: string = fname.endsWith(".daa") ? fname.substring(0, fname.length - 4) : fname;
                 let chunk: number = 0;
-                let split_points: number[] = [ 0 ];
+                const split_points: number[] = [ 0 ];
                 // identify split points (i.e., rows with ownship data
                 for (let i = MAX_DAA_LINES; i < data.length; i += MAX_DAA_LINES) {
                     // advance line number until ownship data is found
@@ -566,8 +568,8 @@ export function splitDaaFile (fname: string, opt?: { maxLines?: number }): numbe
                 // split the daa file using the computed split points
                 chunk = 0;
                 for (let i = 1; i < split_points.length; i++) {
-                    let daaFile: string = `${fname_base}-${chunk < 10 ? `00${chunk}` : chunk < 100 ? `0${chunk}` : chunk}.daa`;
-                    let daaFileContent: string = labels + "\n" + units + "\n" + data.slice(split_points[i - 1], split_points[i]).join("\n");
+                    const daaFile: string = `${fname_base}-${chunk < 10 ? `00${chunk}` : chunk < 100 ? `0${chunk}` : chunk}.daa`;
+                    const daaFileContent: string = labels + "\n" + units + "\n" + data.slice(split_points[i - 1], split_points[i]).join("\n");
                     fsUtils.writeFile(daaFile, daaFileContent);
                     console.log(`[daa-reader] (splitDaaFile) DAA file written: ${daaFile} (lines ${split_points[i - 1]}-${split_points[i] - 1})`);
                     // increment chunk number

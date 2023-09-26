@@ -35,7 +35,7 @@ import { DaaSymbol, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-
 
 function render (data: { map: InteractiveMap }) {
     const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
-    let flightData: LLAData = <LLAData> player.getCurrentFlightData();
+    const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     data.map.setPosition(flightData.ownship.s);
     data.map.setOwnshipVelocity(flightData.ownship.v);
     const hd: number = Compass.v2deg(flightData.ownship.v);

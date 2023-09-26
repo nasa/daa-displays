@@ -30,19 +30,19 @@
 // units conversion functions
 export function msec2knots(msec: number): number {
     return msec * 1.94384;
-};
+}
 export function knots2msec(knots: number): number {
     return knots / 1.94384;
-};
+}
 export function rad2deg(rad: number): number {
     return rad * 180 / Math.PI;
-};
+}
 export function deg2rad(deg: number): number {
     return deg * Math.PI / 180;
-};
+}
 export function meters2feet(m: number): number {
     return m * 3.28084;
-};
+}
 export function feet2meters(ft: number): number {
     return ft / 3.28084;
-};
+}

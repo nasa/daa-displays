@@ -36,12 +36,13 @@ import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, parseDaaConfigInBrowser, DAAPlayer } from './daa-displays/daa-player';
-import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint, DaaSymbol, LatLonAlt } from './daa-displays/utils/daa-types';
+import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint, DaaSymbol, LatLonAlt, AlertLevel } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands } from './daa-displays/daa-utils';
+import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
+import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 const player: DAAPlayer = new DAAPlayer();
 
@@ -65,6 +66,16 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         data.verticalSpeedTape.setVerticalSpeed(vspeed);
         data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
         // console.log(`Flight data`, flightData);
+
+        // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
+        const selected_config: string = player.readSelectedDaaConfiguration();
+        const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+        if (force_caution) {
+            downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+            inhibit_bands({ bands });
+            inhibit_resolutions({ bands });
+        }
+
         if (bands) {
             const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
             data.compass.setBands(compassBands);
@@ -254,6 +265,7 @@ const compassDivName: string = map.getCompassDivName();
 const indicatorsDivName: string = map.getIndicatorsDivName();
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: compassDivName, indicatorsDiv: indicatorsDivName, maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const hscale: HScale = new HScale("hscale", { top: 790, left: 13 }, { parent: "daa-disp", map, compass });
 // map view options
 const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left: 13 }, {
@@ -303,7 +315,7 @@ async function developerMode (): Promise<void> {
     verticalSpeedTape.setRange(configData["vertical-speed"]);
     verticalSpeedTape.revealUnits();
     verticalSpeedTape.showValueBox();
-};
+}
 function normalMode (): void {
     // left
     airspeedTape.defaultUnits();
@@ -320,7 +332,7 @@ function normalMode (): void {
     verticalSpeedTape.hideUnits();
     verticalSpeedTape.hideValueBox();
     verticalSpeedTape.defaultRange();
-};
+}
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {
     const flightData: LLAData[] = player.getFlightData();

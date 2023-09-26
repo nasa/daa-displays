@@ -73,7 +73,7 @@ export const zIndexValue: { [alert: string]: number } = {
 /**
  * Layering mode, default is byAlertLevel (i.e., alerts are shown on top)
  */
-export enum LayeringMode { byAlertLevel, byAltitudeLevel };
+export enum LayeringMode { byAlertLevel, byAltitudeLevel }
 
 /**
  * Leaflet Aircraft class, renders a daa aircraft symbol as a custom leaflet marker

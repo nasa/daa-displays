@@ -249,7 +249,7 @@ export declare interface AirspaceInterface {
     getIndicatorsDivName (): string;
     getOwnshipDivName (): string;
     resetAirspace (): AirspaceInterface; // resets all data structures
-};
+}
 
 /**
  * Airspace implemented with WWD 
@@ -353,9 +353,9 @@ export class DAA_Airspace implements AirspaceInterface {
             this.streetLayer.enabled = !opt.terrainMode;
             if (opt.shader > 0) {
                 // Add shader, to enhance visibility of DAA symbols over Bing map
-                let surfaceImage2 = new WorldWind.SurfaceImage(WorldWind.Sector.FULL_SPHERE, utils.baseUrl + "images/black.png");
+                const surfaceImage2 = new WorldWind.SurfaceImage(WorldWind.Sector.FULL_SPHERE, utils.baseUrl + "images/black.png");
                 surfaceImage2.opacity = opt.shader;
-                let surfaceImageLayer = new WorldWind.RenderableLayer("Map Shader Layer");
+                const surfaceImageLayer = new WorldWind.RenderableLayer("Map Shader Layer");
                 surfaceImageLayer.addRenderable(surfaceImage2);
                 this.wwd.addLayer(surfaceImageLayer);
             }
@@ -443,7 +443,7 @@ export class DAA_Airspace implements AirspaceInterface {
             this.controlLayers.compass.enabled = true;
             this.controlLayers.view.enabled = true;
             this.controlLayers.coords.enabled = true;
-            for (let i in this.controlLayers) {
+            for (const i in this.controlLayers) {
                 this.wwd.addLayer(this.controlLayers[i]);
             }
         }
@@ -468,6 +468,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Trace not available in wwd
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setMaxTraceLength (len: number): boolean {
         // not available
         console.warn(`[daa-interactive-map] Warning: Trace not available in WWD, please use LeafletJS`);
@@ -482,6 +483,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Animation duration not available in wwd
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     animationDuration (duration: number): boolean {
         // not available
         console.warn(`[daa-interactive-map] Warning: Animation duration not available in WWD, please use LeafletJS`);
@@ -490,6 +492,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Enables/disables animation
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     animation (flag: boolean): boolean {
         // not available
         console.warn(`[daa-interactive-map] Warning: Animation not available in WWD, please use LeafletJS`);
@@ -524,6 +527,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Remove traffic traces
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     removeTrafficTrace(ac?: string): AirspaceInterface {
         // not available
         console.warn(`[daa-interactive-map] Warning: Traffic traces not available in WWD, please use LeafletJS`);
@@ -706,6 +710,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Centers the map to a given location. The ownship position is kept unchanged.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     goTo (pos: { lat: number, lon: number }, opt?): DAA_Airspace {
         if (pos) {
             this.recenter(pos);
@@ -919,7 +924,7 @@ export class DAA_Airspace implements AirspaceInterface {
         if (this._traffic && this._traffic.length) {
             for (let i = 0; i < this._traffic.length; i++) {
                 this._traffic[i].hideCallSign();
-            };
+            }
         }
         return this.redraw();
     }
@@ -935,7 +940,7 @@ export class DAA_Airspace implements AirspaceInterface {
         if (this._traffic && this._traffic.length) {
             for (let i = 0; i < this._traffic.length; i++) {
                 this._traffic[i].revealCallSign();
-            };
+            }
         }
         return this.redraw();
     }

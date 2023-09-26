@@ -41,7 +41,8 @@ import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { inhibit_bands, downgrade_alerts, inhibit_resolutions, THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './daa-displays/daa-utils';
+import { inhibit_bands, downgrade_alerts, inhibit_resolutions } from './daa-displays/daa-utils';
+import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 // widgets included in the rendered display
 export interface RenderableDisplay {
@@ -53,7 +54,7 @@ export interface RenderableDisplay {
     windIndicator: WindIndicator,
     hscale?: HScale,
     viewOptions?: ViewOptions
-};
+}
 
 /**
  * Utility function, renders the display elements
@@ -239,7 +240,7 @@ const daaPlots: { id: string, name: string, units: string, range: { from: number
 const splitView: DAASplitView = new DAASplitView();
 
 // displays stores all rendered displays
-let displays: { [index:string]: RenderableDisplay } = {};
+const displays: { [index:string]: RenderableDisplay } = {};
 // create all displays
 for (let i = 0; i < 2; i++) {
     // create display
@@ -298,7 +299,7 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
     time = (time !== undefined) ? time : splitView.getTimeAt(step);
     bandsLeft = (bandsLeft !== undefined) ? bandsLeft : splitView.getPlayer("left").getCurrentBands();
     bandsRight =  (bandsRight !== undefined) ? bandsRight : splitView.getPlayer("right").getCurrentBands();
-    let ans: boolean = false;
+    let l_differsFrom_r: boolean = false;
     if (bandsLeft && bandsRight) {
         // check alerts
         // const diffAlerts: boolean = JSON.stringify(bandsLeft[step].Alerts) !== JSON.stringify(bandsRight.Alerts); // profiler 2ms
@@ -382,8 +383,8 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
 
             // check resolutions
             const resInfo: string = plotName.replace("Bands", "Resolution");
-            let resolutionR: ResolutionElement = bandsRight[resInfo];
-            let resolutionL: ResolutionElement = bandsLeft[resInfo];
+            const resolutionR: ResolutionElement = bandsRight[resInfo];
+            const resolutionL: ResolutionElement = bandsLeft[resInfo];
             if (resolutionR && resolutionL) {
                 // check direction
                 if (resolutionR.flags?.preferred === resolutionL.flags?.preferred) {
@@ -408,6 +409,7 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
             if (plotR !== plotL) { // 1.2ms
                 splitView.getPlayer("left").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>This run:${plotL}<br><br>The other run:${plotR}` });
                 splitView.getPlayer("right").getPlot(plotID).revealMarker({ step, tooltip: `Time ${time}<br>This run:${plotR}<br><br>The other run:${plotL}` });
+                l_differsFrom_r = true;
             }
             // }
         }
@@ -415,7 +417,7 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
         // report error
         console.error("Warning: could not compute diff");
     }
-    return ans;
+    return l_differsFrom_r;
 }
 splitView.define("diff", diff);
 // // -- init

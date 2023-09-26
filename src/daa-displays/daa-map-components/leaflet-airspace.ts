@@ -39,7 +39,6 @@
 
 import { VFR_CHARTS } from "../../aeronav/vfr-charts";
 import * as utils from "../daa-utils";
-import * as server from "../utils/daa-types";
 import { Aircraft, AircraftInterface } from "./daa-aircraft";
 import { AirspaceInterface, cities } from "./daa-airspace";
 import * as L from "leaflet";
@@ -63,7 +62,7 @@ export const DEFAULT_TRACE_WIDTH: number = 3; // px
 export const DEFAULT_TRACE_OPACITY: number = 0.8;
 
 // openstreet providers, see https://leaflet-extras.github.io/leaflet-providers/preview/
-export interface TileProvider { server: string, credict: string };
+export interface TileProvider { server: string, credict: string }
 export const tileProvider = {
     default: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", // this does not seem to be working all the times
     topology: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
@@ -157,8 +156,8 @@ export const ZINDEX = {
 };
 
 // useful types
-export interface RenderableFlightPlan { poly: L.Polyline, markers: L.Marker[], plan: utils.FlightPlan };
-export interface RenderableTrafficTrace { polys: L.Polyline[], trace: utils.FlightPlan, level?: AlertKind };
+export interface RenderableFlightPlan { poly: L.Polyline, markers: L.Marker[], plan: utils.FlightPlan }
+export interface RenderableTrafficTrace { polys: L.Polyline[], trace: utils.FlightPlan, level?: AlertKind }
 export type TrafficTraceMap = {[id: string]: RenderableTrafficTrace }; // id is the aircraft tail number
 export type BlobsMap = {[id: string]: L.Polygon}; // id is the blob identifier
 export type WCVolumesMap = {[id: string]: L.Polygon}; // id is the wcv identifier
@@ -168,10 +167,10 @@ export enum AirspaceCSS {
     DAA_FLIGHT_PLAN = "daa-flight-plan",
     DAA_TRAFFIC_TRACE = "daa-traffic-trace",
     DAA_OWNSHIP_TRACE = "daa-ownship-trace"
-};
+}
 
 // aicrraft data interface
-export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string };
+export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }
 
 /**
  * Airspace implemented with Leafletjs
@@ -474,11 +473,13 @@ export class LeafletAirspace implements AirspaceInterface {
         L.control.scale().addTo(this.lworlds[1]);
 
         // propagate drag and zoom events between worlds
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.lworlds[1].on("drag", ((evt: L.LeafletEvent) => {
             const center: L.LatLng = this.lworlds[1].getCenter();
             const zoom: number = this.lworlds[1].getZoom();
             this.lworlds[0].setView(center, zoom, { animate: false });
         }));
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.lworlds[1].on("zoomend", ((evt: L.LeafletEvent) => {
             const center: L.LatLng = this.lworlds[1].getCenter();
             const zoom: number = this.lworlds[1].getZoom();
@@ -811,6 +812,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * Centers the map to a given location. The ownship position is kept unchanged.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     goTo (pos: LatLon<number | string>, opt?: { animate?: boolean }): AirspaceInterface {
         if (pos) {
             const animate: boolean = this.animate && !this.forceNoAnimation;
@@ -1344,7 +1346,7 @@ export class LeafletAirspace implements AirspaceInterface {
     /**
      * @deprecated To be removed
      */
-    setLoS (regions: server.DAALosRegion[], opt?: { nmi?: number; }): AirspaceInterface {
+    setLoS (): AirspaceInterface {
         // TODO
         return this;
     }

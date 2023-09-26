@@ -44,10 +44,11 @@ import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, Scena
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts, THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './daa-displays/daa-utils';
+import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts } from './daa-displays/daa-utils';
 import { DaaVoice, Guidance, GuidanceKind } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
+import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 // flag indicating whether the display should be widescreen
 const enable_widescreen: boolean = true;
@@ -349,6 +350,7 @@ const compass: Compass = new Compass("compass", {
     duration: UPDATE_FREQUENCY
 });
 // map zoom is controlled by nmiSelector
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const hscale: HScale = new HScale("hscale", {
     top: enable_widescreen ? 851 : 800, 
     left: enable_widescreen ? 7 : 13, 

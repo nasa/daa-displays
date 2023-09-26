@@ -60,9 +60,9 @@ export enum DaaServerCommand {
     // javaVirtualPilot = "java-virtual-pilot",
     listAlertingVolumes = "list-alerting-volumes",
     jasmine = "start-jasmine-test-runner"
-};
+}
 /**
- * Messages accepted by the daa-server
+ * Messages accepted by the daa-server, T is the type of the 'data' field
  */
 export declare interface WebSocketMessage<T> {
     type: DaaServerCommand;
@@ -358,49 +358,49 @@ export declare interface MetricsElement {
 export declare interface WindElement { deg: string, knot: string }
 
 export declare interface ScenarioData {
-    Ownship: OwnshipState[],
-    Wind: WindElement, // FROM
-    Alerts: AlertElement[], // alerts over time
-    "Heading Bands": BandElement[], // bands over time
-    "Horizontal Speed Bands": BandElement[],
-    "Vertical Speed Bands": BandElement[],
-    "Altitude Bands": BandElement[],
-    "Horizontal Direction Resolution": ResolutionElement[],
-    "Horizontal Speed Resolution": ResolutionElement[],
-    "Vertical Speed Resolution": ResolutionElement[],
-    "Altitude Resolution": ResolutionElement[],
-    "Contours": GeofenceElement[],
-    "Hazard Zones": GeofenceElement[],
-    Monitors: MonitorElement[],
-    Metrics: MetricsElement[]
+    Ownship: OwnshipState[] | null,
+    Wind: WindElement | null, // FROM
+    Alerts: AlertElement[] | null, // alerts over time
+    "Heading Bands": BandElement[] | null, // bands over time
+    "Horizontal Speed Bands": BandElement[] | null,
+    "Vertical Speed Bands": BandElement[] | null,
+    "Altitude Bands": BandElement[] | null,
+    "Horizontal Direction Resolution": ResolutionElement[] | null,
+    "Horizontal Speed Resolution": ResolutionElement[] | null,
+    "Vertical Speed Resolution": ResolutionElement[] | null,
+    "Altitude Resolution": ResolutionElement[] | null,
+    "Contours": GeofenceElement[] | null,
+    "Hazard Zones": GeofenceElement[] | null,
+    Monitors: MonitorElement[] | null,
+    Metrics: MetricsElement[] | null
 }
 export declare interface ScenarioDataPoint {
-    Ownship: OwnshipState,
-    Wind: WindElement, // FROM
-    Alerts: AlertElement,
-    "Heading Bands": BandElement,
-    "Horizontal Speed Bands": BandElement,
-    "Vertical Speed Bands": BandElement,
-    "Altitude Bands": BandElement,
-    "Horizontal Direction Resolution": ResolutionElement,
-    "Horizontal Speed Resolution": ResolutionElement,
-    "Vertical Speed Resolution": ResolutionElement,
-    "Altitude Resolution": ResolutionElement,
-    "Contours": GeofenceElement,
-    "Hazard Zones": GeofenceElement,
-    Monitors: MonitorElement[],
-    Metrics: MetricsElement
+    Ownship: OwnshipState | null,
+    Wind: WindElement | null, // FROM
+    Alerts: AlertElement | null,
+    "Heading Bands": BandElement | null,
+    "Horizontal Speed Bands": BandElement | null,
+    "Vertical Speed Bands": BandElement | null,
+    "Altitude Bands": BandElement | null,
+    "Horizontal Direction Resolution": ResolutionElement | null,
+    "Horizontal Speed Resolution": ResolutionElement | null,
+    "Vertical Speed Resolution": ResolutionElement | null,
+    "Altitude Resolution": ResolutionElement | null,
+    "Contours": GeofenceElement | null,
+    "Hazard Zones": GeofenceElement | null,
+    Monitors: MonitorElement[] | null,
+    Metrics: MetricsElement | null
 }
+export declare type InfoData = {
+    language: string, // DAIDALUS language
+    version: string, // DAIDALUS version
+    configuration: string // DAIDALUS configuration file used to produce bands data
+} | null
 export declare type DaaBands = ScenarioDataPoint;
 export declare interface ScenarioDescriptor extends ScenarioData {
-    Info: {
-        language: string, // DAIDALUS language
-        version: string, // DAIDALUS version
-        configuration: string // DAIDALUS configuration file used to produce bands data
-    },
-    Scenario: string
+    Info: InfoData,
+    Scenario: string | null
 }
-
 export declare interface DAALosSector {
     los: boolean;
     level: number;

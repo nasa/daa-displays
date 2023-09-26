@@ -85,13 +85,13 @@ export function stat(fname: string): fs.Stats {
 	// 		resolve(stat);
 	// 	});
 	// });
-};
+}
 
 /**
  * Returns the list of files and folders in a given directory
  */
 export async function readDir(folder: string): Promise<string[]> {
-	return new Promise<string[]>((resolve, reject) => {
+	return new Promise<string[]>((resolve) => {
 		fs.readdir(folder, (error, children) => {
 			// ignore errors for now
 			resolve(children || []);
