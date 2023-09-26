@@ -22,7 +22,7 @@ Paolo Masci and César Muñoz, [A Graphical Toolkit for the Validation of Requir
 
 ## Requirements
 The following software is necessary to compile and execute DAA-Displays
-- NodeJS (v14.16.1 or greater) https://nodejs.org/en/download
+- NodeJS (v18.0.0 or greater) https://nodejs.org/en/download
 - Java Open JDK (1.9 or greater) https://openjdk.java.net/install
 - C++ compiler (gcc version 7.4.0 for Linux, Apple clang 11.0.0 for MacOS)
 - Google Chrome (80.0.x or greater) https://www.google.com/chrome
@@ -191,5 +191,6 @@ Copyright 2019 United States Government as represented by the Administrator of t
 
 
 ## Contacts
-* Paolo Masci (NIA) (paolo.masci@nianet.org)
-* Aaron Dutle (NASA LaRC) (aaron.m.dutle@nasa.gov)
+* [Paolo Masci](https://pmasci.github.io/) (AMA-NASA LaRC) (paolo.masci@ama-inc.com)
+* [Cesar Munoz](https://shemesh.larc.nasa.gov/people/cam/) (NASA LaRC) (cesar.a.munoz@nasa.gov)
+* [Aaron Dutle](https://shemesh.larc.nasa.gov/people/amd/) (NASA LaRC) (aaron.m.dutle@nasa.gov)
