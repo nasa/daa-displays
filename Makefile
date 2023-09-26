@@ -99,12 +99,12 @@ split:
 	)
 
 eslint:
-	npx eslint src/**/*.ts
+	npx eslint 'src/**/*.ts'
 
 eslint-log:
-	npx eslint src/**/*.ts > eslint.log
+	npx eslint 'src/**/*.ts' > eslint.log
 
 eslint-fix:
-	npx eslint --fix src/**/*.ts
+	npx eslint --fix 'src/**/*.ts'
 
 .PHONY: dist
