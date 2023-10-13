@@ -449,9 +449,15 @@ public:
 	std::string jsonVect3(const std::string& label, const Vect3& v) const {
 		std::string json = "";
 		json += "\""+label+"\": { ";
+#ifdef DAIDALUSBANDS_H_
 		json += "\"x\": \"" + fmt(v.x) + "\"";
 		json += ", \"y\": \"" + fmt(v.y) + "\"";
 		json += ", \"z\": \"" + fmt(v.z) + "\"";
+#else
+		json += "\"x\": \"" + fmt(v.x()) + "\"";
+		json += ", \"y\": \"" + fmt(v.y()) + "\"";
+		json += ", \"z\": \"" + fmt(v.z()) + "\"";
+#endif
 		json += " }";
 		return json;
 	}
@@ -478,8 +484,13 @@ public:
 		int alerter_idx = daa.alerterIndexBasedOnAlertingLogic(ac_idx);
 		Alerter alerter = daa.getAlerterAt(alerter_idx);
 		int corrective_level = daa.correctiveAlertLevel(alerter_idx);
+#ifdef DAIDALUSBANDS_H_
 		Detection3D* detector = alerter.getDetectorPtr(corrective_level);
 		double taumod = (detector != NULL && detector->getSimpleSuperClassName() == "WCV_tvar") ? daa.modifiedTau(ac_idx,((WCV_tvar*)detector)->getDTHR()) : NaN;
+#else
+		const Detection3D& detector = alerter.getDetector(corrective_level);
+		double taumod = (detector.isValid() && detector.getSimpleSuperClassName() == "WCV_tvar") ? daa.modifiedTau(ac_idx,((WCV_tvar&)detector).getDTHR()) : NaN;
+#endif
 		std::string json = "{ ";
 		json += "\"separation\": { "+jsonValUnits("horizontal",daa.currentHorizontalSeparation(ac_idx),hrec_units) +
 				", "+jsonValUnits("vertical",daa.currentVerticalSeparation(ac_idx),vrec_units) + " }";
