@@ -508,7 +508,7 @@ export class LeafletAirspace implements AirspaceInterface {
 }
 </style>
 <div class="credits">
-<a href="https://leafletjs.com" title="A JS library for interactive maps" target=_blank>Leaflet</a>
+<a href="https://leafletjs.com" title="Leaflet: a JavaScript library for interactive maps" target=_blank>Leaflet</a>
 | 
 <a href="http://osm.org/copyright" title="OpenStreet Maps" target=_blank>OpenStreetMap</a>
 |
