@@ -72,6 +72,11 @@ public class DAABandsV2 {
 	protected static final double lonOffset = -76.3452218;
 	protected static final double latlonThreshold = 0.3;
 
+	// these two flags are used to enable/disable printing of metrics and polygons
+	// disabling printing of metrics and polygons does not affect the computation of bands and will improve performance
+	protected boolean PRINT_METRICS = true;
+	protected boolean PRINT_POLYGONS = true;
+
 	// the following flag and offset are introduced to avoid a region 
 	// in the atlantic ocean where worldwind is unable to render maps at certain zoom levels
 	// (all rendering layers disappear in that region when the zoom level is below ~2.5NMI)
@@ -564,11 +569,13 @@ public class DAABandsV2 {
 
 		// Traffic aircraft
 		String traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
-		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
-			if (ac > 1) { traffic += ", "; }
-			traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac), !daa.getWindVelocityTo().isZero());
-			traffic += ", \"metrics\": " + jsonAircraftMetrics(ac);
-			traffic += " }";
+		if (PRINT_METRICS) {
+			for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
+				if (ac > 1) { traffic += ", "; }
+				traffic += "{ \"acstate\": " + jsonAircraftState(daa.getAircraftStateAt(ac), !daa.getWindVelocityTo().isZero());
+				traffic += ", \"metrics\": " + jsonAircraftMetrics(ac);
+				traffic += " }";
+			}
 		}
 		traffic += " ]}";
 		metricsArray.add(traffic);
@@ -710,7 +717,7 @@ public class DAABandsV2 {
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 			List<List<Position>> polygons = new ArrayList<List<Position>>();
-			daa.horizontalContours(polygons, ac);
+			if (PRINT_POLYGONS) { daa.horizontalContours(polygons, ac); }
 			contours += "{ \"ac\": \"" + ac_name + "\",\n";
 			contours +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
@@ -726,9 +733,11 @@ public class DAABandsV2 {
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 
 			List<Position> ply_violation = new ArrayList<Position>();
-			daa.horizontalHazardZone(ply_violation, ac, true, false);
 			List<Position> ply_conflict = new ArrayList<Position>();
-			daa.horizontalHazardZone(ply_conflict, ac, false, false);
+			if (PRINT_POLYGONS) {
+				daa.horizontalHazardZone(ply_violation, ac, true, false);
+				daa.horizontalHazardZone(ply_conflict, ac, false, false);
+			}
 			List<List<Position>> polygons = new ArrayList<List<Position>>();
 			polygons.add(ply_violation);
 			polygons.add(ply_conflict);
@@ -742,27 +751,29 @@ public class DAABandsV2 {
 		hazardZones += " ]}";
 		hazardZonesArray.add(hazardZones);
 
-		// monitors
-		monitors.check(daa);
-		String monitorM1 = "{ \"time\": " + time
-				+ ", " + monitors.m1()
-				+ " }";
-		monitorM1Array.add(monitorM1);
+		if (PRINT_METRICS) {
+			// monitors
+			monitors.check(daa);
+			String monitorM1 = "{ \"time\": " + time
+					+ ", " + monitors.m1()
+					+ " }";
+			monitorM1Array.add(monitorM1);
 
-		String monitorM2 = "{ \"time\": " + time
-				+ ", " + monitors.m2()
-				+ " }";
-		monitorM2Array.add(monitorM2);
+			String monitorM2 = "{ \"time\": " + time
+					+ ", " + monitors.m2()
+					+ " }";
+			monitorM2Array.add(monitorM2);
 
-		String monitorM3 = "{ \"time\": " + time
-				+ ", " + monitors.m3(daa)
-				+ " }";
-		monitorM3Array.add(monitorM3);
+			String monitorM3 = "{ \"time\": " + time
+					+ ", " + monitors.m3(daa)
+					+ " }";
+			monitorM3Array.add(monitorM3);
 
-		String monitorM4 = "{ \"time\": " + time
-				+ ", " + monitors.m4(daa)
-				+ " }";
-		monitorM4Array.add(monitorM4);
+			String monitorM4 = "{ \"time\": " + time
+					+ ", " + monitors.m4(daa)
+					+ " }";
+			monitorM4Array.add(monitorM4);
+		}
 
 		// config
 		String stats = "\"hs\": { \"min\": " + fmt(daa.getMinHorizontalSpeed(hs_units)) 
