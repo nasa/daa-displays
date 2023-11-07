@@ -491,7 +491,7 @@ public class DAABandsV2 {
 		Alerter alerter = daa.getAlerterAt(alerter_idx);
 		int corrective_level = daa.correctiveAlertLevel(alerter_idx);
 		Optional<Detection3D> d3d = alerter.getDetector(corrective_level);
-		Detection3D detector = !d3d.isEmpty() ? d3d.get() : null;
+		Detection3D detector = d3d.get();
 		double taumod = (detector instanceof WCV_tvar) ? daa.modifiedTau(ac_idx,((WCV_tvar)detector).getDTHR()) : Double.NaN;
 		String json = "{ ";
 		json += "\"separation\": { "+jsonValUnits("horizontal",daa.currentHorizontalSeparation(ac_idx),hrec_units) + 
