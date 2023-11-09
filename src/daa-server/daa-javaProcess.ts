@@ -44,7 +44,7 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as fsUtils from './utils/fsUtils';
-import { PROFILER_ENABLED } from '../config';
+import { ENABLE_PROFILER } from '../config';
 
 export class JavaProcess {
 	async exec (desc: {
@@ -82,7 +82,7 @@ export class JavaProcess {
 				const config: string = path.resolve(__dirname, "../daa-config", daaConfig);
 				const cmds: string[] = [
 					`cd ${daaFolder}`,
-					`java -jar ${daaLogic} ${PROFILER_ENABLED ? "--profiler-on " : "" } --conf ${config} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${scenario}`
+					`java -jar ${daaLogic} ${ENABLE_PROFILER ? "--profiler-on " : "" } --conf ${config} ${ownshipName ? `--ownship ${ownshipName}` : ""} --output ${outputFilePath} --wind "{ deg: ${wind.deg}, knot: ${wind.knot} }" ${scenario}`
 				];
 				const cmd = cmds.join(" && ");
 				console.info(`Executing ${cmd}`);

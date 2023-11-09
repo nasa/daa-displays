@@ -36,4 +36,4 @@ export const USE_TCAS_SL3: boolean = true;
 export const THRESHOLD_ALT_SL3: number = 400; //ft
 
 // enabled/disabled profiling in the daa-server
-export const PROFILER_ENABLED = true;
+export const ENABLE_PROFILER: boolean = true;
