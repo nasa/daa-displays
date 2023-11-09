@@ -24,7 +24,7 @@ COMPILE_JAVA_TARGETS = $(foreach ver,$(releases),compile-java-$(ver))
 define compile-java-template
 compile-java-$(1):
 	@echo "\033[0;32m** Building DAIDALUS$(1).jar **\033[0m"
-	cd utils; $(JAVAC) -cp $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java) && cp -f $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) ../DAIDALUS$(1).jar && echo "Main-Class: $(if $(call version1,$(1)),DAABands,DAABandsV2)" > mf && $(JAR) umf mf ../DAIDALUS$(1).jar $(if $(call version1,$(1)),DAABands.class,DAABandsV2.class DAAMonitorsV2.class) && rm -f mf
+	cd utils; $(JAVAC) -cp $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) $(if $(call version1,$(1)),DAABands.java,DAABandsV2.java DAAMonitorsV2.java DAAProfiler.java) && cp -f $(DAIDALUS_DIR)/$(1)/Java/lib/$(if $(call version1,$(1)),DAIDALUS.jar,DAIDALUS2.jar) ../DAIDALUS$(1).jar && echo "Main-Class: $(if $(call version1,$(1)),DAABands,DAABandsV2)" > mf && $(JAR) umf mf ../DAIDALUS$(1).jar $(if $(call version1,$(1)),DAABands.class,DAABandsV2.class DAAMonitorsV2.class DAAProfiler.class) && rm -f mf
 endef
 compile-java-all = $(foreach ver,$(releases),$(eval $(call compile-java-template,$(ver))))
 

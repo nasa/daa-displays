@@ -34,3 +34,6 @@ export const USE_TCAS_SL3: boolean = true;
 // altitude threshold below which we suppress warning alerts
 // TODO: the altitude threshold should not be absolute altitude but above ground level (AGL) altitude
 export const THRESHOLD_ALT_SL3: number = 400; //ft
+
+// enabled/disabled profiling in the daa-server
+export const PROFILER_ENABLED = true;

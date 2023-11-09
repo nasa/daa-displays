@@ -103,6 +103,9 @@ public class DAABandsV2 {
 
 	protected PrintWriter printWriter = null;
 
+	public boolean PROFILER_ENABLED = false;
+	protected DAAProfiler profiler = null;
+
 	public Daidalus daa = null;
 
 	public DAABandsV2 () {
@@ -149,6 +152,7 @@ public class DAABandsV2 {
 		System.out.println("  --ownship <tailnumber>\n\tOwnship name (tail number)");
 		System.out.println("  --list-monitors\n\tReturns the list of available monitors, in JSON format");
 		System.out.println("  --list-alerters <file.conf>\nReturns the list of alerters for a given configuration, in JSON format");
+		System.out.println("  --profiler-on\n\tTurns on profiling");
 		System.exit(0);
 	}
 
@@ -507,6 +511,9 @@ public class DAABandsV2 {
 		return json;
 	}
 
+	/**
+	 * Utility function, performs tha computation of bands polygons and metrics
+	 */
 	public String jsonBands (
 			DAAMonitorsV2 monitors,
 			List<String> ownshipArray, 
@@ -836,6 +843,12 @@ public class DAABandsV2 {
 		while (!walker.atEnd()) {
 			walker.readState(daa);
 			if (daaAlerter != null) { loadSelectedAlerter(); }
+
+			if (PROFILER_ENABLED) {
+				if (profiler == null) { profiler = new DAAProfiler("Profiling DAIDALUS v" + VERSION + " with " + scenario); }
+				profiler.start();
+			}
+
 			jsonStats = jsonBands(
 					monitors,
 					ownshipArray, alertsArray, metricsArray,
@@ -843,6 +856,10 @@ public class DAABandsV2 {
 					resTrkArray, resGsArray, resVsArray, resAltArray, 
 					contoursArray, hazardZonesArray,
 					monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array);
+
+			if (PROFILER_ENABLED) {
+				profiler.stop();
+			}
 		}
 
 		printWriter.println(jsonStats + ",");
@@ -886,6 +903,13 @@ public class DAABandsV2 {
 		printWriter.println("}");
 
 		closePrintWriter();
+
+		if (PROFILER_ENABLED) {
+			String profilerOutputFile = ofname + ".profiler.log";
+			System.out.println("[PROFILER] Writing profiler output file " + profilerOutputFile);
+			boolean success = profiler.printCollectedDataToFile(profilerOutputFile);
+			System.out.println(success);
+		}
 	}
 
 	public static String getFileName (String fname) {
@@ -937,8 +961,10 @@ public class DAABandsV2 {
 				if (a + 1 < args.length) { ofname = args[++a]; }
 			} else if (a < args.length - 1 && (args[a].startsWith("--ownship") || args[a].startsWith("-ownship"))) {
 				if (a + 1 < args.length) { ownshipName = args[++a]; }
-			} else if (a < args.length - 1 && (args[a].startsWith("-wind") || args[a].startsWith("--wind"))) {
+			} else if (a < args.length - 1 && (args[a].startsWith("--wind") || args[a].startsWith("-wind"))) {
 				if (a + 1 < args.length) { wind = args[++a]; }
+			} else if (a < args.length - 1 && (args[a].startsWith("--profiler-on") || args[a].startsWith("-profiler-on"))) {
+				PROFILER_ENABLED = true;
 			} else if (args[a].startsWith("-")) {
 				System.err.println("** Warning: Invalid option (" + args[a] + ")");
 			} else {
