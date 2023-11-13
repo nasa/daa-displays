@@ -61,6 +61,7 @@ import gov.nasa.larcfm.Util.EuclideanProjection;
 import gov.nasa.larcfm.ACCoRD.Detection3D;
 import gov.nasa.larcfm.ACCoRD.RecoveryInformation;
 import gov.nasa.larcfm.ACCoRD.WCV_tvar;
+import gov.nasa.larcfm.ACCoRD.DCPAUrgencyStrategy;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
 
@@ -258,7 +259,7 @@ public class DAABandsV2 {
 		if (daa != null) {
 			if (daaConfig != null) {
 				boolean paramLoaded = daa.loadFromFile(daaConfig);
-				if (paramLoaded) {
+				if (paramLoaded && daa.numberOfAlerters() > 0) {
 					System.out.println("** Configuration file " + daaConfig + " loaded successfully!");
 					hs_units = daa.getUnitsOf("step_hs");
 					vs_units = daa.getUnitsOf("step_vs");
@@ -267,10 +268,10 @@ public class DAABandsV2 {
 					vrec_units = daa.getUnitsOf("min_vertical_recovery");
 					return true;
 				} else {
-					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded. Using default DAIDALUS configuration.");
+					System.err.println("** Error: Configuration file " + daaConfig + " could not be loaded.");
 				}
 			} else {
-				System.err.println("** Warning: Configuration file not specified. Using default DAIDALUS configuration.");
+				System.err.println("** Error: Configuration file not specified.");
 			}
 		} else {
 			System.err.println("** Error: Daidalus is not initialized.");
