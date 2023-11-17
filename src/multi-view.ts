@@ -81,7 +81,7 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
     
     const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
     const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-    const vspeed: number = +flightData.ownship.v.z / 100; // airspeed tape units is 100fpm
+    const vspeed: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
     display.compass.setCompass(heading);
     display.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
@@ -228,7 +228,7 @@ function createDisplay (index: number, tailNumber: string, opt?: { daaVersion: s
     // map view options
     const viewOptions: ViewOptions = new ViewOptions(`view-options-${index}`, { top: 4, left: 13 }, { 
         labels: [
-            "nrthup", "call-sign", "vfr-map", "well-clear", "blobs"
+            "nrthup", "call-sign", "vfr-map", "well-clear", "contours"
         ], parent, compass, map
     });
     const airspeedTape: AirspeedTape = new AirspeedTape(`airspeed-${index}`, { top: 100, left: 100 }, { parent });
