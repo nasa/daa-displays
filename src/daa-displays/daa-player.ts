@@ -1169,6 +1169,53 @@ export class DAAPlayer extends Backbone.Model {
         return this;
     }
     /**
+     * utility function, renders the DOM elements necessary for enabling/disabling directive guidance for heading maneuvers
+     */
+    appendDirectiveGuidanceControls (opt?: { top?: number, left?: number, width?: number, parent?: string, callback?: () => void }): DAAPlayer {
+        opt = opt || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 400 : opt.width;
+        const theHTML = Handlebars.compile(templates.directiveGuidanceControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top,
+            left: opt.left, 
+            width: opt.width,
+            innerWidth: opt.width - 40 // 40px is needed to accommodate the checkbox width and avoid the element going to the next line 
+        });
+        utils.createDiv(`${this.id}-directive-guidance-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-directive-guidance-controls`).html(theHTML);
+        // install handlers
+        $(`#${this.id}-directive-guidance-checkbox`).on("change", () => {
+            if (typeof opt?.callback === "function") {
+                opt.callback();
+            }
+        });
+        return this;
+    }
+    /**
+     * Checks whether directive guidance for heading maneuvers is enabled
+     */
+    directiveGuidanceIsEnabled (): boolean {
+        const isEnabled: boolean = $(`#${this.id}-directive-guidance-checkbox`).is(":checked");
+        return isEnabled;
+    }
+    /**
+     * Disables wedge persistence
+     */
+    disableDirectiveGuidance (): void {
+        $(`#${this.id}-directive-guidance-checkbox`).prop("checked", false);
+    }
+    /**
+     * Enables wedge persistence
+     */
+    enableDirectiveGuidance (): void {
+        $(`#${this.id}-directive-guidance-checkbox`).prop("checked", true);
+    }
+
+    /**
      * Checks whether wedge persistence is enabled
      */
     wedgePersistenceIsEnabled (): boolean {

@@ -129,17 +129,24 @@ function render (danti: {
             // checks whether resolution wedges are persistent when there is an alerting aircraft
             const wedgePersistenceEnabled: boolean = player.wedgePersistenceIsEnabled();
 
+            // checks whether directive guidance is enabled
+            const directiveGuidanceEnabled: boolean = player.directiveGuidanceIsEnabled();
+
             // set resolutions
-            // show wedge only for recovery bands
-            if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
-                danti.compass.setBug(bands["Horizontal Direction Resolution"], {
-                    wedgeConstraints: compassBands.RECOVERY,
-                    resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
-                });
+            // if directive guidance is enabled, show directive guidance only for recovery bands
+            if (directiveGuidanceEnabled) {
+                if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
+                    danti.compass.setBug(bands["Horizontal Direction Resolution"], {
+                        wedgeConstraints: compassBands.RECOVERY,
+                        resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
+                    });
+                } else {
+                    danti.compass.setBug(bands["Horizontal Direction Resolution"], {
+                        wedgeAperture: 0
+                    });
+                }
             } else {
-                danti.compass.setBug(bands["Horizontal Direction Resolution"], {
-                    wedgeAperture: 0
-                });
+                danti.compass.hideBug();
             }
             if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
                 danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
@@ -516,9 +523,22 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     player.appendActivationPanel({
         parent: "activation-controls"
     });
-    player.appendWedgePersistenceControls({
+    player.appendDirectiveGuidanceControls({
         parent: "simulation-controls",
         top: -526,
+        left: 1300,
+        width: 400,
+        callback: () => {
+            render({
+                map: map, compass: compass, airspeedTape: airspeedTape, 
+                altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape,
+                voice: daaVoice
+            });
+        }
+    });
+    player.appendWedgePersistenceControls({
+        parent: "simulation-controls",
+        top: -290,
         left: 1300,
         width: 400,
         callback: () => {

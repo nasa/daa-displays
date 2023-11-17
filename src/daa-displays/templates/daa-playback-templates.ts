@@ -613,6 +613,26 @@ export const developersControls: string = `
   </div>
 </div>`;
 
+export const directiveGuidanceControls: string = `
+<div id="{{id}}-directive-guidance-controls-inner" class="simulation-controls directive-guidance-controls" style="position:absolute;width:0px;height:0px;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-directive-guidance-checkbox" class="directive-guidance">
+                        </div>
+                        <div class="input-group-prepend">
+                            <span class="btn-sm directive-guidance" style="width:{{innerWidth}}px; text-align:center; background-color:#e9ecef; border:1px solid #e9ecef; white-space:nowrap;vertical-align: middle;">Directive Guidance for Heading</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;
+
 export const resolutionPersistenceControls: string = `
 <div id="{{id}}-resolution-persistence-controls-inner" class="simulation-controls persistence-controls" style="position:absolute;width:0px;height:0px;">
     <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
