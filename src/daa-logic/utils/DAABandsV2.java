@@ -61,9 +61,60 @@ import gov.nasa.larcfm.Util.EuclideanProjection;
 import gov.nasa.larcfm.ACCoRD.Detection3D;
 import gov.nasa.larcfm.ACCoRD.RecoveryInformation;
 import gov.nasa.larcfm.ACCoRD.WCV_tvar;
-import gov.nasa.larcfm.ACCoRD.DCPAUrgencyStrategy;
 
 import static gov.nasa.larcfm.ACCoRD.DaidalusParameters.VERSION;
+
+class JsonBands {
+	public DAAMonitorsV2 monitors;
+	public List<String> ownshipArray;
+	public List<String> alertsArray;
+	public List<String> metricsArray; 
+	public List<String> windVectorsArray; 
+	public List<String> trkArray;
+	public List<String> gsArray;
+	public List<String> vsArray;
+	public List<String> altArray; 
+	public List<String> resTrkArray; 
+	public List<String> resGsArray;
+	public List<String> resVsArray; 
+	public List<String> resAltArray; 
+	public List<String> contoursArray;
+	public List<String> hazardZonesArray;
+	public List<String> monitorM1Array;
+	public List<String> monitorM2Array; 
+	public List<String> monitorM3Array; 
+	public List<String> monitorM4Array;
+
+	/**
+	 * Constructor
+	 */
+	public JsonBands () {
+		trkArray = new ArrayList<String>();
+		gsArray = new ArrayList<String>();
+		vsArray = new ArrayList<String>();
+		altArray = new ArrayList<String>();
+		alertsArray = new ArrayList<String>();
+
+		windVectorsArray = new ArrayList<String>();
+
+		ownshipArray = new ArrayList<String>();
+		metricsArray = new ArrayList<String>();
+
+		resTrkArray = new ArrayList<String>();
+		resGsArray = new ArrayList<String>();
+		resVsArray = new ArrayList<String>();
+		resAltArray = new ArrayList<String>();
+
+		contoursArray = new ArrayList<String>();
+		hazardZonesArray = new ArrayList<String>();
+
+		monitors = new DAAMonitorsV2();
+		monitorM1Array = new ArrayList<String>();
+		monitorM2Array = new ArrayList<String>();
+		monitorM3Array = new ArrayList<String>();
+		monitorM4Array = new ArrayList<String>();
+	}
+}
 
 public class DAABandsV2 {
 
@@ -515,25 +566,7 @@ public class DAABandsV2 {
 	/**
 	 * Utility function, performs tha computation of bands polygons and metrics
 	 */
-	public String jsonBands (
-			DAAMonitorsV2 monitors,
-			List<String> ownshipArray, 
-			List<String> alertsArray, 
-			List<String> metricsArray, 
-			List<String> trkArray, 
-			List<String> gsArray, 
-			List<String> vsArray,
-			List<String> altArray, 
-			List<String> resTrkArray, 
-			List<String> resGsArray, 
-			List<String> resVsArray, 
-			List<String> resAltArray, 
-			List<String> contoursArray, 
-			List<String> hazardZonesArray,
-			List<String> monitorM1Array, 
-			List<String> monitorM2Array, 
-			List<String> monitorM3Array, 
-			List<String> monitorM4Array) {
+	public String jsonBands (JsonBands jb) {
 
 		// ownship
 		TrafficState ownship = daa.getOwnshipState();
@@ -549,7 +582,15 @@ public class DAABandsV2 {
 		BandsRegion currentAltRegion = daa.regionOfAltitude(ownship.altitude()); 
 		own += ", "+jsonString("alt_region",currentAltRegion.toString());
 		own += " }";
-		ownshipArray.add(own);
+		jb.ownshipArray.add(own);
+
+		// wind vectors
+		Velocity wind = daa.getWindVelocityFrom();
+		String windVectors = "{ \"time\": " + time; 
+		windVectors += ", \"deg\": \"" + fmt(wind.compassAngle("deg")) + "\"";
+		windVectors += ", \"knot\": \"" + fmt(wind.groundSpeed("knot"))  + "\"";
+		windVectors += " }";
+		jb.windVectorsArray.add(windVectors);
 
 		// traffic alerts
 		String alerts = "{ \"time\": " + time + ", \"alerts\": [ ";
@@ -573,7 +614,7 @@ public class DAABandsV2 {
 			+ "}";
 		}
 		alerts += " ]}";
-		alertsArray.add(alerts);
+		jb.alertsArray.add(alerts);
 
 		// Traffic aircraft
 		String traffic = "{ \"time\": " + time + ", \"aircraft\": [ ";
@@ -586,7 +627,7 @@ public class DAABandsV2 {
 			}
 		}
 		traffic += " ]}";
-		metricsArray.add(traffic);
+		jb.metricsArray.add(traffic);
 
 		// bands
 		String trkBands = "{ \"time\": " + time;
@@ -598,7 +639,7 @@ public class DAABandsV2 {
 			if (i < daa.horizontalDirectionBandsLength() - 1) { trkBands += ", "; }
 		}
 		trkBands += " ]}";
-		trkArray.add(trkBands);
+		jb.trkArray.add(trkBands);
 
 		String gsBands = "{ \"time\": " + time;
 		gsBands += ", \"bands\": [ ";
@@ -609,7 +650,7 @@ public class DAABandsV2 {
 			if (i < daa.horizontalSpeedBandsLength() - 1) { gsBands += ", "; }
 		}
 		gsBands += " ]}";
-		gsArray.add(gsBands);
+		jb.gsArray.add(gsBands);
 
 		String vsBands = "{ \"time\": " + time;
 		vsBands += ", \"bands\": [ ";
@@ -620,7 +661,7 @@ public class DAABandsV2 {
 			if (i < daa.verticalSpeedBandsLength() - 1) { vsBands += ", "; }
 		}
 		vsBands += " ]}";
-		vsArray.add(vsBands);
+		jb.vsArray.add(vsBands);
 
 		String altBands = "{ \"time\": " + time;
 		altBands += ", \"bands\": [ ";
@@ -631,7 +672,7 @@ public class DAABandsV2 {
 			if (i < daa.altitudeBandsLength() - 1) { altBands += ", "; }
 		}
 		altBands += " ]}";
-		altArray.add(altBands);
+		jb.altArray.add(altBands);
 
 		// resolutions
 		String trkResolution = "{ \"time\": " + time;
@@ -653,7 +694,7 @@ public class DAABandsV2 {
 		trkResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		trkResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
 		trkResolution += " }";
-		resTrkArray.add(trkResolution);
+		jb.resTrkArray.add(trkResolution);
 
 		String gsResolution = "{ \"time\": " + time;
 		boolean preferredGs = daa.preferredHorizontalSpeedUpOrDown();
@@ -674,7 +715,7 @@ public class DAABandsV2 {
 		gsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		gsResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
 		gsResolution += " }";
-		resGsArray.add(gsResolution);
+		jb.resGsArray.add(gsResolution);
 
 		String vsResolution = "{ \"time\": " + time;
 		boolean preferredVs = daa.preferredVerticalSpeedUpOrDown();
@@ -695,7 +736,7 @@ public class DAABandsV2 {
 		vsResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		vsResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
 		vsResolution += " }";
-		resVsArray.add(vsResolution);
+		jb.resVsArray.add(vsResolution);
 
 		String altResolution = "{ \"time\": " + time;
 		boolean preferredAlt = daa.preferredAltitudeUpOrDown();
@@ -716,7 +757,7 @@ public class DAABandsV2 {
 		altResolution += "\", \"distance\": {"+jsonValUnits("horizontal",recoveryInfo.recoveryHorizontalDistance(),hrec_units); 
 		altResolution += ", "+jsonValUnits("vertical",recoveryInfo.recoveryVerticalDistance(),vrec_units)+"}}"; 
 		altResolution += " }";
-		resAltArray.add(altResolution);
+		jb.resAltArray.add(altResolution);
 
 		// Contours and hazard zones are lists of polygons, and polygons are list of points.
 		Position po = daa.getAircraftStateAt(0).getPosition();
@@ -733,7 +774,7 @@ public class DAABandsV2 {
 			}
 		}
 		contours += " ]}";
-		contoursArray.add(contours);
+		jb.contoursArray.add(contours);
 
 		String hazardZones =  "{ \"time\": " + time;
 		hazardZones += ",\n  \"data\": [ ";
@@ -757,30 +798,30 @@ public class DAABandsV2 {
 			}
 		}
 		hazardZones += " ]}";
-		hazardZonesArray.add(hazardZones);
+		jb.hazardZonesArray.add(hazardZones);
 
 		if (PRINT_METRICS) {
 			// monitors
-			monitors.check(daa);
+			jb.monitors.check(daa);
 			String monitorM1 = "{ \"time\": " + time
-					+ ", " + monitors.m1()
+					+ ", " + jb.monitors.m1()
 					+ " }";
-			monitorM1Array.add(monitorM1);
+			jb.monitorM1Array.add(monitorM1);
 
 			String monitorM2 = "{ \"time\": " + time
-					+ ", " + monitors.m2()
+					+ ", " + jb.monitors.m2()
 					+ " }";
-			monitorM2Array.add(monitorM2);
+			jb.monitorM2Array.add(monitorM2);
 
 			String monitorM3 = "{ \"time\": " + time
-					+ ", " + monitors.m3(daa)
+					+ ", " + jb.monitors.m3(daa)
 					+ " }";
-			monitorM3Array.add(monitorM3);
+			jb.monitorM3Array.add(monitorM3);
 
 			String monitorM4 = "{ \"time\": " + time
-					+ ", " + monitors.m4(daa)
+					+ ", " + jb.monitors.m4(daa)
 					+ " }";
-			monitorM4Array.add(monitorM4);
+			jb.monitorM4Array.add(monitorM4);
 		}
 
 		// config
@@ -815,28 +856,30 @@ public class DAABandsV2 {
 
 		printWriter.println("{\n" + jsonHeader());
 
-		List<String> trkArray = new ArrayList<String>();
-		List<String> gsArray = new ArrayList<String>();
-		List<String> vsArray = new ArrayList<String>();
-		List<String> altArray = new ArrayList<String>();
-		List<String> alertsArray = new ArrayList<String>();
-		List<String> ownshipArray = new ArrayList<String>();
-		List<String> metricsArray = new ArrayList<String>();
+		JsonBands jb = new JsonBands();
+		// List<String> trkArray = new ArrayList<String>();
+		// List<String> gsArray = new ArrayList<String>();
+		// List<String> vsArray = new ArrayList<String>();
+		// List<String> altArray = new ArrayList<String>();
+		// List<String> alertsArray = new ArrayList<String>();
+		// List<String> windVectorsArray = new ArrayList<String>();
+		// List<String> ownshipArray = new ArrayList<String>();
+		// List<String> metricsArray = new ArrayList<String>();
 
-		List<String> resTrkArray = new ArrayList<String>();
-		List<String> resGsArray = new ArrayList<String>();
-		List<String> resVsArray = new ArrayList<String>();
-		List<String> resAltArray = new ArrayList<String>();
+		// List<String> resTrkArray = new ArrayList<String>();
+		// List<String> resGsArray = new ArrayList<String>();
+		// List<String> resVsArray = new ArrayList<String>();
+		// List<String> resAltArray = new ArrayList<String>();
 
-		List<String> contoursArray = new ArrayList<String>();
-		List<String> hazardZonesArray = new ArrayList<String>();
+		// List<String> contoursArray = new ArrayList<String>();
+		// List<String> hazardZonesArray = new ArrayList<String>();
 
-		DAAMonitorsV2 monitors = new DAAMonitorsV2();
+		// DAAMonitorsV2 monitors = new DAAMonitorsV2();
 
-		List<String> monitorM1Array = new ArrayList<String>();
-		List<String> monitorM2Array = new ArrayList<String>();
-		List<String> monitorM3Array = new ArrayList<String>();
-		List<String> monitorM4Array = new ArrayList<String>();
+		// List<String> monitorM1Array = new ArrayList<String>();
+		// List<String> monitorM2Array = new ArrayList<String>();
+		// List<String> monitorM3Array = new ArrayList<String>();
+		// List<String> monitorM4Array = new ArrayList<String>();
 
 		String jsonStats = null;
 
@@ -850,13 +893,7 @@ public class DAABandsV2 {
 				profiler.start();
 			}
 
-			jsonStats = jsonBands(
-					monitors,
-					ownshipArray, alertsArray, metricsArray,
-					trkArray, gsArray, vsArray, altArray, 
-					resTrkArray, resGsArray, resVsArray, resAltArray, 
-					contoursArray, hazardZonesArray,
-					monitorM1Array, monitorM2Array, monitorM3Array, monitorM4Array);
+			jsonStats = jsonBands(jb);
 
 			if (PROFILER_ENABLED) {
 				profiler.stop();
@@ -865,41 +902,43 @@ public class DAABandsV2 {
 
 		printWriter.println(jsonStats + ",");
 
-		printArray(printWriter, ownshipArray, "Ownship");
+		printArray(printWriter, jb.ownshipArray, "Ownship");
 		printWriter.println(",");
-		printArray(printWriter, alertsArray, "Alerts");
+		printArray(printWriter, jb.alertsArray, "Alerts");
 		printWriter.println(",");
-		printArray(printWriter, metricsArray, "Metrics");
+		printArray(printWriter, jb.metricsArray, "Metrics");
 		printWriter.println(",");
-		printArray(printWriter, trkArray, "Heading Bands");
+		printArray(printWriter, jb.windVectorsArray, "WindVectors");
 		printWriter.println(",");
-		printArray(printWriter, gsArray, "Horizontal Speed Bands");
+		printArray(printWriter, jb.trkArray, "Heading Bands");
 		printWriter.println(",");
-		printArray(printWriter, vsArray, "Vertical Speed Bands");
+		printArray(printWriter, jb.gsArray, "Horizontal Speed Bands");
 		printWriter.println(",");
-		printArray(printWriter, altArray, "Altitude Bands");
+		printArray(printWriter, jb.vsArray, "Vertical Speed Bands");
 		printWriter.println(",");
-		printArray(printWriter, resTrkArray, "Horizontal Direction Resolution");
+		printArray(printWriter, jb.altArray, "Altitude Bands");
 		printWriter.println(",");
-		printArray(printWriter, resGsArray, "Horizontal Speed Resolution");
+		printArray(printWriter, jb.resTrkArray, "Horizontal Direction Resolution");
 		printWriter.println(",");
-		printArray(printWriter, resVsArray, "Vertical Speed Resolution");
+		printArray(printWriter, jb.resGsArray, "Horizontal Speed Resolution");
 		printWriter.println(",");
-		printArray(printWriter, resAltArray, "Altitude Resolution");
+		printArray(printWriter, jb.resVsArray, "Vertical Speed Resolution");
+		printWriter.println(",");
+		printArray(printWriter, jb.resAltArray, "Altitude Resolution");
 		printWriter.println(",");
 
-		printArray(printWriter, contoursArray, "Contours");
+		printArray(printWriter, jb.contoursArray, "Contours");
 		printWriter.println(",");
-		printArray(printWriter, hazardZonesArray, "Hazard Zones");
+		printArray(printWriter, jb.hazardZonesArray, "Hazard Zones");
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");
 		List<List<String>> info = new ArrayList<List<String>>();
-		info.add(monitorM1Array);
-		info.add(monitorM2Array);
-		info.add(monitorM3Array);
-		info.add(monitorM4Array);
-		printMonitors(printWriter, monitors, info);
+		info.add(jb.monitorM1Array);
+		info.add(jb.monitorM2Array);
+		info.add(jb.monitorM3Array);
+		info.add(jb.monitorM4Array);
+		printMonitors(printWriter, jb.monitors, info);
 
 		printWriter.println("}");
 

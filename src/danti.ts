@@ -222,7 +222,11 @@ function render (danti: {
         }
         danti.map.setTraffic(traffic);
         // render wind indicator
-        if (bands && bands.Wind) {
+        if (bands?.WindVectors) {
+            wind.setAngleFrom(bands.WindVectors.deg);
+            wind.setMagnitude(bands.WindVectors.knot);
+            wind.reveal();
+        } else if (bands?.Wind) {
             if (+bands.Wind.deg === 0) {
                 // hide indicator
                 wind.hide();

@@ -350,6 +350,12 @@ export declare interface MetricsElement {
     aircraft: AircraftMetrics[]
 }
 
+export declare interface WindVectorsElement {
+    time: number,
+    deg: number | string,
+    knot: number | string
+}
+
 // export declare interface OwnshipElement {
 //     heading: { val: string, internal: string, units: string }, 
 //     airspeed: { val: string, internal: string, units: string }
@@ -373,6 +379,7 @@ export declare interface ScenarioData {
     "Hazard Zones": GeofenceElement[] | null,
     Monitors: MonitorElement[] | null,
     Metrics: MetricsElement[] | null
+    WindVectors: WindVectorsElement[] | null
 }
 export declare interface ScenarioDataPoint {
     Ownship: OwnshipState | null,
@@ -390,6 +397,7 @@ export declare interface ScenarioDataPoint {
     "Hazard Zones": GeofenceElement | null,
     Monitors: MonitorElement[] | null,
     Metrics: MetricsElement | null
+    WindVectors: WindVectorsElement | null
 }
 export declare type InfoData = {
     language: string, // DAIDALUS language

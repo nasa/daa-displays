@@ -146,7 +146,8 @@ export class DAAClient {
                             "Contours": null,
                             "Hazard Zones": null,
                             Monitors: null,
-                            Metrics: null
+                            Metrics: null,
+                            WindVectors: null // FROM
                         },
                         resolve
                     };
