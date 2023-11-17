@@ -4,8 +4,8 @@ import { InteractiveMap } from './daa-interactive-map';
 import { Compass } from './daa-compass';
 
 export declare type ViewOptionLabels = "nrthup" | "call-sign" | "terrain" 
-    | "contours" | "hazard-zones"
-    | "well-clear" | "WCV" | "blobs" 
+    | "contours" | "blobs"
+    | "hazard-zones" | "well-clear" | "WCV" 
     | "flight-plan" | "vfr-map" | ""; // "" means empty slot
 
 export class ViewOptions {
@@ -276,16 +276,22 @@ export class ViewOptions {
         return on ? this.check("terrain") : this.uncheck("terrain");
     }
     /**
-     * Checks/unchecks well-clear volume (formerly "contours")
+     * Checks/unchecks well-clear volume (formerly  "hazard-zones")
      */
     WCV (on: boolean): ViewOptions {
         return on ? this.check("WCV") : this.uncheck("WCV");
     }
     /**
-     * Checks/unchecks blobs (formerly "hazard-zones")
+     * Checks/unchecks blobs (aka "contours")
      */
     blobs (on: boolean): ViewOptions {
         return on ? this.check("blobs") : this.uncheck("blobs");
+    }
+    /**
+     * Checks/unchecks "contours"
+     */
+    contours (on: boolean): ViewOptions {
+        return this.blobs(on);
     }
     /**
      * Checks/unchecks flight plan
