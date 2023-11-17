@@ -743,7 +743,7 @@ export class LeafletAirspace implements AirspaceInterface {
      * Switch to vfr mode
      */
     vfrMode (): AirspaceInterface {
-        $(".leaflet-vfr-chart").css("display", "block");
+        this.$div.find(".leaflet-vfr-chart").css("display", "block");
         // $(".leaflet-street-layer").css("display", "none");
         return this;
     }    
@@ -759,8 +759,8 @@ export class LeafletAirspace implements AirspaceInterface {
      * Switch to street mode
      */
     streetMode(): AirspaceInterface {
-        $(".leaflet-street-layer").css("display", "block");
-        $(".leaflet-vfr-chart").css("display", "none");
+        this.$div.find(".leaflet-street-layer").css("display", "block");
+        this.$div.find(".leaflet-vfr-chart").css("display", "none");
         // this.vfrLayer.removeFrom(this.lworld);
         return this;
     }
@@ -1417,7 +1417,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealFlightPlan (): AirspaceInterface {
         this.flightPlanVisible = true;
-        $(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "block");
+        this.$div.find(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "block");
         return this;
     }
     /**
@@ -1425,7 +1425,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideFlightPlan (): AirspaceInterface {
         this.flightPlanVisible = false;
-        $(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "none");
+        this.$div.find(`.${AirspaceCSS.DAA_FLIGHT_PLAN}`).css("display", "none");
         return this;
     }
     /**
@@ -1433,7 +1433,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealTrafficTrace (): AirspaceInterface {
         this.trafficTraceVisible = true;
-        $(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "block");
+        this.$div.find(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "block");
         return this;
     }
     /**
@@ -1441,7 +1441,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideTrafficTrace (): AirspaceInterface {
         this.trafficTraceVisible = false;
-        $(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "none");
+        this.$div.find(`.${AirspaceCSS.DAA_TRAFFIC_TRACE}`).css("display", "none");
         return this;
     }
     /**
@@ -1449,7 +1449,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealOwnshipTrace (): AirspaceInterface {
         this.ownshipTraceVisible = true;
-        $(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "block");
+        this.$div.find(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "block");
         return this;
     }
     /**
@@ -1457,7 +1457,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideOwnshipTrace (): AirspaceInterface {
         this.ownshipTraceVisible = false;
-        $(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "none");
+        this.$div.find(`.${AirspaceCSS.DAA_OWNSHIP_TRACE}`).css("display", "none");
         return this;
     }
     /**
@@ -1465,7 +1465,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealHazardZones(): AirspaceInterface {
         this.hazardZonesVisible = true;
-        $(".daa-hazard-zone").css("display", "block");
+        this.$div.find(".daa-hazard-zone").css("display", "block");
         return this;
     }
     /**
@@ -1473,7 +1473,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideHazardZones(): AirspaceInterface {
         this.hazardZonesVisible = false;
-        $(".daa-hazard-zone").css("display", "none");
+        this.$div.find(".daa-hazard-zone").css("display", "none");
         return this;
     }
     /**
@@ -1481,7 +1481,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     revealContours(): AirspaceInterface {
         this.contoursVisible = true;
-        $(".daa-contour").css("display", "block");
+        this.$div.find(".daa-contour").css("display", "block");
         return this;
     }
     /**
@@ -1489,7 +1489,7 @@ export class LeafletAirspace implements AirspaceInterface {
      */
     hideContours(): AirspaceInterface {
         this.contoursVisible = false;
-        $(".daa-contour").css("display", "none");
+        this.$div.find(".daa-contour").css("display", "none");
         return this;
     }
     /**
