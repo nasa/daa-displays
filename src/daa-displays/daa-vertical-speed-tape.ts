@@ -226,7 +226,7 @@ class SpeedBug {
      * @instance
      * @inner
      */
-    refresh(opt?: { wedgeAperture?: number }): void {
+    refresh (opt?: { wedgeAperture?: number }): void {
         opt = opt || {};
         this.refreshWedge(opt);
 

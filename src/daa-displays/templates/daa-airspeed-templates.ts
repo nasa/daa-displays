@@ -1,4 +1,4 @@
-import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR } from "./daa-constant-templates";
+import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR, RESOLUTION_BUG_SCALE } from "./daa-constant-templates";
 export const airspeedTemplate = `
 <div id="{{id}}-inner" style="position:absolute; height:{{height}}px; top:{{top}}px; left:{{left}}px; opacity:${TAPE_OPACITY};">
     <div style="position:absolute; overflow:hidden; width:128px; height:650px;">
@@ -21,9 +21,9 @@ export const airspeedTemplate = `
                 </div>
             </div>
             <div id="{{id}}-resolution-bug" style="position:absolute; left:90px; margin-top:18px;">
-                <div id="{{id}}-resolution-bug-indicator" style="position:absolute;">
-                    <div data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug" 
-                         class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" style="width:18px; height:11px; margin-left:5px; background-color:white; border-radius:16px;"></div>
+                <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:${BUG_OPACITY};">
+                    <div data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug"
+                         class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" style="width:18px; height:11px; margin-left:5px; background-color:white; border-radius:16px; transform:scale(${RESOLUTION_BUG_SCALE});"></div>
                 </div>
                 <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.6; width:28px; height:11px; margin-left:-6px; margin-top:6px; background-color:white;"></div>
             </div>

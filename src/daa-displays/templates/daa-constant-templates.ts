@@ -19,6 +19,14 @@ export const TAPE_BACKGROUND_OPACITY: number = 1;
  */
 export const BUG_OPACITY: number = 1;
 /**
+ * Default opacity of bug indicators on tape displays
+ */
+export const BUG_SCALE: number = 1.6;
+/**
+ * Default opacity of resolution bug indicators on tape displays
+ */
+export const RESOLUTION_BUG_SCALE: number = 1;
+/**
  * Default tape background color
  */
 export const TAPE_BACKGROUND_COLOR: string = "#333333";

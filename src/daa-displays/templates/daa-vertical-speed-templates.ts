@@ -1,4 +1,4 @@
-import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR } from "./daa-constant-templates";
+import { FONT_FAMILY, TAPE_BACKGROUND_OPACITY, BUG_OPACITY, TAPE_OPACITY, TAPE_BACKGROUND_COLOR, BUG_SCALE, RESOLUTION_BUG_SCALE } from "./daa-constant-templates";
 export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; position:absolute; height:432px; width:60px; top:{{top}}px; left:{{left}}px; opacity:${TAPE_OPACITY};">
         <div class="trims" style="opacity:${TAPE_BACKGROUND_OPACITY}">
             <div style="position:absolute; background-color:${TAPE_BACKGROUND_COLOR}; left:-77px; width:180px; height:71px; transform:rotate(75deg);"></div>
@@ -31,7 +31,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
         <div id="{{id}}-bands" style="position:absolute;top:24px;left:-6px; opacity:0.8;">
         </div>
         <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:${BUG_OPACITY}; margin-top:1px; z-index:99;">
-            <div id="{{id}}-bug-indicator" style="position:absolute; transform:scale(1.6);">
+            <div id="{{id}}-bug-indicator" style="position:absolute; transform:scale(${BUG_SCALE});">
                 <!-- box -->
                 <div class="{{id}}-bug-tooltip" data-toggle="tooltip" data-placement="right" data-html="true" boundary="window" data-title="speedbug" id="{{id}}-bug-box" style="width:12px; height:11px; border:2px solid #cccccc; background-color:black; margin-left:4px;"></div>
                 <!-- pointer -->
@@ -39,8 +39,8 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
             </div>
         </div>
         <div id="{{id}}-resolution-bug" style="position:absolute; margin-top:1px;">
-            <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:0.8;">
-                <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:18px; margin-left:4px; height:11px; background-color:white; border-radius:16px;"></div>
+            <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:${BUG_OPACITY};">
+                <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:18px; margin-left:6px; height:11px; background-color:white; border-radius:16px; transform:scale(${RESOLUTION_BUG_SCALE});"></div>
             </div>
             <div class="{{id}}-resolution-bug" id="{{id}}-resolution-bug-notch" style="position:absolute; opacity:0.6; margin-left:24px; margin-top:6px; width:20px; height:11px; background-color:white;"></div>
             </div>
