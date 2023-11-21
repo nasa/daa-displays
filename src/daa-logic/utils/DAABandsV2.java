@@ -151,7 +151,10 @@ public class DAABandsV2 {
 	protected String vrec_units = "m";
 	protected String time_units = "s";
 
-	protected String wind = null;
+	protected String wind = null; // constant wind field, specified from the command line, overrides wind vectors
+	protected String wind_deg = "0";
+	protected String wind_knot = "0";
+	protected Velocity windVelocity = null;
 
 	protected PrintWriter printWriter = null;
 
@@ -345,28 +348,44 @@ public class DAABandsV2 {
 		return false;
 	}
 	/**
-	 * Utility function, loads wind data indicated in wind
+	 * Utility function, loads wind data indicated in the '-wind' parameter from command line
 	 */
-	public boolean loadWind () {
+	public Velocity readWind () {
 		if (daa != null) {
 			if (wind != null) {
 				double deg = 0;
 				double knot = 0;
 				double fpm = 0;
-				java.util.regex.Matcher match_deg = java.util.regex.Pattern.compile("\\bdeg\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				java.util.regex.Matcher match_deg = java.util.regex.Pattern.compile("\\bdeg\\s*:\\s*(\\+?\\-?\\d+(?:.\\d+)?)").matcher(wind);
 				if (match_deg.find()) {
-					deg = Double.parseDouble(match_deg.group(1));
+					wind_deg = match_deg.group(1);
+					deg = Double.parseDouble(wind_deg);
 				}
-				java.util.regex.Matcher match_knot = java.util.regex.Pattern.compile("\\bknot\\s*:\\s*(\\d+(?:.\\d+)?)").matcher(wind);
+				java.util.regex.Matcher match_knot = java.util.regex.Pattern.compile("\\bknot\\s*:\\s*(\\+?\\-?\\d+(?:.\\d+)?)").matcher(wind);
 				if (match_knot.find()) {
-					knot = Double.parseDouble(match_knot.group(1));
+					wind_knot = match_knot.group(1);
+					knot = Double.parseDouble(wind_knot);
 				}
-				Velocity windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
-				daa.setWindVelocityFrom(windVelocity);
-				return true;
+				// set the wind only if either direction or intensity are different than 0
+				if (knot != 0 || deg != 0) {
+					windVelocity = Velocity.makeTrkGsVs(deg, "deg", knot, "knot", fpm, "fpm");
+					return windVelocity;
+				}
+				// else
+				wind = null;
 			}
 		} else {
 			System.err.println("** Error: Daidalus is not initialized.");
+		}
+		return null;
+	}
+	/**
+	 * Utility function, sets the wind velocity in the daa object
+	 */
+	public boolean loadWindVelocity () {
+		if (windVelocity != null) {
+			daa.setWindVelocityFrom(windVelocity);
+			return true;
 		}
 		return false;
 	}
@@ -585,10 +604,10 @@ public class DAABandsV2 {
 		jb.ownshipArray.add(own);
 
 		// wind vectors
-		Velocity wind = daa.getWindVelocityFrom();
+		Velocity wv = daa.getWindVelocityFrom();
 		String windVectors = "{ \"time\": " + time; 
-		windVectors += ", \"deg\": \"" + fmt(wind.compassAngle("deg")) + "\"";
-		windVectors += ", \"knot\": \"" + fmt(wind.groundSpeed("knot"))  + "\"";
+		windVectors += ", \"deg\": \"" + fmt(wv.compassAngle("deg")) + "\"";
+		windVectors += ", \"knot\": \"" + fmt(wv.groundSpeed("knot"))  + "\"";
 		windVectors += " }";
 		jb.windVectorsArray.add(windVectors);
 
@@ -839,6 +858,7 @@ public class DAABandsV2 {
 	}
 
 	public void walkFile () {
+		// sanity checks
 		if (ifname == "" || ifname == null) {
 			System.err.println("** Error: Please specify a daa file");
 			System.exit(1);
@@ -848,53 +868,35 @@ public class DAABandsV2 {
 			System.exit(1);
 		}
 
+		// create output stream
 		createPrintWriter();
 
-		/* Create DaidalusFileWalker */
+		// create DaidalusFileWalker
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 		if (ownshipName != null) { walker.setOwnship(ownshipName); }
-
 		printWriter.println("{\n" + jsonHeader());
 
+		// create json bands object
 		JsonBands jb = new JsonBands();
-		// List<String> trkArray = new ArrayList<String>();
-		// List<String> gsArray = new ArrayList<String>();
-		// List<String> vsArray = new ArrayList<String>();
-		// List<String> altArray = new ArrayList<String>();
-		// List<String> alertsArray = new ArrayList<String>();
-		// List<String> windVectorsArray = new ArrayList<String>();
-		// List<String> ownshipArray = new ArrayList<String>();
-		// List<String> metricsArray = new ArrayList<String>();
-
-		// List<String> resTrkArray = new ArrayList<String>();
-		// List<String> resGsArray = new ArrayList<String>();
-		// List<String> resVsArray = new ArrayList<String>();
-		// List<String> resAltArray = new ArrayList<String>();
-
-		// List<String> contoursArray = new ArrayList<String>();
-		// List<String> hazardZonesArray = new ArrayList<String>();
-
-		// DAAMonitorsV2 monitors = new DAAMonitorsV2();
-
-		// List<String> monitorM1Array = new ArrayList<String>();
-		// List<String> monitorM2Array = new ArrayList<String>();
-		// List<String> monitorM3Array = new ArrayList<String>();
-		// List<String> monitorM4Array = new ArrayList<String>();
-
-		String jsonStats = null;
+		// create jsonStats string with the results
+		String jsonStats = "";
 
 		/* Processing the input file time step by time step and writing output file */
 		while (!walker.atEnd()) {
+			// read a line in the daa file
 			walker.readState(daa);
+			// set alerter, if any is specified
 			if (daaAlerter != null) { loadSelectedAlerter(); }
-
+			// set wind, if a constant wind is specified
+			if (windVelocity != null) { loadWindVelocity(); }
+			// start profiler
 			if (PROFILER_ENABLED) {
 				if (profiler == null) { profiler = new DAAProfiler("Profiling DAIDALUS v" + VERSION + " with " + scenario); }
 				profiler.start();
 			}
-
+			// compute the bands
 			jsonStats = jsonBands(jb);
-
+			// stop profiler
 			if (PROFILER_ENABLED) {
 				profiler.stop();
 			}
@@ -1051,7 +1053,8 @@ public class DAABandsV2 {
 		// daaBands.adjustThreshold(); // deprecated, this was needed for WWD
 		daaBands.loadConfig();
 		System.out.println(daaBands.printConfig()); // useful for debugging purposes
-		daaBands.loadWind();
+		Velocity wind = daaBands.readWind();
+		if (wind != null) { System.out.println("Using constant wind vector: " + wind); }
 		daaBands.walkFile();
 	}
 
