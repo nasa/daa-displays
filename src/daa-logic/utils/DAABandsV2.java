@@ -348,7 +348,14 @@ public class DAABandsV2 {
 		return false;
 	}
 	/**
-	 * Utility function, loads wind data indicated in the '-wind' parameter from command line
+	 * Utility function, loads wind data in the daa object from data indicated in the '-wind' parameter specified at the command line
+	 */
+	public boolean loadWind () {
+		readWind();
+		return loadWindVelocity();
+	}
+	/**
+	 * Utility function, reads wind data indicated in the '-wind' parameter from command line
 	 */
 	public Velocity readWind () {
 		if (daa != null) {
