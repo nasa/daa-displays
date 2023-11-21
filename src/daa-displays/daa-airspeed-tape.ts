@@ -291,7 +291,7 @@ export class AirspeedTape {
     protected range: { from: number, to: number };
     protected tapeUnits: string = "knots";
     static readonly defaultTapeUnits: string = "knots";
-    static readonly defaultTapeStep: number = 20;
+    static readonly defaultTapeStep: number = 20; // [kn]
 
     static readonly units = {
         knots: "knots",

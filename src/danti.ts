@@ -48,7 +48,7 @@ import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts
 import { DaaVoice, Guidance, GuidanceKind } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
-import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
+import { ALT_STEP, THRESHOLD_ALT_SL3, USE_TCAS_SL3, AIRSPEED_STEP, VSPEED_RANGE } from './config';
 
 // flag indicating whether the display should be widescreen
 const enable_widescreen: boolean = true;
@@ -378,9 +378,9 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", {
 // sounds
 const daaVoice: DaaVoice = new DaaVoice();
 // create remaining display widgets
-const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: enable_widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50 });
-const altitudeTape = new AltitudeTape("altitude", { top: 100, left: enable_widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300 });
-const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: enable_widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
+const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: enable_widescreen ? 194 : 100 }, { parent: "daa-disp", maxWedgeAperture: 50, airspeedStep: AIRSPEED_STEP });
+const altitudeTape = new AltitudeTape("altitude", { top: 100, left: enable_widescreen ? 1154 : 833 }, { parent: "daa-disp", maxWedgeAperture: 300, altitudeStep: ALT_STEP });
+const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: enable_widescreen ? 1308 : 981 }, { parent: "daa-disp", verticalSpeedRange: VSPEED_RANGE, maxWedgeAperture: 500 });
 const player: DAAPlayer = new DAAPlayer();
 let lastSimulationStep: number = 0;
 player.define("step", async () => {
