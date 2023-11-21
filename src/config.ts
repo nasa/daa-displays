@@ -39,7 +39,7 @@ export const THRESHOLD_ALT_SL3: number = 400; //ft
 // enabled/disabled profiling in the daa-server
 export const ENABLE_PROFILER: boolean = true;
 
-// scale of the altitude tape ticks
+// step size for tape displays
 export const AIRSPEED_STEP: number = 20; // [kn]
 export const ALT_STEP: number = 100; // [ft]
 export const VSPEED_RANGE: number = 2000; // [ft/min]
