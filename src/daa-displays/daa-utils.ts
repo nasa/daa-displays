@@ -13,28 +13,28 @@ export const DEFAULT_MAX_TRACE_LEN: number = 32; // max aircraft trace length
 export type DaaSymbol = server.DaaSymbol;
 
 export const color = {
-    RECOVERY: "#00f500", // DASHED green
-    FAR: "#ffc107", // DASHED YELLOW
+    RECOVERY: "#00f500", // green
+    FAR: "#ffc107", // yellow
     MID: "#ffc107", // yellow "#ffbf00",
     NEAR: "red",
-    UNKNOWN: "gray",
+    UNKNOWN: "white",
     NONE: "transparent"
 };
 export const bandColors = {
-    RECOVERY: { style: "dash", color: "#00f500" }, // DASH green
-    FAR: { style: "dash", color: "#ffc107" }, // DASH YELLOW
-    MID: { style: "solid", color: "#ffc107" }, // YELLOW
-    NEAR: { style: "solid", color: "red" }, // red
-    UNKNOWN: { style: "solid", color: "gray" }, // gray
-    NONE: { style: "solid", color: "transparent" }
+    RECOVERY: { style: "dash", color: color.RECOVERY }, // DASH green
+    FAR: { style: "dash", color: color.FAR }, // DASH YELLOW
+    MID: { style: "solid", color: color.MID }, // YELLOW
+    NEAR: { style: "solid", color: color.NEAR }, // red
+    UNKNOWN: { style: "solid", color: color.UNKNOWN }, // white
+    NONE: { style: "solid", color: color.NONE }
 };
 export const bandColorsDanti = {
-    RECOVERY: { style: "dash", color: "#00f500" }, // DASH green
-    FAR: { style: "dash", color: "transparent" }, // DASH YELLOW
-    MID: { style: "solid", color: "transparent" }, // YELLOW
+    RECOVERY: { style: "dash", color: color.RECOVERY }, // DASH green
+    FAR: { style: "dash", color: color.NONE }, // disabled in DANTi
+    MID: { style: "solid", color: color.NONE }, // disabled in DANTi
     NEAR: { style: "solid", color: "#ffbf00" }, // amber
-    UNKNOWN: { style: "solid", color: "gray" }, // gray
-    NONE: { style: "solid", color: "transparent" }
+    UNKNOWN: { style: "solid", color: color.UNKNOWN }, // white
+    NONE: { style: "solid", color: color.NONE }
 };
 export interface RGBColor { r: number, g: number, b: number }
 export function hex2rgb (hex: string, opt?: { normalize?: boolean }): RGBColor {
@@ -55,14 +55,14 @@ export const bugColors = {
     MID: "#ffc107", //"#ffbf00",
     NEAR: "red",
     RECOVERY: "#00f500", // DASHED green #07dc0a
-    UNKNOWN: "gainsboro"
+    UNKNOWN: "white"
     ,
     "0": "#cccccc",  // NONE
     "1": "#ffc107",// FAR
     "2": "#ffc107",// MID
     "3": "red",    // NEAR
     "4": "#00f500",// RECOVERY
-    "-1": "gainsboro"   // UNKNOWN
+    "-1": "white"   // UNKNOWN
 };
 export const alertingColors = {
     NONE: { color: "transparent" },

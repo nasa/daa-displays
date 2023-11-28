@@ -299,7 +299,7 @@ export class AltitudeTape {
     protected duration: number = utils.DEFAULT_INSTRUMENT_ANIMATION_DURATION;
 
     static readonly defaultTapeUnits: string = AltitudeTape.units.feet;
-    static readonly defaultTapeStep: number = 100;
+    static readonly defaultTapeStep: number = 100; // [ft]
 
     /**
      * Sets the units of the tape

@@ -30,10 +30,17 @@
 // list of file extensions that can contain flight data in daa format
 export const DAA_FILE_EXTENSIONS = [ ".daa", ".txt", ".xyz" ];
 
+// when enabled, DANTi suppresses warning alerts below THRESHOLD_ALT_SL3
 export const USE_TCAS_SL3: boolean = true;
 // altitude threshold below which we suppress warning alerts
-// TODO: the altitude threshold should not be absolute altitude but above ground level (AGL) altitude
+// NOTE: the altitude threshold should be above ground level (AGL) altitude, it's currently absolute altitude because we don't have AGL info as input
 export const THRESHOLD_ALT_SL3: number = 400; //ft
 
 // enabled/disabled profiling in the daa-server
 export const ENABLE_PROFILER: boolean = true;
+
+// step size for tape displays
+export const AIRSPEED_STEP: number = 20; // [kn]
+export const ALT_STEP: number = 100; // [ft]
+export const VSPEED_RANGE: number = 2000; // [ft/min]
+

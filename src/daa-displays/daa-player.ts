@@ -2233,7 +2233,7 @@ export class DAAPlayer extends Backbone.Model {
      */
     getCurrentBands (step?: number): ScenarioDataPoint {
         const res: ScenarioDataPoint = {
-            Wind: { deg: `0`, knot: `0` },
+            Wind: { deg: "0", knot: "0" },
             Ownship: null,
             Alerts: null,
             "Altitude Bands": null,
@@ -2247,7 +2247,8 @@ export class DAAPlayer extends Backbone.Model {
             "Contours": null,
             "Hazard Zones": null,
             Monitors: null,
-            Metrics: null
+            Metrics: null,
+            WindVectors: null
         };
         step = (step === undefined) ? this.getCurrentSimulationStep() : step;
         if (this._selectedScenario && this._scenarios[this._selectedScenario] && this._bands) {
