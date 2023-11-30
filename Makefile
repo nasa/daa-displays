@@ -49,18 +49,21 @@ dist:
 	rsync -a src/contrib dist/
 	@echo "\033[0;32m** Done copying dist folder! **\033[0m"
 
-# To compile particular releases of DAIDALUS
+# To compile particular releases of DAIDALUS in Java or CPP (by default everthing)
 daidalus-releases=
+only-danti=
+only-java=$(only-danti)
+only-cpp=
 
 daidalus:
 	@echo "\033[0;32m** Making DAIDALUS submodules **\033[0m"
 	git submodule update --init --remote
-	@cd daidalus-submodules; make -e daidalus-releases=$(daidalus-releases)
+	@cd daidalus-submodules; make -e daidalus-releases=$(daidalus-releases) -e only-java=$(only-java) -e only-cpp=$(only-cpp)
 	@echo "\033[0;32m** Done making DAIDALUS submodules! **\033[0m"
 
 compile:
 	@echo "\033[0;32m** Making Java and C++ applications **\033[0m"
-	cd dist && make clean compile -e daidalus-releases=$(daidalus-releases)
+	cd dist && make clean compile -e daidalus-releases=$(daidalus-releases) -e only-java=$(only-java) -e only-cpp=$(only-cpp) -e only-danti=$(only-danti)
 	@echo "\033[0;32mDone making Java and C++ applications! \033[0m"
 
 install-dependencies:
@@ -74,7 +77,7 @@ resolutions:
 
 clean:
 	@echo "\033[0;33m** Cleaning dist and daidalus-submodules folder **\033[0m"
-	cd daidalus-submodules; make clean -e daidalus-releases=$(daidalus-releases)
+	cd daidalus-submodules; make clean 
 	test ! -d dist || ( cd dist && make clean )
 	@echo "\033[0;33mDone cleaning! \033[0m"
 

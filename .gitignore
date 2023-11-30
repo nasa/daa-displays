@@ -4,6 +4,8 @@ node_modules
 .pvscontext
 .vscode
 *~
+*.class
+*.o
 *.old
 dist/
 tmp/
