@@ -1,9 +1,13 @@
+ifeq ($(strip $(daidalus-releases)),)
+releases := $(shell cat releases | sed -e "s:\#.*::g")
+else
+releases := $(daidalus-releases)
+endif
+
 all: compile
 
-releases := $(shell cat releases | sed -e "s:\#.*::g")
-
 releases:
-	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
+	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases). To compile a particular release type: make -e daidalus-releases=vx.y.z"
 
 compile:
 	@for f in $(releases); do \

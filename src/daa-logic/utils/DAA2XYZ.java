@@ -128,7 +128,7 @@ public class DAA2XYZ {
     public String printXYZ(TrafficState ownship, TrafficState intruder, double time) {
 	// current intruder position
 	Vect3 si = intruder.get_s(); // projected position of the intruder
-	Velocity vi = intruder.get_v(); // projected velocity of the intruder
+	Vect3 vi = intruder.get_v(); // projected velocity of the intruder
 	SUMData sum = intruder.sum();
 	return format(intruder.getId()) 
 	    + format(si.x) + format(si.y) + format(si.z) 
@@ -149,7 +149,7 @@ public class DAA2XYZ {
     public String printLatLon(TrafficState ownship, TrafficState intruder, double time) {
 	// current intruder position
 	Vect3 si = intruder.get_s(); // projected position of the intruder
-	Velocity vi = intruder.get_v(); // projected velocity of the intruder
+	Velocity vi = Velocity.make(intruder.get_v()); // projected velocity of the intruder
 
 	// --- the following shows how to perform inverse transformation
 	Position po = ownship.getPosition(); // ownship position in lat lon
@@ -159,7 +159,7 @@ public class DAA2XYZ {
 	Velocity vx = eprj.inverseVelocity(si, vi, true);
 		
 	return intruder.getId() + "\t" + f.FmPrecision(Units.to("deg", px.lat()), precision) + "\t" + f.FmPrecision(Units.to("deg", px.lon()), precision) + "\t" + f.FmPrecision(Units.to("ft", px.alt()), precision) + "\t" 
-	    + f.FmPrecision(Units.to("knot", vx.x), precision) + "\t" + f.FmPrecision(Units.to("knot", vx.y), precision) + "\t" + f.FmPrecision(Units.to("fpm", vx.z), precision) + "\t" + f.FmPrecision(time, precision);
+	    + f.FmPrecision(Units.to("knot", vx.x()), precision) + "\t" + f.FmPrecision(Units.to("knot", vx.y()), precision) + "\t" + f.FmPrecision(Units.to("fpm", vx.z()), precision) + "\t" + f.FmPrecision(time, precision);
     }
 
     // public String printIntruderXYZ(TrafficState ownship, TrafficState intruder) {

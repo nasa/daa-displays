@@ -122,7 +122,7 @@ public class DAA2Json {
 	public String printLLA(TrafficState ownship, TrafficState intruder) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
-		Velocity vi = intruder.get_v(); // projected velocity of the intruder
+		Velocity vi = Velocity.make(intruder.get_v()); // projected velocity of the intruder
 
 		// --- the following computations show how to perform inverse transformation for lla and velocity
 		Position po = ownship.getPosition(); // ownship position in lat lon
@@ -142,16 +142,16 @@ public class DAA2Json {
 		+ "\"lon\": \"" + lon + "\", " 
 		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\" }, "
 		+ "\"v\": { " 
-		+ "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-		+ "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", "
-		+ "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\" }"
+		    + "\"x\": \"" + f.FmPrecision(Units.to("knot", vx.x()), precision16) + "\", " 
+		    + "\"y\": \"" + f.FmPrecision(Units.to("knot", vx.y()), precision16) + "\", "
+		    + "\"z\": \"" + f.FmPrecision(Units.to("fpm", vx.z()), precision16) + "\" }"
 		+ " }";
 	}
 
 	public String printDAA(TrafficState ownship, TrafficState intruder, double time) {
 		// current intruder position
 		Vect3 si = intruder.get_s(); // projected position of the intruder
-		Velocity vi = intruder.get_v(); // projected velocity of the intruder
+		Velocity vi = Velocity.make(intruder.get_v()); // projected velocity of the intruder
 
 		// --- the following shows how to perform inverse transformation
 		Position po = ownship.getPosition(); // ownship position in lat lon
@@ -166,9 +166,9 @@ public class DAA2Json {
 		+ "\"lat\": \"" + f.FmPrecision(Units.to("deg", px.lat()), precision16) + "\", " 
 		+ "\"lon\": \"" + f.FmPrecision(Units.to("deg", px.lon()), precision16) + "\", " 
 		+ "\"alt\": \"" + f.FmPrecision(Units.to("ft", px.alt()), precision16) + "\", "
-		+ "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x), precision16) + "\", " 
-		+ "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y), precision16) + "\", " 
-		+ "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z), precision16) + "\""
+		    + "\"vx\": \"" + f.FmPrecision(Units.to("knot", vx.x()), precision16) + "\", " 
+		    + "\"vy\": \"" + f.FmPrecision(Units.to("knot", vx.y()), precision16) + "\", " 
+		    + "\"vz\": \"" + f.FmPrecision(Units.to("fpm", vx.z()), precision16) + "\""
 		+ " }";
 	}
 

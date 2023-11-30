@@ -49,15 +49,18 @@ dist:
 	rsync -a src/contrib dist/
 	@echo "\033[0;32m** Done copying dist folder! **\033[0m"
 
+# To compile particular releases of DAIDALUS
+daidalus-releases=
+
 daidalus:
 	@echo "\033[0;32m** Making DAIDALUS submodules **\033[0m"
 	git submodule update --init --remote
-	@cd daidalus-submodules; make
+	@cd daidalus-submodules; make -e daidalus-releases=$(daidalus-releases)
 	@echo "\033[0;32m** Done making DAIDALUS submodules! **\033[0m"
 
 compile:
 	@echo "\033[0;32m** Making Java and C++ applications **\033[0m"
-	cd dist && make clean compile 
+	cd dist && make clean compile -e daidalus-releases=$(daidalus-releases)
 	@echo "\033[0;32mDone making Java and C++ applications! \033[0m"
 
 install-dependencies:
@@ -71,7 +74,7 @@ resolutions:
 
 clean:
 	@echo "\033[0;33m** Cleaning dist and daidalus-submodules folder **\033[0m"
-	cd daidalus-submodules; make clean
+	cd daidalus-submodules; make clean -e daidalus-releases=$(daidalus-releases)
 	test ! -d dist || ( cd dist && make clean )
 	@echo "\033[0;33mDone cleaning! \033[0m"
 

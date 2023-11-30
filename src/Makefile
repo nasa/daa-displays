@@ -6,7 +6,7 @@ install-dependencies:
 	@cd daa-server && npm install
 
 compile:
-	cd daa-logic && make 
+	cd daa-logic && make -e daidalus-releases=$(daidalus-releases) 
 	cd contrib && make 
 
 clean:

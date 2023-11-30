@@ -1,6 +1,8 @@
-releasefile := $(if $(shell test -f "releases" && echo "YES"),releases,../../daidalus-submodules/releases)
-
-releases := $(shell cat $(releasefile) | sed -e "s:\#.*::g")
+ifeq ($(strip $(daidalus-releases)),)
+releases := $(shell cat ../../daidalus-submodules/releases | sed -e "s:\#.*::g")
+else
+releases := $(daidalus-releases)
+endif
 
 version1 = $(findstring v1.,$(1))
 
@@ -11,9 +13,6 @@ CPP   = c++
 all: compile
 
 releases:
-	@if [ -f releases ]; then \
-		echo "*** Warning: Using local file 'dist/daa-logic/releases'"; \
-	fi
 	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
 
 DAIDALUS_DIR=../../../daidalus-submodules
@@ -36,7 +35,7 @@ compile-cpp-$(1):
 endef
 compile-cpp-all = $(foreach ver,$(releases),$(eval $(call compile-cpp-template,$(ver))))
 
-CODEV1 = DAA2PVS
+CODEV1 = #DAA2PVS
 define codev1-template
 codev1-$(1):
 	@echo "\033[0;32m** Building $(1)-1.x **\033[0m"

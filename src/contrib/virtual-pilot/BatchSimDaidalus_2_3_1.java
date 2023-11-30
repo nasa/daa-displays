@@ -248,22 +248,22 @@ public class BatchSimDaidalus_2_3_1 {
 	// For example, an easterly wind is a wind in the 270 direction.
 	
 	// Zero wind.
-	wind = Velocity.makeVxyz(0.0, 0.0, 0.0); // x-knots, y-knots, z-fpm.
+	wind = Velocity.makeVxyz(0.0, 0.0, "knot", 0.0, "fpm"); // x-knots, y-knots, z-fpm.
 
 	// North wind at 50 knots.
-	// wind = Velocity.makeVxyz(0.0, -50.0, 0.0); // x-knots, y-knots, z-fpm.
+	// wind = Velocity.makeVxyz(0.0, -50.0, "knot", 0.0, "fpm"); // x-knots, y-knots, z-fpm.
 	
 	// South wind at 50 knots.
-	// wind = Velocity.makeVxyz(0.0, 50.0, 0.0); // x-knots, y-knots, z-fpm.
+	// wind = Velocity.makeVxyz(0.0, 50.0, "knot", 0.0, "fpm"); // x-knots, y-knots, z-fpm.
 	
 	// West wind at 50 knots.
-	// wind = Velocity.makeVxyz(50, 0, 0); // x-knots, y-knots, z-fpm.
+	// wind = Velocity.makeVxyz(50, 0, "knot", 0, "fpm"); // x-knots, y-knots, z-fpm.
 	
 	// North-west wind at 50 knots.
-	// wind = Velocity.makeVxyz(35.35534, -35.35534, 0.0);
+	// wind = Velocity.makeVxyz(35.35534, -35.35534, "knot", 0.0, "fpm");
 	
 	// South-east wind at 50 knots.
-	// wind = Velocity.makeVxyz(-35.35534, 35.35534, 0.0);
+	// wind = Velocity.makeVxyz(-35.35534, 35.35534, "knot", 0.0, "fpm");
 
 	// Get the states of the aircraft.
 	trk_own_ic = daa.getOwnshipState().horizontalDirection(); // radians.
@@ -328,7 +328,7 @@ public class BatchSimDaidalus_2_3_1 {
 	    wind_direction = 2*Math.PI*r2.nextDouble();
 	    wind_x = 50*Math.sin(wind_direction);
 	    wind_y = 50*Math.cos(wind_direction);
-	    wind = Velocity.makeVxyz(wind_x, wind_y, 0); // x-knots, y-knots, z-fpm.
+	    wind = Velocity.makeVxyz(wind_x, wind_y, "knot", 0, "fpm"); // x-knots, y-knots, z-fpm.
 	    // System.out.println("direction "+wind_direction*180/Math.PI+" wind_x "+wind_x+" wind_y "+wind_y);
 	   
 
@@ -386,22 +386,22 @@ public class BatchSimDaidalus_2_3_1 {
 		severity = severity(daa);
 
 		// System.out.print(" time "+time_sim);
-		// System.out.println(" severity "+severity.x()+" range "+severity.y()+" vertical dist "+severity.z());
+		// System.out.println(" severity "+severity.x+" range "+severity.y+" vertical dist "+severity.z);
 	    
-		if (severity.x() > max_squircle.x()) {
+		if (severity.x > max_squircle.x) {
 		    max_squircle = severity;
 		}
 
 		// Only count minimum horizontal distance if the vertical distance is
 		// 450 feet or less.
-		if (severity.y() < min_horizontal_distance.x() && severity.z()*3.281 <= 450.0) {
-		    min_horizontal_distance = new Vect2(severity.y(), severity.z());
+		if (severity.y < min_horizontal_distance.x && severity.z*3.281 <= 450.0) {
+		    min_horizontal_distance = new Vect2(severity.y, severity.z);
 		}
 	    
 		// Only count minimum vertical distance if the horizontal distance is
 		// 5,000 feet of less.
-		if (severity.z() < min_vertical_distance.y() && severity.y()*3.281 <= 5000.0) {
-		    min_vertical_distance = new Vect2(severity.y(), severity.z());
+		if (severity.z < min_vertical_distance.y() && severity.y*3.281 <= 5000.0) {
+		    min_vertical_distance = new Vect2(severity.y, severity.z);
 		}
 
 		// Set the wind field in the Daidalus object.
@@ -573,8 +573,8 @@ public class BatchSimDaidalus_2_3_1 {
 	    velocity_own_air = Velocity.mkTrkGsVs(heading_own_new, airspeed_own, ver_speed_own_new);
 
 	    // Add wind to the air velocity vectors.
-	    velocity_own_ground = velocity_own_air.Add(wind);
-	    velocity_traf_ground = velocity_traf_air.Add(wind);
+	    velocity_own_ground = velocity_own_air.Add(wind.vect3());
+	    velocity_traf_ground = velocity_traf_air.Add(wind.vect3());
 
 	    // Put the ownship and traffic aircraft in the Daidalus object.
 	    daa.setOwnshipState("ownship", position_own, velocity_own_ground, time_sim);
@@ -589,9 +589,9 @@ public class BatchSimDaidalus_2_3_1 {
 	    
 	    } // End Simulation loop.
 	
-	    System.out.print(+max_squircle.x()*100+", "+max_squircle.y()*3.281+", "+max_squircle.z()*3.281);
-	    System.out.print(", "+min_horizontal_distance.x()*3.281+", "+min_horizontal_distance.y()*3.281);
-	    System.out.print(", "+min_vertical_distance.x()*3.281+", "+min_vertical_distance.y()*3.281);
+	    System.out.print(+max_squircle.x*100+", "+max_squircle.y*3.281+", "+max_squircle.z*3.281);
+	    System.out.print(", "+min_horizontal_distance.x*3.281+", "+min_horizontal_distance.y*3.281);
+	    System.out.print(", "+min_vertical_distance.x*3.281+", "+min_vertical_distance.y*3.281);
 	    System.out.println(", "+time_impl_delay);
 	
 	    // Write last state.
@@ -941,9 +941,9 @@ public class BatchSimDaidalus_2_3_1 {
 	Vect3 relative_s = own_s.Sub(traf_s);
 	Vect2 rel_s_hor = relative_s.vect2();
 	double range = rel_s_hor.norm();
-	double vert_dist = Math.abs(own_s.z() - traf_s.z());
-	double d_x = own_s.x() - traf_s.x();
-	double d_y = own_s.y() - traf_s.y();
+	double vert_dist = Math.abs(own_s.z - traf_s.z);
+	double d_x = own_s.x - traf_s.x;
+	double d_y = own_s.y - traf_s.y;
 	double HMD;
 
 	Vect3 own_v = daa.getOwnshipState().get_v();
@@ -957,8 +957,8 @@ public class BatchSimDaidalus_2_3_1 {
 	}
 	double closure = rel_s_hor.dot(rel_v_hor)/range;
 	
-	double v_x = own_v.x() - traf_v.x();
-	double v_y = own_v.y() - traf_v.y();
+	double v_x = own_v.x - traf_v.x;
+	double v_y = own_v.y - traf_v.y;
 	
 	// System.out.println(" Range "+range/1852.0+" NM, vertical distance "+vert_dist+" m, "+vert_dist*3.281+" feet");
 	// System.out.println(" Closure "+closure*3600.0/1852+" knots");
