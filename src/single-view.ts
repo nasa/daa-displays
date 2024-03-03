@@ -181,9 +181,19 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         });
         data.map.setTraffic(traffic);
         // set wind indicator
-        if (bands && bands.Wind) {
-            wind.setAngleFrom(bands.Wind.deg);
-            wind.setMagnitude(bands.Wind.knot);
+        if (bands?.WindVectors) {
+            wind.setAngleFrom(bands.WindVectors.deg);
+            wind.setMagnitude(bands.WindVectors.knot);
+            wind.reveal();
+        } else if (bands?.Wind) {
+            if (+bands.Wind.deg === 0) {
+                // hide indicator
+                wind.hide();
+            } else {
+                wind.setAngleFrom(bands.Wind.deg);
+                wind.setMagnitude(bands.Wind.knot);
+                wind.reveal();
+            }
         }
         const step: number = player.getCurrentSimulationStep();
         const time: string = player.getCurrentSimulationTime();

@@ -160,10 +160,20 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
         }
     }); 
     display.map.setTraffic(traffic);
-    // set wind indicator
-    if (bands && bands.Wind) {
-        display.windIndicator.setAngleFrom(bands.Wind.deg);
-        display.windIndicator.setMagnitude(bands.Wind.knot);
+    // render wind indicator
+    if (bands?.WindVectors) {
+        display.windIndicator.setAngleFrom(bands.WindVectors.deg);
+        display.windIndicator.setMagnitude(bands.WindVectors.knot);
+        display.windIndicator.reveal();
+    } else if (bands?.Wind) {
+        if (+bands.Wind.deg === 0) {
+            // hide indicator
+            display.windIndicator.hide();
+        } else {
+            display.windIndicator.setAngleFrom(bands.Wind.deg);
+            display.windIndicator.setMagnitude(bands.Wind.knot);
+            display.windIndicator.reveal();
+        }
     }
     
     // render plots

@@ -148,10 +148,20 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
         }
     }); 
     data.map.setTraffic(traffic);
-    // set wind indicator
-    if (bands && bands.Wind) {
-        data.windIndicator.setAngleFrom(bands.Wind.deg);
-        data.windIndicator.setMagnitude(bands.Wind.knot);
+    // render wind indicator
+    if (bands?.WindVectors) {
+        data.windIndicator.setAngleFrom(bands.WindVectors.deg);
+        data.windIndicator.setMagnitude(bands.WindVectors.knot);
+        data.windIndicator.reveal();
+    } else if (bands?.Wind) {
+        if (+bands.Wind.deg === 0) {
+            // hide indicator
+            data.windIndicator.hide();
+        } else {
+            data.windIndicator.setAngleFrom(bands.Wind.deg);
+            data.windIndicator.setMagnitude(bands.Wind.knot);
+            data.windIndicator.reveal();
+        }
     }
     
     plot(player, { ownship: { gs: airspeed, vs: vspeed, alt, hd: heading }, bands, step: splitView.getCurrentSimulationStep(), time: splitView.getCurrentSimulationTime() });
