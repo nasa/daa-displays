@@ -686,6 +686,7 @@ export class VerticalSpeedTape {
         this.verticalSpeedStep = val;
         this.create_vspeed_ticks();
         this.speedBug.setValue(this.currentVerticalSpeed);
+        this.resolutionBug.refresh();
         this.draw_bands();
         this.setVerticalSpeed(this.currentVerticalSpeed);
         // return this.setVerticalSpeed(this.currentVerticalSpeed, { transitionDuration: "0ms" }); -- FIXED!
