@@ -51,7 +51,7 @@ import * as serverInterface from '../utils/daa-types'
 import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
-import { LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
+import { DAA_AircraftDescriptor, DaaSymbol, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // standard set of locations
 export const cities = {
@@ -192,6 +192,9 @@ function _get_streetMap(t: string): WorldWind.RenderableLayer {
     return new OpenStreetMapRestLayer();    
 }
 
+// aicrraft data interface
+export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string, magvar?: number }
+
 /**
  * Airspace interface, provides information on ownship and traffic
  */
@@ -215,7 +218,7 @@ export declare interface AirspaceInterface {
     setOwnshipHeading (deg: number, opt?: { nrthup?: boolean, duration?: number }): AirspaceInterface;
     getOwnshipHeading (): number;
     getTraffic (): AircraftInterface[];
-    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[]): AirspaceInterface;
+    setTraffic (traffic: AircraftData[]): AirspaceInterface;
     hideTraffic (): AirspaceInterface;
     revealTraffic (): AirspaceInterface;
     hideCallSign (): AirspaceInterface;

@@ -99,7 +99,8 @@ export class LeafletAircraft extends Aircraft {
     constructor (map: L.Map, desc: { 
         s: LatLonAlt<number | string>,
         v?: Vector3D<number | string>,
-        heading: number, 
+        heading: number,
+        magvar?: number,
         callSign: string, 
         symbol: DaaSymbol,
         ownship?: AircraftInterface,

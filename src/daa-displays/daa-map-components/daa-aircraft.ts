@@ -162,6 +162,7 @@ export interface AircraftLabel {
 export class Aircraft implements AircraftInterface {
     protected position: LatLonAlt<number>;
     protected heading: number; // we keed a separate variable for heading, so this information is well defined even if velocity is 0
+    protected magvar: number; // magnetic variation
     protected velocity: Vector3D<number>;
     protected callSign: string;
     /**
@@ -185,6 +186,7 @@ export class Aircraft implements AircraftInterface {
         };
         this.velocity = null;
         this.heading = NaN;
+        this.magvar = 0;
     }
     /**
      * This function is only for traffic aircraft, should be extended by classes that extend the base class Aircraft
@@ -222,7 +224,7 @@ export class Aircraft implements AircraftInterface {
             this.velocity.x = +vel.x; //(isNaN(+vel.x)) ? this.velocity.x : +vel.x;
             this.velocity.y = +vel.y; //(isNaN(+vel.y)) ? this.velocity.y : +vel.y;
             this.velocity.z = +vel.z; //(isNaN(+vel.z)) ? this.velocity.z : +vel.z;
-            this.heading = conversions.rad2deg(Math.atan2(this.velocity.x, this.velocity.y));
+            this.heading = conversions.rad2deg(Math.atan2(this.velocity.x, this.velocity.y)) + this.magvar;
         }
         return this;
     }

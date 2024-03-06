@@ -40,7 +40,7 @@
 import { VFR_CHARTS } from "../../aeronav/vfr-charts";
 import * as utils from "../daa-utils";
 import { Aircraft, AircraftInterface } from "./daa-aircraft";
-import { AirspaceInterface, cities } from "./daa-airspace";
+import { AircraftData, AirspaceInterface, cities } from "./daa-airspace";
 import * as L from "leaflet";
 import { DEFAULT_MAP_HEIGHT, DEFAULT_MAP_WIDTH, MAP_WIDESCREEN_WIDTH } from "../daa-interactive-map";
 import { LayeringMode, LeafletAircraft, OWNSHIP_COLOR } from "./leaflet-aircraft";
@@ -168,9 +168,6 @@ export enum AirspaceCSS {
     DAA_TRAFFIC_TRACE = "daa-traffic-trace",
     DAA_OWNSHIP_TRACE = "daa-ownship-trace"
 }
-
-// aicrraft data interface
-export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }
 
 /**
  * Airspace implemented with Leafletjs
@@ -1250,6 +1247,7 @@ export class LeafletAirspace implements AirspaceInterface {
                     : `target-${i}`;
             const heading: number = Aircraft.headingFromVelocity(traffic[i].v);
             const symbol: string = (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? traffic[i].symbol : "daa-target";
+            const magvar: number = isFinite(traffic[i].magvar) ? traffic[i].magvar : 0;
             const aircraft: LeafletAircraft = new LeafletAircraft(this.lworlds[1], {
                 s: canAnimate && this.previousTrafficPosition[callSign] ? 
                     this.previousTrafficPosition[callSign] 
@@ -1262,7 +1260,8 @@ export class LeafletAirspace implements AirspaceInterface {
                 aircraftVisible: this.trafficVisible,
                 ownship: this._ownship,
                 mapCanRotate: !this.godsView,
-                layeringMode: this.layeringMode
+                layeringMode: this.layeringMode,
+                magvar
             }, this.trafficLayer);
             this._traffic.push(aircraft);
             if (!canAnimate) {
