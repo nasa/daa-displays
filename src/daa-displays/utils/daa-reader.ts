@@ -183,7 +183,8 @@ export function deltaHeading (deg: number, previousAngle: number): number {
  * airspeed and vspeed are kept constant in the sub-intervals
  * position, heading and bank angle are interpolated linearly
  */
-export function animateAircraft (ac_series: DaaAircraft[], n: number): DaaAircraft[] {
+export function animateAircraft (ac_series: DaaAircraft[], n: number, opt?: { dbg_lines?: boolean }): DaaAircraft[] {
+    const dbg_lines: boolean = opt?.dbg_lines !== undefined && opt?.dbg_lines !== null ? opt.dbg_lines : true;
     const extra_steps: number = parseInt(`${n}`); // make sure n is an integer
     if (ac_series?.length && extra_steps > 0) {
         extra_steps;
@@ -205,9 +206,11 @@ export function animateAircraft (ac_series: DaaAircraft[], n: number): DaaAircra
                     alt: `${+ac_series[i - 1].alt + k * alt_inc}`,
                     trk: `${+ac_series[i - 1].trk + k * trk_inc}`,
                     roll: ac_series[i - 1].roll ? (+ac_series[i - 1].roll + k * roll_inc).toFixed(DEFAULT_ROLL_PRECISION) : "0",
-                    time: `${+ac_series[i - 1].time + k * time_inc}`,
-                    "animation-frame": true,
-                    dbg: `extra-${k}`
+                    time: `${+ac_series[i - 1].time + k * time_inc}`
+                };
+                if (dbg_lines) {
+                    ac["animation-frame"] = true;
+                    ac.dbg = `extra-${k}`;
                 };
                 animated_series.push(ac);
             }
