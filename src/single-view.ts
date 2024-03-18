@@ -43,6 +43,7 @@ import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
+import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
 
 const player: DAAPlayer = new DAAPlayer();
 
@@ -363,10 +364,11 @@ player.define("plot", () => {
     //     monitorID
     // });
 });
+const plotWidth: number = 1134; // px
 async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "alerts",
-        width: 1790,
+        width: plotWidth,
         label: "Alerts",
         range: { from: 1, to: 3 },
         parent: "simulation-plot"
@@ -376,7 +378,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "heading-bands",
         top: 150,
-        width: 1790,
+        width: plotWidth,
         label: "Heading Bands",
         range: { from: 0, to: 360 },
         units: "[deg]",
@@ -385,7 +387,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "horizontal-speed-bands",
         top: 300,
-        width: 1790,
+        width: plotWidth,
         label: "Horizontal Speed Bands",
         range: { from: 0, to: 1000 },
         units: "[knot]",
@@ -394,7 +396,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "vertical-speed-bands",
         top: 450,
-        width: 1790,
+        width: plotWidth,
         label: "Vertical Speed Bands",
         range: { from: -10000, to: 10000 },
         units: "[fpm]",
@@ -403,7 +405,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     player.appendSimulationPlot({
         id: "altitude-bands",
         top: 600,
-        width: 1790,
+        width: plotWidth,
         label: "Altitude Bands",
         range: { from: -200, to: 60000 },
         units: "[ft]",
@@ -433,15 +435,22 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
         });
     }
     player.appendSimulationControls({
-        parent: "simulation-controls",
+        htmlTemplate: integratedPlaybackTemplate,
+        parent: ".navbar-integrated-simulation-controls",//"simulation-controls"
+        multiplay: [
+            { id: "#multi-view-plot", label: "plot" },
+            { id: "#multi-view-reset", label: "reset" }
+        ],
         displays: [ "daa-disp" ]
     });
-    player.appendPlotControls({
-        parent: "simulation-controls",
-        top: 47
-    });
     player.appendActivationPanel({
-        parent: "activation-controls"
+        parent: ".navbar-integrated-simulation-controls",//"activation-controls"
+    });
+    player.appendPlotControls({
+        parent: ".integrated-multiplay-controls", //"simulation-controls"
+        reuseParentDiv: true,
+        buttons: { plot: "#multi-view-plot", reset: "#multi-view-reset" },
+        // top: 47
     });
     player.appendWedgeRangeControls({
         setCompassWedgeAperture: (aperture: string) => {
@@ -456,18 +465,33 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
         setVerticalSpeedWedgeAperture: (aperture: string) => {
             verticalSpeedTape.setMaxWedgeAperture(aperture);
         }
-    }, { top: -110, left: 1140 });
+    }, { parent: "simulation-controls", top: 50, left: 0, width: 492 });
     player.appendDeveloperControls({
         normalMode,
         developerMode
     }, {
         parent: "simulation-controls",
-        top: 48,
-        left: 754,
-        width: 344,
+        top: -50,
+        left: 0,
+        width: 492,
         controls: {
             showDeveloper: true
         }
+    });
+    player.appendMagVarControls({
+        setMagVar: (val: string) => {
+            map.magVar(+val);
+            compass.magVar(+val);
+        },
+        magneticCompass: (val: boolean) => {
+            map.magneticHeading(val);
+            compass.magneticHeading(val);
+        }
+    }, {
+        parent: "simulation-controls",
+        top: 0,
+        left: 0,
+        width: 492
     });
     await player.activate({ developerMode: true });
 

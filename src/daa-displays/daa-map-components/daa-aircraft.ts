@@ -141,6 +141,7 @@ export declare interface AircraftInterface {
     getVelocity(): Vector3D<number>;
     getAltitude (): number;
     getHeading (): number;
+    getMagHeading (): number;
     getCallSign (): string;
     getAlertKind (): AlertKind;
 }
@@ -297,6 +298,12 @@ export class Aircraft implements AircraftInterface {
      */
     getHeading (): number {
         return this.heading;
+    }
+    /**
+     * Returns the heading of the aircraft
+     */
+    getMagHeading (): number {
+        return this.heading + this.magvar;
     }
     /**
      * Utility function, returns the heading described by the velocity vector passed as function parameter

@@ -10,7 +10,7 @@ export const airspeedTemplate = `
                 <div id="{{id}}-ticks" style="position:absolute;width:12px;left:72px;top:24px;">
                 </div>
             </div>
-            <div id="{{id}}-bands" style="position:absolute;top:24px;">
+            <div id="{{id}}-bands" class="daa-guidance" style="position:absolute;top:24px;">
             </div>
             <div id="{{id}}-bug" style="position:absolute; left:-2px; opacity:${BUG_OPACITY}; margin-top:18px;">
                 <div id="{{id}}-bug-indicator" style="position:absolute;">
@@ -20,7 +20,7 @@ export const airspeedTemplate = `
                     <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:62px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(-45deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; left:90px; margin-top:18px;">
+            <div id="{{id}}-resolution-bug" class="daa-guidance daa-resolution" style="position:absolute; left:90px; margin-top:18px;">
                 <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:${BUG_OPACITY};">
                     <div data-toggle="tooltip" data-placement="right" data-html="true" data-boundary="window" data-title="resolution bug"
                          class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" style="width:18px; height:11px; margin-left:5px; background-color:white; border-radius:16px; transform:scale(${RESOLUTION_BUG_SCALE});"></div>

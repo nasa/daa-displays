@@ -28,7 +28,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
             <div style="top:327px;position:absolute; width:100%; border-top:2px solid white; border-bottom:2px solid white;height:34px;"></div>
             <div style="top:383px;position:absolute; width:100%; border-top:2px solid white; border-bottom:2px solid white;height:26px;"></div>
         </div>
-        <div id="{{id}}-bands" style="position:absolute;top:24px;left:-6px; opacity:0.8;">
+        <div id="{{id}}-bands" class="daa-guidance" style="position:absolute;top:24px;left:-6px; opacity:0.8;">
         </div>
         <div id="{{id}}-bug" style="position:absolute; left:40px; opacity:${BUG_OPACITY}; margin-top:1px; z-index:99;">
             <div id="{{id}}-bug-indicator" style="position:absolute; transform:scale(${BUG_SCALE});">
@@ -38,7 +38,7 @@ export const vspeedTemplate = `<div id="{{id}}-inner" style="overflow:hidden; po
                 <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-9.5px; border-bottom:2px solid #cccccc;border-right:2px solid #cccccc;background-color:black; transform:rotate(135deg);"></div>
             </div>
         </div>
-        <div id="{{id}}-resolution-bug" style="position:absolute; margin-top:1px;">
+        <div id="{{id}}-resolution-bug" class="daa-guidance daa-resolution" style="position:absolute; margin-top:1px;">
             <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:${BUG_OPACITY};">
                 <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolution bug" style="width:18px; margin-left:6px; height:11px; background-color:white; border-radius:16px; transform:scale(${RESOLUTION_BUG_SCALE});"></div>
             </div>

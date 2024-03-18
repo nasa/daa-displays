@@ -15,7 +15,7 @@ export const altitudeTemplate = `
                     <div style="top:648px;position:absolute; width:100%; border-top:2px solid white; border-bottom:2px solid white;height:82px;"></div>
                 </div>
             </div>
-            <div id="{{id}}-bands" style="position:absolute; top:24px; margin-left:36px;">
+            <div id="{{id}}-bands" class="daa-guidance" style="position:absolute; top:24px; margin-left:36px;">
             </div>
             <div id="{{id}}-bug" style="opacity:${BUG_OPACITY}; position:absolute; left:19px; opacity:0.8; margin-top:98px; margin-left:36px;">
                 <div id="{{id}}-bug-indicator" style="position:absolute;">
@@ -25,7 +25,7 @@ export const altitudeTemplate = `
                     <div id="{{id}}-bug-pointer" style="width:8px; height:8px; margin-top:-10px; margin-left:5px; border-bottom:2px solid white; border-right:2px solid white; background-color:black; transform:rotate(135deg);"></div>
                 </div>
             </div>
-            <div id="{{id}}-resolution-bug" style="position:absolute; margin-top:99px;">
+            <div id="{{id}}-resolution-bug" class="daa-guidance daa-resolution" style="position:absolute; margin-top:99px;">
                 <div id="{{id}}-resolution-bug-indicator" style="position:absolute; opacity:${BUG_OPACITY};">
                     <div class="{{id}}-resolution-bug {{id}}-resolution-bug-tooltip" data-toggle="tooltip" data-placement="left" data-html="true" boundary="window" data-title="resolutionbug" style="width:18px; margin-left:15px; height:11px; background-color:white; border-radius:16px; transform:scale(${RESOLUTION_BUG_SCALE});"></div>
                 </div>

@@ -29,7 +29,7 @@ export const playbackTemplate: string = `
                         <span class="btn-sm" style="text-align:left; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; min-width:200px; width:100%;">
                             Current Time: 
                             <span style="float:right; text-align:right;">
-                                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span><span>sec</span>
+                                <span id="{{id}}-curr-sim-time" style="user-select: all; margin-left:4px; margin-right:4px;">0</span><span>sec</span>
                             </span>
                         </span>
                     </div>
@@ -106,10 +106,8 @@ export const integratedPlaybackTemplate: string = `
                     </div>
                     <div class="input-group input-group-sm mb-3">
                         <span class="btn-sm" style="text-align:left; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle; min-width:200px; width:100%;">
-                            Current Time: 
-                            <span style="float:right; text-align:right;">
-                                <span id="{{id}}-curr-sim-time" style="margin-left:4px; margin-right:4px;">0</span><span>sec</span>
-                            </span>
+                            Time: 
+                            <span id="{{id}}-curr-sim-time" style="user-select: all; margin-left:4px; margin-right:4px;">0</span><span>sec</span>
                         </span>
                     </div>
 
@@ -610,6 +608,10 @@ export const developersControls: string = `
       <input id="{{id}}-show-plots-checkbox" type="checkbox" checked="true" aria-label="Show plot diagrams">
       <span style="margin-left:4px; margin-right:14px;">Show plot diagrams</span>
     </div>{{/if}}
+    {{#if controls.showGuidance}}<div class="input-group-text" style="width:{{width}}px;">
+      <input id="{{id}}-show-guidance-checkbox" type="checkbox" checked="true" aria-label="Show guidance">
+      <span style="margin-left:4px; margin-right:14px;">Show guidance</span>
+    </div>{{/if}}
   </div>
 </div>`;
 
@@ -717,6 +719,31 @@ export const resolutionControls: string = `
                         <input id="{{id}}-max-altitude-wedge-aperture-input" style="text-align:center;" type="number" value="300" min="0" step="1" aria-label="altitude notch aperture" class="form-control">
                         <div class="input-group-append">
                             <span class="input-group-text">feet</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>`;
+
+
+export const magVarControls: string = `
+<div id="{{id}}-magvar-controls-inner" class="simulation-controls magvar-controls" style="position:absolute; width:0px; height:0px;">
+    <div class="input-group input-group-sm mb-3" style="width:{{width}}px;left:{{left}}px;top:{{top}}px;">
+        <div class="container-fluid" style="padding:0px;">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="input-group input-group-sm mb-3">
+                        <div class="input-group-text">
+                            <input type="checkbox" id="{{id}}-magvar-checkbox" class="magvar">
+                        </div>
+                        <div class="input-group-prepend">
+                            <span class="btn-sm magvar" style="width:240px; text-align:center; background-color:#e9ecef; border:1px solid #ced4da; white-space:nowrap;vertical-align: middle;">Magnetic Variation</span>
+                        </div>
+                        <input id="{{id}}-magvar-input" style="text-align:center;" type="number" value="0" min="-360" max="360" step="1" aria-label="magnetic variation" class="form-control">
+                        <div class="input-group-append">
+                            <span class="input-group-text">deg</span>
                         </div>
                     </div>
                 </div>

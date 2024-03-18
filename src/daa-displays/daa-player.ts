@@ -107,6 +107,11 @@ export enum ResolutionHandler {
     setVerticalSpeedWedgeAperture = "setVerticalSpeedWedgeAperture"
 }
 
+export enum MagVarHandler {
+    setMagVar = "setMagVar",
+    magneticCompass = "magneticCompass"
+}
+
 /**
  * DAA Player interfaces
  */
@@ -120,7 +125,7 @@ export declare interface DAAPlaybackHandlers {
     speed: () => Promise<void>;
     identify: () => Promise<void>;
 }
-export declare type InputHandler = (data: string) => void;
+export declare type InputHandler = (data: string | boolean) => void;
 export declare interface Handlers extends DAAPlaybackHandlers {
     daaScenarioReloader: (scenarios: string[]) => Promise<void>;
     daaConfigurationReloader: () => Promise<void>;
@@ -831,7 +836,8 @@ export class DAAPlayer extends Backbone.Model {
         parent?: string,
         controls?: {
             showDeveloper?: boolean,
-            showPlot?: boolean
+            showPlot?: boolean,
+            showGuidance?: boolean
         } 
         hidden?: boolean
     }): void {
@@ -844,6 +850,7 @@ export class DAAPlayer extends Backbone.Model {
         opt.controls = opt.controls || {};
         opt.controls.showDeveloper = opt.controls.showDeveloper === undefined ? true : !!opt.controls.showDeveloper;
         opt.controls.showPlot = opt.controls.showPlot === undefined ? true : !!opt.controls.showPlot;
+        opt.controls.showGuidance = opt.controls.showGuidance === undefined ? true : !!opt.controls.showGuidance;
         const theHTML = Handlebars.compile(templates.developersControls)({
             id: this.id,
             ...opt,
@@ -870,6 +877,14 @@ export class DAAPlayer extends Backbone.Model {
                 this.clickShowPlots();
             } else {
                 this.clickHidePlots();
+            }
+        });
+        $(`#${this.id}-show-guidance-checkbox`).on("change", () => {
+            const isChecked = $(`#${this.id}-show-guidance-checkbox`).prop("checked");
+            if (isChecked) {
+                this.clickShowGuidance();
+            } else {
+                this.clickHideGuidance();
             }
         });
     }
@@ -961,6 +976,40 @@ export class DAAPlayer extends Backbone.Model {
         });
     }
     /**
+     * Utility function, renders the DOM elements necessary for magvar
+     */
+    appendMagVarControls (handlers: { [Property in MagVarHandler]: InputHandler }, opt?: { top?: number, left?: number, width?: number, parent?: string }): void {
+        opt = opt || {};
+        opt.parent = opt.parent || this.id;
+        opt.top = (isNaN(opt.top)) ? 0 : opt.top;
+        opt.left = (isNaN(opt.left)) ? 0 : opt.left;
+        opt.width = (isNaN(+opt.width)) ? 400 : opt.width;
+        const theHTML = Handlebars.compile(templates.magVarControls)({
+            id: this.id,
+            parent: opt.parent,
+            top: opt.top, left: opt.left, width: opt.width
+        });
+        utils.createDiv(`${this.id}-magvar-controls`, { zIndex: 99, parent: opt.parent });
+        $(`#${this.id}-magvar-controls`).html(theHTML);
+        // install handlers
+        const hdl = (id: string, handlerName: string) => {
+            if (handlers && typeof handlers[handlerName] === "function") {
+                handlers[handlerName](<string> $(`#${id}-input`).val());
+            }
+        }
+        $(`#${this.id}-magvar-input`).on("input", () => {
+            hdl(`${this.id}-magvar`, "setMagVar");
+        });
+        $(`#${this.id}-magvar-checkbox`).on("change", () => {
+            const id: string = `${this.id}-magvar`;
+            const isChecked: boolean = $(`#${id}-checkbox`).is(":checked");
+            const handlerName: string = "magneticCompass";
+            if (handlers && typeof handlers[handlerName] === "function") {
+                handlers[handlerName](isChecked);
+            }
+        });
+    }
+    /**
      * Programmatically clicks "developer mode" button in the player
      */
     async clickDeveloperMode (): Promise<void> {
@@ -993,6 +1042,20 @@ export class DAAPlayer extends Backbone.Model {
     clickHidePlots (): void {
         $(`#${this.id}-show-plots-checkbox`).prop("checked", false);
         $(`.daa-spectrogram`).css({ display: "none" });
+    }
+    /**
+     * DAA guidance is visible
+     */
+    clickShowGuidance (): void {
+        $(`#${this.id}-show-guidance-checkbox`).prop("checked", true);
+        $(`.daa-guidance`).css({ display: "block" });
+    }
+    /**
+     * Hides DAA guidance
+     */
+    clickHideGuidance (): void {
+        $(`#${this.id}-show-guidance-checkbox`).prop("checked", false);
+        $(`.daa-guidance`).css({ display: "none" });
     }
     /**
      * utility function, renders the DOM elements necessary for plotting spectrograms

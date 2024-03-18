@@ -88,6 +88,9 @@ export class LeafletAircraft extends Aircraft {
     // reference aircraft -- this is used for the aircraft label, which shows relative altitude
     protected _own: AircraftInterface;
 
+    protected magvar: number;
+    protected magheading: boolean;
+
     // flags
     protected aircraftVisible: boolean; // whether the aircraft is visible
     protected callSignVisible: boolean; // whether the call sign is visible
@@ -101,6 +104,7 @@ export class LeafletAircraft extends Aircraft {
         v?: Vector3D<number | string>,
         heading: number,
         magvar?: number,
+        magheading?: boolean,
         callSign: string, 
         symbol: DaaSymbol,
         ownship?: AircraftInterface,
@@ -115,6 +119,8 @@ export class LeafletAircraft extends Aircraft {
         this.layer = layer; // This layers is used to render the aircraft
         this.symbol = desc?.symbol || "daa-target";
         this.heading = desc?.heading || 0;
+        this.magvar = desc?.magvar || 0;
+        this.magheading = !!desc?.magheading;
         this.velocity = {
             x: +desc?.v?.x || 0,
             y: +desc?.v?.y || 0,
@@ -165,8 +171,8 @@ export class LeafletAircraft extends Aircraft {
      * Internal function, creates the DOM element for the aircraft marker
      */
     protected createAircraftIcon (): L.DivIcon {
-        const aircraftHeading: number = this.heading || 0;
-        const ownshipHeading: number = this._own?.getHeading() || 0;
+        const aircraftHeading: number = (this.heading || 0) + (this.magheading ? this.magvar : 0);
+        const ownshipHeading: number = (this.magheading ? this._own?.getMagHeading() : this._own?.getHeading()) || 0;
         const label: AircraftLabel = this.symbol === "ownship" || this.symbol === "daa-ownship" ? 
             this.createCallSignLabel({ ownship: this._own }) 
                 : this.createTrafficLabel({ ownship: this._own });
@@ -347,6 +353,24 @@ export class LeafletAircraft extends Aircraft {
      */
     hide (): LeafletAircraft {
         this.marker.setOpacity(0);
+        return this;
+    }
+    /**
+     * Sets magvar for the aircraft
+     */
+    magVar (val: number): LeafletAircraft {
+        this.magvar = isFinite(val) ? val : 0;
+        // refresh aircraft
+        this.refresh();
+        return this;
+    }
+    /**
+     * Whether traffic heading should be adjusted using magvar
+     */
+    magneticHeading (flag: boolean): LeafletAircraft {
+        this.magheading = !!flag;
+        // refresh aircraft
+        this.refresh();
         return this;
     }
 }

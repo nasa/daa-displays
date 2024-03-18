@@ -9,6 +9,7 @@ export const indicatorsTemplate = `
 <!-- top indicator -->
 <div style="position:absolute; margin-left:-1px; margin-top:-110px; opacity:0.8;">
     <div id="{{id}}-top-hdg" style="color:#00f500; position:absolute; font-size:22px; font-family:${FONT_FAMILY}; margin-left:220px; top:58px; text-shadow:2px 2px black; opacity:0.8;">HDG</div>
+    <div id="{{id}}-top-mag" style="display:none; color:#00f500; position:absolute; font-size:22px; font-family:${FONT_FAMILY}; margin-left:364px; top:58px; text-shadow:2px 2px black; opacity:0.8;">MAG</div>
     <div id="{{id}}-top-indicator" style="position:absolute;top:56px; margin-left:280px; opacity:0.8;">
         <div id="{{id}}-top-indicator-box" style="overflow: hidden; position:absolute; background-color:black; border: 2px solid white; width:78px; height: 39px;"></div>
         <div id="{{id}}-top-indicator-pointer" style="position:absolute; background-color:black; border-bottom: 2px solid white; border-right: 2px solid white; transform-origin:center; transform:rotate(45deg); width:20px; height: 20px; top:28px; left:29px;"></div>
@@ -16,7 +17,6 @@ export const indicatorsTemplate = `
             0
         </div>
     </div>
-    <div id="{{id}}-top-mag" style="display:none; color:#00f500; position:absolute;font-size:22px;font-family:${FONT_FAMILY};margin-left:370px; top:64px;">MAG</div>
 </div>
 `;
 export const compassTemplate = `
@@ -51,9 +51,9 @@ export const compassTemplate = `
     <div id="{{id}}-circle" class="compass" style="transform:rotate(0deg); transition-timing-function:linear;">
         <object data="{{baseUrl}}svgs/danti-quadrant.svg" type="image/svg+xml" style="position:absolute;left:0px;width:635px;opacity:${COMPASS_LABELS_OPACITY};"></object>
         <!-- compass bands -->
-        <canvas id="{{id}}-bands" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;left:0px;opacity:${BANDS_OPACITY};"></canvas>
+        <canvas id="{{id}}-bands" class="daa-guidance" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;left:0px;opacity:${BANDS_OPACITY};"></canvas>
         <!-- resolution bug -->
-        <div id="{{id}}-resolution-bug" class="compass" style="transform:rotate(0deg); display:none;">
+        <div id="{{id}}-resolution-bug" class="compass daa-guidance daa-resolution" style="transform:rotate(0deg); display:none;">
             <!-- indicator -->
             <div id="{{id}}-resolution-bug-indicator" style="position:absolute; left:311px; top:75px;">
                 <!-- back -->

@@ -524,6 +524,21 @@ export class InteractiveMap {
         this.airspace?.streetMode();
         return this;
     }
+    /**
+     * Magnetic Variation (magvar)
+     */
+    magVar (val: number): InteractiveMap {
+        this.airspace?.magVar(val);
+        return this;
+    }
+    /**
+     * Whether the traffic display should use magnetic track/heading
+     */
+    magneticHeading (flag: boolean): InteractiveMap {
+        this.airspace?.magneticHeading(flag);
+        return this;
+    }
+
     addGeoFence (
         id: string, 
         perimeter: LatLon<number | string>[], 
