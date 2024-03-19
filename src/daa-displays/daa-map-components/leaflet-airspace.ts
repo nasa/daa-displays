@@ -186,10 +186,6 @@ export class LeafletAirspace implements AirspaceInterface {
     protected contoursLayer: L.LayerGroup; // contours layer
     protected hazardZonesLayer: L.LayerGroup; // hazard zones layer
 
-    // magnetic heading
-    protected magvar: number; // Magnetic Variation
-    protected magheading: boolean; // whether traffic heading should be corrected by magvar
-
     // max trace length
     protected maxTraceLen: number = DEFAULT_MAX_TRACE_LEN;
 
@@ -1251,8 +1247,6 @@ export class LeafletAirspace implements AirspaceInterface {
                     : `target-${i}`;
             const heading: number = Aircraft.headingFromVelocity(traffic[i].v);
             const symbol: string = (traffic[i].symbol !== null || traffic[i].symbol !== undefined) ? traffic[i].symbol : "daa-target";
-            const magvar: number = isFinite(this.magvar) ? this.magvar : 0;
-            const magheading: boolean = this.magheading;
             const aircraft: LeafletAircraft = new LeafletAircraft(this.lworlds[1], {
                 s: canAnimate && this.previousTrafficPosition[callSign] ? 
                     this.previousTrafficPosition[callSign] 
@@ -1261,7 +1255,6 @@ export class LeafletAirspace implements AirspaceInterface {
                 symbol,
                 callSign,
                 heading,
-                magvar, magheading,
                 callSignVisible: this.callSignVisible,
                 aircraftVisible: this.trafficVisible,
                 ownship: this._ownship,
@@ -1510,26 +1503,6 @@ export class LeafletAirspace implements AirspaceInterface {
     hideGeoFence(): AirspaceInterface {
         this.hideContours();
         this.hideHazardZones()
-        return this;
-    }
-    /**
-     * Sets magvar for the current location
-     */
-    magVar (val: number): AirspaceInterface {
-        this.magvar = isFinite(val) ? val : 0;
-        for (let i = 0; i < this._traffic?.length; i++) {
-            this._traffic[i].magVar(this.magvar);
-        }
-        return this;
-    }
-    /**
-     * Sets magvar for the current location
-     */
-    magneticHeading (flag: boolean): AirspaceInterface {
-        this.magheading = !!flag;
-        for (let i = 0; i < this._traffic?.length; i++) {
-            this._traffic[i].magneticHeading(this.magheading);
-        }
         return this;
     }
 }

@@ -193,7 +193,7 @@ function _get_streetMap(t: string): WorldWind.RenderableLayer {
 }
 
 // aicrraft data interface
-export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string, magvar?: number, magheading?: boolean }
+export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }
 
 /**
  * Airspace interface, provides information on ownship and traffic
@@ -252,8 +252,6 @@ export declare interface AirspaceInterface {
     getIndicatorsDivName (): string;
     getOwnshipDivName (): string;
     resetAirspace (): AirspaceInterface; // resets all data structures
-    magVar (val: number): AirspaceInterface; // magvar data for the current location
-    magneticHeading (flag: boolean): AirspaceInterface; // whether traffic heading should be adjusted using magvar
 }
 
 /**
@@ -509,22 +507,6 @@ export class DAA_Airspace implements AirspaceInterface {
     resetAirspace (): AirspaceInterface {
         // not available
         console.warn(`[daa-interactive-map] Warning: Reset function not available in WWD, please use LeafletJS`);
-        return this;        
-    }
-    /**
-     * magvar data for the current location
-     */
-    magVar (): AirspaceInterface {
-        // not available
-        console.warn(`[daa-interactive-map] Warning: MagVar not available in WWD, please use LeafletJS`);
-        return this;        
-    }
-    /**
-     * magvar data for the current location
-     */
-    magneticHeading (flag: boolean): AirspaceInterface {
-        // not available
-        console.warn(`[daa-interactive-map] Warning: Magnetic Heading not available in WWD, please use LeafletJS`);
         return this;        
     }
     /**

@@ -325,6 +325,7 @@ export class Compass {
         this.map = opt.map;
         this.wind = opt.wind;
         this.magvar = 0;
+        this.magheading = false;
 
         // create div element
         this.div = utils.createDiv(id, { parent: opt.parent, zIndex: 2 });
@@ -437,9 +438,13 @@ export class Compass {
         const animationDuration: number = this.animate ? this.duration : 0;
         const transitionDuration: string = opt.transitionDuration || `${animationDuration}s`;
         const duration: number = parseFloat(transitionDuration) / (transitionDuration.endsWith("ms") ? 1000 : 1); // sec
+        const posangle: number = (((this.currentCompassAngle) % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
+        // apply magnetic variation whem the compass is magnetic
         const magvar: number = this.magheading ? this.magvar : 0;
-        const posangle: number = (((this.currentCompassAngle + magvar) % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
-        $(`#${this.id}-value`).html(`${fixed3(Math.round(posangle))}`); // display only integer, round to the nearest integer
+        $(`#${this.id}-quadrant`).css({ "transform": `rotate(-${magvar}deg)` });
+        // top display indicator, round heading to the nearest integer
+        $(`#${this.id}-value`).html(`${fixed3(Math.round(posangle + magvar))}`);
+        // rotate compass track-up / north-up
         if (this.nrthup) {
             $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });

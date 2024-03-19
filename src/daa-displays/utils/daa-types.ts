@@ -337,7 +337,6 @@ export interface DAA_AircraftDescriptor {
     v: Vector3D<number | string>;
     symbol: DaaSymbol;
     callSign: string;
-    magvar?: number;
 }
 
 export declare interface AircraftMetrics {

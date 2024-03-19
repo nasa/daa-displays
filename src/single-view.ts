@@ -480,12 +480,10 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     });
     player.appendMagVarControls({
         setMagVar: (val: string) => {
-            map.magVar(+val);
             compass.magVar(+val);
         },
-        magneticCompass: (val: boolean) => {
-            map.magneticHeading(val);
-            compass.magneticHeading(val);
+        magneticCompass: (flag: boolean) => {
+            compass.magneticHeading(flag);
         }
     }, {
         parent: "simulation-controls",

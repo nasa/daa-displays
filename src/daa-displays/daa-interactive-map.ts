@@ -525,20 +525,8 @@ export class InteractiveMap {
         return this;
     }
     /**
-     * Magnetic Variation (magvar)
+     * Add geofence to the map
      */
-    magVar (val: number): InteractiveMap {
-        this.airspace?.magVar(val);
-        return this;
-    }
-    /**
-     * Whether the traffic display should use magnetic track/heading
-     */
-    magneticHeading (flag: boolean): InteractiveMap {
-        this.airspace?.magneticHeading(flag);
-        return this;
-    }
-
     addGeoFence (
         id: string, 
         perimeter: LatLon<number | string>[], 
@@ -553,6 +541,9 @@ export class InteractiveMap {
         this.airspace?.addGeoFencePolygon(id, perimeter, floor, opt);
         return this;
     }
+    /**
+     * Add contours (hazard zones) to the map
+     */
     addContour (
         id: string, 
         perimeter: LatLon<number | string>[], 
