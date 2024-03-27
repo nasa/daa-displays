@@ -46,6 +46,9 @@ export const g: number = 9.81; // gravity acceleration (m/s^2)
 // default number of decimals for roll values
 export const DEFAULT_ROLL_PRECISION: number = 2;
 
+// max traffic aircraft in the daa file
+export const MAX_TRAFFIC: number = 300;
+
 /**
  * Utility function, splits the colums of a given line of the daa file
  */
@@ -237,25 +240,27 @@ export function animateTraffic (trf_series: DaaTraffic[], n: number): DaaTraffic
                 const animated_traffic: DaaTraffic = [];
                 // for each traffic line
                 for (let ac = 0; ac < trf_line_0.length; ac++) {
-                    const lat_inc: number = (+trf_line_1[ac].lat - +trf_line_0[ac].lat) / extra_steps;
-                    const lon_inc: number = (+trf_line_1[ac].lon - +trf_line_0[ac].lon) / extra_steps;
-                    const alt_inc: number = (+trf_line_1[ac].alt - +trf_line_0[ac].alt) / extra_steps;
-                    const trk_inc: number = deltaHeading(+trf_line_1[ac].trk, +trf_line_0[ac].trk) / extra_steps;
-                    const roll_inc: number = trf_line_1[ac].roll ? (+trf_line_1[ac].roll - +trf_line_0[ac].roll) / extra_steps : 0;
-                    const time_inc: number = (+trf_line_1[ac].time - +trf_line_0[ac].time) / extra_steps;
-                    // airspeed and vspeed are kept constant
-                    const animated_ac: DaaAircraft = {
-                        ...trf_line_0[ac],
-                        lat: `${+trf_line_0[ac].lat + k * lat_inc}`,
-                        lon: `${+trf_line_0[ac].lon + k * lon_inc}`,
-                        alt: `${+trf_line_0[ac].alt + k * alt_inc}`,
-                        trk: `${+trf_line_0[ac].trk + k * trk_inc}`,
-                        roll: trf_line_0[ac].roll ? (+trf_line_0[ac].roll + k * roll_inc).toFixed(DEFAULT_ROLL_PRECISION) : "0",
-                        time: `${+trf_line_0[ac].time + k * time_inc}`,
-                        "animation-frame": true,
-                        dbg: `extra-${k}`
-                    };
-                    animated_traffic.push(animated_ac);
+                    if (trf_line_1[ac]?.lat) {
+                        const lat_inc: number = (+trf_line_1[ac].lat - +trf_line_0[ac].lat) / extra_steps;
+                        const lon_inc: number = (+trf_line_1[ac].lon - +trf_line_0[ac].lon) / extra_steps;
+                        const alt_inc: number = (+trf_line_1[ac].alt - +trf_line_0[ac].alt) / extra_steps;
+                        const trk_inc: number = deltaHeading(+trf_line_1[ac].trk, +trf_line_0[ac].trk) / extra_steps;
+                        const roll_inc: number = trf_line_1[ac].roll ? (+trf_line_1[ac].roll - +trf_line_0[ac].roll) / extra_steps : 0;
+                        const time_inc: number = (+trf_line_1[ac].time - +trf_line_0[ac].time) / extra_steps;
+                        // airspeed and vspeed are kept constant
+                        const animated_ac: DaaAircraft = {
+                            ...trf_line_0[ac],
+                            lat: `${+trf_line_0[ac].lat + k * lat_inc}`,
+                            lon: `${+trf_line_0[ac].lon + k * lon_inc}`,
+                            alt: `${+trf_line_0[ac].alt + k * alt_inc}`,
+                            trk: `${+trf_line_0[ac].trk + k * trk_inc}`,
+                            roll: trf_line_0[ac].roll ? (+trf_line_0[ac].roll + k * roll_inc).toFixed(DEFAULT_ROLL_PRECISION) : "0",
+                            time: `${+trf_line_0[ac].time + k * time_inc}`,
+                            "animation-frame": true,
+                            dbg: `extra-${k}`
+                        };
+                        animated_traffic.push(animated_ac);
+                    }
                 }
                 animated_series.push(animated_traffic);
             }
@@ -336,8 +341,8 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
             const ownshipName: string = getCol(colNum, lines[2]);
             if (ownshipName) {
                 const traffic: string[] = [];
-                // find all the aircraft names
-                for (let i = 3; i < lines.length; i++) {
+                // scan the first MAX_TRAFFIC lines to find all the aircraft names
+                for (let i = MAX_TRAFFIC; i < lines.length; i++) {
                     const acName: string = getCol(colNum, lines[i]);
                     if (acName !== ownshipName && !traffic.includes(acName)) {
                         traffic.push(acName);
@@ -496,13 +501,13 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
                                 console.log(`[daa-reader] Warning: ac ${ac_name} data not provided for time ${ac_time}`);
                                 traffic.push({
                                     name: ac_name, 
-                                    lat: NaN, 
-                                    lon: NaN, 
-                                    alt: NaN, 
-                                    trk: NaN, 
-                                    gs: NaN,
-                                    vs: NaN,
-                                    roll: NaN,
+                                    lat: 0, 
+                                    lon: 0, 
+                                    alt: 0, 
+                                    trk: 0, 
+                                    gs: 0,
+                                    vs: 0,
+                                    roll: 0,
                                     time: `${ms ? +ac_time/1000 : ac_time}`
                                 });
                             }
