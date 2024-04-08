@@ -342,13 +342,14 @@ export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: b
             if (ownshipName) {
                 const traffic: string[] = [];
                 // scan the first MAX_TRAFFIC lines to find all the aircraft names
-                for (let i = MAX_TRAFFIC; i < lines.length; i++) {
+                for (let i = 3; i < MAX_TRAFFIC && i < lines.length; i++) {
                     const acName: string = getCol(colNum, lines[i]);
                     if (acName !== ownshipName && !traffic.includes(acName)) {
+                        console.log(`${acName} added as traffic!`);
                         traffic.push(acName);
                     }
                 }
-                // console.log(`[stream-scenario2xplane] aircraft names:`, { ownshipName, traffic });
+                console.log(`[stream-scenario2xplane] aircraft names:`, { ownshipName, traffic });
                 // ownship data, in the form of an array of daa lines
                 const ownship_lines: string[] = lines.filter((line: string) => {
                     return line.toLocaleLowerCase().includes(ownshipName.toLocaleLowerCase());
