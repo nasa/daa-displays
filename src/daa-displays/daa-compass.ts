@@ -442,8 +442,9 @@ export class Compass {
         // apply magnetic variation whem the compass is magnetic
         const magvar: number = this.magheading ? this.magvar : 0;
         $(`#${this.id}-quadrant`).css({ "transform": `rotate(-${magvar}deg)` });
-        // top display indicator, round heading to the nearest integer
-        $(`#${this.id}-value`).html(`${fixed3(Math.round(posangle + magvar))}`);
+        // top display indicator, round heading to the nearest integer and the value should always be between [0..360)
+        const rotation: number = ((Math.round(posangle + magvar) % 360) + 360) % 360;
+        $(`#${this.id}-value`).html(`${fixed3(Math.round(rotation))}`);
         // rotate compass track-up / north-up
         if (this.nrthup) {
             $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
