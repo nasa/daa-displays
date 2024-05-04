@@ -443,23 +443,23 @@ export class Compass {
         const magvar: number = this.magheading ? this.magvar : 0;
         $(`#${this.id}-quadrant`).css({ "transform": `rotate(-${magvar}deg)` });
         // top display indicator, round heading to the nearest integer and the value should always be between [0..360)
-        const rotation: number = ((Math.round(posangle + magvar) % 360) + 360) % 360;
-        $(`#${this.id}-value`).html(`${fixed3(Math.round(rotation))}`);
+        const headingIndicator: number = ((Math.round(posangle + magvar) % 360) + 360) % 360;
+        $(`#${this.id}-value`).html(`${fixed3(Math.round(headingIndicator))}`);
         // rotate compass track-up / north-up
         if (this.nrthup) {
             $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" }); // compass needs counter-clockwise rotation
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "none" });
-            $(`#${this.id}-daa-ownship`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + posangle + "deg)" });
+            $(`#${this.id}-daa-ownship`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + this.currentCompassAngle + "deg)" });
             // rotate map and wind indicator accordingly
             if (this.map) { this.map.setHeading(0, { duration }); }
             if (this.wind) { this.wind.currentHeading(0); }
         } else {
-            $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + -posangle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
+            $(`#${this.id}-circle`).css({ "transition-duration": `${duration}s`, "transform": "rotate(" + -this.currentCompassAngle + "deg)" }); // the negative sign is because the compass rotation goes the other way (40 degrees on the compass requires a -40 degrees rotation)
             $(`#${this.id}-top-indicator-pointer`).css({ "display": "block" });
             $(`#${this.id}-daa-ownship`).css({ "transition-duration": `${duration}s`, "transform": "rotate(0deg)" });
             // rotate map and wind indicator accordingly
-            if (this.map) { this.map.setHeading(posangle, { duration }); }
-            if (this.wind) { this.wind.currentHeading(posangle); }
+            if (this.map) { this.map.setHeading(this.currentCompassAngle, { duration }); }
+            if (this.wind) { this.wind.currentHeading(this.currentCompassAngle); }
         }
     }
 
