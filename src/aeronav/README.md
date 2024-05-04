@@ -1,8 +1,8 @@
 # VFR Sectional Charts 
-The VFR sectional charts available in this folder are a scaled-down version of a collection of free aeronautical charts provided by the FAA. For information please visit http://faa.gov/go/ais
+The VFR sectional charts available in this folder are a scaled-down version of a collection of free aeronautical charts provided by the FAA. For information please visit https://www.faa.gov/air_traffic/flight_info/aeronav/productcatalog/vfrcharts/
 
 ## Download link
-https://www.faa.gov/air_traffic/flight_info/aeronav/productcatalog/VFRCharts/Sectional/
+https://www.faa.gov/air_traffic/flight_info/aeronav/productcatalog/vfrcharts/sectional/
 
 ## Access constraints
 None.
