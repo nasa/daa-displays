@@ -441,7 +441,7 @@ export class Compass {
         const posangle: number = (((this.currentCompassAngle) % 360) + 360) % 360; // the angle shown in the cockpit should always be between 0...360
         // apply magnetic variation whem the compass is magnetic
         const magvar: number = this.magheading ? this.magvar : 0;
-        $(`#${this.id}-quadrant`).css({ "transform": `rotate(-${magvar}deg)` });
+        $(`#${this.id}-quadrant`).css({ "transform": `rotate(${-magvar}deg)` });
         // top display indicator, round heading to the nearest integer and the value should always be between [0..360)
         const headingIndicator: number = ((Math.round(posangle + magvar) % 360) + 360) % 360;
         $(`#${this.id}-value`).html(`${fixed3(Math.round(headingIndicator))}`);
