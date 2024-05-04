@@ -15,7 +15,7 @@ import * as L from 'leaflet';
 import { LeafletAircraft } from '../daa-displays/daa-map-components/leaflet-aircraft';
 import { Aircraft } from '../daa-displays/daa-map-components/daa-aircraft';
 import { VFR_CHARTS } from '../aeronav/vfr-charts';
-import { DAA_AircraftDescriptor, LatLon } from '../daa-displays/utils/daa-types';
+import { DAA_AircraftDescriptor, LatLon, LatLonAlt } from '../daa-displays/utils/daa-types';
 
 const ANIMATE: boolean = true;
 
@@ -37,6 +37,28 @@ class Playground {
     constructor (widgets?: DaaWidgets) {
         this.widgets = widgets;
         this.widgets?.compass.magneticHeading(true);
+
+        $("#test-latitude").on("click", () => {
+            const val: number = +$("#test-latitude-input").val();
+            console.log("Setting latitude to " + val + " deg");
+            const pos: LatLonAlt<number> = this.widgets?.map.getOwnshipPosition();
+            pos.lat = val;
+            this.widgets?.map.setPosition(pos);
+        });
+        $("#test-longitude").on("click", () => {
+            const val: number = +$("#test-longitude-input").val();
+            console.log("Setting longitude to " + val + " deg");
+            const pos: LatLonAlt<number> = this.widgets?.map.getOwnshipPosition();
+            pos.lon = val;
+            this.widgets?.map.setPosition(pos);
+        });
+        $("#test-altitude").on("click", () => {
+            const val: number = +$("#test-altitude-input").val();
+            console.log("Setting altitude to " + val + " deg");
+            const pos: LatLonAlt<number> = this.widgets?.map.getOwnshipPosition();
+            pos.alt = val;
+            this.widgets?.map.setPosition(pos);
+        });
 
         $("#test-compass").on("click", () => {
             const val: number = +$("#test-compass-input").val();
@@ -208,12 +230,13 @@ if (render_wwd) {
         left: 6
     }, { 
         parent: "daa-disp",
+        animate: ANIMATE,
         engine: "wwd"
     });
     map.setTraffic(others);
 
     // map heading is controlled by the compass
-    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
+    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map, animate: ANIMATE });
     // map zoom is controlled by nmiSelector
     const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
     // map view options
