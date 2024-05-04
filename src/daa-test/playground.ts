@@ -208,13 +208,12 @@ if (render_wwd) {
         left: 6
     }, { 
         parent: "daa-disp",
-        animate: ANIMATE,
         engine: "wwd"
     });
     map.setTraffic(others);
 
     // map heading is controlled by the compass
-    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map, animate: ANIMATE });
+    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
     // map zoom is controlled by nmiSelector
     const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
     // map view options
