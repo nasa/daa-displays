@@ -17,6 +17,8 @@ import { Aircraft } from '../daa-displays/daa-map-components/daa-aircraft';
 import { VFR_CHARTS } from '../aeronav/vfr-charts';
 import { DAA_AircraftDescriptor, LatLon } from '../daa-displays/utils/daa-types';
 
+const ANIMATE: boolean = true;
+
 //---
 // playground utils
 //---
@@ -34,11 +36,17 @@ class Playground {
     
     constructor (widgets?: DaaWidgets) {
         this.widgets = widgets;
+        this.widgets?.compass.magneticHeading(true);
 
         $("#test-compass").on("click", () => {
             const val: number = +$("#test-compass-input").val();
             console.log("Setting compass to " + val + " deg");
             this.widgets?.compass.setCompass(val);
+        });
+        $("#test-magvar").on("click", () => {
+            const val: number = +$("#test-magvar-input").val();
+            console.log("Setting magvar to " + val + " deg");
+            this.widgets?.compass.magVar(val);
         });
 
         // make resolution bug visible
@@ -200,12 +208,13 @@ if (render_wwd) {
         left: 6
     }, { 
         parent: "daa-disp",
+        animate: ANIMATE,
         engine: "wwd"
     });
     map.setTraffic(others);
 
     // map heading is controlled by the compass
-    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map });
+    const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp", map: map, animate: ANIMATE });
     // map zoom is controlled by nmiSelector
     const hscale: HScale = new HScale("hscale", { top: 800, left: 13 }, { parent: "daa-disp", map: map });
     // map view options
@@ -262,12 +271,13 @@ const lmap: InteractiveMap = new InteractiveMap("lmap", {
 }, { 
     parent: "ljs-disp",
     engine: "leafletjs",
-    widescreen: false
+    widescreen: false,
+    animate: ANIMATE
 });
 lmap.setTraffic(others);
 
 // map heading is controlled by the compass
-const lcompass: Compass = new Compass("ljs-compass", { top: 110, left: 215 }, { parent: "ljs-disp", map: lmap });
+const lcompass: Compass = new Compass("ljs-compass", { top: 110, left: 215 }, { parent: "ljs-disp", map: lmap, animate: ANIMATE });
 // map zoom is controlled by nmiSelector
 const lhscale: HScale = new HScale("ljs-hscale", { top: 800, left: 13 }, { parent: "ljs-disp", map: lmap });
 // map view options
