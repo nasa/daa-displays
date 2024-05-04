@@ -397,6 +397,9 @@ export class InteractiveMap {
         }
         return this;
     }
+    getOwnshipPosition(): LatLonAlt<number> {
+        return this.pos;
+    }
     setOwnshipVelocity(v: Vector3D<number | string>): InteractiveMap {
         if (v) {
             const vel: Vector3D<number> = {
