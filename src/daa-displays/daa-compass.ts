@@ -544,19 +544,16 @@ export class Compass {
      *              <li>UNKNOWN (grey)</li>
      *              <li>NONE (transparent)</li>
      *              Band colors are defined in daa-utils.js
+	 * 				The widget will automatically convert the bands to degrees
      * @param bands {Object} Bands to be rendered. This parameter is an object in the form { bandName: ranges },
      *                       where bandName is one of FAR, MID, NEAR, RECOVERY, UNKNOWN, NONE
      *                       and ranges is an Array of objects in the { from: real, to: real }.
      *                       Band range is given in degrees.
-     *                       Example bands: { RECOVERY: [ { from: 0, to: 300 } ], { NEAR: [ { from: 300, to: 600 } ] } 
-     * @param opt {Object} Options:
-     *             <li>units (String): "rad", indicates that resolution bands are given in radians.
-     *                                 The widget will automatically convert the bands to degrees.</li>
+     *                       Example bands: { RECOVERY: [ { from: 0, to: 300, units: "deg" } ], { NEAR: [ { from: 300, to: 600, units: "deg" } ] } 
      * @memberof module:Compass
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }): Compass {
-        opt = opt || {};
+    setBands(bands: utils.Bands): Compass {
         const normaliseCompassBand = (b: utils.FromTo[]) => {
             // normaliseRange converts range in bands to positive degrees (e.g., -10..0 becomes 350..360), and range.from is always < range.to 
             const normaliseBand = (rg: { from: number, to: number }[]) => {
@@ -569,10 +566,10 @@ export class Compass {
                         if (from < 0) { from = from % 360 + 360; }
                         // if range.from is greater than range.to (e.g., { from: 330, to: 20 }), we need to split the range in two sub-ranges (e.g., in this case [{ from: 330, to: 360 }, { from: 0, to: 20 } ] )
                         if (from > to) {
-                            range.push({ from: from, to: 360 });
-                            range.push({ from: 0, to: to });
+                            range.push({ from, to: 360 });
+                            range.push({ from: 0, to });
                         } else {
-                            range.push({ from: from, to: to });
+                            range.push({ from, to });
                         }
                     }
                 }
@@ -580,7 +577,7 @@ export class Compass {
             }
             if (b && b.length > 0) {
                 const ans = b.map((range: utils.FromTo) => {
-                    if (opt.units === "rad") {
+                    if (range.units === "rad") {
                         // if bands are given in radiants, we need to convert to degrees
                         return { from: math.rad2deg(range.from), to: math.rad2deg(range.to) };
                     }

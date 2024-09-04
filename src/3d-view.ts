@@ -46,9 +46,9 @@ function render (data: { map: InteractiveMap }) {
     const bands: ScenarioDataPoint = player.getCurrentBands();
     // if (bands) {
     //     data.compass.setBands(bands["Heading Bands"]);
-    //     data.airspeedTape.setBands(bands["Horizontal Speed Bands"], AirspeedTape.units.knots);
+    //     data.airspeedTape.setBands(bands["Horizontal Speed Bands"]);
     //     data.verticalSpeedTape.setBands(bands["Vertical Speed Bands"]);
-    //     data.altitudeTape.setBands(bands["Altitude Bands"], AltitudeTape.units.ft);
+    //     data.altitudeTape.setBands(bands["Altitude Bands"]);
     // }
     const traffic = flightData.traffic.map((data, index) => {
         const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;

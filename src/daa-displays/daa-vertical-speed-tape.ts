@@ -557,24 +557,20 @@ export class VerticalSpeedTape {
      *              <li>UNKNOWN (grey)</li>
      *              <li>NONE (transparent)</li>
      *              Band colors are defined in daa-utils.js
+	 * The widget will automatically convert the bands to 100 feet per minute. Default units is fpm.
      * @param bands {Object} Bands to be rendered. This parameter is an object in the form { bandName: ranges },
      *                       where bandName is one of FAR, MID, NEAR, RECOVERY, UNKNOWN, NONE
      *                       and ranges is an Array of objects in the { from: real, to: real }.
      *                       Band range is given in 100 feet per minute.
      *                       Example bands: { RECOVERY: [ { from: 0, to: 300 } ], { NEAR: [ { from: 300, to: 600 } ] } 
-     * @param opt {Object} Options:
-     *             <li>units (String): "x100mpm" or "mpm 100x", indicates that resolution bands are given in 100 meters per minute.<br>
-     *                                 "mpm",  indicates that resolution bands are given in meters per minute.<br>
-     *                                 The widget will automatically convert the bands to 100 feet per minute. Default units is fpm.</li>
      * @memberof module:VerticalSpeedTape
      * @instance
      */
-    setBands(bands: utils.Bands, opt?: { units?: string }): void {
-        opt = opt || {};
+    setBands(bands: utils.Bands): void {
         const normaliseVerticalSpeedBand = (b: utils.FromTo[]) => {
             if (b && b.length > 0) {
-                return b.map((range) => {
-                    const units: string = opt.units || range.units || "fpm";
+                return b.map((range: utils.FromTo) => {
+					const units: string = range.units;
                     if (units === "x100mpm" || units === "mpm 100x") {
                         // if bands are given in 100x metres per minute, we need to convert in 100x feet per minute
                         return { from: conversions.meters2feet(range.from), to: conversions.meters2feet(range.to), units };

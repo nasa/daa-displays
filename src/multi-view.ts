@@ -80,13 +80,16 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
     const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+	const headingUnits: string = (bands?.Ownship?.acstate?.heading) ? bands.Ownship.acstate.heading.units : Compass.units.deg;
     const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+	const airspeedUnits: string = (bands?.Ownship?.acstate?.airspeed) ? bands.Ownship.acstate.airspeed.units : AirspeedTape.units.knots;
     const vspeed: number = +flightData.ownship.v.z;
     const alt: number = +flightData.ownship.s.alt;
-    display.compass.setCompass(heading);
-    display.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
+	const altUnits: string = AltitudeTape.units.ft;
+    display.compass.setCompass(heading, { units: headingUnits });
+    display.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
     display.verticalSpeedTape.setVerticalSpeed(vspeed);
-    display.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+    display.altitudeTape.setAltitude(alt, altUnits);
     // console.log(`Flight data`, flightData);
 
     // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
@@ -100,9 +103,9 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
 
     if (bands) {
         display.compass.setBands(utils.bandElement2Bands(bands["Heading Bands"]));
-        display.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]), AirspeedTape.units.knots);
+        display.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]));
         display.verticalSpeedTape.setBands(utils.bandElement2Bands(bands["Vertical Speed Bands"]));
-        display.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
+        display.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]));
         // set resolutions
         display.compass.setBug(bands["Horizontal Direction Resolution"]);
         display.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);

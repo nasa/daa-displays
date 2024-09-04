@@ -256,11 +256,11 @@ if (render_wwd) {
     airspeedTape.setBands({
         RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
         NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
-    }, AirspeedTape.units.knots);
+    });
     altitudeTape.setBands({
         RECOVERY: [ { from: 100, to: 200, units: AltitudeTape.units.ft } ],
         NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
-    }, AltitudeTape.units.ft);
+    });
     verticalSpeedTape.setBands({
         RECOVERY: [ { from: -2000, to: 4000, units: verticalSpeedTape.units.fpm } ],
         NEAR: [ { from: -6000, to: -2000, units: verticalSpeedTape.units.fpm } ]
@@ -319,11 +319,11 @@ const lverticalSpeedTape: VerticalSpeedTape = new VerticalSpeedTape("ljs-vertica
 lairspeedTape.setBands({
     RECOVERY: [ { from: 100, to: 200, units: AirspeedTape.units.knots } ],
     NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
-}, AirspeedTape.units.knots);
+});
 laltitudeTape.setBands({
     RECOVERY: [ { from: 100, to: 200, units: AltitudeTape.units.ft } ],
     NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
-}, AltitudeTape.units.ft);
+});
 lverticalSpeedTape.setBands({
     RECOVERY: [ { from: -2000, to: 4000, units: lverticalSpeedTape.units.fpm } ],
     NEAR: [ { from: -6000, to: -2000, units: lverticalSpeedTape.units.fpm } ]

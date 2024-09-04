@@ -67,14 +67,17 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
     const bands: ScenarioDataPoint = player.getCurrentBands();
     if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
-    const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
-    const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-    const vspeed: number = +flightData.ownship.v.z;
-    const alt: number = +flightData.ownship.s.alt;
-    data.compass.setCompass(heading);
-    data.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
-    data.verticalSpeedTape.setVerticalSpeed(vspeed);
-    data.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+	const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+	const headingUnits: string = (bands?.Ownship?.acstate?.heading) ? bands.Ownship.acstate.heading.units : Compass.units.deg;
+	const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+	const airspeedUnits: string = (bands?.Ownship?.acstate?.airspeed) ? bands.Ownship.acstate.airspeed.units : AirspeedTape.units.knots;
+	const vspeed: number = +flightData.ownship.v.z;
+	const alt: number = +flightData.ownship.s.alt;
+	const altUnits: string = AltitudeTape.units.ft;
+	data.compass.setCompass(heading, { units: headingUnits });
+	data.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
+	data.verticalSpeedTape.setVerticalSpeed(vspeed);
+	data.altitudeTape.setAltitude(alt, altUnits);
     // console.log(`Flight data`, flightData);
 
     // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
@@ -88,9 +91,9 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
     
     if (bands) {
         data.compass.setBands(utils.bandElement2Bands(bands["Heading Bands"]));
-        data.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]), AirspeedTape.units.knots);
+        data.airspeedTape.setBands(utils.bandElement2Bands(bands["Horizontal Speed Bands"]));
         data.verticalSpeedTape.setBands(utils.bandElement2Bands(bands["Vertical Speed Bands"]));
-        data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]), AltitudeTape.units.ft);
+        data.altitudeTape.setBands(utils.bandElement2Bands(bands["Altitude Bands"]));
         // set resolutions
         data.compass.setBug(bands["Horizontal Direction Resolution"]);
         data.airspeedTape.setBug(bands["Horizontal Speed Resolution"]);

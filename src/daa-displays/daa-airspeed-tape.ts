@@ -548,18 +548,16 @@ export class AirspeedTape {
      *                       and ranges is an Array of objects in the { from: real, to: real }.
      *                       Band range is given in knots.
      *                       Example bands: { RECOVERY: [ { from: 0, to: 300 } ], { NEAR: [ { from: 300, to: 600 } ] } 
-     * @param opt {Object} Options:
-     *             <li>units (String): "msec", indicates that resolution bands are given in meters per seconds. 
-     *                                 The widget will automatically convert the bands to knots.</li>
      * @memberof module:AirspeedTape
      * @instance
      */
-    setBands(bands: utils.Bands, units: string): AirspeedTape {
+    setBands(bands: utils.Bands): AirspeedTape {
         // opt = opt || {};
         const tapeUnits: string = this.tapeUnits;
         const normaliseAirspeedBand = (b: utils.FromTo[]) => {
             if (b && b.length > 0) {
                 return b.map((range: utils.FromTo) => {
+					const units: string = range.units;
                     return {
                         from: AirspeedTape.convert(range.from, units, tapeUnits),
                         to: AirspeedTape.convert(range.to, units, tapeUnits),

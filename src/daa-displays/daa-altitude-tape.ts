@@ -553,23 +553,22 @@ export class AltitudeTape {
      *              <li>UNKNOWN (grey)</li>
      *              <li>NONE (transparent)</li>
      *              Band colors are defined in daa-utils.js
+	 * 				The widget will automatically convert the bands to feet.
      * @param bands {Object} Bands to be rendered. This parameter is an object in the form { bandName: ranges },
      *                       where bandName is one of FAR, MID, NEAR, RECOVERY, UNKNOWN, NONE
      *                       and ranges is an Array of objects in the { from: real, to: real }.
      *                       Band range is given in knots.
      *                       Example bands: { RECOVERY: [ { from: 0, to: 300 } ], { NEAR: [ { from: 300, to: 600 } ] } 
-     * @param opt {Object} Options:
-     *             <li>units (String): "meters", indicates that resolution bands are given in meters. 
-     *                                 The widget will automatically convert the bands to feet.</li>
      * @memberof module:AltitudeTape
      * @instance
      */
-    setBands (bands: utils.Bands, units: string): AltitudeTape {
+    setBands (bands: utils.Bands): AltitudeTape {
         // opt = opt || {};
         const tapeUnits: string = this.tapeUnits;
         function normaliseAltitudeBand(b: utils.FromTo[]) {
             if (b && b.length > 0) {
                 return b.map((range: utils.FromTo) => {
+					const units: string = range.units;
                     return {
                         from: AltitudeTape.convert(range.from, units, tapeUnits),
                         to: AltitudeTape.convert(range.to, units, tapeUnits),

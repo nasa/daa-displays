@@ -190,7 +190,6 @@ export function animateAircraft (ac_series: DaaAircraft[], n: number, opt?: { db
     const dbg_lines: boolean = opt?.dbg_lines !== undefined && opt?.dbg_lines !== null ? opt.dbg_lines : true;
     const extra_steps: number = parseInt(`${n}`); // make sure n is an integer
     if (ac_series?.length && extra_steps > 0) {
-        extra_steps;
         // add intermediate steps for the aircraft
         const animated_series: DaaAircraft[] = [ ac_series[0] ];
         for (let i = 1; i < ac_series.length; i++) {
@@ -214,7 +213,7 @@ export function animateAircraft (ac_series: DaaAircraft[], n: number, opt?: { db
                 if (dbg_lines) {
                     ac["animation-frame"] = true;
                     ac.dbg = `extra-${k}`;
-                };
+                }
                 animated_series.push(ac);
             }
             animated_series.push(ac_series[i]);

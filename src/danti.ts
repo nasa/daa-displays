@@ -81,14 +81,17 @@ function render (danti: {
         const bands: DaaBands = player.getCurrentBands();
         if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
 
-        const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
-        const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-        const vspeed: number = +flightData.ownship.v.z;
-        const alt: number = +flightData.ownship.s.alt;
-        danti.compass.setCompass(heading);
-        danti.airspeedTape.setAirSpeed(airspeed, AirspeedTape.units.knots);
-        danti.verticalSpeedTape.setVerticalSpeed(vspeed);
-        danti.altitudeTape.setAltitude(alt, AltitudeTape.units.ft);
+		const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
+		const headingUnits: string = (bands?.Ownship?.acstate?.heading) ? bands.Ownship.acstate.heading.units : Compass.units.deg;
+		const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
+		const airspeedUnits: string = (bands?.Ownship?.acstate?.airspeed) ? bands.Ownship.acstate.airspeed.units : AirspeedTape.units.knots;
+		const vspeed: number = +flightData.ownship.v.z;
+		const alt: number = +flightData.ownship.s.alt;
+		const altUnits: string = AltitudeTape.units.ft;
+		danti.compass.setCompass(heading, { units: headingUnits });
+		danti.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
+		danti.verticalSpeedTape.setVerticalSpeed(vspeed);
+		danti.altitudeTape.setAltitude(alt, altUnits);
 
         // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
         const selected_config: string = player.readSelectedDaaConfiguration();
@@ -120,11 +123,11 @@ function render (danti: {
             const compassBands: Bands = utils.bandElement2Bands(bands["Heading Bands"]);
             danti.compass.setBands(compassBands);
             const airspeedBands: Bands = utils.bandElement2Bands(bands["Horizontal Speed Bands"]);
-            danti.airspeedTape.setBands(airspeedBands, AirspeedTape.units.knots);
+            danti.airspeedTape.setBands(airspeedBands);
             const vspeedBands: Bands = utils.bandElement2Bands(bands["Vertical Speed Bands"]);
             danti.verticalSpeedTape.setBands(vspeedBands);
             // const altitudeBands: Bands = utils.bandElement2Bands(bands["Altitude Bands"]);
-            // danti.altitudeTape.setBands(altitudeBands, AltitudeTape.units.ft);
+            // danti.altitudeTape.setBands(altitudeBands);
 
             // checks whether resolution wedges are persistent when there is an alerting aircraft
             const wedgePersistenceEnabled: boolean = player.wedgePersistenceIsEnabled();
