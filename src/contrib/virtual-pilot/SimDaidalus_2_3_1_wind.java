@@ -538,22 +538,22 @@ public class SimDaidalus_2_3_1_wind {
 	
 		// Write state to output file
 		out.print(daa.getOwnshipState().getId());
-		out.printf(", %.8f",daa.getOwnshipState().getPosition().latitude());
-		out.printf(", %.8f",daa.getOwnshipState().getPosition().longitude());
-		out.printf(", %.6f",daa.getOwnshipState().getPosition().altitude());
-		out.printf(", %.6f",(Units.to("deg",daa.getOwnshipState().horizontalDirection())));
-		out.printf(", %.6f",(Units.to("knot",daa.getOwnshipState().horizontalSpeed())));
-		out.printf(", %.6f",(Units.to("fpm",daa.getOwnshipState().verticalSpeed())));
+		out.printf(", %.8f",Units.to("deg",daa.getOwnshipState().getPosition().lat()));
+		out.printf(", %.8f",Units.to("deg",daa.getOwnshipState().getPosition().lon()));
+		out.printf(", %.6f",Units.to("ft",daa.getOwnshipState().getPosition().alt()));
+		out.printf(", %.6f",Units.to("deg",daa.getOwnshipState().horizontalDirection()));
+		out.printf(", %.6f",Units.to("knot",daa.getOwnshipState().horizontalSpeed()));
+		out.printf(", %.6f",Units.to("fpm",daa.getOwnshipState().verticalSpeed()));
 		out.printf(", %.3f",daa.getCurrentTime());
 		out.println(" ");
 		
 		out.print(daa.getAircraftStateAt(1).getId()+" ");
-		out.printf(", %.8f",daa.getAircraftStateAt(1).getPosition().latitude());
-		out.printf(", %.8f",daa.getAircraftStateAt(1).getPosition().longitude());
-		out.printf(", %.6f",daa.getAircraftStateAt(1).getPosition().altitude());
-		out.printf(", %.6f",(Units.to("deg",daa.getAircraftStateAt(1).horizontalDirection())));
-		out.printf(", %.6f",(Units.to("knot",daa.getAircraftStateAt(1).horizontalSpeed())));
-		out.printf(", %.6f",(Units.to("fpm",daa.getAircraftStateAt(1).verticalSpeed())));
+		out.printf(", %.8f",Units.to("deg",daa.getAircraftStateAt(1).getPosition().lat()));
+		out.printf(", %.8f",Units.to("deg",daa.getAircraftStateAt(1).getPosition().lon()));
+		out.printf(", %.6f",Units.to("ft",daa.getAircraftStateAt(1).getPosition().alt()));
+		out.printf(", %.6f",Units.to("deg",daa.getAircraftStateAt(1).horizontalDirection()));
+		out.printf(", %.6f",Units.to("knot",daa.getAircraftStateAt(1).horizontalSpeed()));
+		out.printf(", %.6f",Units.to("fpm",daa.getAircraftStateAt(1).verticalSpeed()));
 		out.printf(", %.3f",daa.getCurrentTime());
 		out.println(" ");
     }
