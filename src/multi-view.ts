@@ -41,10 +41,10 @@ import { DAAMultiView } from './daa-displays/daa-multi-view';
 import { DAAPlayer, DidChangeDaaConfiguration, DidChangeDaaVersion, DidChangeDaaScenarioSelection, PlayerEvents } from './daa-displays/daa-player';
 
 import * as utils from './daa-displays/daa-utils';
-import { AlertLevel, ConfigData, DaaSymbol, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
+import { ConfigData, DaaSymbol, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 import { RenderableDisplay } from './split-view';
 import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
-import { downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
+import { downgrade_alerts, inhibit_bands, inhibit_resolutions, severity } from './daa-displays/daa-utils';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 const INCLUDE_PLOTS: boolean = true;
@@ -96,7 +96,7 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
     const selected_config: string = player.readSelectedDaaConfiguration();
     const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
     if (force_caution) {
-        downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+        downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
         inhibit_bands({ bands });
         inhibit_resolutions({ bands });
     }
@@ -154,12 +154,12 @@ export function render(player: DAAPlayer, display: RenderableDisplay): void {
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert_level]
+            symbol: daaSymbols[alert]
         }
     }); 
     display.map.setTraffic(traffic);
@@ -303,7 +303,7 @@ async function createAllDisplays (tailNumbers: string[], opt?: { createMap?: boo
                     const alt: number = +lla.ownship.s.alt;
                     const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
                     if (force_caution) {
-                        downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                        downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
                         inhibit_bands({ bands });
                         inhibit_resolutions({ bands });
                     }  
@@ -523,7 +523,7 @@ async function createPlayer (opt?: { loadDefaultConfiguration?: boolean }) {
     // create configuration cols in the sidebar
     multiView.createConfigurationAttributesViews();
     if (opt?.loadDefaultConfiguration) {
-        await multiView.selectDaaConfiguration("DO_365A_no_SUM");
+        await multiView.selectDaaConfiguration("2.x/DO_365A_no_SUM");
     }
     // append simulation controls
     multiView.appendSimulationControls({

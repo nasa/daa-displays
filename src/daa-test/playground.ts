@@ -262,8 +262,8 @@ if (render_wwd) {
         NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
     });
     verticalSpeedTape.setBands({
-        RECOVERY: [ { from: -2000, to: 4000, units: verticalSpeedTape.units.fpm } ],
-        NEAR: [ { from: -6000, to: -2000, units: verticalSpeedTape.units.fpm } ]
+        RECOVERY: [ { from: -2000, to: 4000, units: VerticalSpeedTape.units.fpm } ],
+        NEAR: [ { from: -6000, to: -2000, units: VerticalSpeedTape.units.fpm } ]
     });
 
     // add geofence to the map
@@ -325,8 +325,8 @@ laltitudeTape.setBands({
     NEAR: [ { from: 200, to: 220, units: AirspeedTape.units.knots } ]
 });
 lverticalSpeedTape.setBands({
-    RECOVERY: [ { from: -2000, to: 4000, units: lverticalSpeedTape.units.fpm } ],
-    NEAR: [ { from: -6000, to: -2000, units: lverticalSpeedTape.units.fpm } ]
+    RECOVERY: [ { from: -2000, to: 4000, units: VerticalSpeedTape.units.fpm } ],
+    NEAR: [ { from: -6000, to: -2000, units: VerticalSpeedTape.units.fpm } ]
 });
 
 // add geofence to the map

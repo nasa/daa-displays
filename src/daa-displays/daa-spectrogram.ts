@@ -49,7 +49,8 @@ import * as utils from './daa-utils';
 import * as conversions from './utils/daa-math';
 import * as templates from './templates/daa-spectrogram-templates';
 import { DAAPlayer } from './daa-player';
-import { Alert, AlertLevel, BandElement, BandRange, DaidalusBand, Region } from './utils/daa-types';
+import { Alert, AlertRegion, BandElement, BandRange, DaidalusBand, Region } from './utils/daa-types';
+import { severity } from './daa-utils';
 
 // data is an object { width: real, height: real, length: nat }
 function createGrid (data: { width: number, height: number, length: number }) {
@@ -69,7 +70,7 @@ function createGrid (data: { width: number, height: number, length: number }) {
 function convert (val: number, unitsFrom: string, unitsTo: string): number {
     if (unitsFrom !== unitsTo) {
         if (unitsFrom === "rad" && unitsTo === "deg") { return parseFloat(conversions.rad2deg(val).toFixed(2)); }
-        if (unitsFrom === "msec" && unitsTo === "knots") { return parseFloat(conversions.msec2knots(val).toFixed(2)); }
+        if ((unitsFrom === "msec" || unitsFrom === "m/s") && unitsTo === "knots") { return parseFloat(conversions.msec2knots(val).toFixed(2)); }
         if (unitsFrom === "meters" && unitsTo === "feet") { return parseFloat(conversions.meters2feet(val).toFixed(2)); }
         if (unitsFrom === "mpm" && unitsTo === "fpm 100x") { return parseFloat(conversions.meters2feet(val).toFixed(2)) / 100; }
     }
@@ -263,12 +264,12 @@ export class DAASpectrogram {
             const leftMargin = data.step * barWidth;
 
             if ($(`#${stepID}`).length === 0) { // profiler: 0.4ms (without optimisation 3.4ms)
-                const alertTypes: { [level: string]: string } = {
-                    "0": "0", // NONE
-                    "1": "1", // FAR
-                    "2": "2", // MID
-                    "3": "3" // NEAR
-                };
+                // const alertTypes: { [level: string]: string } = {
+                //     "0": "0", // NONE
+                //     "1": "1", // FAR
+                //     "2": "2", // MID
+                //     "3": "3" // NEAR
+                // };
                 const range: { from: number, to: number } = { from: 0, to: 3 };
                 // this._timeseries.push(JSON.stringify(data.alerts, null, " ")); // 5.4ms
                 const band_plot_data = {};
@@ -286,14 +287,14 @@ export class DAASpectrogram {
                 // data.alerts.forEach((elem: { ac: string, alert: string }) => { // 3ms
                 for (let a = 0; a < data.alerts.length; a++) {
                     const elem: Alert = data.alerts[a];
-                    if (elem && elem.alert_level > AlertLevel.NONE) {
-                        const alert_level: AlertLevel = elem.alert_level
-                        band_plot_data[alert_level] = [];
-                        band_plot_data[alert_level].push({
-                            from: alert_level - 1,
-                            to: alert_level,
-                            color: utils.alertingColors[alert_level].color,
-                            top: (range.to - alert_level) * yScaleFactor,
+                    if (elem && severity(elem.alert_region) > severity("NONE")) {
+                        const alert: AlertRegion = elem.alert_region
+                        band_plot_data[alert] = [];
+                        band_plot_data[alert].push({
+                            from: severity(alert) - 1,
+                            to: alert,
+                            color: utils.alertingColors[alert].color,
+                            top: (range.to - severity(alert)) * yScaleFactor,
                             height: yScaleFactor,
                             units: (typeof this.units === "string") ? this.units : this.units.to,
                             indicator: {
@@ -313,10 +314,10 @@ export class DAASpectrogram {
                     time: data.time,
                     bands: band_plot_data,
                     alerts: Object.keys(band_plot_data).length ? (data && data.alerts) ? 
-                        data.alerts.filter((elem: { ac: string; alert_level: number }) => {
-                            return elem.alert_level > AlertLevel.NONE;
-                        }).map((elem: { ac: string; alert_level: number }) => {
-                            return `${elem.ac} (${alertTypes[elem.alert_level]})`;
+                        data.alerts.filter((elem: { ac: string; alert_region: AlertRegion }) => {
+                            return severity(elem.alert_region) > severity("NONE");
+                        }).map((elem: { ac: string; alert_region: AlertRegion }) => {
+                            return `${elem.ac} (${elem.alert_region})`;
                         }).join("\n") : "" : null,
                     top: this.top,
                     left: leftMargin,

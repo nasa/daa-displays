@@ -256,6 +256,19 @@ export class Compass {
         rad: "rad"
     };
 
+	/**
+	 * Utility function, converts units
+	 */
+    static convert (val: number, unitsFrom: string, unitsTo: string): number {
+        if (unitsFrom !== unitsTo) {
+            if (unitsFrom === Compass.units.rad && unitsTo === Compass.units.deg) {
+				return  math.rad2deg(val);
+			}
+			console.warn(`[daa-compass] Warning: unable to convert units from ${unitsFrom} to ${unitsTo}`);
+        }
+		return val;
+    }
+
     protected id: string;
     protected top: number;
     protected left: number;
@@ -375,12 +388,13 @@ export class Compass {
         this.resolutionBug.setMaxWedgeAperture(opt.maxWedgeAperture);
         this.resolutionBug.hide();
     }
+
     /**
      * @function <a name="setCompass">setCompass</a>
      * @description Sets the compass value.
      * @param val {real} Compass value. Default units is degrees.
      * @param opt {Object} Options:
-     *             <li>units (String): "rad", indicates that resolution bands are given in radians.
+     *             <li>units (String): "rad", indicates that values are given in radians.
      *                                 The widget will automatically convert the bands to degrees.</li>
      * @memberof module:Compass
      * @instance

@@ -295,14 +295,14 @@ export class AirspeedTape {
 
     static readonly units = {
         knots: "knots",
-        msec: "msec",
+        msec: "m/s",
         default: "knots"
     };
 
     static convert (val: number, unitsFrom: string, unitsTo: string): number {
         if (unitsFrom !== unitsTo) {
             if ((unitsFrom === "knot" || unitsFrom === "kn" || unitsFrom === "knots") && (unitsTo === "msec" || unitsTo === "ms" || unitsTo === "m/s")) { return parseFloat(conversions.knots2msec(val).toFixed(2)); }
-            if ((unitsFrom === "msec" || unitsFrom === "ms" || unitsFrom === "m/s") && (unitsTo === "knot" || unitsTo === "kn" || unitsTo === "knots")) { return parseFloat(conversions.msec2knots(val).toFixed(2)) / 100; }
+            if ((unitsFrom === "msec" || unitsFrom === "ms" || unitsFrom === "m/s") && (unitsTo === "knot" || unitsTo === "kn" || unitsTo === "knots")) { return parseFloat(conversions.msec2knots(val).toFixed(2)); }
         }
         // return parseFloat(val.toFixed(2)); // [profiler] 12.7ms
         return Math.floor(val * 100) / 100; // [profiler] 0.1ms
@@ -698,9 +698,10 @@ export class AirspeedTape {
      * @memberof module:AirspeedTape
      * @instance
      */
-    setAirSpeed(val: number, units: string, opt?: { transitionDuration?: string }): AirspeedTape {
+    setAirSpeed(val: number, units?: string, opt?: { transitionDuration?: string }): AirspeedTape {
         opt = opt || {};
         // val = utils.limit(0, 300, "airspeed")(val); // the display range is 0..300
+		units = units || this.tapeUnits;
         this.currentAirspeed = AirspeedTape.convert(val, units, this.tapeUnits);
 
         if (this.tapeCanSpin) {
@@ -767,7 +768,7 @@ export class AirspeedTape {
      */
     setWindSpeed(val: number, opt?: { units?: string }): AirspeedTape {
         opt = opt || {};
-        this.windSpeed = (opt.units === "msec") ? conversions.msec2knots(val) : val;
+        this.windSpeed = (opt.units === "msec") || (opt.units === "m/s") ? conversions.msec2knots(val) : val;
         this.updateWind();
         // ground speed and true airspeed need to be updated every time wind speed changes
         this.updateGroundSpeed();

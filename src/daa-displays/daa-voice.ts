@@ -27,9 +27,9 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { alertLevel2symbol, computeBearing, computeNmiDistance, DaaSymbol, symbol2alertLevel } from "./daa-utils";
+import { alertRegion2symbol, computeBearing, computeNmiDistance, DaaSymbol, severity, symbol2alertRegion } from "./daa-utils";
 import { rad2deg } from "./utils/daa-math";
-import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D } from "./utils/daa-types";
+import { DaaBands, DAA_AircraftDescriptor, LatLon, LLAPosition, Vector3D, AlertRegion } from "./utils/daa-types";
 import { getAlertingAircraftMap } from "./utils/daa-utils";
 
 // convenient type definitions
@@ -641,8 +641,8 @@ export class DaaVoice {
      * Utility function, returns the set of aircraft whose alert >= threshold
      * default minThreshold and maxThreshold are AlertLevel.ALERT
      */
-    getAlertingAircraft (data: CommData, opt?: { minThreshold?: AlertLevel, maxThreshold?: AlertLevel } | { alertLevel?: AlertLevel }): DAA_AircraftDescriptor[] {
-        const alerting: { [ac: string]: AlertLevel } = getAlertingAircraftMap(data?.bands, opt);
+    getAlertingAircraft (data: CommData, opt?: { minThreshold?: AlertRegion, maxThreshold?: AlertRegion } | { alertRegion?: AlertRegion }): DAA_AircraftDescriptor[] {
+        const alerting: { [ac: string]: AlertRegion } = getAlertingAircraftMap(data?.bands, opt);
         if (alerting) {
             const alerting_ids: string[] = Object.keys(alerting);
             if (alerting_ids?.length) {
@@ -652,7 +652,7 @@ export class DaaVoice {
                     return {
                         s: ac.s,
                         v: ac.v,
-                        symbol: alertLevel2symbol(alerting[ac.id]),
+                        symbol: alertRegion2symbol(alerting[ac.id]),
                         callSign: ac.id                
                     };
                 }) || [];
@@ -665,13 +665,13 @@ export class DaaVoice {
      * Utility function, returns the max alerting aircraft based on some ranking criteria
      * For now, no specifc criteria is used and we simply return the first aircraft in the list
      */
-    getMaxAlertingAircraft (alerting: DAA_AircraftDescriptor[], opt?: { suppressRepeatedAlerts?: boolean, alertLevel?: AlertLevel }): DAA_AircraftDescriptor {
+    getMaxAlertingAircraft (alerting: DAA_AircraftDescriptor[], opt?: { suppressRepeatedAlerts?: boolean, alertRegion?: AlertRegion }): DAA_AircraftDescriptor {
         if (alerting?.length) {
-            const level: AlertLevel = opt?.alertLevel !== undefined ? opt.alertLevel : AlertLevel.ALERT;
+            const level: AlertRegion = opt?.alertRegion !== undefined ? opt.alertRegion : "NEAR";
             // remove last alerting aircraft to avoid repeated alerts on the same aircraft, unless the alert level for that aircraft has increased
             const candidates: DAA_AircraftDescriptor[] = opt?.suppressRepeatedAlerts && this.lastAlertingAircraft ? alerting.filter(ac => {
-                const ac_level: AlertLevel = symbol2alertLevel(ac.symbol);
-                const last_level: AlertLevel = symbol2alertLevel(this.lastAlertingAircraft?.symbol);
+                const ac_level: AlertRegion = symbol2alertRegion(ac.symbol);
+                const last_level: AlertRegion = symbol2alertRegion(this.lastAlertingAircraft?.symbol);
                 return ac.callSign !== this.lastAlertingAircraft.callSign || ac_level > last_level;
             }) : alerting;
             // return the first aircraft in the candidates list
@@ -703,7 +703,7 @@ export class DaaVoice {
     protected updateAlertingHistory (ac: DAA_AircraftDescriptor): boolean {
         if (ac && (!this.lastAlertingAircraft 
                     || this.lastAlertingAircraft?.callSign !== ac?.callSign 
-                    || symbol2alertLevel(this.lastAlertingAircraft?.symbol) < symbol2alertLevel(ac?.symbol))) {
+                    || symbol2alertRegion(this.lastAlertingAircraft?.symbol) < symbol2alertRegion(ac?.symbol))) {
             this.clearAlertingHistory();
             // store a copy of the alerting aircraft descriptor
             this.lastAlertingAircraft = {
@@ -825,26 +825,27 @@ export class DaaVoice {
         suppressRepeatedAlerts?: boolean
     }): Guidance {
         if (this.enabled && data?.bands && data?.ownship && data?.traffic?.length) {
-            const levels: AlertLevel[] = [
-                AlertLevel.ALERT,  // DO-365 warning
-                AlertLevel.AVOID,  // DO-365 corrective alert
-                AlertLevel.MONITOR // DO-365 preventive alert
+            const regions: AlertRegion[] = [
+				"RECOVERY", // DO-365 warning
+                "NEAR",  // DO-365 warning
+                "MID",  // DO-365 corrective alert
+                "FAR", // DO-365 preventive alert
             ];
-            for (let i = 0; i < levels.length; i++) {
+            for (let i = 0; i < regions.length; i++) {
                 // check warnings, then corrective alerts, then preventive alerts
-                const alertLevel: AlertLevel = levels[i];
-                const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data, { alertLevel });
-                const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { ...opt, alertLevel });
+                const alertRegion: AlertRegion = regions[i];
+                const alerting: DAA_AircraftDescriptor[] = this.getAlertingAircraft(data, { alertRegion });
+                const max_alert_aircraft: DAA_AircraftDescriptor = this.getMaxAlertingAircraft(alerting, { ...opt, alertRegion });
                 // voice guidance is provided only the alerts persist for at least 4 seconds (TODO)
-                if (max_alert_aircraft && symbol2alertLevel(max_alert_aircraft.symbol) >= AlertLevel.MONITOR) {
+                if (max_alert_aircraft && severity(symbol2alertRegion(max_alert_aircraft.symbol)) >= severity("FAR")) {
                     // store info about the alerting aircraft
                     this.updateAlertingHistory(max_alert_aircraft);
-                    const guidance: Guidance = levels[i] === AlertLevel.ALERT ? [
+                    const guidance: Guidance = regions[i] === "NEAR" || regions[i] === "RECOVERY" ? [
                         { text2speak: "TRAFFIC, MANEUVER NOW" },
                         { text2speak: "TRAFFIC, MANEUVER NOW" }
-                    ] : levels[i] === AlertLevel.AVOID ? [
+                    ] : regions[i] === "MID" ? [
                         { text2speak: "TRAFFIC, AVOID" }
-                    ] : levels[i] === AlertLevel.MONITOR ? [
+                    ] : regions[i] === "FAR" ? [
                         { text2speak: "TRAFFIC, MONITOR" }
                     ] : null;
                     return guidance;

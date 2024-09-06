@@ -36,19 +36,58 @@ import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, parseDaaConfigInBrowser, DAAPlayer } from './daa-displays/daa-player';
-import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint, DaaSymbol, LatLonAlt, AlertLevel } from './daa-displays/utils/daa-types';
+import { LLAData, ConfigData, MonitorElement, MonitorData, ScenarioData, ScenarioDataPoint, LatLonAlt, OwnshipData } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
+import { Bands, daaSymbols, downgrade_alerts, inhibit_bands, inhibit_resolutions, severity } from './daa-displays/daa-utils';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
 
 const player: DAAPlayer = new DAAPlayer();
 
+/**
+ * Utility function, returns the heading of the ownship.
+ * The preferred heading is the one specified in the bands data
+ */
+function getHeading (bands: ScenarioDataPoint, flightData: LLAData): { val: number, units: string } {
+	const heading: number = (bands?.Ownship?.acstate?.heading) ? 
+		Compass.convert(+bands.Ownship.acstate.heading.val, bands.Ownship.acstate.heading.units, Compass.units.deg)  
+			: Compass.v2deg(flightData.ownship.v);
+	return { val: heading, units: Compass.units.deg };
+}
+/**
+ * Utility function, returns the airspeed of the ownship.
+ * The preferred airspeed is the one specified in the bands data
+ */
+function getAirSpeed (bands: ScenarioDataPoint, flightData: LLAData): { val: number, units: string } {
+	const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? 
+			AirspeedTape.convert(+bands.Ownship.acstate.airspeed.val, bands.Ownship.acstate.airspeed.units, AirspeedTape.units.knots)
+			: AirspeedTape.v2gs(flightData.ownship.v);
+	return { val: airspeed, units: AirspeedTape.units.knots };
+}
+/**
+ * Utility function, returns the airspeed of the ownship.
+ * The preferred airspeed is the one specified in the bands data
+ */
+function getVerticalSpeed (bands: ScenarioDataPoint, flightData: LLAData): { val: number, units: string } {
+	const vspeed: number = (bands?.Ownship?.acstate?.verticalspeed) ? 
+		VerticalSpeedTape.convert(+bands.Ownship.acstate.verticalspeed.val, bands.Ownship.acstate.verticalspeed.units, VerticalSpeedTape.units.fpm)
+			: +flightData.ownship.v.z;
+	return { val: vspeed, units: VerticalSpeedTape.units.fpm };
+}
+/**
+ * Utility function, returns the altitude of the ownship.
+ * The preferred altitude is the one specified in the bands data
+ */
+function getAltitude (bands: ScenarioDataPoint, flightData: LLAData): { val: number, units: string } {
+	const altitude: number = (bands?.Ownship?.acstate?.altitude) ?
+		AltitudeTape.convert(+bands?.Ownship?.acstate?.altitude?.val, bands?.Ownship?.acstate?.altitude?.units, AltitudeTape.units.ft)
+			: +flightData.ownship.s.alt;
+	return { val: altitude, units: AltitudeTape.units.ft };
+}
 function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: AirspeedTape, altitudeTape: AltitudeTape, verticalSpeedTape: VerticalSpeedTape }) {
-    const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "daa-traffic-avoid", "daa-alert" ]; // 0..3
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     player.displayFlightData();
     if (flightData && flightData.ownship) {
@@ -57,23 +96,30 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         const bands: ScenarioDataPoint = player.getCurrentBands();
         if (bands && !bands.Ownship) { console.warn("Warning: using ground-based data for the ownship"); }
     
-		const heading: number = (bands?.Ownship?.acstate?.heading) ? +bands.Ownship.acstate.heading.val : Compass.v2deg(flightData.ownship.v);
-		const headingUnits: string = (bands?.Ownship?.acstate?.heading) ? bands.Ownship.acstate.heading.units : Compass.units.deg;
-		const airspeed: number = (bands?.Ownship?.acstate?.airspeed) ? +bands.Ownship.acstate.airspeed.val : AirspeedTape.v2gs(flightData.ownship.v);
-		const airspeedUnits: string = (bands?.Ownship?.acstate?.airspeed) ? bands.Ownship.acstate.airspeed.units : AirspeedTape.units.knots;
-		const vspeed: number = +flightData.ownship.v.z;
-		const alt: number = +flightData.ownship.s.alt;
-		const altUnits: string = AltitudeTape.units.ft;
-		data.compass.setCompass(heading, { units: headingUnits });
-		data.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
+		// heading units is "deg"
+		const hd: { val: number, units: string } = getHeading(bands, flightData);
+		const heading: number = hd.val;
+		// airspeed units is "knot"
+		const as: { val: number, units: string } = getAirSpeed(bands, flightData);
+		const airspeed: number = as.val;
+		// vspeed units is fpm
+		const vs: { val: number, units: string } = getVerticalSpeed(bands, flightData);
+		const vspeed: number = vs.val;
+		// altitude units is ft
+		const alt: { val: number, units: string } = getAltitude(bands, flightData);
+		const altitude: number = alt.val;
+
+		// set ownship indicators
+		data.compass.setCompass(heading);
+		data.airspeedTape.setAirSpeed(airspeed);
 		data.verticalSpeedTape.setVerticalSpeed(vspeed);
-		data.altitudeTape.setAltitude(alt, altUnits);
+		data.altitudeTape.setAltitude(altitude);
 
         // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
         const selected_config: string = player.readSelectedDaaConfiguration();
-        const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
+        const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && altitude < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
         if (force_caution) {
-            downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+            downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
             inhibit_bands({ bands });
             inhibit_resolutions({ bands });
         }
@@ -173,12 +219,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         }
         const traffic = flightData.traffic.map((data, index) => {
-            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+            const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
             return {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
-                symbol: daaSymbols[alert_level]
+                symbol: daaSymbols[alert]
             }
         });
         data.map.setTraffic(traffic);
@@ -199,7 +245,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         }
         const step: number = player.getCurrentSimulationStep();
         const time: string = player.getCurrentSimulationTime();
-        plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
+
+		// plot bands
+        plot({ ownship: { hd, gs: as, vs, alt }, bands, step, time });
     }
 }
 
@@ -210,29 +258,36 @@ const daaPlots: { id: string, name: string, units: string }[] = [
     { id: "altitude-bands", units: "ft", name: "Altitude Bands" }
 ];
 
-function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: number }, bands: ScenarioDataPoint, step: number, time: string }) {
+function plot (desc: { 
+	ownship: OwnshipData, bands: ScenarioDataPoint, step: number, time: string
+}) {
     // FIXME: band.id should be identical to band.name
     player.getPlot("alerts").plotAlerts({
         alerts: desc.bands?.Alerts?.alerts,
         step: desc.step,
         time: desc.time
     });
-    for (let i = 0; i < daaPlots.length; i++) {
-        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd
-                                : (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs
-                                : (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs * 100
-                                : (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt
-                                : null;
+    for (let i = 0; i < daaPlots.length; i++) {		
+        const marker: number = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd.val
+			: (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs.val
+			: (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs.val
+			: (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt.val
+			: null;
         const resolution: number = (daaPlots[i].id === "heading-bands" && desc.bands["Horizontal Direction Resolution"] && desc.bands["Horizontal Direction Resolution"].preferred_resolution) ? +desc.bands["Horizontal Direction Resolution"].preferred_resolution?.valunit?.val
-                                : (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution?.valunit?.val
-                                : (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution?.valunit?.val
-                                : (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution?.valunit?.val
-                                : null;
+			: (daaPlots[i].id === "horizontal-speed-bands" && desc.bands["Horizontal Speed Resolution"] && desc.bands["Horizontal Speed Resolution"].preferred_resolution) ? +desc.bands["Horizontal Speed Resolution"].preferred_resolution?.valunit?.val
+			: (daaPlots[i].id === "vertical-speed-bands" && desc.bands["Vertical Speed Resolution"] && desc.bands["Vertical Speed Resolution"].preferred_resolution) ? +desc.bands["Vertical Speed Resolution"].preferred_resolution?.valunit?.val
+			: (daaPlots[i].id === "altitude-bands" && desc.bands["Altitude Resolution"] && desc.bands["Altitude Resolution"].preferred_resolution) ? +desc.bands["Altitude Resolution"].preferred_resolution?.valunit?.val
+			: null;
+		const units: string = (daaPlots[i].id === "heading-bands") ? desc.ownship.hd.units
+			: (daaPlots[i].id === "horizontal-speed-bands") ? desc.ownship.gs.units
+			: (daaPlots[i].id === "vertical-speed-bands") ? desc.ownship.vs.units
+			: (daaPlots[i].id === "altitude-bands") ? desc.ownship.alt.units
+			: null;
         player.getPlot(daaPlots[i].id).plotBands({
             bands: desc.bands[daaPlots[i].name],
             step: desc.step,
             time: desc.time,
-            units: daaPlots[i].units,
+            units,
             marker,
             resolution
         });
@@ -313,18 +368,27 @@ player.define("init", async () => {
 async function developerMode (): Promise<void> {
     const configData: ConfigData = await player.loadSelectedConfiguration();
 
-    airspeedTape.setUnits(configData["horizontal-speed"].units);
-    airspeedTape.setRange(configData["horizontal-speed"]);
+    airspeedTape.setRange({
+		from: AirspeedTape.convert(+configData["horizontal-speed"].from, configData["horizontal-speed"].units, AirspeedTape.units.knots),
+		to: AirspeedTape.convert(+configData["horizontal-speed"].to, configData["horizontal-speed"].units, AirspeedTape.units.knots),
+		units: AirspeedTape.units.knots
+	});
     airspeedTape.revealUnits();
     airspeedTape.disableTapeSpinning();
 
-    altitudeTape.setUnits(configData.altitude.units);
-    altitudeTape.setRange(configData.altitude);
+    altitudeTape.setRange({
+		from: AltitudeTape.convert(+configData.altitude.from, configData.altitude.units, AltitudeTape.units.ft),
+		to: AltitudeTape.convert(+configData.altitude.to, configData.altitude.units, AltitudeTape.units.ft),
+		units: AltitudeTape.units.ft
+	});
     altitudeTape.revealUnits();
     altitudeTape.disableTapeSpinning();
 
-    verticalSpeedTape.setUnits(configData["vertical-speed"].units);
-    verticalSpeedTape.setRange(configData["vertical-speed"]);
+    verticalSpeedTape.setRange({
+		from: VerticalSpeedTape.convert(+configData["vertical-speed"].from, configData["vertical-speed"].units, VerticalSpeedTape.units.fpm100),
+		to: VerticalSpeedTape.convert(+configData["vertical-speed"].to, configData["vertical-speed"].units, VerticalSpeedTape.units.fpm100),
+		units: VerticalSpeedTape.units.fpm100
+	});
     verticalSpeedTape.revealUnits();
     verticalSpeedTape.showValueBox();
 }
@@ -347,16 +411,16 @@ function normalMode (): void {
 }
 //fixme: don't use DAABandsData[], replace it with DaidalusBandsDescriptor
 player.define("plot", () => {
-    const flightData: LLAData[] = player.getFlightData();
-    for (let step = 0; step < flightData?.length; step++) {
-        const bandsData: ScenarioDataPoint = player.getCurrentBands(step);
+    const flightDataArray: LLAData[] = player.getFlightData();
+    for (let step = 0; step < flightDataArray?.length; step++) {
+        const bands: ScenarioDataPoint = player.getCurrentBands(step);
+		const flightData: LLAData = flightDataArray[step];
+		const hd: { val: number, units: string } = getHeading(bands, flightData);
+		const gs: { val: number, units: string } = getAirSpeed(bands, flightData);
+		const vs: { val: number, units: string } = getVerticalSpeed(bands, flightData);
+		const alt: { val: number, units: string } = getAltitude(bands, flightData);
         player.setTimerJiffy("plot", () => {
-            const lla: LLAData = flightData[step];
-            const hd: number = Compass.v2deg(lla.ownship.v);
-            const gs: number = AirspeedTape.v2gs(lla.ownship.v);
-            const vs: number = +lla.ownship.v.z / 100;
-            const alt: number = +lla.ownship.s.alt;
-            plot({ ownship: { hd, gs, vs, alt }, bands: bandsData, step, time: player.getTimeAt(step) });
+			plot({ ownship: { hd, gs, vs, alt }, bands, step, time: player.getTimeAt(step) });
         }, step);
     }
     // const monitorID: number = 2;
@@ -391,7 +455,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
         width: plotWidth,
         label: "Horizontal Speed Bands",
         range: { from: 0, to: 1000 },
-        units: "[knot]",
+        units: "[knots]",
         parent: "simulation-plot"
     });
     player.appendSimulationPlot({
@@ -418,7 +482,7 @@ async function createPlayer(args?: DaaConfig): Promise<void> {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
     await player.appendDaaVersionSelector({ selector: "daidalus-version" });
     await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectDaaConfiguration("DO_365A_no_SUM");
+    await player.selectDaaConfiguration("2.x/DO_365A_no_SUM");
     await player.appendMonitorPanel();
     await player.appendTrafficPanel();
     // handlers can be defined only after creating the monitor panel

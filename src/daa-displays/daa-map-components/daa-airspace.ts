@@ -51,7 +51,7 @@ import * as serverInterface from '../utils/daa-types'
 import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
-import { DAA_AircraftDescriptor, DaaSymbol, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
+import { DaaSymbol, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // standard set of locations
 export const cities = {
@@ -306,7 +306,12 @@ export class DAA_Airspace implements AirspaceInterface {
      */
     constructor (opt?: { 
         ownship?: LatLonAlt<number | string>, 
-        traffic?: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[], 
+        traffic?: { 
+			s: LatLonAlt<number | string>, 
+			v: Vector3D<number | string>, 
+			symbol: "daa-target" | "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-ownship", 
+			callSign: string
+		}[], 
         flightPlan?: utils.FlightPlan,
         canvas?: string, // canvas where the airspace will be rendered
         shader?: number, 
@@ -826,7 +831,7 @@ export class DAA_Airspace implements AirspaceInterface {
     /**
      * Updates traffic information.
      */
-    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: string, callSign: string }[]): DAA_Airspace {
+    setTraffic (traffic: { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: "daa-target" | "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-ownship", callSign: string }[]): DAA_Airspace {
         const len: number = (traffic) ? traffic.length : 0;
         if (len === undefined) {
             console.error("[daa-displays] Warning: traffic information should be an array of traffic descriptors.");

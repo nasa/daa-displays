@@ -39,7 +39,7 @@
  **/
 
 import * as L from 'leaflet';
-import { alertLevel2symbol, DEFAULT_TRAFFIC_UPDATE_INTERVAL, DEFAULT_TRAFFIC_ANIMATION_NFRAMES, MIN_ANIMATION_THRESHOLD } from '../daa-utils';
+import { DEFAULT_TRAFFIC_UPDATE_INTERVAL, DEFAULT_TRAFFIC_ANIMATION_NFRAMES, MIN_ANIMATION_THRESHOLD } from '../daa-utils';
 import { DaaSymbol, LatLonAlt, Vector3D  } from '../utils/daa-types';
 import { Aircraft, AircraftInterface, AircraftLabel } from "./daa-aircraft";
 
@@ -291,11 +291,10 @@ export class LeafletAircraft extends Aircraft {
     /**
      * Sets the aircraft symbol
      */
-    setSymbol (daaSymbol?: string | number): LeafletAircraft {
+    setSymbol (daaSymbol?: string): LeafletAircraft {
         if (daaSymbol) {
-            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alertLevel2symbol(+daaSymbol);
-            if (symbol !== this.symbol) {
-                this.symbol = symbol;
+            if (daaSymbol !== this.symbol) {
+                this.symbol = daaSymbol;
                 const icon: L.DivIcon = this.createAircraftIcon();
                 this.marker.setIcon(icon);
             }

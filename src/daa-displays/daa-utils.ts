@@ -1,5 +1,5 @@
 import { deg2rad, rad2deg } from "./utils/daa-math";
-import { BandElement, Region, DaidalusBand, AlertLevel, AlertKind, LatLonAlt, LatLon, Vector3D, Alert, DaaBands } from "./utils/daa-types";
+import { BandElement, Region, DaidalusBand, AlertKind, LatLonAlt, LatLon, Vector3D, Alert, DaaBands, AlertRegion } from "./utils/daa-types";
 import * as server from './utils/daa-types';
 
 // useful constants
@@ -66,13 +66,17 @@ export const bugColors = {
 };
 export const alertingColors = {
     NONE: { color: "transparent" },
-    MONITOR: { color: "#cccccc" }, // white
-    AVOID: { color: "#ffc107" }, // yellow
-    ALERT: { color: "red" },
     "0": { color: "transparent" },
+    MONITOR: { color: "#cccccc" }, // white
+    FAR: { color: "#cccccc" }, // white
     "1": { color: "#cccccc" }, // white
+    AVOID: { color: "#ffc107" }, // yellow
+    MID: { color: "#ffc107" }, // yellow
     "2": { color: "#ffc107" }, // yellow
-    "3": { color: "red" }
+    ALERT: { color: "red" },
+    NEAR: { color: "red" },
+    RECOVERY: { color: "red" },
+    "3": { color: "red" },
 };
 
 
@@ -82,16 +86,16 @@ export const daaSymbols: DaaSymbol[] = [ "daa-target", "daa-traffic-monitor", "d
 /**
  * Utility function, converts an alert level to a symbol name
  */
-export function alertLevel2symbol (daaAlert: AlertLevel): DaaSymbol {
+export function alertRegion2symbol (daaAlert: AlertRegion): DaaSymbol {
     switch (daaAlert) {
-        case AlertLevel.MONITOR: // 1
+        case "FAR": // 1
             return "daa-traffic-monitor";
-        case AlertLevel.AVOID: // 2
+        case "MID": // 2
             return "daa-traffic-avoid";
-        case AlertLevel.ALERT: // 3
+        case "NEAR": // 3
             return "daa-alert";
-        case AlertLevel.NONE:
-        case AlertLevel.UNKNOWN:
+        case "NONE":
+        case "UNKNOWN":
             return "daa-target"
         default:
             console.log(`[daa-utils] Warning: invalid daa alert level ${daaAlert}`);
@@ -115,14 +119,31 @@ export function symbol2alertKind (symbol: DaaSymbol): AlertKind {
 /**
  * Utility function, returns the alert kind of this aircraft
  */
-export function symbol2alertLevel (symbol: DaaSymbol): AlertLevel {
+export function symbol2alertRegion (symbol: DaaSymbol): AlertRegion {
     switch (symbol) {
-        case "daa-alert": { return AlertLevel.ALERT; }
-        case "daa-traffic-avoid": { return AlertLevel.AVOID; }
-        case "daa-traffic-monitor": { return AlertLevel.MONITOR; }
-        case "daa-target": { return AlertLevel.NONE; }
-        default: { return AlertLevel.UNKNOWN; }
+        case "daa-alert": { return "NEAR"; }
+        case "daa-traffic-avoid": { return "MID"; }
+        case "daa-traffic-monitor": { return "FAR"; }
+        case "daa-target": { return "NONE"; }
+        default: { return "UNKNOWN"; }
     }
+}
+
+/**
+ * Utility function, converts an alert region into a numeric value that can be used to identify the symbol and color to be used
+ */
+export function severity (alertRegion: AlertRegion): number {
+	switch (alertRegion) {
+		case "NONE": return 0;
+		case "FAR": return 1;
+		case "MID": return 2;
+
+		case "NEAR": 
+		case "RECOVERY": return 3;
+
+		case "UNKNOWN": 
+		default: return -1;
+	}
 }
 
 /**
@@ -310,11 +331,11 @@ export function jquerySelector (name: string): string {
 /**
  * Utility function, downgrades alerts to a given level
  */
-export function downgrade_alerts (desc: { to: AlertLevel, alerts: Alert[] }): void {
+export function downgrade_alerts (desc: { to: AlertRegion, alerts: Alert[] }): void {
     if (desc?.to && desc?.alerts?.length) {
         for (let i = 0; i < desc.alerts.length; i++) {
-            if (desc.alerts[i].alert_level > desc.to) {
-                desc.alerts[i].alert_level = desc.to;
+            if (severity(desc.alerts[i].alert_region) > severity(desc.to)) {
+                desc.alerts[i].alert_region = desc.to;
             }
         }
     }

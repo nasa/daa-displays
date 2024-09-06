@@ -36,11 +36,11 @@ import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
-import { LLAData, ConfigData, ScenarioDataPoint, DaaSymbol, LatLonAlt, AlertLevel } from './daa-displays/utils/daa-types';
+import { LLAData, ConfigData, ScenarioDataPoint, DaaSymbol, LatLonAlt } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions } from './daa-displays/daa-utils';
+import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions, severity } from './daa-displays/daa-utils';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 const player: DAAPlayer = new DAAPlayer();
@@ -90,7 +90,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
         const selected_config: string = player.readSelectedDaaConfiguration();
         const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
         if (force_caution) {
-            downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+            downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
             inhibit_bands({ bands });
             inhibit_resolutions({ bands });
         }
@@ -190,12 +190,12 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             }
         }
         const traffic = flightData.traffic.map((data, index) => {
-            const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+            const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
             return {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
-                symbol: daaSymbols[alert_level]
+                symbol: daaSymbols[alert]
             }
         });
         data.map.setTraffic(traffic);
@@ -393,7 +393,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
     await player.appendDaaVersionSelector({ selector: "daidalus-version" });
     await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectDaaConfiguration("DO_365A_no_SUM");
+    await player.selectDaaConfiguration("2.x/DO_365A_no_SUM");
     await player.appendMonitorPanel();
     await player.appendTrafficPanel();
     // handlers can be defined only after creating the monitor panel

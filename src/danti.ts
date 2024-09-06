@@ -40,11 +40,11 @@ import {
      DidChangeDaaVoiceRate, DidChangeSimulationSpeed, DidToggleDaaVoiceFeedback, parseDaaConfigInBrowser, 
      PlayerEvents 
 } from './daa-displays/daa-player';
-import { AlertLevel, DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
+import { DaaBands, DAA_AircraftDescriptor, LatLonAlt, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
-import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts } from './daa-displays/daa-utils';
+import { Bands, inhibit_bands, inhibit_resolutions, daaSymbols, downgrade_alerts, severity } from './daa-displays/daa-utils';
 import { DaaVoice, Guidance, GuidanceKind } from './daa-displays/daa-voice';
 import { LayeringMode } from './daa-displays/daa-map-components/leaflet-aircraft';
 import { TailNumberIndicator } from './daa-displays/daa-tail-number';
@@ -97,7 +97,7 @@ function render (danti: {
         const selected_config: string = player.readSelectedDaaConfiguration();
         const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
         if (force_caution) {
-            downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+            downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
             inhibit_bands({ bands });
             inhibit_resolutions({ bands });
         }
@@ -105,15 +105,15 @@ function render (danti: {
         // compute max alert and collect aircraft alert descriptors
         let max_alert: number = 0;
         const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
-            const alert_level: number = bands.Alerts.alerts[index].alert_level 
+            const alert: number = severity(bands.Alerts.alerts[index].alert_region)
             const desc: DAA_AircraftDescriptor = {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
-                symbol: daaSymbols[alert_level]
+                symbol: daaSymbols[alert]
             };
-            if (alert_level > max_alert) {
-                max_alert = alert_level;
+            if (alert > max_alert) {
+                max_alert = alert;
             }
             return desc;
         });
@@ -138,7 +138,7 @@ function render (danti: {
             // set resolutions
             // if directive guidance is enabled, show directive guidance only for recovery bands
             if (directiveGuidanceEnabled) {
-                if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
+                if (compassBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= severity("NEAR"))) {
                     danti.compass.setBug(bands["Horizontal Direction Resolution"], {
                         wedgeConstraints: compassBands.RECOVERY,
                         resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -151,7 +151,7 @@ function render (danti: {
             } else {
                 danti.compass.hideBug();
             }
-            if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
+            if (airspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= severity("NEAR"))) {
                 danti.airspeedTape.setBug(bands["Horizontal Speed Resolution"], {
                     wedgeConstraints: airspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -161,7 +161,7 @@ function render (danti: {
                     wedgeAperture: 0
                 });
             }
-            // if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
+            // if (altitudeBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= severity("NEAR"))) {
             //     danti.altitudeTape.setBug(bands["Altitude Resolution"], {
             //         wedgeConstraints: altitudeBands.RECOVERY,
             //         resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -171,7 +171,7 @@ function render (danti: {
             //         wedgeAperture: 0
             //     });
             // }
-            if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= AlertLevel.ALERT)) {
+            if (vspeedBands?.RECOVERY || (wedgePersistenceEnabled && max_alert >= severity("NEAR"))) {
                 danti.verticalSpeedTape.setBug(bands["Vertical Speed Resolution"], {
                     wedgeConstraints: vspeedBands.RECOVERY,
                     resolutionBugColor: utils.bugColors["RECOVERY"] //"green"
@@ -454,7 +454,7 @@ player.define("plot", () => {
             const alt: number = +lla.ownship.s.alt;
             const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
             if (force_caution) {
-                downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
                 inhibit_bands({ bands: bands });
                 inhibit_resolutions({ bands });
             }
@@ -516,7 +516,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false });
     await player.appendDaaVersionSelector({ selector: "daidalus-version" });
     await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectDaaConfiguration("DANTi_SL3"); // was "DO_365A_no_SUM"
+    await player.selectDaaConfiguration("2.x/DANTi_SL3"); // was "DO_365A_no_SUM"
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

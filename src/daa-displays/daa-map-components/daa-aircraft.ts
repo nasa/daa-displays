@@ -48,7 +48,7 @@ import * as utils from '../daa-utils';
 import * as conversions from '../utils/daa-math';
 import * as WorldWind from '../wwd/worldwind.min';
 import { LosRegion } from './daa-regions';
-import { alertLevel2symbol, symbol2alertKind } from '../daa-utils';
+import { symbol2alertKind } from '../daa-utils';
 import { AlertKind, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // arrow symbols, useful for labels
@@ -811,23 +811,22 @@ export class DAA_Aircraft extends Aircraft {
     /**
      * @function <a name="DAA_Aircraft_setSymbol">setSymbol</a>
      * @description Sets the daa symbol to be used for the aircraft.
-     * @param daaSymbol {String|number} string is for daa symbols, one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship), number is for alert (0 = target, 1 = monitor, 2 = avoid, 3 = alert)</li>
+     * @param daaSymbol one of "daa-target", "daa-alert", "daa-traffic-avoid", "daa-traffic-monitor", "daa-ownship" (default: daa-ownship)</li>
      * @memberof module:InteractiveMap
      * @instance
      * @inner
      */
-    setSymbol(daaSymbol?: string | number): DAA_Aircraft {
+    setSymbol(daaSymbol?: "daa-target" | "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-ownship"): DAA_Aircraft {
         if (daaSymbol) {
-            const symbol: string = (typeof daaSymbol === "string") ? daaSymbol : alertLevel2symbol(+daaSymbol);
-            if (symbol) {
+            if (daaSymbol) {
                 if (!this.renderableAircraft[this.selectedSymbol]) {
                     // console.log("Warning: still loading DAA_Aircraft symbols... :/");
                     // the symbol will be selected when the loading process completes --- see DAA_Aircraft.setupRenderables()
-                    this.selectedSymbol = symbol;
+                    this.selectedSymbol = daaSymbol;
                 } else {
                     if (daaSymbol !== this.selectedSymbol) {
                         this.renderableAircraft[this.selectedSymbol].hide(); // hide old symbol
-                        this.selectedSymbol = symbol;
+                        this.selectedSymbol = daaSymbol;
                         this.renderableAircraft[this.selectedSymbol].reveal(); // reveal new symbol
                         this.refreshLabel();
                     } // else do nothing, the symbol is the same

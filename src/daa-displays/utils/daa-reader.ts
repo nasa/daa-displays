@@ -319,6 +319,9 @@ export function computeDaaLines (ownship: DaaAircraft[], traffic: DaaTraffic[]):
  * Utility function, converts .daa file content into a DaaFileContent
  */
 export function readDaaFileContent (fileContent: string, opt?: { computeRoll?: boolean, maxLines?: number, tailNumbersOnly?: boolean }): DaaFileContent | null {
+	// remove comments
+	fileContent = fileContent.replace(/^\s*#.*/g, "");
+	// get lines
     const lines: string[] = fileContent?.replace(/\bunitless\b/g, "[none]").trim()?.split("\n")?.map((line: string) => {
         return line.trim();
     });

@@ -35,13 +35,13 @@ import { HScale } from './daa-displays/daa-hscale';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DAASplitView, parseSplitConfigInBrowser, SplitConfig } from './daa-displays/daa-split-view';
-import { AlertLevel, ConfigData, DaaSymbol, LatLonAlt, LLAData, Region, ResolutionElement, ScenarioDataPoint } from './daa-displays/utils/daa-types';
+import { ConfigData, DaaSymbol, LatLonAlt, LLAData, Region, ResolutionElement, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 import { DAAPlayer } from './daa-displays/daa-player';
-import { inhibit_bands, downgrade_alerts, inhibit_resolutions } from './daa-displays/daa-utils';
+import { inhibit_bands, downgrade_alerts, inhibit_resolutions, severity } from './daa-displays/daa-utils';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
 
 // widgets included in the rendered display
@@ -84,7 +84,7 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
     const selected_config: string = player.readSelectedDaaConfiguration();
     const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
     if (force_caution) {
-        downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+        downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
         inhibit_bands({ bands });
         inhibit_resolutions({ bands });
     }
@@ -142,12 +142,12 @@ export function render(player: DAAPlayer, data: RenderableDisplay): void {
         }
     }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert_level]
+            symbol: daaSymbols[alert]
         }
     }); 
     data.map.setTraffic(traffic);
@@ -293,7 +293,7 @@ for (let i = 0; i < 2; i++) {
                 const alt: number = +lla.ownship.s.alt;
                 const force_caution: boolean = selected_config?.toLowerCase().includes("danti_sl3") && alt < THRESHOLD_ALT_SL3 && USE_TCAS_SL3;
                 if (force_caution) {
-                    downgrade_alerts({ to: AlertLevel.AVOID, alerts: bands?.Alerts?.alerts });
+                    downgrade_alerts({ to: "MID", alerts: bands?.Alerts?.alerts });
                     inhibit_bands({ bands });
                     inhibit_resolutions({ bands });
                 }    
@@ -320,8 +320,8 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
         let alertsR: string = "";
         if (bandsRight?.Alerts) {
             for (let i = 0; i < bandsRight.Alerts?.alerts?.length; i++) {
-                if (bandsRight.Alerts.alerts[i].alert_level > 0) {
-                    alertsR += `${bandsRight.Alerts.alerts[i].ac} [${bandsRight.Alerts.alerts[i].alert_level}]`;
+                if (severity(bandsRight.Alerts.alerts[i].alert_region) > severity("NONE")) {
+                    alertsR += `${bandsRight.Alerts.alerts[i].ac} [${bandsRight.Alerts.alerts[i].alert_region}]`;
                 }
             }
             // bandsRight.Alerts?.alerts?.forEach(alert => {
@@ -333,8 +333,8 @@ function diff (player: DAAPlayer, bandsLeft?: ScenarioDataPoint, bandsRight?: Sc
         let alertsL: string = "";
         if (bandsLeft?.Alerts) {
             for (let i = 0; i < bandsLeft.Alerts?.alerts?.length; i++) {
-                if (bandsLeft.Alerts.alerts[i].alert_level > 0) {
-                    alertsL += `${bandsLeft.Alerts.alerts[i].ac} [${bandsLeft.Alerts.alerts[i].alert_level}]`; 
+                if (severity(bandsLeft.Alerts.alerts[i].alert_region) > severity("NONE")) {
+                    alertsL += `${bandsLeft.Alerts.alerts[i].ac} [${bandsLeft.Alerts.alerts[i].alert_region}]`; 
                 }
             }
             // bandsLeft.Alerts?.alerts?.forEach(alert => {
@@ -522,7 +522,7 @@ async function createPlayer (args: SplitConfig) {
     await splitView.appendWindSettings({ fromToSelectorVisible: true });
     await splitView.appendDaaVersionSelector();
     await splitView.appendDaaConfigurationSelector();
-    await splitView.selectDaaConfiguration("DO_365A_no_SUM");
+    await splitView.selectDaaConfiguration("2.x/DO_365A_no_SUM");
     splitView.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp-left", "daa-disp-right" ]

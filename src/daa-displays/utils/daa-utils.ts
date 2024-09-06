@@ -27,7 +27,8 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { Alert, AlertLevel, DaaBands } from "./daa-types";
+import { severity } from "../daa-utils";
+import { Alert, AlertRegion, DaaBands } from "./daa-types";
 
 /**
  * Returns a unique id
@@ -69,19 +70,19 @@ export const COLORS: { [name: string]: [
  * The default threshold is AlertLevel.ALERT
  */
 export function getAlertingAircraftMap (bands: DaaBands, opt?: { 
-	minThreshold?: AlertLevel, maxThreshold?: AlertLevel
-} | { alertLevel?: AlertLevel }): { [ac: string]: AlertLevel } {
+	minThreshold?: AlertRegion, maxThreshold?: AlertRegion
+} | { alertRegion?: AlertRegion }): { [ac: string]: AlertRegion } {
 	if (bands?.Alerts?.alerts?.length) {
 		opt = opt || {};
-		const min: AlertLevel = opt["alertLevel"] || opt["minThreshold"] || AlertLevel.ALERT;
-		const max: AlertLevel = opt["alertLevel"] || opt["maxThreshold"] || AlertLevel.ALERT;
+		const min: AlertRegion = opt["alertRegion"] || opt["minThreshold"] || "NEAR";
+		const max: AlertRegion = opt["alertRegion"] || opt["maxThreshold"] || "NEAR";
 		const alerts: Alert[] = bands.Alerts.alerts.filter(alert => {
-			return alert.alert_level >= min && alert.alert_level <= max;
+			return severity(alert.alert_region) >= severity(min) && severity(alert.alert_region) <= severity(max);
 		}) || [];
 		if (alerts?.length) {
-			const alerting: { [ac: string]: AlertLevel } = {};
+			const alerting: { [ac: string]: AlertRegion } = {};
 			for (let i = 0; i < alerts.length; i++) {
-				alerting[alerts[i].ac] = alerts[i].alert_level;
+				alerting[alerts[i].ac] = alerts[i].alert_region;
 			}
 			return alerting;
 		}

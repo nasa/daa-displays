@@ -31,6 +31,7 @@ import { Compass } from './daa-displays/daa-compass';
 
 import { InteractiveMap } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
+import { severity } from './daa-displays/daa-utils';
 import { DaaSymbol, LLAData, ScenarioDataPoint } from './daa-displays/utils/daa-types';
 
 function render (data: { map: InteractiveMap }) {
@@ -51,12 +52,12 @@ function render (data: { map: InteractiveMap }) {
     //     data.altitudeTape.setBands(bands["Altitude Bands"]);
     // }
     const traffic = flightData.traffic.map((data, index) => {
-        const alert_level: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? bands.Alerts.alerts[index].alert_level : 0;
+        const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
         return {
             callSign: data.id,
             s: data.s,
             v: data.v,
-            symbol: daaSymbols[alert_level]
+            symbol: daaSymbols[alert]
         }
     });
     data.map.setTraffic(traffic);
@@ -197,7 +198,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     await player.appendWindSettings({ selector: "daidalus-wind", dropDown: false, fromToSelectorVisible: true });
     await player.appendDaaVersionSelector({ selector: "daidalus-version" });
     await player.appendDaaConfigurationSelector({ selector: "daidalus-configuration" });
-    await player.selectDaaConfiguration("DO_365A_no_SUM");
+    await player.selectDaaConfiguration("2.x/DO_365A_no_SUM");
     player.appendSimulationControls({
         parent: "simulation-controls",
         displays: [ "daa-disp" ]

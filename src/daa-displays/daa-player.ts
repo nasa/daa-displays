@@ -1962,7 +1962,7 @@ export class DAAPlayer extends Backbone.Model {
             await this.connectToServer();
             const req: GetTailNumbersRequest = {
                 scenarioName
-            }
+            };
             const ans = await this.client.send({
                 type: DaaServerCommand.getTailNumbers,
                 data: req
@@ -2011,14 +2011,28 @@ export class DAAPlayer extends Backbone.Model {
             // by convention, configuration have an extension .conf
             if (!configName.endsWith(".conf")) { configName = configName + ".conf"; }
             const prev: string = this.readSelectedDaaConfiguration();
-            const selected: string = $(`#${this.daaConfigurationDomSelector}-list option:contains("${configName}")`).text();
-            console.log(`[daa-player] selectConfiguration`, { prev, selected, configName });
-            $(`#${this.daaConfigurationDomSelector}-list option:contains("${configName}")`).prop("selected", true);
-            // const selected: string = this.getSelectedConfiguration();
-            if (prev !== selected) {
-                await this.refreshConfigurationAttributesView(selected);   
-            }
-            return selected?.includes(configName);
+			// try exact match
+			let candidates: JQuery<HTMLElement> = $(`#${this.daaConfigurationDomSelector}-list option`).filter((index, elem) => {
+				return elem.textContent === configName;
+			});
+			// if none matches, try best match
+			if (candidates.length === 0) {
+				candidates = $(`#${this.daaConfigurationDomSelector}-list option`).filter((index, elem) => {
+					return elem.textContent.endsWith(configName);
+				});
+			}
+			// sanity check
+			if (candidates.length === 1) {
+				const selected: string = candidates.text();
+				console.log(`[daa-player] selectConfiguration`, { prev, selected, configName });
+				$(`#${this.daaConfigurationDomSelector}-list option:contains("${configName}")`).prop("selected", true);
+				// const selected: string = this.getSelectedConfiguration();
+				if (prev !== selected) {
+					await this.refreshConfigurationAttributesView(selected);   
+				}
+				return selected?.includes(configName);
+			}
+			console.warn(`[daa-player] Warning: unable to select configuration ${configName} (configuration name matches ${candidates.length} configuration names)`, { candidates });
         }
         return false;
     }

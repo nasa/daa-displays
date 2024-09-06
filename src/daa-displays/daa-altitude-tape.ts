@@ -697,11 +697,12 @@ export class AltitudeTape {
      * @memberof module:AltitudeTape
      * @instance
      */
-    setAltitude(val: number, units: string, opt?: {
+    setAltitude(val: number, units?: string, opt?: {
         transitionDuration?: string
     }): AltitudeTape {
         opt = opt || {};
         // val = utils.limit(-200, 60000, "altitude")(val);
+		units = units || AltitudeTape.units.ft;
         this.currentAltitude = AltitudeTape.convert(val, units, this.tapeUnits);
 
         if (this.tapeCanSpin) {

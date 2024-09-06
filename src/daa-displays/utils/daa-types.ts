@@ -204,19 +204,25 @@ export enum AlertKind {
     ALERT = "ALERT", // warning alert
     UNKNOWN = "UNKNOWN"
 }
-export enum AlertLevel {
-    NONE = 0,
-    MONITOR = 1,
-    AVOID = 2,
-    ALERT = 3,
-    UNKNOWN = -1
-}
+// export enum AlertLevel {
+//     NONE = 0,
+//     MONITOR = 1,
+//     AVOID = 2,
+//     ALERT = 3,
+//     UNKNOWN = -1
+// }
+export declare type AlertRegion = "NONE" | "FAR" | "MID" | "NEAR" | "RECOVERY" | "UNKNOWN";
+    // NONE = 0,
+    // FAR = 1,
+    // MID = 2,
+    // NEAR | RECOVERY = 3,
+    // UNKNOWN = -1
 export type DaaSymbol = "daa-alert" | "daa-traffic-avoid" | "daa-traffic-monitor" | "daa-target" | "ownship" | string;
 
 export declare interface Alert {
     ac: string, // aircraft ID (tail number)
-    alert_level: AlertLevel,
-    alert_region: string,
+    // alert_level: number, // NOTE: this is a misnomer, alert level should be alert id
+    alert_region: AlertRegion,
     // Only in DAIDALUSv2
     alerter?: string,
     alerter_idx? : number
@@ -399,6 +405,12 @@ export declare interface ScenarioDataPoint {
     Metrics: MetricsElement | null
     WindVectors: WindVectorsElement | null
 }
+export declare interface OwnshipData { 
+	gs: { val: number, units: string },
+	vs: { val: number, units: string },
+	alt: { val : number, units: string },
+	hd: { val: number, units: string }
+}
 export declare type InfoData = {
     language: string, // DAIDALUS language
     version: string, // DAIDALUS version
@@ -427,7 +439,7 @@ export declare interface DAALosDescriptor {
     },
     Scenario: string,
     Detector: string,
-    AlertLevel: AlertLevel,
+    AlertLevel: number,
     Grid: { sectorSize: number, sectorUnits: string, xmax: number, ymax: number },
     LoS: {
         time: number,

@@ -312,18 +312,52 @@ export class VerticalSpeedTape {
     protected zero: number;
     protected bands: utils.Bands;
     protected div: HTMLElement;
-    protected tapeUnits: string = VerticalSpeedTape.defaultTapeUnits;
 
-    static readonly defaultTapeUnits: string = "fpm x100";
+
+    static readonly units = {
+		mps: "m/s",
+        mpm: "mpm",
+        fpm: "fpm", // feet per minute
+		fpm100: "fpm x100"  // 100 feet per meter
+    };
+    static readonly defaultTapeUnits: string =  VerticalSpeedTape.units.fpm100;
+	protected tapeUnits: string = VerticalSpeedTape.defaultTapeUnits;
+
     static readonly defaultRange: { from: number, to: number, units: string } = { from: -24, to: 24, units: VerticalSpeedTape.defaultTapeUnits };
     protected resolutionBug: SpeedBug;
     protected speedBug: SpeedBug;
 
-    readonly units = {
-        mpm: "mpm",
-        fpm: "fpm" // feet per minute
-    };
-
+	/**
+	 * Utility function, converts units to fpm
+	 */
+	static convert (val: number, unitsFrom: string, unitsTo: string): number {
+		if (unitsFrom !== unitsTo) {
+			if (unitsTo === VerticalSpeedTape.units.fpm) {
+				switch (unitsFrom) {
+					case VerticalSpeedTape.units.mpm: { return conversions.feet2meters(val); }
+					case VerticalSpeedTape.units.fpm100: { return val * 100; }
+					case VerticalSpeedTape.units.mps: { return conversions.meters2feet(val) / 60; }
+					default: // unable to convert
+				}
+			} else if (unitsTo === VerticalSpeedTape.units.fpm100) {
+				switch (unitsFrom) {
+					case VerticalSpeedTape.units.mpm: { return conversions.feet2meters(val) / 100; }
+					case VerticalSpeedTape.units.fpm: { return val / 100; }
+					case VerticalSpeedTape.units.mps: { return conversions.meters2feet(val) / 60 / 100; }
+					default: // unable to convert
+				}
+			} else if (unitsTo === VerticalSpeedTape.units.mps) {
+				switch (unitsFrom) {
+					case VerticalSpeedTape.units.mpm: { return val / 60; }
+					case VerticalSpeedTape.units.fpm100: { return conversions.feet2meters(val) / 60 / 100; }
+					case VerticalSpeedTape.units.fpm: { return conversions.feet2meters(val) / 60; }
+					default: // unable to convert
+				}
+			}
+			console.warn(`[daa-vertical-speed-tape] Warning: unable to convert units from ${unitsFrom} to ${unitsTo}`);
+		}
+		return val;
+	}
     /**
      * @function <a name="VerticalSpeedTape">VerticalSpeedTape</a>
      * @description Constructor.
@@ -709,10 +743,10 @@ export class VerticalSpeedTape {
                 from: +range.from,
                 to: +range.to
             };
-            if (range.units && !(range.units.includes("x100") || range.units.includes("100x"))) {
-                this.range.from /= 100;
-                this.range.to /= 100;
-            }
+            // if (range.units && !(range.units.includes("x100") || range.units.includes("100x"))) {
+            //     this.range.from /= 100;
+            //     this.range.to /= 100;
+            // }
             const step: number = (this.range.to - this.range.from) / 24; // 24 is the standard range with step 1
             this.setStep(step);
         } else {
