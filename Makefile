@@ -98,10 +98,11 @@ audit-fix:
 	npm audit fix
 	cd src/daa-server && npm audit fix
 
+maxlines=4096
 # make split file=xxx.daa
 split:
 	@( \
-		node dist/daa-displays/utils/daa-split.js $(file) \
+		node dist/daa-displays/utils/daa-split.js $(file) $(maxlines)\
 	)
 
 eslint:

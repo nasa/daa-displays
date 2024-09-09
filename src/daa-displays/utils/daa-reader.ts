@@ -569,7 +569,7 @@ export function splitDaaFile (fname: string, opt?: { maxLines?: number }): numbe
                 // identify split points (i.e., rows with ownship data
                 for (let i = MAX_DAA_LINES; i < data.length; i += MAX_DAA_LINES) {
                     // advance line number until ownship data is found
-                    while (!data[i]?.trim()?.startsWith(ownship_name)) { i++; }
+                    while (i < data.length && !data[i]?.trim()?.startsWith(ownship_name)) { i++; }
                     // add line as split point
                     split_points.push(i);
                 }

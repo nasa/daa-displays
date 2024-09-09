@@ -43,7 +43,11 @@ node daa-split <daa-file>`;
 const args: string[] = process.argv?.slice(2);
 console.log('args: ', args);
 if (args?.length && args[0]) {
-    splitDaaFile(args[0]);
+	if (args.length > 1 && +args[1] > 3) {
+		splitDaaFile(args[0], { maxLines: +args[1] });
+	} else {
+		splitDaaFile(args[0]);
+	}
 } else {
     console.log(help());
 }
