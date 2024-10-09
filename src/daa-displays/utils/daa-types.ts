@@ -509,3 +509,24 @@ export declare interface ConfigFile extends ConfigData {
     };
 }
 
+export declare interface DaaDataFile {
+	file: string,
+	type: "json" | "array", 
+	key?: string
+}
+
+export declare type DaaDataChunk = {
+	type: "json",
+	val: string,
+	idx: number,
+	tot: number,
+	eof: boolean
+} | {
+	type: "array",
+	val: string[],
+	idx: number,
+	tot: number,
+	key: string,
+	eof: boolean
+}
+

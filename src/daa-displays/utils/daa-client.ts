@@ -27,7 +27,7 @@
  * UNILATERAL TERMINATION OF THIS AGREEMENT.
  */
 
-import { DaaServerCommand, ScenarioDescriptor } from "./daa-types";
+import { DaaDataChunk, DaaServerCommand, ScenarioDescriptor } from "./daa-types";
 import { uuid } from "./daa-utils";
 export interface Token {
     type: DaaServerCommand,
@@ -167,21 +167,58 @@ export class DAAClient {
                             // sanity check
                             if (response?.type === request?.type) {
                                 if (response && response.type === "exec") {
-                                    // the "exec" response type spans the response over multiple messages, one for each DaidalusBandsDescriptor component
-                                    // each message is read and the data component is used to fill in the blanks in this.resolveMap[request.id].response
-                                    // this is done because the amount of data may be huge (GB) and the websocket connection would break
-                                    const data: { key: string, val: unknown, idx: number, tot: number } = 
-                                        <{ key: string, val: unknown, idx: number, tot: number }> response.data;
-                                    this.resolveMap[<string>request.id].response[data.key] = data.val;
-                                    // if this was the last data chunk, resolve the promise
-                                    if (data.idx === data.tot - 1) {
-                                        // copy all the data collected
-                                        response.data = this.resolveMap[<string>request.id].response
-                                        // resolve the promise
-                                        this.resolveMap[<string>request.id].resolve(response);
-                                        // delete the entry
-                                        delete this.resolveMap[<string>request.id];
-                                    }
+									if (response?.data && response.data["type"]) {
+										// the "exec" response type spans the response over multiple messages, one for each DaidalusBandsDescriptor component
+										// each message is read and the data component is used to fill in the blanks in this.resolveMap[request.id].response
+										// this is done because the amount of data may be huge (GB) and the websocket connection would break
+										const data: DaaDataChunk = <DaaDataChunk> response.data;
+										switch (data.type) {
+											case "json": {
+												const json = JSON.parse(data.val);
+												const keys: string[] = Object.keys(json);
+												for (let i = 0; i < keys.length; i++) {
+													this.resolveMap[<string>request.id].response[keys[i]] = json[keys[i]];
+												}
+												break;
+											}
+											case "array": {
+												const lines: string[] = data.val;
+												const key: string = data.key;
+												this.resolveMap[<string>request.id].response[key] = this.resolveMap[<string>request.id].response[key] || [];
+												for (let i = 0; i < lines.length; i++) {
+													const json = JSON.parse(lines[i]);
+													this.resolveMap[<string>request.id].response[key].push(json);
+												}
+												break;
+											}
+											default: {
+												console.log(`[daa-client] Warning: unrecognized daa chunk data type ${data["type"]}`);
+											}
+										}
+										// if this was the last data chunk, resolve the promise
+										if (data.eof && data.idx === data.tot - 1) {
+											// copy all the data collected
+											response.data = this.resolveMap[<string>request.id].response
+											// resolve the promise
+											this.resolveMap[<string>request.id].resolve(response);
+											// delete the entry
+											delete this.resolveMap[<string>request.id];
+										}
+									} else {
+										// this part of the logic is for backwards compatibility with older versions of DAABands
+										const data: { key: string, val: unknown, idx: number, tot: number } = 
+											<{ key: string, val: unknown, idx: number, tot: number }> response.data;
+										this.resolveMap[<string>request.id].response[data.key] = data.val;
+										// if this was the last data chunk, resolve the promise
+										if (data.idx === data.tot - 1) {
+											// copy all the data collected
+											response.data = this.resolveMap[<string>request.id].response
+											// resolve the promise
+											this.resolveMap[<string>request.id].resolve(response);
+											// delete the entry
+											delete this.resolveMap[<string>request.id];
+										}
+									}
                                 } else {
                                     // resolve the promise
                                     this.resolveMap[<string>request.id].resolve(response);

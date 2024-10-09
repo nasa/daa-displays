@@ -156,7 +156,32 @@ public class DAABandsV2 {
 	protected String wind_knot = "0";
 	protected Velocity windVelocity = null;
 
+	// printWriter creates a single file with all the data.
 	protected PrintWriter printWriter = null;
+	// these additional printers break down the output into smaller chunks, useful for handling large datasets.
+	protected PrintWriter printWriterFiles = null; // the list of output files
+	protected PrintWriter printWriterInfo = null; // .info file
+	protected PrintWriter printWriterOwnship = null; // .ownship file
+	protected PrintWriter printWriterAlerts = null; // .alerts file
+	protected PrintWriter printWriterWind = null; // .wind file
+	protected PrintWriter printWriterMetrics = null; // .metrics file
+	protected PrintWriter printWriterMonitors = null; // .monitors file
+	protected PrintWriter printWriterAltBands = null; // .alt-bands file
+	protected PrintWriter printWriterVsBands = null; // .vs-bands file
+	protected PrintWriter printWriterHsBands = null; // .hs-bands file
+	protected PrintWriter printWriterHdBands = null; // .hd-bands file
+	protected PrintWriter printWriterAltRes = null; // .alt-res file
+	protected PrintWriter printWriterVsRes = null; // .vs-res file
+	protected PrintWriter printWriterHsRes = null; // .hs-res file
+	protected PrintWriter printWriterHdRes = null; // .hd-res file
+	protected PrintWriter printWriterContours = null; // .contours file
+	protected PrintWriter printWriterHazardZones = null; // .hazardzones file
+	protected String chunks[] = {
+		".info", ".ownship", ".alerts", ".wind", ".metrics", ".monitors", 
+		".hd-bands", ".vs-bands", ".hs-bands", ".alt-bands",
+		".hd-res", ".vs-res", ".hs-res", ".alt-res",
+		".contours", ".hazardzones"
+	};
 
 	public boolean PROFILER_ENABLED = false;
 	protected DAAProfiler profiler = null;
@@ -268,7 +293,7 @@ public class DAABandsV2 {
 	}
 
 	/**
-	 * Utility function, prints a list in output as a JSON array
+	 * Utility function, prints a list on 'out' as a JSON array
 	 */
 	public static void printArray(PrintWriter out, List<String> info, String label) {
 		out.println("\"" + label + "\": [");
@@ -283,6 +308,14 @@ public class DAABandsV2 {
 		}
 		out.println("\n]");
 	}
+	/**
+	 * Utility function, prints each element in the list on 'out' as a separate line
+	 */
+	public static void printArray(PrintWriter out, List<String> info) {
+		for (String str : info) {
+			out.println(str);
+		}
+	}
 
 	public static void printMonitors (PrintWriter out, DAAMonitorsV2 monitors, List<List<String>> info) {
 		out.println("[ ");
@@ -292,13 +325,13 @@ public class DAABandsV2 {
 			String legend = DAAMonitorsV2.getLegend(monitorID);
 			String color = monitors.getColor(monitorID);
 			String label = DAAMonitorsV2.getLabel(monitorID);
-			out.print("{ \"id\": \"" + monitorID + "\",\n");
-			out.print("\"name\": \"" + label + "\",\n");
-			out.print("\"color\": \"" + color + "\",\n");
-			out.println("\"legend\": " + legend + ",\n");
+			out.print("{ \"id\": \"" + monitorID + "\", ");
+			out.print("\"name\": \"" + label + "\", ");
+			out.print("\"color\": \"" + color + "\", ");
+			out.print("\"legend\": " + legend + ",\n");
 			printArray(out, info.get(i), "results");
 			if (i < len - 1) {
-				out.println("}, ");
+				out.println("}\n,");
 			} else {
 				out.println("} ");
 			}
@@ -475,16 +508,16 @@ public class DAABandsV2 {
 			String lon = llaFlag ? f.FmPrecision(Units.to("deg", lla.lon()) + lonOffset, precision16)
 					: f.FmPrecision(Units.to("deg", lla.lon()), precision16);
 			if (comma) {
-				polygon += ",\n";
+				polygon += ", ";
 			} else {
 				comma = true;
 			}
-			polygon += "\t\t{ \"lat\": \"" + lat;
+			polygon += "{ \"lat\": \"" + lat;
 			polygon += "\", \"lon\": \"" + lon; 
 			polygon += "\", \"alt\": \"" + fmt(Units.to("ft", lla.alt()));
 			polygon += "\" }";
 		}
-		polygon = "\t[\n" + polygon + "\n\t]";
+		polygon = "[" + polygon + "]";
 		return polygon;
 	}
 
@@ -493,13 +526,13 @@ public class DAABandsV2 {
 		boolean comma = false;
 		for (List<Position> ply : polygons) {
 			if (comma) {
-				res += ",\n";
+				res += ", ";
 			} else {
 				comma = true;
 			}
 			res += printPolygon(ply, po);
 		}
-		return "[ \n" + res + "]";
+		return "[ " + res + " ]";
 	}
 
 	public String fmt(double val) {
@@ -788,12 +821,12 @@ public class DAABandsV2 {
 		// Contours and hazard zones are lists of polygons, and polygons are list of points.
 		Position po = daa.getAircraftStateAt(0).getPosition();
 		String contours =  "{ \"time\": " + time;
-		contours += ",\n  \"data\": [ ";
+		contours += ",  \"data\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 			List<List<Position>> polygons = new ArrayList<List<Position>>();
 			if (PRINT_POLYGONS) { daa.horizontalContours(polygons, ac); }
-			contours += "{ \"ac\": \"" + ac_name + "\",\n";
+			contours += "{ \"ac\": \"" + ac_name + "\", ";
 			contours +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
 				contours += ", ";
@@ -803,7 +836,7 @@ public class DAABandsV2 {
 		jb.contoursArray.add(contours);
 
 		String hazardZones =  "{ \"time\": " + time;
-		hazardZones += ",\n  \"data\": [ ";
+		hazardZones += ",  \"data\": [ ";
 		for (int ac = 1; ac <= daa.lastTrafficIndex(); ac++) {
 			String ac_name = daa.getAircraftStateAt(ac).getId();
 
@@ -817,7 +850,7 @@ public class DAABandsV2 {
 			polygons.add(ply_violation);
 			polygons.add(ply_conflict);
 
-			hazardZones += "{ \"ac\": \"" + ac_name + "\",\n";
+			hazardZones += "{ \"ac\": \"" + ac_name + "\",";
 			hazardZones +=	"  \"polygons\": " + printPolygons(polygons, po) + "}";
 			if (ac < daa.lastTrafficIndex()) {
 				hazardZones += ", ";
@@ -881,7 +914,6 @@ public class DAABandsV2 {
 		// create DaidalusFileWalker
 		DaidalusFileWalker walker = new DaidalusFileWalker(ifname);
 		if (ownshipName != null) { walker.setOwnship(ownshipName); }
-		printWriter.println("{\n" + jsonHeader());
 
 		// create json bands object
 		JsonBands jb = new JsonBands();
@@ -909,36 +941,63 @@ public class DAABandsV2 {
 			}
 		}
 
-		printWriter.println(jsonStats + ",");
+		printWriter.println("{\n" + jsonHeader() + "\n" + jsonStats + ",");
+		printWriterInfo.println("{\n" + jsonHeader() + "\n" + jsonStats + "\n}");
 
 		printArray(printWriter, jb.ownshipArray, "Ownship");
+		printArray(printWriterOwnship, jb.ownshipArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.alertsArray, "Alerts");
+		printArray(printWriterAlerts, jb.alertsArray);
 		printWriter.println(",");
-		printArray(printWriter, jb.metricsArray, "Metrics");
-		printWriter.println(",");
+
 		printArray(printWriter, jb.windVectorsArray, "WindVectors");
+		printArray(printWriterWind, jb.windVectorsArray);
 		printWriter.println(",");
+
+		printArray(printWriter, jb.metricsArray, "Metrics");
+		printArray(printWriterMetrics, jb.metricsArray);
+		printWriter.println(",");
+
 		printArray(printWriter, jb.trkArray, "Heading Bands");
+		printArray(printWriterHdBands, jb.trkArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.gsArray, "Horizontal Speed Bands");
+		printArray(printWriterHsBands, jb.gsArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.vsArray, "Vertical Speed Bands");
+		printArray(printWriterVsBands, jb.vsArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.altArray, "Altitude Bands");
+		printArray(printWriterAltBands, jb.altArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.resTrkArray, "Horizontal Direction Resolution");
+		printArray(printWriterHdRes, jb.resTrkArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.resGsArray, "Horizontal Speed Resolution");
+		printArray(printWriterHsRes, jb.resGsArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.resVsArray, "Vertical Speed Resolution");
+		printArray(printWriterVsRes, jb.resVsArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.resAltArray, "Altitude Resolution");
+		printArray(printWriterAltRes, jb.resAltArray);
 		printWriter.println(",");
 
 		printArray(printWriter, jb.contoursArray, "Contours");
+		printArray(printWriterContours, jb.contoursArray);
 		printWriter.println(",");
+
 		printArray(printWriter, jb.hazardZonesArray, "Hazard Zones");
+		printArray(printWriterHazardZones, jb.hazardZonesArray);
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");
@@ -948,9 +1007,9 @@ public class DAABandsV2 {
 		info.add(jb.monitorM3Array);
 		info.add(jb.monitorM4Array);
 		printMonitors(printWriter, jb.monitors, info);
+		printMonitors(printWriterMonitors, jb.monitors, info);
 
 		printWriter.println("}");
-
 		closePrintWriter();
 
 		if (PROFILER_ENABLED) {
@@ -1036,19 +1095,138 @@ public class DAABandsV2 {
 		return true;
 	}
 
+	/**
+	 * Utility function, creates the output streams
+	 */
 	public boolean createPrintWriter () {
 		try {
-			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)),true);
 			System.out.println("Creating output file " + ofname);
+			printWriter = new PrintWriter(new BufferedWriter(new FileWriter(ofname)), true);
+
+			System.out.println("Creating output file " + ofname + ".files");
+			printWriterFiles = new PrintWriter(new BufferedWriter(new FileWriter(ofname + ".files")),true);
+			printWriterFiles.println("[");
+			for (int i = 0; i < chunks.length; i++) {
+				String fname = ofname + chunks[i];
+				File f = new File(fname);
+				System.out.println("Creating output file " + fname);
+				switch (chunks[i]) {
+					case ".info": { 
+						printWriterInfo = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"json\" }");
+						break;
+					}
+					case ".ownship": {
+						printWriterOwnship = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Ownship\" }");
+						break;
+					}
+					case ".alerts": { 
+						printWriterAlerts = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Alerts\" }");
+						break;
+					}
+					case ".wind": {
+						printWriterWind = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"WindVectors\" }");
+						break; 
+					}
+					case ".metrics": { 
+						printWriterMetrics = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Metrics\" }");
+						break;
+					}
+					case ".monitors": {
+						printWriterMonitors = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Monitors\" }");
+						break;
+					}
+					case ".hd-bands": { 
+						printWriterHdBands = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Heading Bands\" }");
+						break;
+					}
+					case ".vs-bands": { 
+						printWriterVsBands = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Vertical Speed Bands\" }");
+						break;
+					}
+					case ".hs-bands": {
+						printWriterHsBands = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Horizontal Speed Bands\" }");
+						break;
+					}
+					case ".alt-bands": { 
+						printWriterAltBands = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Altitude Bands\" }");
+						break; 
+					}
+					case ".hd-res": { 
+						printWriterHdRes = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Horizontal Direction Resolution\" }");
+						break; 
+					}
+					case ".vs-res": { 
+						printWriterVsRes = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Vertical Speed Resolution\" }");
+						break; 
+					}
+					case ".hs-res": { 
+						printWriterHsRes = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Horizontal Speed Resolution\" }");
+						break; 
+					}
+					case ".alt-res": { 
+						printWriterAltRes = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Altitude Resolution\" }");
+						break; 
+					}
+					case ".contours": { 
+						printWriterContours = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Contours\" }");
+						break; 
+					}
+					case ".hazardzones": { 
+						printWriterHazardZones = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true); 
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Hazard Zones\" }");
+						break; 
+					}
+					default: {
+						System.out.println("[DAABandsV2] Warning: unrecognized chunk " + chunks[i]);
+						break;
+					}
+				}
+				if (i < chunks.length - 1) { printWriterFiles.println(","); }
+			}
+			printWriterFiles.println("]");
 		} catch (Exception e) {
 			System.err.println("** Error: " + e);
 			return false;
 		}
 		return true;
 	}
+	/**
+	 * Utility function, closes the output streams
+	 */
 	public boolean closePrintWriter () {
 		if (printWriter != null) {
 			printWriter.close();
+			printWriterFiles.close();
+			printWriterInfo.close();
+			printWriterOwnship.close();
+			printWriterAlerts.close();
+			printWriterWind.close();
+			printWriterMetrics.close();
+			printWriterAltBands.close();
+			printWriterVsBands.close();
+			printWriterHsBands.close();
+			printWriterHdBands.close();
+			printWriterAltRes.close();
+			printWriterVsRes.close();
+			printWriterHsRes.close();
+			printWriterHdRes.close();
+			printWriterContours.close();
+			printWriterHazardZones.close();
 			return true;
 		}
 		return false;

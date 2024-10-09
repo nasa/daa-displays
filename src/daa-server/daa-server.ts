@@ -38,13 +38,16 @@ import { JavaProcess } from './daa-javaProcess';
 import { CppProcess } from './daa-cppProcess';
 import { 
     ExecMsg, LoadScenarioRequest, LoadConfigRequest, WebSocketMessage, 
-    ConfigFile, ScenarioDescriptor, SaveScenarioRequest, GetTailNumbersRequest, GetTailNumbersResponse, DaaServerCommand 
+    ConfigFile, SaveScenarioRequest, GetTailNumbersRequest, GetTailNumbersResponse, DaaServerCommand,
+	DaaDataFile,
+	ScenarioDescriptor
 } from './utils/daa-types';
 import * as fsUtils from './utils/fsUtils';
 import WebSocket = require('ws');
 import { AddressInfo } from 'net';
 import { DaaFileContent, readDaaFileContent } from '../daa-displays/utils/daa-reader';
 import { DAA_FILE_EXTENSIONS } from '../config';
+import readline = require('node:readline');
 
 // flag for enabling verbose log, useful for debugging purposes but may reduce performance
 const VERBOSE: boolean = false;
@@ -308,9 +311,10 @@ export class DAAServer {
                             
                             const outputFolder: string = path.join(__dirname, "../daa-output", daaVersion, impl);
                             const bandsFile: string = path.resolve(outputFolder, bandsFileName);
+							const chunkFile: string = `${bandsFile}.files`;
                             // console.log(`[daa-server] Bands file`, { bandsFile });
                             try {
-                                if (this.useCache && fs.existsSync(bandsFile)) {
+                                if (this.useCache && (fs.existsSync(bandsFile) || fs.existsSync(chunkFile))) {
                                     console.log(`Reading bands file from cache`, { bandsFile });
                                 } else {
                                     // invoke the corresponding process to generate the bands file
@@ -356,8 +360,84 @@ export class DAAServer {
                                         }
                                     }
                                 }
-                                try {
-                                    console.log(`[daa-server] Reading bands file ${bandsFile}`);
+								if (fs.existsSync(chunkFile)) {
+									console.log(`[daa-server] Reading list of output files ${chunkFile}`);
+									const daaDataFiles: DaaDataFile[] = JSON.parse(fs.readFileSync(`${chunkFile}`, { encoding: "utf-8" }));
+									for (let i = 0; i < daaDataFiles.length; i++) {
+										const chunkFile = path.resolve(outputFolder, daaDataFiles[i].file);
+										console.log(`[daa-server] Reading file ${daaDataFiles[i].file}`);
+										try {
+											switch (daaDataFiles[i].type) {
+												case "json": {
+													const val: string = fs.readFileSync(`${chunkFile}`, { encoding: "utf-8" });
+													content.data = {
+														type: daaDataFiles[i].type,
+														val,
+														idx: i,
+														tot: daaDataFiles.length,
+														eof: true
+													};
+													this.trySend(wsocket, content, `daa data (file ${i + 1} of ${daaDataFiles.length})`);
+													break;
+												}
+												case "array": {
+													let lines: string[] = [];
+													let ln: number = 0;
+													const max: number = 1000;
+													const fileStream: fs.ReadStream = fs.createReadStream(chunkFile);
+													const rl = readline.createInterface({
+														input: fileStream,
+														crlfDelay: Infinity
+													});
+													const success: boolean = await new Promise((resolve) => {
+														rl.on('line', (line) => {
+															lines.push(line);
+															ln++;
+															// send lines in bulk
+															if (lines.length > max) {
+																content.data = {
+																	type: daaDataFiles[i].type,
+																	val: lines,
+																	key: daaDataFiles[i].key,
+																	idx: i,
+																	tot: daaDataFiles.length,
+																	eof: false
+																};
+																this.trySend(wsocket, content, `daa data (line ${ln} in file ${i + 1} of ${daaDataFiles.length})`);
+																lines = [];
+															}
+														});
+														rl.on('close', () => {
+															content.data = {
+																type: daaDataFiles[i].type,
+																val: lines,
+																key: daaDataFiles[i].key,
+																idx: i,
+																tot: daaDataFiles.length,
+																eof: true
+															};
+															this.trySend(wsocket, content, `daa data (line ${ln} in file ${i + 1} of ${daaDataFiles.length})`);
+															lines = [];
+															console.log('Finished reading the file.');
+															resolve(true);
+														});
+													});
+													success ? console.log("File read successful") : console.log("Warning: File read failed");
+													break;
+												}
+												default: {
+													console.log(`[daa-server] Warning: unrecognized daa data file type ${daaDataFiles[i].type}`);
+													break;
+												}
+											}
+										} catch (readError) {
+											console.error(`Error while reading daa data file ${chunkFile}`, readError);
+											this.trySend(wsocket, null, "daa data");
+										}
+									}
+								} else {
+									// this part of the logic is for backwards compatibility with older versions of DAABands
+									console.log(`[daa-server] Reading bands file ${bandsFile}`);
                                     const buf: Buffer = fs.readFileSync(bandsFile);
                                     const desc: ScenarioDescriptor = JSON.parse(buf.toLocaleString());
                                     // content.data = buf.toLocaleString();
@@ -371,13 +451,10 @@ export class DAAServer {
                                         };
                                         this.trySend(wsocket, content, `daa bands (part ${i + 1} of ${keys.length}, ${keys[i]})`);
                                     }
-                                } catch (readError) {
-                                    console.error(`Error while reading daa bands file ${bandsFile}`, readError);
-                                    this.trySend(wsocket, null, "daa bands");
-                                }
+								}
                             } catch (execError) {
                                 console.error(`Error while executing java process`, execError);
-                                this.trySend(wsocket, null, "daa bands");
+                                this.trySend(wsocket, null, "daa data");
                             }
                         } else {
                             console.error(`Error: unsupported implementation type :/`, data.daaLogic);
@@ -880,7 +957,7 @@ export class DAAServer {
                     }
                     case "-fast": {
                         this.useCache = true;
-                        console.log("[daa-displays] Developer mode");
+                        console.log("[daa-displays] Fast option enabled");
                         break;
                     }
                     case "-help": {
