@@ -1,6 +1,6 @@
 /**
  * @module CppProcess
- * Java process wrapper
+ * C++ process wrapper
  * @author Paolo Masci
  * @date 2019.11.05
  * @copyright 
@@ -93,8 +93,8 @@ export class CppProcess {
 					}
 					console.info(`stdout: ${stdout}`);
 				const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
-				console.log(`DAIDALUS++ version: ${match[1]}`);
 				if (match && match[1]) {
+					console.log(`DAIDALUS++ version: ${match[1]}`);
 					resolve(match[1]);
 				} else {
 					console.warn("Unable to identify Daildalus version");
