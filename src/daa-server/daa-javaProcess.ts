@@ -95,8 +95,8 @@ export class JavaProcess {
 					}
 					console.info(`stdout: ${stdout?.trim()}`);
 					const match: RegExpMatchArray = /.(\d+\.\d+(\.\d+)?)/g.exec(stdout);
-					console.log(`DAIDALUSj version: ${match[1]}`);
 					if (match && match[1]) {
+						console.log(`DAIDALUSj version: ${match[1]}`);
 						resolve(match[1]);
 					} else {
 						console.warn("Unable to identify Daildalus version");
