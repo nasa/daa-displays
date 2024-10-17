@@ -1001,6 +1001,7 @@ public class DAABandsV2 {
 		printWriter.println(",");
 
 		printWriter.println("\"Monitors\": ");
+		printWriterMonitors.println("{ \"Monitors\": ");
 		List<List<String>> info = new ArrayList<List<String>>();
 		info.add(jb.monitorM1Array);
 		info.add(jb.monitorM2Array);
@@ -1008,6 +1009,7 @@ public class DAABandsV2 {
 		info.add(jb.monitorM4Array);
 		printMonitors(printWriter, jb.monitors, info);
 		printMonitors(printWriterMonitors, jb.monitors, info);
+		printWriterMonitors.println("}");
 
 		printWriter.println("}");
 		closePrintWriter();
@@ -1138,7 +1140,7 @@ public class DAABandsV2 {
 					}
 					case ".monitors": {
 						printWriterMonitors = new PrintWriter(new BufferedWriter(new FileWriter(fname)), true);
-						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"array\", \"key\": \"Monitors\" }");
+						printWriterFiles.println("{ \"file\": \"" + f.getName() + "\", \"type\": \"json\", \"key\": \"Monitors\" }");
 						break;
 					}
 					case ".hd-bands": { 
