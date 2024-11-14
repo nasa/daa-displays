@@ -230,7 +230,7 @@ export class DAAPlayer extends Backbone.Model {
     protected _repl: { [key: string]: DAAClient };
     protected _plot: { [plotName:string]: DAASpectrogram };
     protected href: string;
-    protected timers: { [ tname: string ]: NodeJS.Timer } = {};
+    protected timers: { [ tname: string ]: NodeJS.Timeout } = {};
     protected windowZoomLevel: number = 100;
     readonly minZoomLevel: number = 20;
 
