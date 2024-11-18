@@ -33,16 +33,16 @@ import * as fs from 'fs';
  * Generates the name of the file containing bands data.
  * The file name is built using conventions on config name, scenario name, wind values, and ownship name
  */
-export function getBandsFileName (desc: { daaConfig: string, scenarioName: string, ownshipName: string, wind: { deg: string, knot: string } }) {
+export function getBandsFileName (desc: { daaLogic?: string, daaConfig: string, scenarioName: string, ownshipName: string, wind: { deg: string, knot: string } }) {
     if (desc) {
 		if (desc.wind && desc.wind.knot && +desc.wind.knot > 0) {
 			return desc?.ownshipName ? 
-				`${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}-ownship_${desc.ownshipName}.bands.json`
-				: `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
+				`${desc.daaConfig ? getFilename(desc.daaConfig, { removeFileExtension: true }) : desc.daaLogic || ""}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}-ownship_${desc.ownshipName}.bands.json`
+				: `${desc.daaConfig ? getFilename(desc.daaConfig, { removeFileExtension: true }) : desc.daaLogic || ""}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-wind_${desc.wind.deg}_${desc.wind.knot}.bands.json`;
 		} else {
 			return desc?.ownshipName ? 
-				`${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-ownship_${desc.ownshipName}.bands.json`
-				: `${getFilename(desc.daaConfig, { removeFileExtension: true })}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
+				`${desc.daaConfig ? getFilename(desc.daaConfig, { removeFileExtension: true }) : desc.daaLogic || ""}-${getFilename(desc.scenarioName, { removeFileExtension: true })}-ownship_${desc.ownshipName}.bands.json`
+				: `${desc.daaConfig ? getFilename(desc.daaConfig, { removeFileExtension: true }) : desc.daaLogic || ""}-${getFilename(desc.scenarioName, { removeFileExtension: true })}.bands.json`;
 		}
     }
     return null;

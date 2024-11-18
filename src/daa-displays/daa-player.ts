@@ -1786,7 +1786,7 @@ export class DAAPlayer extends Backbone.Model {
     }> {
         const msg: ExecMsg = {
             daaLogic: data.alertingLogic ||  "DAIDALUSv2.0.2.jar",
-            daaConfig: data.alertingConfig || "2.x/DO_365B_no_SUM.conf",
+            daaConfig: data.alertingLogic?.includes("DAIDALUS") ? data.alertingConfig || "2.x/DO_365B_no_SUM.conf" : "", // send a DAIDALUS configuration only if the DAIDALUS logic is selected
             scenarioName: data.scenario || "H1.daa",
             wind: { knot: data?.wind?.knot || "0", deg: data?.wind?.deg || "0" },
             ownshipName: data.ownshipName
@@ -2040,9 +2040,16 @@ export class DAAPlayer extends Backbone.Model {
      * Returns the daidalus version currently selected in the player interface
      */
     readSelectedDaaVersion (): string {
-        return $(`#${this.daaVersionDomSelector}-list`)[0] ?
+        const selectedVersion: string = $(`#${this.daaVersionDomSelector}-list`)[0] ?
             $(`#${this.daaVersionDomSelector}-list option:selected`).text()
                 : null;
+		// display the DAIDALUS configuration only if the selected logic is DAIDALUS 
+		if (selectedVersion?.includes("DAIDALUS")) {
+			this.revealDaaConfigurationSelector();
+		} else {
+			this.hideDaaConfigurationSelector();
+		}
+		return selectedVersion;
     }
     /**
      * Programmatically selects a daidalus version in the player interface
