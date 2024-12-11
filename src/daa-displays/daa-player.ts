@@ -2461,7 +2461,7 @@ export class DAAPlayer extends Backbone.Model {
         const tk: string[] = (tname) ? keys.filter((timer) => { return timer.startsWith(`${tname}-`); }) : keys;
         if (tk && tk.length) {
             for (let i = 0; i < tk.length; i++) {
-                // clearTimeout(this.timers[tk[i]]);
+                clearTimeout(this.timers[tk[i]]);
             }
         }
     }
