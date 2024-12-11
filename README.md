@@ -30,7 +30,9 @@ The following software is necessary to compile and execute DAA-Displays
 ## Installation instructions
 1. Download the latest release of DAA-Displays from the github repository.
 2. Open a terminal window and change directory to the `daa-displays` folder.
-3. Run `make` in the terminal window.
+3. [This step is needed only for Mac with ARM architecture] Run `npm run arm` in the terminal window.
+   This command is needed for downloading the correct NodeJS dependencies on Mac ARM architectures.
+4. Run `make` in the terminal window.
    This command will download the dependencies and create a folder `dist/` with the distribution.
 
 ## Use instructions
