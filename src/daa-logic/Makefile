@@ -15,7 +15,8 @@ JAVAC = javac
 JAR   = jar
 CPP   = c++
 
-all: compile
+all:
+	-make compile
 
 releases:
 	@echo "DAA-Displays includes the following DAIDALUS releases:$(releases)"
@@ -66,11 +67,7 @@ endef
 codev2-all = $(foreach code,$(CODEV2),$(eval $(call codev2-template,$(code))))
 COMPILE_CODEV2_TARGETS = $(foreach code,$(CODEV2),codev2-$(code))
 
-compile:
-	make $(COMPILE_JAVA_TARGETS)
-	make $(COMPILE_CODEV1_TARGETS)
-	make $(COMPILE_CODEV2_TARGETS) 
-	-make $(COMPILE_CPP_TARGETS) 
+compile: $(COMPILE_JAVA_TARGETS) $(COMPILE_CODEV1_TARGETS) $(COMPILE_CODEV2_TARGETS) $(COMPILE_CPP_TARGETS) 
 
 clean:
 	@echo "\033[0;33m** Removing binary files **\033[0m"
