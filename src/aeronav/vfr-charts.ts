@@ -43,8 +43,9 @@ export declare interface VfrChart {
     // optional offset, can be used fine-tune the chart position if needed
     // e.g., when there's a mismatch between the position of the chart wrt the street map
     // landmarks such as airports can be used to perform fine tuning of the chart position
-    // x,y can be used for rigid translations
+    // x,y can be used for rigid translations, positive x move the map right, positive y moves the map up
     // west, east, north, south can be used for stretching the dimensions of the chart
+	// the daa-displays playground (http://localhost:8082/playground) can be conveniently used to calibrate the position of the map on a landmark
     offset?: { west?: number, east?: number, north?: number, south?: number, x?: number, y?: number },
     // optional description of the sectional chart
     description?: string
@@ -57,6 +58,15 @@ export declare interface VfrChart {
  * For performance reasons, the GeoTIFF charts are down-scaled to a .png file of approx 8000x6000 (300dpi)
  */
 export const VFR_CHARTS: VfrChart[] = [
+    {
+        file: "NYC.png", // Note: you can use file washington-highres.png if you want higher resolution map (16000x12000) and are not concerned about performance
+        west: -78.136657, 
+        east: -68.650280, 
+        north: 44.294169, 
+        south: 39.468085,
+        date: { begin: "20241226", end: " 20250219" },
+        offset: { x: 0.039, y: 0.031 } // landmark is downtown NYC, La Guardia airport, latlon=(40.7766, -73.8742)
+    },
     {
         file: "washington.png", // Note: you can use file washington-highres.png if you want higher resolution map (16000x12000) and are not concerned about performance
         west: -79.948223, 
