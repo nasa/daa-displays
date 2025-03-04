@@ -42,6 +42,9 @@ import * as L from 'leaflet';
 import { DEFAULT_TRAFFIC_UPDATE_INTERVAL, DEFAULT_TRAFFIC_ANIMATION_NFRAMES, MIN_ANIMATION_THRESHOLD } from '../daa-utils';
 import { DaaSymbol, LatLonAlt, Vector3D  } from '../utils/daa-types';
 import { Aircraft, AircraftInterface, AircraftLabel } from "./daa-aircraft";
+import * as utils from "../daa-utils";
+import { BANDS_OPACITY } from '../templates/daa-compass-templates';
+import { Compass } from '../daa-compass';
 
 const icons: {[key:string]: string } = {
     "daa-alert": "daa-displays/svgs/daa-alert.svg",
@@ -83,10 +86,12 @@ export class LeafletAircraft extends Aircraft {
     protected layer: L.Layer; // layer where the symbol is rendered
     protected symbol: DaaSymbol; // current symbol
     protected marker: L.Marker; // pointer to the renderable aircraft marker
+	protected bands: L.Marker; // pointer to the renderable aircraft bands
     // protected label: L.Marker; // pointer to the renderable aircraft label (this is separate from the marker because the label rotates based on the ownship heading to be rendered upright while the marker rotates based on the traffic heading)
 
     // reference aircraft -- this is used for the aircraft label, which shows relative altitude
     protected _own: AircraftInterface;
+	protected acSymbolsScale: number = NaN;
 
     // flags
     protected aircraftVisible: boolean; // whether the aircraft is visible
@@ -106,7 +111,8 @@ export class LeafletAircraft extends Aircraft {
         callSignVisible?: boolean,
         aircraftVisible?: boolean,
         mapCanRotate?: boolean,
-        layeringMode?: LayeringMode
+        layeringMode?: LayeringMode,
+		markerScale?: number
     }, layer: L.Layer) {
         super(desc?.callSign, { lat: +desc?.s?.lat || 0, lon: +desc?.s?.lon || 0, alt: +desc?.s?.alt || 0 });
 
@@ -125,12 +131,19 @@ export class LeafletAircraft extends Aircraft {
         this.mapCanRotate = desc.mapCanRotate === undefined ? true : !!desc.mapCanRotate; // true by default
 
         // create custom marker and append marker to the map
-        const icon: L.DivIcon = this.createAircraftIcon();
+		this.acSymbolsScale = isFinite(desc?.markerScale) ? desc.markerScale : NaN;
+        const icon: L.DivIcon = this.createAircraftIcon({ markerScale: this.acSymbolsScale });
         this.marker = L.marker([ this.position.lat, this.position.lon ]).setIcon(icon);
         const layeringMode: LayeringMode = desc.layeringMode !== LayeringMode.byAltitudeLevel ? LayeringMode.byAlertLevel : LayeringMode.byAltitudeLevel;
         const zIndex: number = layeringMode === LayeringMode.byAlertLevel ? (zIndexValue[this.symbol] || 0) : (this.position.alt || 0);
         this.marker.setZIndexOffset(zIndex);
         this.marker.addTo(this.map);
+
+		// create custom marker for the bands
+		const bands: L.DivIcon = this.createAircraftBands();
+		this.bands = L.marker([ this.position.lat, this.position.lon ]).setIcon(bands);
+		this.bands.setZIndexOffset(zIndex);
+		this.bands.addTo(this.map);
 
         // set visiblity of the aircraft
         this.aircraftVisible ? this.reveal() : this.hide();
@@ -157,13 +170,47 @@ export class LeafletAircraft extends Aircraft {
      * Forces rendering refresh
      */
     refresh (): void {
-        const icon: L.DivIcon = this.createAircraftIcon();
+        const icon: L.DivIcon = this.createAircraftIcon({ markerScale: this.acSymbolsScale });
         this.marker.setLatLng([ this.position.lat, this.position.lon ]).setIcon(icon);
+		const bands: L.DivIcon = this.createAircraftBands();
+		this.bands.setLatLng([ this.position.lat, this.position.lon ]).setIcon(bands);
     }
+	/**
+	 * Utility function, draws resolution bands over the compass
+	 * TODO: share code with daa-compass
+	 **/
+	drawBands (bands: utils.Bands): LeafletAircraft {
+		const canvasId: string = `leaflet-${this.callSign}-bands`;
+		const canvas = <HTMLCanvasElement> document.getElementById(canvasId);
+        const radius: number = 32;
+		const theHTML: string = Compass.drawBands({
+			bands, 
+			saturated: bands?.RECOVERY?.length > 0,
+			canvas,
+			radius,
+			id: "leaflet-compass-band"
+		})
+		$(`#${canvasId}`).html(theHTML);
+		return this;
+	}
+	/**
+	 * Internal function, creates the DOM element for the aircraft bands
+	 */
+	protected createAircraftBands (): L.DivIcon {
+		// bands radius
+		const COMPASS_SIZE: number = 100; //px
+		return new L.DivIcon({
+			html: `
+			<!-- compass bands -->
+			<canvas id="leaflet-${this.callSign}-bands" class="daa-guidance" width="${COMPASS_SIZE}" height="${COMPASS_SIZE}" style="position:absolute;top:${-COMPASS_SIZE/2}px;left:${-COMPASS_SIZE/2}px;opacity:${BANDS_OPACITY};"></canvas>`,
+			iconSize: [ 0, 0 ],
+			className: "daa-bands"
+		});
+	}
     /**
      * Internal function, creates the DOM element for the aircraft marker
      */
-    protected createAircraftIcon (): L.DivIcon {
+    protected createAircraftIcon (opt?: { markerScale?: number }): L.DivIcon {
         const aircraftHeading: number = this.heading || 0;
         const ownshipHeading: number = this._own?.getHeading() || 0;
         const label: AircraftLabel = this.symbol === "ownship" || this.symbol === "daa-ownship" ? 
@@ -171,7 +218,7 @@ export class LeafletAircraft extends Aircraft {
                 : this.createTrafficLabel({ ownship: this._own });
         const labelRotation: number = this.mapCanRotate ? -(ownshipHeading + aircraftHeading) : -aircraftHeading;
         const marginLeft: number = (this.symbol == "ownship" || this.symbol == "daa-ownship" || this.symbol === "daa-target") ? 9 : 0;
-        const scale: number = (this.symbol === "daa-target") ? 0.9 : 1;
+        const scale: number = isFinite(opt?.markerScale) ? opt.markerScale : (this.symbol === "daa-target") ? 0.9 : 1;
         const lineHeight: number = label.offsetY < 0 ? 1.2 * MARKER_SIZE : 4.8 * MARKER_SIZE;
         const oppositeLineHeight: number = label.offsetY < 0 ? 4.8 * MARKER_SIZE : 1.2 * MARKER_SIZE;
         const labelSize: number = 3 * MARKER_SIZE;
@@ -295,7 +342,7 @@ export class LeafletAircraft extends Aircraft {
         if (daaSymbol) {
             if (daaSymbol !== this.symbol) {
                 this.symbol = daaSymbol;
-                const icon: L.DivIcon = this.createAircraftIcon();
+                const icon: L.DivIcon = this.createAircraftIcon({ markerScale: this.acSymbolsScale });
                 this.marker.setIcon(icon);
             }
         }

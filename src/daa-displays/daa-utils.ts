@@ -185,9 +185,14 @@ export function computeBearing (pos1: LatLon<number>, pos2: LatLon<number>): num
 }
 
 // interface definitions
-export interface WayPoint { lla: LatLonAlt<number>, label?: string }
+export interface WayPoint {
+	lla: LatLonAlt<number>, 
+	label?: string,
+	toa?: number, // time of applicability, this indicates the time at which this waypoint is reached or expected to be reached by the aircraft
+	ap?: { from?: number | string, to?: number | string } // applicability period, indicates when data should be displayed, typically from when the aicraft takes off to when it lands
+}
 export type FlightPlan = WayPoint[]
-export type FlightTrace = WayPoint[];
+export type FlightTrace = WayPoint[]
 export interface FromTo { from: number, to: number, units: string }
 export interface Val { val: number, units: string }
 export interface Bands {
@@ -379,4 +384,19 @@ export function conceal_resolutions (desc: { bands: DaaBands }): void {
             }
         }
     }
+}
+
+/**
+ * Utility function, generates a random color
+ */
+export function getRandomColor (): string {
+	const rnd = (min: number, max: number) => {
+		return Math.floor(Math.random() * Math.abs(max - min + 1)) + min;
+	};
+	const h: number = rnd(0, 360);
+	const s: number = rnd(42, 98);
+	const l: number = rnd(40, 90);
+	return `hsl(${h},${s}%,${l}%)`;
+	// const randomColor = Math.floor(Math.random() * sd * 20000000).toString(16);
+	// return `#${randomColor}`;
 }

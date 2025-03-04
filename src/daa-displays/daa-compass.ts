@@ -269,6 +269,30 @@ export class Compass {
 		return val;
     }
 
+	/**
+	 * Utility function, draws an arc over a canvas element
+	 */
+	static drawArc (data: { 
+		ctx: CanvasRenderingContext2D, 
+		from: number, 
+		to: number, 
+		centerX: number, 
+		centerY: number, 
+		radius: number, 
+		alert: string, 
+		saturated: boolean 
+	}): void {
+		if (data?.ctx) {
+			data.ctx.beginPath();
+			const segments: number[] = utils.bandColors[data.alert].style === "dash" && !data.saturated ? [4, 8] : [];
+			data.ctx.setLineDash(segments);
+			data.ctx.arc(data.centerX, data.centerY, data.radius, math.deg2rad(data.from) - Math.PI / 2, math.deg2rad(data.to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
+			data.ctx.lineWidth = (data.saturated) ? DOUBLE_STROKE : SINGLE_STROKE;
+			data.ctx.strokeStyle = (data.saturated) ? utils.bandColors.NEAR.color : utils.bandColors[data.alert].color;
+			data.ctx.stroke();
+		}
+	}
+
     protected id: string;
     protected top: number;
     protected left: number;
@@ -286,10 +310,10 @@ export class Compass {
 
     protected bands: utils.Bands;
     protected canvas: HTMLCanvasElement;
-    protected strokeWidth: number = SINGLE_STROKE;
-    protected radius: number;
-    protected centerX: number;
-    protected centerY: number;
+    // protected strokeWidth: number = SINGLE_STROKE;
+    // protected radius: number;
+    // protected centerX: number;
+    // protected centerY: number;
     protected resolutionBug: ResolutionBug;
     protected div: HTMLElement;
 
@@ -379,8 +403,8 @@ export class Compass {
         $(ownshipDiv)?.html(ownshipHTML);
 
         this.canvas = <HTMLCanvasElement> document.getElementById(id + "-bands");
-        this.radius = this.canvas.width / 2 - this.strokeWidth + 1;
-        this.centerX = this.centerY = this.canvas.width / 2;
+        // this.radius = this.canvas.width / 2 - this.strokeWidth + 1;
+        // this.centerX = this.centerY = this.canvas.width / 2;
 
         // create resolution bug
         this.resolutionBug = new ResolutionBug(this.id + "-resolution-bug", this);
@@ -615,51 +639,61 @@ export class Compass {
     /**
      * Utility function, draws resolution bands over the compass
      **/
-    protected draw_bands () {
-        let theHTML = "";
-        // if wedge > 0 then band saturates red and notch is displayed on top
-        // otherwise bands are displayed as usual
-        const saturateRed: boolean = this.resolutionBug.getWedgeAperture() > 0
-            && this.bands && this.bands.RECOVERY && this.bands.RECOVERY.length > 0;
-
-        const drawArc = (ctx: CanvasRenderingContext2D, from: number, to: number, alert: string) => {
-            ctx.beginPath();
-            if (utils.bandColors[alert].style === "dash" && !saturateRed) {
-                ctx.setLineDash([4, 8]);
-            } else {
-                ctx.setLineDash([]);
-            }
-            ctx.arc(this.centerX, this.centerY, this.radius, math.deg2rad(from) - Math.PI / 2, math.deg2rad(to) - Math.PI / 2); // 0 degrees in the compass is -90 degrees in the canvas
-            ctx.lineWidth = (saturateRed) ? DOUBLE_STROKE : SINGLE_STROKE;
-            ctx.strokeStyle = (saturateRed) ? utils.bandColors.NEAR.color : utils.bandColors[alert].color;
-            ctx.stroke();
-        }
-        const ctx: CanvasRenderingContext2D = this.canvas.getContext("2d");
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        const alerts: string[] = Object.keys(this.bands);
-        for (let i = 0; i < alerts?.length; i++) {
-            const alert: string = alerts[i];
-            const arcs: utils.FromTo[] = this.bands[alert];
-            const segs = [];
-            // console.log(arcs);
-            for (let i = 0; i < arcs.length; i++) {
-                const from = arcs[i].from || 0;
-                const to = arcs[i].to || 360;
-                drawArc(ctx, from, to, alert);
-                // the following info is attached to the html to better support debugging
-                segs.push({
-                    from: from,
-                    to: to,
-                    id: "compass-band-" + alert + "-" + i
-                });                
-            }
-            theHTML += Handlebars.compile(templates.compassBandsTemplate)({
-                segments: segs,
-                color: utils.bandColors[alert].color
-            });                        
-        }
+	protected draw_bands (): void {
+		const theHTML = Compass.drawBands({
+			id: "compass-band", 
+			bands: this.bands, 
+			saturated: this.resolutionBug.getWedgeAperture() > 0,
+			canvas: this.canvas
+		});
         $(`#${this.id}-bands`).html(theHTML);
+	}
+    /**
+     * Utility function, draws bands over a canvas element
+     **/
+    static drawBands (data: {
+		bands: utils.Bands, 
+		saturated?: boolean,
+		canvas: HTMLCanvasElement,
+		radius?: number,
+		id: string
+	}): string {
+		let theHTML: string = "";
+		if (data?.canvas) {
+			// if wedge > 0 then band saturates red and notch is displayed on top
+			// otherwise bands are displayed as usual
+			const saturated: boolean = data.saturated && data.bands?.RECOVERY?.length > 0;
+			const radius: number = data.radius || data.canvas.width / 2 - SINGLE_STROKE + 1;
+            const centerX: number = data.canvas.width / 2;
+            const centerY: number = data.canvas.width / 2;
+
+			const ctx: CanvasRenderingContext2D = data.canvas.getContext("2d");
+			ctx.clearRect(0, 0, data.canvas.width, data.canvas.height);
+
+			const alerts: string[] = Object.keys(data.bands);
+			for (let i = 0; i < alerts?.length; i++) {
+				const alert: string = alerts[i];
+				const arcs: utils.FromTo[] = data.bands[alert];
+				const segs = [];
+				// console.log(arcs);
+				for (let i = 0; i < arcs.length; i++) {
+					const from = arcs[i].from || 0;
+					const to = arcs[i].to || 360;
+					Compass.drawArc({ ctx, from, to, alert, saturated, centerX, centerY, radius });
+					// the following info is attached to the html to better support debugging
+					segs.push({
+						from: from,
+						to: to,
+						id: `${data.id}-${alert}-${i}`
+					});                
+				}
+				theHTML += Handlebars.compile(templates.compassBandsTemplate)({
+					segments: segs,
+					color: utils.bandColors[alert].color
+				});                        
+			}
+		}
+		return theHTML;
     }
     /**
      * @function <a name="getAlert">getAlert</a>

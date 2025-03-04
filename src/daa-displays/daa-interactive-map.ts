@@ -62,7 +62,7 @@ import { AirspaceInterface, cities, DAA_Airspace } from './daa-map-components/da
 import { GeoFence } from './daa-map-components/daa-geofence';
 import { LeafletAirspace } from './daa-map-components/leaflet-airspace';
 import { LayeringMode } from './daa-map-components/leaflet-aircraft';
-import { DAA_AircraftDescriptor, LatLon, LatLonAlt, Vector3D } from './utils/daa-types';
+import { DAA_AircraftDescriptor, DaidalusBand, DaidalusResolution, LatLon, LatLonAlt, Vector3D } from './utils/daa-types';
 
 // useful constants
 export const colors = GeoFence.geofenceColors;
@@ -106,7 +106,9 @@ export class InteractiveMap {
         coords: { top?: number, left?: number },
         opt?: { 
             parent?: string, 
-            pos?: LatLonAlt<number>, 
+			width?: number, // map width, this should *not* be used in views that have a compass, otherwise the layout will break
+			height?: number, // map height, this should *not* be used in views that have a compass, otherwise the layout will break
+			pos?: LatLonAlt<number>, 
             offlineMap?: string, 
             terrainMap?: string, 
             streetMap?: string, 
@@ -137,8 +139,8 @@ export class InteractiveMap {
         coords = coords || {};
         coords.top = (isNaN(+coords.top)) ? 0 : +coords.top;
         coords.left = (isNaN(+coords.left)) ? 0 : +coords.left;
-        const width: number = opt.widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH;
-        const height: number = DEFAULT_MAP_HEIGHT;
+        const width: number = opt.width || (opt.widescreen ? MAP_WIDESCREEN_WIDTH : DEFAULT_MAP_WIDTH);
+        const height: number = opt.height || DEFAULT_MAP_HEIGHT;
 
         // parent div
         this.$div = $(`#${opt.parent}`);
@@ -152,8 +154,8 @@ export class InteractiveMap {
             id: this.id,
             top: coords.top,
             left: coords.left,
-            width: width,
-            height: height
+            width,
+            height
         });
         $(this.$innerDiv).html(theHTML);
         // default rendering engine is wwd, for backwards compatibility with other tools that might be using daa-displays
@@ -165,7 +167,8 @@ export class InteractiveMap {
         this.airspace = 
             (engine === "leafletjs" && !opt.view3D) ? new LeafletAirspace({
                 ...opt,
-                div: this.id + "-div"
+                div: this.id + "-div",
+				ownshipSymbol: opt?.godsView ? "daa-target" : "daa-ownship"
             }) : (engine === "wwd" || opt.view3D) ? new DAA_Airspace({
                 ...opt,
                 canvas: this.id + "-canvas"
@@ -397,9 +400,15 @@ export class InteractiveMap {
         }
         return this;
     }
+	/**
+	 * Utility function, gets onwship position (lat lon alt)
+	 */
     getOwnshipPosition(): LatLonAlt<number> {
         return this.pos;
     }
+	/**
+	 * Utility function, sets onwship velocity vector
+	 */
     setOwnshipVelocity(v: Vector3D<number | string>): InteractiveMap {
         if (v) {
             const vel: Vector3D<number> = {
@@ -413,6 +422,15 @@ export class InteractiveMap {
         }
         return this;
     }
+	/**
+	 * Utility function, sets ownship name
+	 */
+	setOwnshipName (name: string): InteractiveMap {
+		if (typeof this.airspace?.setOwnshipName === "function") {
+			this.airspace?.setOwnshipName(name);
+		}
+		return this;
+	}
     /**
      * @function <a name="recenter">recenter</a>
      * @description Recenters the map at the ownship location.
@@ -596,10 +614,17 @@ export class InteractiveMap {
         return this;
     }
     /**
-     * Sets a flight plan and displays it on the map
+     * Sets a flight plan for the ownship and displays it on the map
      */
     setFlightPlan (flightPlan: utils.FlightPlan): InteractiveMap {
         this.airspace?.setFlightPlan(flightPlan);
+        return this;
+    }
+    /**
+     * Sets a flight plan for a given aircraft and displays it on the map
+     */
+    setAicraftFlightPlan (ac: string, flightPlan: utils.FlightPlan): InteractiveMap {
+        if (typeof this.airspace?.setAircraftFlightPlan === "function") { this.airspace.setAircraftFlightPlan(ac, flightPlan); }
         return this;
     }
     /**
@@ -623,4 +648,38 @@ export class InteractiveMap {
         this.airspace?.hideFlightPlan();
         return this;
     }
+    /**
+     * Reveals/Hides aicraft flight plan
+     */
+    showAircraftFlightPlan (ac: string, reveal: boolean): InteractiveMap {
+        (reveal) ? this.revealAircraftFlightPlan(ac) : this.hideTrafficFlightPlan(ac);
+        return this;
+    }
+    /**
+     * Reveals aircraft flight plan
+     */
+    revealAircraftFlightPlan (ac: string): InteractiveMap {
+        if (typeof this.airspace?.revealAircraftFlightPlan === "function") { this.airspace?.revealAircraftFlightPlan(ac); }
+        return this;
+    }
+    /**
+     * Hides traffic flight plan
+     */
+    hideTrafficFlightPlan (ac: string): InteractiveMap {
+        if (typeof this.airspace?.hideAircraftFlightPlan === "function") { this.airspace?.hideAircraftFlightPlan(ac); }
+        return this;
+    }
+	/**
+	 * Utility function, draws heading bands around the aircraft
+	 * @param ac aircraft identifier (e.g., call sign or tail number)
+	 * @param bands 
+	 */
+	drawAircraftBands (acName: string, bands: DaidalusBand[], resolution?: DaidalusResolution): InteractiveMap {
+		if (typeof this.airspace?.drawAircraftBands === "function") {
+			this.airspace?.drawAircraftBands(acName, bands, resolution);
+		} else {
+			console.warn("[daa-interactive-map] Warning: drawOwnshipBands is not supported with the selected airspace library");
+		}
+		return this;
+	}
 }

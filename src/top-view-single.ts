@@ -34,14 +34,15 @@ import { Compass } from './daa-displays/daa-compass';
 import { HScale } from './daa-displays/daa-hscale';
 import { WindIndicator } from './daa-displays/daa-wind-indicator';
 
-import { InteractiveMap } from './daa-displays/daa-interactive-map';
+import { DEFAULT_MAP_HEIGHT, InteractiveMap, MAP_WIDESCREEN_WIDTH } from './daa-displays/daa-interactive-map';
 import { DaaConfig, DAAPlayer, parseDaaConfigInBrowser } from './daa-displays/daa-player';
-import { LLAData, ConfigData, ScenarioDataPoint, DaaSymbol, LatLonAlt } from './daa-displays/utils/daa-types';
+import { LLAData, ConfigData, ScenarioDataPoint, DaaSymbol, LatLonAlt, DAA_AircraftDescriptor, LLAPosition } from './daa-displays/utils/daa-types';
 
 import * as utils from './daa-displays/daa-utils';
 import { ViewOptions } from './daa-displays/daa-view-options';
 import { Bands, downgrade_alerts, inhibit_bands, inhibit_resolutions, severity } from './daa-displays/daa-utils';
 import { THRESHOLD_ALT_SL3, USE_TCAS_SL3 } from './config';
+import { integratedPlaybackTemplate } from './daa-displays/templates/daa-playback-templates';
 
 const player: DAAPlayer = new DAAPlayer();
 
@@ -55,6 +56,7 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
     const flightData: LLAData = <LLAData> player.getCurrentFlightData();
     player.displayFlightData();
     if (flightData && flightData.ownship) {
+		data.map.setOwnshipName(flightData.ownship.id);
         if (godsView) {
             // set velocity and position of ownship
             data.map.setOwnshipPosition(flightData.ownship.s);
@@ -80,10 +82,10 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
 		const altUnits: string = AltitudeTape.units.ft;
         if (!godsView) {
             data.compass.setCompass(heading, { units: headingUnits });
-        }
-		data.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
-		data.verticalSpeedTape.setVerticalSpeed(vspeed);
-		data.altitudeTape.setAltitude(alt, altUnits);
+			data.airspeedTape.setAirSpeed(airspeed, airspeedUnits);
+			data.verticalSpeedTape.setVerticalSpeed(vspeed);
+			data.altitudeTape.setAltitude(alt, altUnits);
+		}
         // console.log(`Flight data`, flightData);
 
         // the special configuration DANTi_SL3 mimicks TCAS suppression of warning alerts when the aircraft is below a certain altitude
@@ -189,9 +191,9 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
                 }
             }
         }
-        const traffic = flightData.traffic.map((data, index) => {
+        const traffic: DAA_AircraftDescriptor[] = flightData.traffic.map((data, index) => {
             const alert: number = (bands?.Alerts?.alerts && bands.Alerts.alerts[index]) ? severity(bands.Alerts.alerts[index].alert_region) : severity("NONE");
-            return {
+			return {
                 callSign: data.id,
                 s: data.s,
                 v: data.v,
@@ -204,6 +206,11 @@ function render (data: { map: InteractiveMap, compass: Compass, airspeedTape: Ai
             wind.setAngleFrom(bands.Wind.deg);
             wind.setMagnitude(bands.Wind.knot);
         }
+		// draw bands
+		if (bands && bands['Heading Bands']) {
+			// currently we have bands only for the ownship, the java executable needs to be updated so bands are generated for all aircraft
+			data.map.drawAircraftBands(flightData.ownship.id, bands['Heading Bands']?.bands, bands['Heading Bands']?.resolution);
+		}		
         // const step: number = player.getCurrentSimulationStep();
         // const time: string = player.getCurrentSimulationTime();
         // plot({ ownship: { gs: airspeed, vs: vspeed / 100, alt, hd: heading }, bands, step, time });
@@ -247,20 +254,29 @@ function plot (desc: { ownship: { gs: number, vs: number, alt: number, hd: numbe
 }
 
 // interactive map
+const mainFrameScale: number = parseFloat($("#main-frame")[0].style.transform.replace("scale(", "")) || 1;
+const currMainFrameWidth: number = (window.innerWidth - 350) / mainFrameScale; // 350 is the typical size of the side panel in the view
+const mapWidth: number = currMainFrameWidth > 0 && currMainFrameWidth > MAP_WIDESCREEN_WIDTH ? currMainFrameWidth : MAP_WIDESCREEN_WIDTH;
+const currMainFrameHeight: number = (window.innerHeight - 150) / mainFrameScale; // 150 is the typical size of the top panel in the view
+const mapHeight: number = currMainFrameHeight > 0 && currMainFrameHeight > DEFAULT_MAP_HEIGHT ? currMainFrameHeight : DEFAULT_MAP_HEIGHT;
 const map: InteractiveMap = new InteractiveMap("map", {
     top: 2, 
     left: 6
 }, { 
     parent: "daa-disp", 
+	width: mapWidth,
+	height: mapHeight,
     godsView,
     engine: "leafletjs",
     scrollZoom: true,
-    dragging: true,
-    trafficTraceVisible: true,
-    ownshipTraceVisible: true
+    dragging: true
 });
+// move encounter information panel according to the map width
+$("#daa-traffic").css({ left: mapWidth + 50 });
+$("#daa-monitors").css({ left: mapWidth + 50 });
+
 // wind indicator
-const wind: WindIndicator = new WindIndicator("wind", { top: (godsView ? 764 : 690), left: (godsView ? 890 : 195), width: (godsView ? 168 : 140) }, { parent: "daa-disp"});
+const wind: WindIndicator = new WindIndicator("wind", { top: mapHeight - 80, left: mapWidth - 165, width: (godsView ? 168 : 140) }, { parent: "daa-disp"});
 // map heading is controlled by the compass
 const compass: Compass = new Compass("compass", { top: 110, left: 215 }, { parent: "daa-disp-hidden", maxWedgeAperture: 15, map, wind });
 // map zoom is controlled by nmiSelector
@@ -275,12 +291,22 @@ const viewOptions: ViewOptions = new ViewOptions("view-options", { top: 4, left:
 const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { parent: "daa-disp-hidden", maxWedgeAperture: 50 });
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp-hidden", maxWedgeAperture: 300 });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 981 }, { parent: "daa-disp-hidden", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
+// const renderables = { map, compass, airspeedTape, altitudeTape, verticalSpeedTape };
+const acFlightPlan: { [ac: string]: utils.FlightPlan } = {};
+// flight plans applicability periods
+const flightPlansAP: { [ac: string]: { from?: number, to?: number } } = {};
 
 player.define("step", async () => {
     render({
         map: map, compass: compass, airspeedTape: airspeedTape, 
         altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape
     });
+	const step: number = player.getCurrentSimulationStep();
+	const ac: string[] = Object.keys(flightPlansAP);
+	for (let k = 0; k < ac.length; k++) {
+		const reveal: boolean = step >= flightPlansAP[ac[k]]?.from && step <= flightPlansAP[ac[k]]?.to;
+		map.showAircraftFlightPlan(ac[k], reveal);
+	}
 });
 player.define("init", async () => {
     // compute java output
@@ -300,6 +326,53 @@ player.define("init", async () => {
             map: map, compass: compass, airspeedTape: airspeedTape, 
             altitudeTape: altitudeTape, verticalSpeedTape: verticalSpeedTape
         }, { recenter: true });
+		// get full scenario data and render flight paths
+		const scenarioData: LLAData[] = player.getFlightData();
+		console.log({ scenarioData });
+		// extract flight plans and applicability period
+		for (let i = 0; i < scenarioData?.length; i++) {
+			let lla: LLAPosition = scenarioData[i].ownship;
+			acFlightPlan[lla.id] = acFlightPlan[lla.id] || [];
+			acFlightPlan[lla.id].push({ 
+				lla: {
+					lat: +lla.s.lat,
+					lon: +lla.s.lon,
+					alt: +lla.s.alt
+				},
+				toa: i // the simulation step is used here as a measure of the time of applicability
+			});
+			if (flightPlansAP[lla.id]) {
+				if (flightPlansAP[lla.id].to < i) { flightPlansAP[lla.id].to = i; }
+			} else {
+				// entry does not exist, so this is the first time the ac shows up in the simulation
+				flightPlansAP[lla.id] = { from: i, to: i };
+			}
+			for (let k = 0; k < scenarioData[i].traffic?.length; k++) {
+				lla = scenarioData[i].traffic[k];
+				acFlightPlan[lla.id] = acFlightPlan[lla.id] || [];
+				acFlightPlan[lla.id].push({ 
+					lla: {
+						lat: +lla.s.lat,
+						lon: +lla.s.lon,
+						alt: +lla.s.alt
+					},
+					toa: i // the simulation step is used here as a measure of the time of applicability
+				});
+				// fill in data for the applicability period
+				if (flightPlansAP[lla.id]) {
+					if (flightPlansAP[lla.id].to < i) { flightPlansAP[lla.id].to = i; }
+				} else {
+					// entry does not exist, so this is the first time the ac shows up in the simulation
+					flightPlansAP[lla.id] = { from: i, to: i };
+				}
+			}
+		}
+		// set all flight plans
+		const acKeys: string[] = Object.keys(acFlightPlan);
+		for (let k = 0; k < acKeys.length; k++) {
+			map.setAicraftFlightPlan(acKeys[k], acFlightPlan[acKeys[k]]);
+		}
+		console.log({ trafficFlightPlans: acFlightPlan, flightPlansAP });
     }
 });
 async function developerMode (): Promise<void> {
@@ -411,7 +484,8 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     //     });
     // }
     player.appendSimulationControls({
-        parent: "simulation-controls",
+		htmlTemplate: integratedPlaybackTemplate,
+		parent: ".navbar-integrated-simulation-controls", // "simulation-controls",
         displays: [ "daa-disp" ]
     });
     // player.appendPlotControls({
@@ -419,22 +493,23 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     //     top: 47
     // });
     player.appendActivationPanel({
-        parent: "activation-controls"
+        parent: ".navbar-integrated-simulation-controls",//"activation-controls",
+		width: mapWidth
     });
-    player.appendWedgeRangeControls({
-        setCompassWedgeAperture: (aperture: string) => {
-            compass.setMaxWedgeAperture(aperture);
-        },
-        setAirspeedWedgeAperture: (aperture: string) => {
-            airspeedTape.setMaxWedgeAperture(aperture);
-        },
-        setAltitudeWedgeAperture: (aperture: string) => {
-            altitudeTape.setMaxWedgeAperture(aperture);
-        },
-        setVerticalSpeedWedgeAperture: (aperture: string) => {
-            verticalSpeedTape.setMaxWedgeAperture(aperture);
-        }
-    }, { top: -110, left: 1140 });
+    // player.appendWedgeRangeControls({
+    //     setCompassWedgeAperture: (aperture: string) => {
+    //         compass.setMaxWedgeAperture(aperture);
+    //     },
+    //     setAirspeedWedgeAperture: (aperture: string) => {
+    //         airspeedTape.setMaxWedgeAperture(aperture);
+    //     },
+    //     setAltitudeWedgeAperture: (aperture: string) => {
+    //         altitudeTape.setMaxWedgeAperture(aperture);
+    //     },
+    //     setVerticalSpeedWedgeAperture: (aperture: string) => {
+    //         verticalSpeedTape.setMaxWedgeAperture(aperture);
+    //     }
+    // }, { parent: "simulation-controls", top: 0, left: 1140 });
     // player.appendDeveloperControls({
     //     normalMode,
     //     developerMode
@@ -446,6 +521,15 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     //     hidden: true
     // });
     // await player.activate({ developerMode: true });
+	// const clearTraces = () => {
+	// 	if (map?.airspace && typeof map.airspace["clearAllTraces"] === "function") {
+	// 		console.log("clearing traffic traces...");
+	// 		map.airspace["clearAllTraces"]();
+	// 	}
+	// }
+	// player.link("clear-trace", () => {
+	// 	clearTraces();
+	// });
 
     // auto-load scenario+config if they are specified in the browser
     if (args) {
