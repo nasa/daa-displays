@@ -51,7 +51,7 @@ import * as serverInterface from '../utils/daa-types'
 import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
-import { DaaSymbol, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
+import { BandElement, DaaSymbol, DaidalusBand, DaidalusResolution, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // standard set of locations
 export const cities = {
@@ -193,7 +193,13 @@ function _get_streetMap(t: string): WorldWind.RenderableLayer {
 }
 
 // aicrraft data interface
-export interface AircraftData { s: LatLonAlt<number | string>, v: Vector3D<number | string>, symbol: DaaSymbol, callSign: string }
+export interface AircraftData {
+	s: LatLonAlt<number | string>, 
+	v: Vector3D<number | string>, 
+	symbol: DaaSymbol, 
+	callSign: string,
+	bands?: DaidalusBand[]
+}
 
 /**
  * Airspace interface, provides information on ownship and traffic
@@ -215,8 +221,10 @@ export declare interface AirspaceInterface {
     setOwnshipPosition (pos: string | LatLonAlt<number | string>): AirspaceInterface;
     setOwnshipVelocity (v: Vector3D<number | string>): AirspaceInterface;
     setFlightPlan (flightPlan: utils.FlightPlan): AirspaceInterface;
+    setAircraftFlightPlan? (ac: string, flightPlan: utils.FlightPlan): AirspaceInterface;
     setOwnshipHeading (deg: number, opt?: { nrthup?: boolean, duration?: number }): AirspaceInterface;
     getOwnshipHeading (): number;
+	setOwnshipName? (name: string): AirspaceInterface;
     getTraffic (): AircraftInterface[];
     setTraffic (traffic: AircraftData[]): AirspaceInterface;
     hideTraffic (): AirspaceInterface;
@@ -242,6 +250,8 @@ export declare interface AirspaceInterface {
     removeTrafficTrace (ac?: string): AirspaceInterface;
     revealFlightPlan (): AirspaceInterface;
     hideFlightPlan (): AirspaceInterface;
+    revealAircraftFlightPlan? (ac: string): AirspaceInterface;
+    hideAircraftFlightPlan? (ac: string): AirspaceInterface;
     revealHazardZones (): AirspaceInterface;
     hideHazardZones (): AirspaceInterface
     revealContours (): AirspaceInterface;
@@ -252,6 +262,7 @@ export declare interface AirspaceInterface {
     getIndicatorsDivName (): string;
     getOwnshipDivName (): string;
     resetAirspace (): AirspaceInterface; // resets all data structures
+	drawAircraftBands? (acName: string, bands: DaidalusBand[], resolution?: DaidalusResolution): AirspaceInterface;
 }
 
 /**
@@ -306,6 +317,7 @@ export class DAA_Airspace implements AirspaceInterface {
      */
     constructor (opt?: { 
         ownship?: LatLonAlt<number | string>, 
+		callSign?: string, // ownship call sign
         traffic?: { 
 			s: LatLonAlt<number | string>, 
 			v: Vector3D<number | string>, 
@@ -416,7 +428,7 @@ export class DAA_Airspace implements AirspaceInterface {
         this._ownship = new DAA_Aircraft(this.wwd, {
             s: opt.ownship,
             symbol: "daa-ownship",
-            callSign: "ownship",
+            callSign: opt?.callSign || "ownship",
             callSignVisible: this.callSignVisible,
             aircraftVisible: this.godsView,
             view3D: this._3dview

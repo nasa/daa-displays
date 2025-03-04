@@ -1584,6 +1584,20 @@ export class DAAPlayer extends Backbone.Model {
         }
         return this;
     }
+	/**
+	 * Utility function, associates click actions on the given button to the given user-defined function
+	 */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+	link (button: string, fbody: (...args: any) => any): void {
+		if (button && fbody) {
+			button = button.startsWith("#") || button.startsWith(".") ? button : `#${button}`;
+			const $btn: JQuery<HTMLElement> = $(button);
+			this._defines[button] = fbody;
+			$btn.on("click", () => {
+				this._defines[button]();
+			})
+		}
+	}
     /**
      * @function <a name="handle">handle</a>
      * @description Utility function for defining handlers of player widgets, such as buttons and checkboxes. Events currently supported include:
