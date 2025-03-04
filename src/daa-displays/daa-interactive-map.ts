@@ -652,7 +652,7 @@ export class InteractiveMap {
      * Reveals/Hides aicraft flight plan
      */
     showAircraftFlightPlan (ac: string, reveal: boolean): InteractiveMap {
-        (reveal) ? this.revealAircraftFlightPlan(ac) : this.hideTrafficFlightPlan(ac);
+        (reveal) ? this.revealAircraftFlightPlan(ac) : this.hideAircraftFlightPlan(ac);
         return this;
     }
     /**
@@ -663,12 +663,19 @@ export class InteractiveMap {
         return this;
     }
     /**
-     * Hides traffic flight plan
+     * Hides aircraft flight plan
      */
-    hideTrafficFlightPlan (ac: string): InteractiveMap {
+    hideAircraftFlightPlan (ac: string): InteractiveMap {
         if (typeof this.airspace?.hideAircraftFlightPlan === "function") { this.airspace?.hideAircraftFlightPlan(ac); }
         return this;
     }
+	/**
+	 * Clear all aircraft flight plans
+	 */
+	clearFlightPlans (): InteractiveMap {
+        if (typeof this.airspace?.clearFlightPlans === "function") { this.airspace?.clearFlightPlans(); }
+        return this;
+	}
 	/**
 	 * Utility function, draws heading bands around the aircraft
 	 * @param ac aircraft identifier (e.g., call sign or tail number)
