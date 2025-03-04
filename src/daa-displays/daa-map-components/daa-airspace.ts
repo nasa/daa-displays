@@ -51,7 +51,7 @@ import * as serverInterface from '../utils/daa-types'
 import { AircraftInterface, DAA_Aircraft } from './daa-aircraft';
 import { GeoFence } from './daa-geofence';
 import { DAA_FlightPlan } from './daa-flight-plan';
-import { BandElement, DaaSymbol, DaidalusBand, DaidalusResolution, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
+import { DaaSymbol, DaidalusBand, DaidalusResolution, LatLon, LatLonAlt, Vector3D } from '../utils/daa-types';
 
 // standard set of locations
 export const cities = {
@@ -252,6 +252,7 @@ export declare interface AirspaceInterface {
     hideFlightPlan (): AirspaceInterface;
     revealAircraftFlightPlan? (ac: string): AirspaceInterface;
     hideAircraftFlightPlan? (ac: string): AirspaceInterface;
+	clearFlightPlans? (): AirspaceInterface;
     revealHazardZones (): AirspaceInterface;
     hideHazardZones (): AirspaceInterface
     revealContours (): AirspaceInterface;

@@ -292,9 +292,9 @@ const airspeedTape = new AirspeedTape("airspeed", { top: 100, left: 100 }, { par
 const altitudeTape = new AltitudeTape("altitude", { top: 100, left: 833 }, { parent: "daa-disp-hidden", maxWedgeAperture: 300 });
 const verticalSpeedTape = new VerticalSpeedTape("vertical-speed", { top: 210, left: 981 }, { parent: "daa-disp-hidden", verticalSpeedRange: 2000, maxWedgeAperture: 500 });
 // const renderables = { map, compass, airspeedTape, altitudeTape, verticalSpeedTape };
-const acFlightPlan: { [ac: string]: utils.FlightPlan } = {};
+let acFlightPlan: { [ac: string]: utils.FlightPlan } = {};
 // flight plans applicability periods
-const flightPlansAP: { [ac: string]: { from?: number, to?: number } } = {};
+let flightPlansAP: { [ac: string]: { from?: number, to?: number } } = {};
 
 player.define("step", async () => {
     render({
@@ -309,6 +309,10 @@ player.define("step", async () => {
 	}
 });
 player.define("init", async () => {
+	// reset global variables
+	acFlightPlan = {};
+	flightPlansAP = {};
+	map.clearFlightPlans();
     // compute java output
     await player.exec({
         alertingLogic: player.readSelectedDaaVersion(), //"DAAtoPVS-1.0.1.jar",
@@ -494,7 +498,7 @@ async function createPlayer(args: DaaConfig): Promise<void> {
     // });
     player.appendActivationPanel({
         parent: ".navbar-integrated-simulation-controls",//"activation-controls",
-		width: mapWidth
+		width: mapWidth / 2
     });
     // player.appendWedgeRangeControls({
     //     setCompassWedgeAperture: (aperture: string) => {

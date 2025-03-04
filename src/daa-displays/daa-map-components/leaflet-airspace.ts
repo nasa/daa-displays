@@ -973,7 +973,7 @@ export class LeafletAirspace implements AirspaceInterface {
 						}
 					}
 					// save flight plan
-					this.trafficFlightPlan[ac] = { poly, markers: [], plan };
+					this.trafficFlightPlan[ac] = { poly, markers, plan };
 				}
 				// update visibility
 				this.flightPlanVisible ? this.revealAircraftFlightPlan(ac) : this.hideAircraftFlightPlan(ac);
@@ -995,6 +995,16 @@ export class LeafletAirspace implements AirspaceInterface {
         this.flightPlan = null;
         return this;
     }
+    /**
+     * Clears (i.e., removes) all aircraft flight plans
+     */
+	clearFlightPlans(): AirspaceInterface {
+		const acs: string[] = Object.keys(this.trafficFlightPlan || {});
+		for (let i = 0; i < acs?.length; i++) {
+			this.clearCurrentTrafficFlightPlan(acs[i]);
+		}
+		return this;
+	}
     /**
      * Clears (i.e., removes) the current flight plan
      */
