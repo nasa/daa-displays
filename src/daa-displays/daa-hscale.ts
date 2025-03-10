@@ -133,7 +133,7 @@ export class HScale {
      */
     selectNextZoomLevel (): boolean {
         const min: number = this.scrollEnabled ? 0 : 8;
-        const max: number = this.nmiRadios.length;
+        const max: number = this.scrollEnabled ? this.nmiRadios.length : 16;
         if (this.zoomLevel >= min && this.zoomLevel < max - 1) {
             this.checkRadio(this.zoomLevel + 1);
             return true;
